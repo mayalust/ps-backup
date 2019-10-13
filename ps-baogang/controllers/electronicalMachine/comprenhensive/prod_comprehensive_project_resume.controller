@@ -1,0 +1,342 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,growl,commonMethodService,psLoading"
+></config>
+<template>
+  <div class="wrap" style="overflow-y:auto;height:calc(100vh - 180px);">
+    <div class="row">
+      <div class="col-md-12 margin-bottom-5">
+        <button ng-click="back()" class="btn btn-primary">返回</button>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block padding-10">
+          <div class="margin-bottom-5">
+            <span class="padding-right-10">修理方式:</span>
+            <div class="horizontal width-200">
+              <ps-select ng-model="repairWay"
+                         data-change = "modelChange(repairWay + repairWay.length)"
+                         data-options="repairWay.valueCode as repairWay.label for repairWay in repairWays"></ps-select>
+            </div>
+            <span class="padding-right-10">委托单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="entrustOrderNo" class="form-control"/>
+            </div>
+            <span class="padding-right-10">工程单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="implementOrderNo" class="form-control"/>
+            </div>
+            <span class="padding-right-10">交工日期:</span>
+            <div  class="horizontal width-200">
+            <ps-date2 ng-model="completionDate"></ps-date2>
+            </div>
+            <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+            <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block">
+          <div class="wrap">
+            <div class="table-title">
+              维修履历
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>委托单位</th>
+                <th>委托单号</th>
+                <th>项目等级</th>
+                <th>工程名称</th>
+                <th>工程单号</th>
+                <th>设备类型</th>
+                <th>修理方式</th>
+                <th>宝钢号</th>
+                <th>设备型号</th>
+                <th>委托日期</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="item.entrustDepartments"></td>
+                <td ng-bind="item.entrustOrderNo"></td>
+                <td ng-bind="item.projectLevel"></td>
+                <td ng-bind="item.projectName"></td>
+                <td ng-bind="item.implementOrderNo"></td>
+                <td ng-bind="(item.motorType == 'AC_MOTOR') ? '交流电机'
+                             : (item.motorType == 'DC_MOTOR') ? '直流电机'
+                             : (item.motorType == 'TRANSFORMER')? '变压器'
+                             : '-'"></td>
+                <td ng-bind="(item.repairWay == 'DDJNCWX_REPAIR') ? '大电机内场维修'
+                             : (item.repairWay == 'DJBX_REPAIR') ? '电机备修'
+                             : (item.repairWay == 'XCDDJ_REPAIR')? '现场大电机维修'
+                             : '-'"></td>
+                <td ng-bind="item.baogangNo"></td>
+                <td ng-bind="item.motorModel"></td>
+                <td>{{item.entrustDate | date:'yyyy-MM-dd HH:mm:ss '}}</td>
+                <!--<td ng-bind="item.getModifyTime()"></td>-->
+                <td ng-bind="item.status == 10 ? '待处理'
+                              : item.status == 100 ? '处理中'
+                              : item.status == 200 ? '已完成'
+                              :  '-'"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.totalDealFn()" ng-if="item.status !== 200">综合处理</button>
+                    <button class="btn btn-primary" ng-click="item.repairResume()"  ng-if="item.status == 200">检修履历</button>
+                    <button class="btn btn-default" ng-click="item.finishFn()">完工管理</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,$state,registerService,cms2,ajax,growl,commonMethodService,psLoading){
+        var target = commonMethodService();
+        scope.entrustObj = target.getValue("entrustObj");
+        //跳转页面的方法
+        function cmsPage(self) {
+          if(scope.currentRoleID == 70153973788934 ||scope.currentRoleID == 59846674150228 ){//综合管理员 超级管理员
+            if(self.motorType == "交流电" || self.motorType == "AC_MOTOR"){
+              cms2.navigateTo([3,0,0]);
+            }else if(self.motorType == "直流电" || self.motorType == "DC_MOTOR"){
+              cms2.navigateTo([3,1,0]);
+            }else if(self.motorType == "变压器" || self.motorType == "TRANSFORMER"){
+              cms2.navigateTo([3,2,0]);
+            }
+          }else {
+            if(self.motorType == "交流电" || self.motorType == "AC_MOTOR"){
+              cms2.navigateTo([0,0,0]);
+            }else if(self.motorType == "直流电" || self.motorType == "DC_MOTOR"){
+              cms2.navigateTo([0,1,0]);
+            }else if(self.motorType == "变压器" || self.motorType == "TRANSFORMER"){
+              cms2.navigateTo([0,2,0]);
+            }
+          }
+        }
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                    ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                    : "-";
+            }
+            repairResume(){
+                target.setValue("mode","resume");
+                target.setValue("maintainObj",this);
+                cmsPage(this);
+                // cms2.navigateTo(3,0);
+            }
+            totalDealFn(){
+                target.setValue("maintainObj",this);
+                cms2.navigateTo(3,0);
+            }
+            finishFn(){
+                cms2.modal({
+                    title : "完工管理",
+                    directive : "dialog-project-finish-manage",
+                    width : "80%",
+                    params : {
+                        mode : "edit",
+                        data : { "implementOrderNo":this.implementOrderNo}
+                    }
+                }).then( d => {
+                    if( typeof (d && d.clone) != "undefined"){
+                        function getFiles(data) {
+                            let keys = Object.keys(data);
+                            let values = Object.values(data);
+                            let temp = [];
+                            let ret = [];
+                            keys.forEach((key, index) => {
+                                let obj = {};
+                                obj.key = key;
+                                obj.files = values[index];
+                                temp.push(obj);
+                            });
+
+                            let index = 0;
+                            temp.forEach(item => {
+                                if (item.files.length > 0) {
+                                    item.files.forEach(file => {
+                                        ret.push({
+                                            name: file.name,
+                                            key: item.key,
+                                            file: file,
+                                            index: index
+                                        });
+                                        index ++ ;
+                                    });
+                                }
+                            });
+
+                            return ret;
+                        }
+                        function setValueEmpty(data) {
+                            for(let key in data) {
+                                d.clone[key] = [];
+                            }
+                        }
+                        let formData = new FormData();
+                        let obj = {
+                            'attachmentListDelivery': d.clone.attachmentListDelivery || [],
+                            'attachmentListHandover': d.clone.attachmentListHandover || [],
+                            'attachmentListWarehouse': d.clone.attachmentListWarehouse || []
+                        };
+                        let files = getFiles(obj);
+                        setValueEmpty(obj);
+                        formData.append("resourceId",2);
+                        if(files.length >0){
+                            files.forEach((v,i) => {
+                                formData.append(`file${v.index}`,v.file);
+                            })
+                        }
+                        if(files.length !== 0){
+                            // d.clone.attachmentList = [];
+                            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                                if(s.code == "0"){
+                                    growl.info("附件上传成功");
+                                    let obj = {};
+                                    if(isArray(s.data)){
+                                        s.data.forEach((v,i)=>{
+                                            obj = {};
+                                            obj["fileName"] = files[i].name;
+                                            obj["filePath"] = v.qualifiedName;
+                                            d.clone[files[i].key].push(obj);
+                                        })
+                                    }else {
+                                        obj["fileName"] = files[0].name;
+                                        obj["filePath"] = s.data.qualifiedName;
+                                        d.clone[files[0].key].push(obj);
+                                    }
+                                    return cms2.success( d );
+                                }
+                            }).then(function (d) {
+                                psLoading.showLoading();
+                                ajax.post("motorRepairUIService.saveCompletionManagement",d.clone).then(function (d) {
+                                    if(d!= null){
+                                        psLoading.closeLoading();
+                                        growl.info("完工管理成功！");
+                                    }
+                                });
+                            })
+                        }else {
+                            psLoading.showLoading();
+                            ajax.post("motorRepairUIService.saveCompletionManagement",d.clone).then(function (d) {
+                                if(d!= null){
+                                    psLoading.closeLoading();
+                                    growl.info("完工管理成功！");
+                                }
+
+                            })
+                        }
+                    }
+
+                });
+            }
+
+
+        }
+        function timer(){
+            ajax.post("motorRepairUIService.findImplementOrder",{baogangNo:target.getValue("baogangNo")}).then( d => {
+                scope.resources = d.map( a => new tableCell(a));
+            })
+        }
+        timer();
+        let interval = setInterval(()=>{
+            timer();
+            scope.$apply();
+        },300000)
+
+        scope.departments = [{
+            id : "电厂",
+            label : "电厂"
+        },{
+            id : "炼铁厂",
+            label : "炼铁厂"
+        }];
+        scope.repairWays = target.getRootScope("myDicts")["repairTypeWay"];
+        scope.motorTypes = [{
+            id : "直流电机",
+            label : "直流电机"
+        },{
+            id : "变压器",
+            label : "变压器"
+        },{
+            id : "交流绕线式电机",
+            label : "交流绕线式电机"
+        },{
+            id : "交流双速电机",
+            label : "交流双速电机"
+        }];
+        scope.modelChange = function(a){
+            //  
+        };
+        scope.back = function(){
+            // cms2.navigateTo(1);
+          history.back();
+        }
+        scope.clearFn = function(){
+            scope.repairWay = "";
+            scope.entrustOrderNo = "";
+            scope.implementOrderNo = "";
+            scope.completionDate = "";
+            scope.filter = (() => {
+                return true;
+            });
+        }
+        scope.searchFn = function(){
+            scope.filter = ({ repairWay,entrustOrderNo,implementOrderNo,completionDate}) => {
+                if( scope.repairWay && repairWay !== scope.repairWay){
+                    return false;
+                }
+                if((typeof scope.entrustOrderNo !== "undefined") && entrustOrderNo !==null && entrustOrderNo.indexOf( scope.entrustOrderNo ) == -1){
+                   return false;
+                }else if(entrustOrderNo == null
+                         && (scope.entrustOrderNo !=null || scope.entrustOrderNo !="")
+                         && typeof scope.entrustOrderNo !== "undefined"
+                         && scope.repairWay !== ""
+                         && scope.implementOrderNo !== ""
+                         && scope.completionDate !== ""
+                ){
+                    return false;
+                }
+                if( typeof scope.implementOrderNo !=="undefined" && implementOrderNo.indexOf( scope.implementOrderNo ) == -1 ){
+                    return false;
+                }
+                if( scope.completionDate && completionDate !== scope.completionDate){
+                    return false;
+                }
+                return true;
+            }
+        };
+        scope.$on("$destroy",()=>{
+            clearInterval(interval);
+        })
+
+    }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

@@ -1,0 +1,93 @@
+<config injector="$rootScope, $q, $timeout, $compile, psScope, psDialog, psUltility, ajax, psEvent"
+></config>
+<template>
+  <div>
+    <div class="bk-scope ps-layout"></div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { deepClone, isString, isFunction, isObject, extend } from "ps-ultility";
+  export default function(rootScope, q, timeout, compile, psScope, psDialog, psUltility, ajax, psEvent){
+    return {
+      restrict: 'E',
+      scope: {
+        isRoot : "=",
+        option : '='
+      },
+      link: function (scope, element) {
+        let elem = element[0].children[0], clear, watchers = [];
+        function render(){
+          var _root = scope.$parent,
+            isRoot = typeof scope.isRoot === "undefined" ? true : !!scope.isRoot,
+            s = scope.$new(), div = document.createElement("ps-recursive");
+          isRoot = true;
+          isRoot ? rootScope['$$customRootScope'] = scope.$parent : null;
+          scope.$parent['$$customParentScope'] = scope.$parent;
+          scope.$parent['$$customRootScope'] = scope.$parent;
+          scope.$parent[psUltility.keyPattern("layout")] = scope.option;
+          for(let i in scope.option.modals){
+            scope.$parent[psUltility.keyPattern(i)] = function(){
+              return deepClone(scope.option.modals[i]);
+            };
+          }
+          if(isRoot){
+            rootScope.$$customRootScope = scope.$parent;
+          }
+          scope.$parent.$refresh = function(){
+            psUltility.setData(scope.$parent, scope.$parent);
+          };
+          function preparation(){
+            return psUltility.createLoadEvent(scope.option.init);
+          }
+          function setCustomWatch (watcher) {
+            if (typeof watcher !== "object") {  return; }
+            let evt = psEvent(event), handler = watcher.handler, rs;
+            psUltility.createLoadWatch(watcher, scope, (d) => {
+              evt.$scope = scope;
+              evt.$value = d;
+              evt.update = function (obj) {
+                psUltility.setData(scope, obj);
+              };
+              rs = handler && handler(evt);
+              if(typeof rs !== "undefined"){
+                extend(_root, d);
+                psUltility.setData(scope, rs);
+              }
+            });
+          }
+          setCustomWatch(scope.option.watch);
+          preparation().then((d) => {
+            extend(_root, d);
+            psUltility.setData(scope, d);
+          })
+          div.setAttribute("ng-repeat", "op in option.children");
+          elem.appendChild(div);
+          compile(elem)(s);
+          return function(){
+            let item;
+            while(item = elem.children[0]){
+              item.remove()
+            }
+             
+            s.$destroy();
+          }
+        }
+          timeout(d => {
+              watchers.push(scope.$watch("option", (n, o, s)=>{
+                  if(n){
+                      clear && clear();
+                      clear = render(n)
+                  }
+              }))
+          });
+        scope.$on("$destroy", d => {
+            watchers.forEach( d => {
+                d();
+            })
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+</style>

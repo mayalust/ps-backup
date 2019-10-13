@@ -1,0 +1,135 @@
+<config injector="$q,$timeout,$compile,ajax,psUltility,psEvent"
+></config>
+<template>
+    <div style="width: 90%;">
+    </div>
+</template>
+<script type="text/javascript">
+import {isString, isArray, isObject, isFunction, extend, attribute} from "ps-ultility";
+
+export default function (q, timeout, compile, ajax, psUltility, psEvent) {
+  return {
+    scope: {
+      header: `=`,
+      key: `=`,
+      row: `=`,
+      index: `=`
+    },
+    link (scope, element, attr) {
+      let dom = element[0], on, watcher1, watcher2, watcher3, watcher4, config = {},
+        _position = ["label", "type", "bind", "search", "filter", "options"],
+        dic = {"text": "label"},
+        div = document.createElement("ps-tools");
+      div.setAttribute("data-option", "config");
+
+      function getTextFromType (type, header) {
+        if (isArray(header)) {
+          var inx = _position.indexOf(type)
+          return header[inx];
+        } else if (isObject(header)) {
+          return header[type];
+        } else if (isFunction(header)) {
+          return header[type];
+        } else {
+          return null
+        }
+      }
+
+      function removeAllChildren (node) {
+        for (var i = 0; i < node.children.length; i++) {
+          node.children[i].remove();
+        }
+      }
+
+      function init () {
+        watcher1 && watcher1();
+        removeAllChildren(dom);
+        dom.appendChild(div);
+        scope.config = {};
+        render(scope.row);
+        compile(dom)(scope);
+        watcher1 = scope.$$childHead.$watch("option." + psUltility.keyPattern(scope.key), (n, o, s) => {
+          if (typeof n !== "undefined") {
+            attribute(scope.row, scope.key, n);
+          }
+        });
+      }
+
+      function render (row) {
+        let type = getTextFromType("gridType", scope.header),
+          style = getTextFromType("style", scope.header),
+          value = attribute(scope.row, scope.key), parser,
+          format = getTextFromType("format", scope.header),
+          options = getTextFromType("options", scope.header) || [],
+          bind = getTextFromType("bind", scope.header);
+        type = dic[type] || type;
+        if (type === 'date' || type === 'date2') {
+          type = 'datelabel';
+        } else {
+          type = typeof type === "function" ? type(row, scope.index) : type;
+        }
+        options = typeof options === "function" ? options(row, scope.index) : options;
+        style = typeof style === "function" ? style(row, scope.index) : style;
+        parser = typeof bind === "function" ? function () {
+          return bind(row, scope.index);
+        } : null;
+        scope.config = scope.config || {};
+        on = scope.header.on;
+        config = extend( {}, scope.config );
+        extend(config, {
+          on: on,
+          style: style || {},
+          parser: parser,
+          format: format
+        });
+        let clone = {
+            type: type,
+            format: format,
+            key: scope.key,
+            config: config,
+            options: options,
+            value: value
+        };
+        if(typeof value !== "undefined" && value !== null){
+            clone.value = value;
+        }
+        extend(scope.config, clone);
+      }
+
+      function clearAllWathers () {
+        watcher1 && watcher1();
+        watcher2 && watcher2();
+        watcher3 && watcher3();
+        watcher4 && watcher4();
+      }
+
+      watcher2 = scope.$watch(`row`, (n, o, s) => {
+        if (n) {
+          render(n);
+        }
+      }, true);
+
+      watcher3 = scope.$watch(`row.${scope.key}`, (n) => {
+        if (typeof n !== "undefined") {
+          attribute(scope.$$childHead, `option.${psUltility.keyPattern(scope.key)}`, n);
+        }
+      });
+
+      watcher4 = scope.$watch(`row`, (n, o, s) => {
+        if (n) {
+          init(n);
+        }
+      });
+
+      scope.$on("$destroy", () => {
+        clearAllWathers();
+        div.remove();
+        div = null;
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+
+</style>

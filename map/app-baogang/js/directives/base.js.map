@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-baogang/js/directives/base.js"],"names":["angular","module"],"mappings":"AAAAA,QAAQC,OAAO,kBAAmB","file":"app-baogang/js/directives/base.js","sourcesContent":["angular.module('myApp.directive', []);"],"sourceRoot":"/source/"}

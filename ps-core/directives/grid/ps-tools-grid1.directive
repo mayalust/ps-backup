@@ -1,0 +1,102 @@
+<config injector="$q,$timeout,$compile,psUltility"
+></config>
+<template>
+    <div style="width: 90%;">
+    </div>
+</template>
+<script type="text/javascript">
+import {isString, isArray, isObject, isFunction, extend, attribute, deepClone} from "ps-ultility";
+
+export default function (q, timeout, compile, psUltility) {
+  return {
+    scope: {
+      column: `=`,
+      row: `=`,
+    },
+    link (scope, element, attr) {
+      let dom = element[0], on, watcher1, watcher2, watcher3, watcher4;
+      let psToolsOption = {},
+        _position = ["label", "type", "bind", "search", "filter", "options", "config"],
+        dic = {"text": "label"};
+
+      function clone (obj) {
+        var n = null;
+        if (typeof obj !== "object") {
+          return obj;
+        }
+        try {
+          n = deepClone(obj);
+        } catch (e) {
+          console.warn(obj, e);
+        }
+        return n;
+      }
+
+      function getSiblings (node) {
+        let parentNode = node.parentNode;
+        let allSiblings = Array.prototype.slice.call(parentNode.children);
+        return allSiblings.filter((n) => {
+          return n !== node;
+        });
+      }
+
+      function removeAllChildren (node) {
+        let siblings = getSiblings(node);
+        if (siblings.length > 0) {
+          siblings.forEach(s => {
+            for (var i = 0; i < s.children.length; i++) {
+              s.children[i].remove();
+            }
+          });
+        }
+        /*for (var i = 0; i < node.children.length; i++) {
+          node.children[i].remove();
+        }*/
+      }
+
+      function render () {
+        scope.psToolsOption = {
+          type: scope.column.type === 'text' ? 'label' : scope.column.type,
+          config: {},
+          key: scope.column.key
+        };
+        let text = scope.column && scope.column.bind && typeof scope.column.bind === 'function' ? (function () {
+          return scope.column.bind(scope.row, scope.row[scope.column.key]);
+        })() : attribute(scope.row, scope.column.key);
+        scope.psToolsOption[psUltility.keyPattern(scope.column.key)] = text;
+      }
+
+      function clearAllWathers () {
+        watcher1 && watcher1();
+        watcher2 && watcher2();
+        watcher3 && watcher3();
+        watcher4 && watcher4();
+      }
+
+      function init (n) {
+        removeAllChildren(dom);
+        let psTools1 = document.createElement("ps-tools1");
+        psTools1.setAttribute("data-option", "psToolsOption");
+        dom.appendChild(psTools1);
+        render();
+        compile(dom)(scope);
+      }
+
+      watcher4 = scope.$watch(`row`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          init(n);
+        }
+      });
+
+      scope.$on("$destroy", () => {
+        clearAllWathers();
+        dom.remove();
+        dom = null;
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+
+</style>

@@ -1,0 +1,41 @@
+<config injector="$rootScope,$timeout,$compile,$location" type="factory"
+></config>
+<script type="text/javascript">
+  import { screenOffset, extend } from "ps-ultility";
+  export default function(rootScope,timeout,compile,location){
+    let param = {};
+    function parse(str){
+      let rs = null;
+      try {
+        rs = JSON.parse(str);
+      } catch(e) {
+        console.warn(e);
+      } finally {
+        return rs;
+      }
+    }
+    function params(name){
+        if(param[name]){
+            return param[name];
+        }else {
+          console.warn("sesstion = ", sessionStorage["rootParam"]);
+          let obj = parse(sessionStorage["rootParam"])
+            return obj ? obj[name] : null;
+        }
+    }
+    function go(path, p){
+      sessionStorage.setItem("rootParam",JSON.stringify(p))
+      param = p || {};
+      location.path(path);
+    }
+    function set(obj){
+        extend(param, obj);
+        sessionStorage.setItem("rootParam",JSON.stringify(param))
+    }
+    return {
+      params : params,
+      set : set,
+      go : go
+    }
+  }
+</script>

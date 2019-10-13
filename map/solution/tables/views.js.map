@@ -1,0 +1,1 @@
+{"version":3,"sources":["solution/tables/views.js"],"names":["view","config"],"mappings":"AAAAA,KAAKC,OAAS","file":"solution/tables/views.js","sourcesContent":["view.config = {};"],"sourceRoot":"/source/"}

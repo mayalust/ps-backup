@@ -1,0 +1,95 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "label": "控制板1",
+        "type": "block",
+        "source": "BLOCK",
+        "style": {
+          "padding": "5px 15px",
+          "margin": "0px",
+          "border": "0",
+          "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+          "background-color": "rgba(250,250,250,0)"
+        },
+        "advance": {
+          "expression": "{}"
+        },
+        "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+              {
+                "label": "伪TAB样式",
+                "type": "faketab",
+                "source": "FAKETAB",
+                "advance": {
+                  "getfunction": "kpiDataService.getValueList",
+                  "category": "ci",
+                  "condition": [
+                    "kpi",
+                    "{object:kpiQueryModel}"
+                  ],
+                  "expression": "expression = {\n  \"on\" : {\n    \"init\" : function(event){\n      // -------------- 初始化内容在这里设置;\n      var TYPE = \"electric\";\n      if(TYPE == \"electric\"){\n         var tabs = [{\n          id : 1,\n          label : \"趋势分析\",\n          default : \"baogang/electric/el_analysis\",\n          icon : \"proudsmart ps-bw_tezhengqushi\",\n        },{\n          id : 2,\n          label : \"趋势对比\",\n          default : \"baogang/electric/el_compare\",\n          icon : \"proudsmart ps-bw_tezhengqushi\",\n        }];\n        var NAVIGATETO = \"electricShakeNavigateTo\";\n        var CACHEDVALUENAME = \"controlPanelElectricShakeNavigation\";\n        var CHANGENAVEEVENT = \"electricShakeviewchange\";\n        var MOVETOEVENT = \"electricShakemoveTo\";\n      }\n      // ------------------- 初始化内容在这里设置\n      var target = event.target;\n      var main = target.getParameter(\"main\") || 0;\n      var sub = target.getParameter(\"sub\") || 0;\n      var param = target.getParameter(\"sub2\");\n      var sub2, path;\n      if(param instanceof Array){\n          sub2 = param[0];\n          path = param[1];\n      } else {\n          sub2 = param\n      }\n      target.setScopeValue(\"CACHEDVALUENAME\", CACHEDVALUENAME);\n      target.setScopeValue(\"CHANGENAVEEVENT\", CHANGENAVEEVENT);\n      target.setScopeValue(\"MOVETOEVENT\", MOVETOEVENT);\n      var editMode = true;\n      var subTabs = [];\n      var updateNaviList = function(){\n        var obj = {\n          tabs : tabs,\n          subTabs : subTabs,\n          editMode : editMode\n        };\n        target.saveEditorStatus(CACHEDVALUENAME, obj);\n      }\n      var select = function(item, path){\n        var viewId = item.viewId;\n        target.trigger(CHANGENAVEEVENT, {\n            item : item,\n            path : path\n        });\n      };\n      var saveView = function(item, callback){\n        var viewTitle = item.label;\n        var viewType = \"dashboard\";\n        var viewId = item.viewId;\n        if(viewId){\n          target.updateView({\n            viewId : viewId,\n            viewTitle : item.label,\n            viewType : \"dashboard\"\n          }, function(data){\n            callback(data);\n          })\n        } else {\n          var run = function(json){\n            // 
+                  "customCategory": ""
+                },
+                "style": {
+                  "color": "#fff",
+                  "background-color": "#3c8dbc",
+                  "margin": "5px"
+                },
+                "parameters": {},
+                "url": "images/map/map1.png"
+              },
+              {
+                "label": "控制板1",
+                "type": "block",
+                "source": "BLOCK",
+                "style": {
+                  "padding": "5px",
+                  "min-height": "400px"
+                },
+                "advance": {
+                  "expression": "{}"
+                },
+                "children": [
+                  {
+                    "type": "column",
+                    "col": 12,
+                    "children": [
+                      {
+                        "label": "视图嵌入",
+                        "type": "injector",
+                        "source": "INJECTOR",
+                        "parameters": {
+                          "icon": {
+                            "id": 0,
+                            "perfix": "ion",
+                            "css": "ion-ios-gear-outline"
+                          }
+                        },
+                        "advance": {
+                          "getfunction": "",
+                          "expression": "expression = {\n  on : {\n    init : function(event){\n      var json;\n      var target = event.target;\n      var CHANGENAVEEVENT = target.getScopeValue(\"CHANGENAVEEVENT\");\n      var MOVETOEVENT = target.getScopeValue(\"MOVETOEVENT\");\n      target.off(MOVETOEVENT);\n      target.on(MOVETOEVENT, function(path){\n        var find = json.groups.find(function(elem){\n          return elem.path == path;\n        });\n        json.layout = find.layout;\n        target.render(json);\n      });\n      target.off(CHANGENAVEEVENT);\n      target.on(CHANGENAVEEVENT, function(data){\n        var view = data.item;\n        var path = data.path;\n        var viewId = view.viewId;\n        //target.off(\"tree_resourceChange\");\n        if(viewId){\n          target.getViewById(viewId, function(view){\n            var content = view.content;\n            // n}"
+                        },
+                        "style": {},
+                        "children": []
+                      }
+                    ]
+                  }
+                ],
+                "url": "images/map/map1.png",
+                "parameters": {}
+              }
+            ]
+          }
+        ],
+        "url": "images/map/map1.png"
+      }
+    ],
+    "col": 12
+  },
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

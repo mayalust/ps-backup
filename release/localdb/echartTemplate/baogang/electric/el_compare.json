@@ -1,0 +1,196 @@
+{
+  "version": "V_2",
+  "groups": [
+    {
+      "id": "0",
+      "label": "导航页",
+      "path": "page0",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "type": "row",
+            "source": "ROW",
+            "advance": {
+              "expression": "expression = {\n  \"on\" : {\n    \"init\" : function(event){\n      var target = event.target;\n      //target.setDimension([6,6]);\n    }\n  }\n};"
+            },
+            "parameters": {
+              "alignment": "bootstrap"
+            },
+            "style": {},
+            "children": [
+              {
+                "type": "column",
+                "children": [
+                  {
+                    "label": "控制板1",
+                    "type": "block",
+                    "source": "BLOCK",
+                    "style": {
+                      "padding": "5px",
+                      "margin": "5px"
+                    },
+                    "advance": {
+                      "expression": {}
+                    },
+                    "children": [
+                      {
+                        "type": "column",
+                        "col": 12,
+                        "children": [
+                          {
+                            "label": "控件组",
+                            "type": "ctrlgroup",
+                            "source": "CTRLGROUP",
+                            "advance": {
+                              "expression": "expression = {\n  width : \"auto\",\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var dItem,kpi;\n      var resource = target.getValue(\"global/resource\");\n      var sensor = target.getValue(\"global/sensor\") || {};\n      //var time = target.getValue(\"global/time\");\n      var subaccessConfigValues;\n      var deviceId;\n      if(resource){\n        deviceId = resource.id;\n      }\n      target.off(\"tree_resourceChange\");\n      target.on(\"tree_resourceChange\", function tree_resourceChange_multi(node) {\n        deviceId = node.resource.id;\n      });\n      var endDate = target.dateHandler();\n      var startDate = endDate.clone();\n      startDate.addDay(-1);\n      // 获取设备的测点\n      //var alertInstance = target.getParameter(\"alertInstance\");\n      var dateRangeTime = [startDate, endDate];\n      var all = [];\n      var types = [{\n        id : 0,\n        label : \"实时\"\n      },{\n        id : 1,\n        label : \"时平均\"\n      },{\n        id : 2,\n        label : \"天平均\"\n      }];\n      var type = 0;\n      var success = function () {\n        var triggerEvent = function () {\n          var sel = accessConfigValues.filter(function(elem){\n            return elem.select;\n          });\n          target.trigger(\"timeChange\", {\n            dateRangeTime:dateRangeTime,\n            type : type\n          });\n        }\n        if(!resource){\n          target.navigateTo(\"index\", {\n            main : 2,\n            sub : 0\n          },\"self\");\n        };\n        var ci = [resource.id]; // 设备 526443915616079\n        var modelId = [resource.modelId] // 获取modelId\n        var accessConfigValues = resource.physicalConfig.accessConfigs;\n        accessConfigValues[0].select = true;\n        triggerEvent();\n        var render = function () {\n          //target.setValue(\"global/hasSingnal\", all);\n          var ctrlGroups = [\n            [,{\n              type: \"label\",\n              value: \"分析类型\",\n              style: {\n                width : \"40px\",\n                textAlign: \"center\"\n              }\n            }, {\n              type: \"select\",\n              class: \"col-md-2\",\n              value : type,\n              on: {\n                change: function (elem) {\n                  type = elem.value.id;\n                  triggerEvent();\n                  render();\n                }\n              },\n              options: types\n            },{\n              id:1,\n              icon:\"none\",\n              value : startDate,\n              type: \"dateTimePicker\",\n              dateType : \"date\",\n              style : {\n                width : \"200px\"\n              },\n              on: {\n                change: function (elem) {\n                  startDate = target.dateHandler(elem.value.getUTCDateString);\n                   
+                            },
+                            "style": {
+                              "margin": "5px",
+                              "font-size": "12px"
+                            },
+                            "help": "../pdf/ctrlgroup.pdf",
+                            "url": "images/map/map1.png",
+                            "parameters": {
+                              "cgroupstyle": "table"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "url": "images/map/map1.png"
+                  },
+                  {
+                    "label": "高级视图",
+                    "type": "advanceEchart",
+                    "source": "ADVANCEECHART",
+                    "advance": {
+                      "expression": "express = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var color = \"#ffe400\";\n      var LENGTH = 50;\n      var resource = target.getValue(\"global/resource\");\n      var kpiName;\n      var nodeDes;\n      var instance;\n      var endDate = target.dateHandler();\n      var startDate = endDate.clone();\n      var type;\n      startDate.addDay(-1);\n      var endTime = endDate.getUTCDateString();\n      var startTime = startDate.getUTCDateString();\n      // 渲染echart图\n      var renderEchart = function (ci, kpi, instance) {\n        // 扩展参数\n        target.showLoading();\n        target.hideNoData();\n        if(ci.length > 0 && kpi.length > 0 && instance){\n          var extension = {\n            isRealTimeData : false,\n            startTime:startTime,\n            endTime:endTime,\n            includeInstance : true\n          };\n          if(type == 1){\n              extension.queryInstances = \"00havg\";\n          } else if(type == 2){\n              extension.queryInstances = \"00davg\";\n          } else {\n             extension.queryInstances = \"00\";\n          }\n          var xAxis = [];\n          target.getKpiValueList(ci, kpi, 0, function (returnData) {\n            if(returnData.length > 0){\n              target.hideLoading();\n              var minDate = returnData.reduce(function(a, b){\n                var dt = target.dateHandler(b.arisingTime)\n                if(a){\n                  if(dt.before(a)){\n                    return dt;\n                  } else {\n                    return a;\n                  }\n                } else {\n                  return dt\n                }\n              }, null);\n              var maxDate = returnData.reduce(function(a, b){\n                var dt = target.dateHandler(b.arisingTime)\n                if(a){\n                  if(dt.after(a)){\n                    return dt;\n                  } else {\n                    return a;\n                  }\n                } else {\n                  return dt\n                }\n              }, null);\n              var endInx = 0;\n              var ix = 0\n              var series = kpiDes.map(function(kpi){\n                var rdata = returnData.filter(function(vdata){\n                  var kpiCode = vdata.kpiCode;\n                  var instance = vdata.instance;\n                  return kpi.dataItemId == kpiCode && kpi.instance == instance;\n                })\n                rdata.sort(function(a, b){\n                  var dt1 = new Date(a.arisingTime);\n                  var dt2 = new Date(b.arisingTime);\n                  return dt1.getTime() - dt2.getTime();\n                });\n                var rs = {\n                  name : nodeDes[ix].label + \"-\" + kpi.kpiName,\n                  type : \"line\",\n                  symbolSize :0,\n                  data : rdata.map(function(elem){\n                    var dt = new Date(elem.arisingTime);\n                    var dh = target.dateHandler(dt);\n                    var D2017 = target.dateHandler(\"2017/01/01\");\n                    var result = dh.minus(minDate);\n                    return [result,elem.value]\n                  })\n                }\n                ix++;\n                return rs;\n              });\n              ix = 0;\n              var option = {\n                title: {\n                  textStyle: {color: \"#fff\"}\n                },\n                grid :{\n                  containLabel:\"true\",\n                  left:\"23px\",\n                  right:\"50px\"\n                },\n                tooltip: {\n                  trigger: 'axis',\n                  formatter : function(params, b, c){\n                    var str = \"\";\n                    var loop = function(i, param){\n                         
+                    },
+                    "style": {
+                      "margin": "auto",
+                      "width": "100%",
+                      "height": "350px"
+                    },
+                    "parameters": {
+                      "theme": "macarons"
+                    },
+                    "url": "images/map/map1.png"
+                  }
+                ],
+                "col": 9
+              },
+              {
+                "type": "column",
+                "children": [
+                  {
+                    "label": "控制板1",
+                    "type": "block",
+                    "source": "BLOCK",
+                    "style": {
+                      "padding": "5px",
+                      "margin": "5px",
+                      "min-height": "400px"
+                    },
+                    "advance": {
+                      "expression": {}
+                    },
+                    "children": [
+                      {
+                        "type": "column",
+                        "col": 12,
+                        "children": [
+                          {
+                            "label": "控件组",
+                            "type": "ctrlgroup",
+                            "source": "CTRLGROUP",
+                            "advance": {
+                              "expression": "expression = {\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      var collections = [];\n      var render = function(){\n        var ctrlGroups = [\n          [{\n            type : \"label\",\n            value : \"分析指标列表\",\n            class : \"col-md-8\",\n            style : {\n              \"border-bottom\" : \"1px solid rgba(250,250,250,.3)\",\n              \"padding\" : \"8px 2px\"\n            }\n          },{\n            type : \"button\",\n            value : \"\",\n            icon : \"glyphicon glyphicon-plus\",\n            btnclass : \"btn btn-primary\",\n            class : \"col-md-4\",\n            btnStyle : {\n              float : \"right\"\n            },\n            on : {\n              click : function(elem){\n                target.createSystemPopupByLocalPath(\"page1\",{\n                  width:\"600px\",\n                  title:\"添加趋势对比指标\",\n                  on : {\n                    submit : function(selections){\n                      collections = selections;\n                      \n                      target.trigger(\"kpiCompare\", collections);\n                      render();\n                    }\n                  }\n                }, collections)\n              }\n            },\n            style : {\n              \"border-bottom\" : \"1px solid rgba(250,250,250,.3)\",\n              \"padding\" : \"8px 2px\"\n            }\n          }]\n        ];\n        for(var i in collections){\n          ctrlGroups.push([{\n            type : \"label\",\n            value : collections[i].area + \"-\" + collections[i].device + \"-\" + collections[i].kpi,\n            colSpan : 2,\n            style : {\n              \"border-bottom\" : \"1px solid rgba(250,250,250,.3)\",\n              \"padding\" : \"8px 2px\"\n            },\n            class : \"col-md-12\"\n          }])\n        }\n        target.render(ctrlGroups);\n      };\n      render();\n    }\n  }\n}"
+                            },
+                            "style": {
+                              "margin": "5px",
+                              "font-size": "12px"
+                            },
+                            "help": "../pdf/ctrlgroup.pdf",
+                            "parameters": {
+                              "cgroupstyle": "table"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "col": 3
+              }
+            ]
+          }
+        ],
+        "col": 12
+      },
+      "$$hashKey": "object:2959"
+    },
+    {
+      "label": "弹出框",
+      "path": "page1",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "require([\"../solution/customview/urgentKPIcomparing\"]);"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          },
+          {
+            "label": "高级列表",
+            "type": "dataTableAdvance",
+            "source": "DATATABLEADVANCE",
+            "parameters": {
+              "col": 1,
+              "pageSize": 10,
+              "listbottom": "pageOnly"
+            },
+            "advance": {
+              "expression": "require([\"../solution/customview/urgentKPIcomparing_list\"])"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            }
+          },
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      var ctrlGroups = [\n        [{\n          type : \"buttonGroup\",\n          class : \"col-md-12\",\n          style : {\n            \"text-align\" : \"right\"  \n          },\n          content : [{\n            type : \"button\",\n            value : \"保存\",\n            icon : \"glyphicon glyphicon-save\",\n            btnclass : \"btn btn-primary\",\n            on : {\n              click : function(elem){\n                  var selections = target.getValue(\"addpop/selections\");\n                  target.submit(selections);\n              }\n            }\n          },{\n            type : \"button\",\n            value : \"取消\",\n            icon : \"glyphicon glyphicon-remove\",\n            btnclass : \"btn btn-default\",\n            on : {\n              click : function(elem){\n                 target.cancel();\n              }\n            }\n          }]\n        }]\n      ];\n      event.target.render(ctrlGroups);\n    }\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          }
+        ],
+        "col": 12
+      },
+      "id": "1",
+      "$$hashKey": "object:2966"
+    }
+  ],
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

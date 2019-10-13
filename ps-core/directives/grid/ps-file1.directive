@@ -1,0 +1,48 @@
+<config injector="psEvent"></config>
+<template>
+    <div class="ps-file-zgn-wrap">
+        <div class="form-control bk-form-input">
+            <i class="file-upload">---请选择上传文件---</i>
+            <span class="proudsmart ps-add"></span>
+        </div>
+        <input type="file" style="display : none;"/>
+    </div>
+</template>
+<script type="text/javascript">
+export default function (psEvent) {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?"
+    },
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let rootDom = element[0];
+      let fileInput = rootDom.children[1];
+      let dom = rootDom.children[0];
+      dom.addEventListener('click', function (e) {
+        fileInput.click();
+      });
+      fileInput.addEventListener('change', function (e) {
+        let fileObject = this.files;
+        ngModel.$setViewValue(fileObject[0]);
+        ngModel.$render();
+      });
+      /*ngModel.$render = function () {
+        let v = typeof ngModel.$viewValue;
+        icon.style.display = v === "object"
+          ? "none" : "inline";
+        spaUpload.innerText = v === "object"
+          ? ngModel.$viewValue.name : "---请选择上传文件---";
+      }
+      invisDom.onchange = function (e) {
+        let fileObject = this.files;
+        ngModel.$setViewValue(fileObject[0]);
+        ngModel.$render();
+      }*/
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+</style>

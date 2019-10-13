@@ -1,0 +1,319 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "type": "row",
+        "source": "ROW",
+        "parameters": {
+          "alignment": "bootstrap"
+        },
+        "style": {},
+        "children": [
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "文字",
+                "type": "text",
+                "source": "TEXT",
+                "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                "style": {
+                  "margin": "5px",
+                  "padding": "0",
+                  "font-size": "12px",
+                  "font-weight": "bold"
+                },
+                "advance": {
+                  "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"新建文字\")\n        }\n    }\n}"
+                },
+                "data": {
+                  "modelType": 300,
+                  "resfilltype": "parameter",
+                  "modelDisable": true
+                },
+                "template": [
+                  {
+                    "type": "text",
+                    "style": {
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "10px",
+                      "font-weight": "bold",
+                      "color": "#333"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "style": {
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "16px",
+                      "font-weight": "bold",
+                      "color": "#666",
+                      "text-align": "center"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "style": {
+                      "width": "60px",
+                      "height": "60px",
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "12px",
+                      "line-height": "60px",
+                      "font-weight": "bold",
+                      "color": "#fff",
+                      "text-align": "center",
+                      "border-radius": "50%",
+                      "background-color": "#3c8dbc"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "style": {
+                      "width": "140px",
+                      "height": "60px",
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "12px",
+                      "line-height": "60px",
+                      "font-weight": "bold",
+                      "color": "#fff",
+                      "text-align": "center",
+                      "border-radius": "4px",
+                      "background-color": "#3c8dbc"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "style": {
+                      "width": "140px",
+                      "height": "60px",
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "12px",
+                      "line-height": "60px",
+                      "font-weight": "bold",
+                      "color": "#444",
+                      "text-align": "center",
+                      "border-radius": "4px",
+                      "background-color": "#eee"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "style": {
+                      "margin": "auto",
+                      "padding": "5px",
+                      "font-size": "18px",
+                      "font-weight": "bold",
+                      "color": "#444",
+                      "text-align": "center",
+                      "border-radius": "0px",
+                      "background-color": "#eee"
+                    }
+                  }
+                ],
+                "id": "jdkP6BEByjcErQQs2i2b7kQ3ftXk85Ds"
+              }
+            ],
+            "col": 3,
+            "id": "h2aad2sJrYsdKFNa3jCkfwYt3jFnCKPd"
+          },
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "伪TAB样式",
+                "type": "faketab",
+                "source": "FAKETAB",
+                "advance": {
+                  "getfunction": "kpiDataService.getValueList",
+                  "category": "ci",
+                  "condition": [
+                    "kpi",
+                    "{object:kpiQueryModel}"
+                  ],
+                  "expression": "expression = {\n  \"on\" : {\n    \"init\" : function(event){\n      var target = event.target;\n      var editMode = true;\n      var tabs = [{\n        id : 0,\n        label : \"综合趋势\",\n        default : \"baogang/analysis/general\",\n        icon : \"glyphicon glyphicon-home\",\n      },{\n        id : 1,\n        label : \"特征趋势\",\n        default : \"baogang/analysis/feature\",\n        icon : \"glyphicon glyphicon-home\",\n      },{\n        id : 2,\n        label : \"时域分析\",\n        default : \"baogang/analysis/time\",\n        icon : \"glyphicon glyphicon-home\",\n      },{\n        id : 3,\n        label : \"频域波形\",\n        default : \"baogang/analysis/frequence\",\n        icon : \"glyphicon glyphicon-home\",\n      },{\n        id : 4,\n        label : \"诊断履历\",\n        default : \"baogang/analysis/diagnose\",\n        icon : \"glyphicon glyphicon-home\",\n      }];\n      var subTabs = [];\n      var updateNaviList = function(){\n        var obj = {\n          tabs : tabs,\n          subTabs : subTabs,\n          editMode : editMode\n        };\n        target.saveEditorStatus(\"controlPanelAnalysisNavigation\", obj);\n      }\n      var select = function(item){\n        var viewId = item.viewId;\n        target.trigger(\"analysisviewchange\", item);\n      };\n      var saveView = function(item, callback){\n        var viewTitle = item.label;\n        var viewType = \"dashboard\";\n        var viewId = item.viewId;\n        if(viewId){\n          target.updateView({\n            viewId : viewId,\n            viewTitle : item.label,\n            viewType : \"dashboard\"\n          }, function(data){\n            callback(data);\n          })\n        } else {\n          var run = function(json){\n               
+                  "customCategory": ""
+                },
+                "style": {
+                  "color": "#fff",
+                  "background-color": "#3c8dbc",
+                  "margin": "5px"
+                },
+                "parameters": {},
+                "url": "images/map/map1.png",
+                "template": [
+                  {
+                    "label": "普通样式",
+                    "type": "faketab",
+                    "source": "FAKETAB",
+                    "advance": {
+                      "getfunction": "kpiDataService.getValueList",
+                      "category": "ci",
+                      "condition": [
+                        "kpi",
+                        "{object:kpiQueryModel}"
+                      ],
+                      "expression": "{\n  \"on\" : {\n    \"init\" : function(event){\n      var tabs = [];\n      for(var i=0; i<4; i++){\n        tabs.push({\n          id : i,\n        \tlabel : \"标签页\" + i\n        })\n      }\n      event.target.render(tabs);\n    },\n    \"click\" : function(event){\n       
+                    },
+                    "style": {
+                      "color": "#fff",
+                      "background-color": "#3c8dbc",
+                      "margin": "5px"
+                    },
+                    "tabInx": 0,
+                    "url": "images/map/map1.png"
+                  },
+                  {
+                    "label": "可删减TAB",
+                    "type": "faketab",
+                    "source": "FAKETAB",
+                    "advance": {
+                      "expression": "{\n  \"on\" : {\n    \"init\" : function(event){\n      var target = event.target;\n      var data = [];\n      for(var i=0; i<4; i++) {\n        data.push({\n          id: i,\n          label: \"标签页\" + i\n        })\n      };\n      var render = function(){\n        var tabs = [];\n        var createItem = function(inx, item){\n          var rs = {\n            id : item.id,\n            label : item.label,\n            on : {\n              click : function(event){\n                target.tabInx = inx;\n                render();\n              }\n            },\n            addOn : [{\n              icon : \"glyphicon glyphicon-remove\",\n              on : {\n                click  : function(event){\n                  data.splice(inx, 1);\n                  if(target.tabInx > data.length - 1){\n                      target.tabInx = data.length - 1;\n                  };\n                  render();\n                }\n              }\n            }]\n          };\n          return rs;\n        };\n        for(var i in data){\n          tabs.push(createItem(i, data[i]))\n        };\n        event.target.render(tabs);\n      };\n      render();\n    }\n  },\n  \"format\" : {\n    \"id\" : \"id\",\n    \"label\" : \"label\"\n  }\n}"
+                    },
+                    "style": {
+                      "color": "#fff",
+                      "background-color": "#3c8dbc",
+                      "margin": "5px"
+                    },
+                    "tabInx": 0,
+                    "url": "images/map/map1.png"
+                  },
+                  {
+                    "label": "所有项目",
+                    "type": "faketab",
+                    "source": "FAKETAB",
+                    "advance": {
+                      "getfunction": "kpiDataService.getValueList",
+                      "category": "ci",
+                      "condition": [
+                        "kpi",
+                        "{object:kpiQueryModel}"
+                      ],
+                      "expression": "{\n  \"on\" : {\n    \"init\" : function(event){\n      event.target.getDomainsByFilter({\n        modelIds : [302]\n      }, function(projects){\n        event.target.render(projects);\n      })\n    },\n    \"click\" : function(event){\n       
+                    },
+                    "style": {
+                      "color": "#fff",
+                      "background-color": "#3c8dbc",
+                      "margin": "5px"
+                    },
+                    "tabInx": 0,
+                    "url": "images/map/map1.png"
+                  }
+                ],
+                "id": "m3jSWH4YXaGKY7eijbAQapjEFaTDENCG",
+                "tabInx": 0
+              },
+              {
+                "label": "控制板1",
+                "type": "block",
+                "source": "BLOCK",
+                "style": {
+                  "padding": "5px",
+                  "min-height": "calc(100vh - 100px)"
+                },
+                "advance": {
+                  "expression": {}
+                },
+                "children": [
+                  {
+                    "type": "column",
+                    "col": 12,
+                    "children": [
+                      {
+                        "label": "视图嵌入",
+                        "type": "injector",
+                        "source": "INJECTOR",
+                        "parameters": {
+                          "icon": {
+                            "id": 0,
+                            "perfix": "ion",
+                            "css": "ion-ios-gear-outline"
+                          }
+                        },
+                        "advance": {
+                          "getfunction": "",
+                          "expression": "expression = {\n  on : {\n    init : function(event){\n        var json;\n      var target = event.target;\n      target.on(\"analysismoveTo\", function(path){\n          var find = json.groups.find(function(elem){\n              return elem.path == path;\n          });\n          json.layout = find.layout;\n          target.render(json);\n      });\n      target.on(\"analysisviewchange\", function(view){\n        var viewId = view.viewId;\n        if(viewId){\n            target.setValue(\"global/viewId\", viewId);\n            target.getViewById(viewId, function(view){\n              var content = view.content;\n              if(content){\n                json = JSON.parse(content);\n                target.render(json);\n              } else {\n                  target.Info('../../localdb/echartTemplate/baogang/nographe.json', function(nographe){\n                      target.render(nographe);\n                  });\n              }\n            });\n        } else {\n            var viewPath = view.default;\n             
+                        },
+                        "style": {},
+                        "children": [],
+                        "id": "2RAnTnkCJJcMHZpdETad3QPsNpQfxdxM"
+                      }
+                    ],
+                    "id": "4aT7mtBRdabnMEjWWbjSwHmpyr5jZH5t"
+                  }
+                ],
+                "url": "images/map/map1.png",
+                "template": [
+                  {
+                    "type": "css",
+                    "style": {
+                      "padding": "10px",
+                      "margin": "5px",
+                      "border": "0",
+                      "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+                      "background-color": "rgba(250,250,250,0)"
+                    }
+                  },
+                  {
+                    "type": "css",
+                    "style": {
+                      "padding": "5px",
+                      "margin": "5px",
+                      "border": "1px solid #ccc",
+                      "background-color": "#fff",
+                      "border-top": "0"
+                    }
+                  },
+                  {
+                    "type": "css",
+                    "style": {
+                      "margin": "5px",
+                      "padding": "5px",
+                      "background-color": "#efdcaf",
+                      "border": "1px solid #c2ad7a"
+                    }
+                  },
+                  {
+                    "type": "css",
+                    "style": {
+                      "margin": "5px",
+                      "padding": "5px",
+                      "background-color": "#f0c0a4",
+                      "border": "1px solid #e5671b"
+                    }
+                  },
+                  {
+                    "type": "css",
+                    "style": {
+                      "margin": "5px",
+                      "padding": "5px",
+                      "background-color": "#ffb3b3",
+                      "border": "1px solid #db2222"
+                    }
+                  }
+                ],
+                "id": "dZ4Qtwbbi8cmZ7xE7SHeBjD3xKaZYRKz"
+              }
+            ],
+            "col": 9,
+            "id": "mFnCN3jHyephTArBKTsfJGPYB674xTWG"
+          }
+        ],
+        "id": "Ef8MP6fpei8MWbaAJjDWr2DGpAZPP6Jp"
+      }
+    ],
+    "col": 12,
+    "id": "AAAm6bATf2RXXcyTRNjJim6xfwWc7N3Y"
+  },
+  "setting": {
+    "showNavi": false,
+    "style": {
+      "padding": "15px"
+    }
+  }
+}

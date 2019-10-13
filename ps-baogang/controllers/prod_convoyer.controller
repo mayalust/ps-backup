@@ -1,0 +1,72 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-20 top">
+          <div class="topo with-border">
+            <ps-topo-common></ps-topo-common>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="block margin-5 padding-5">
+          <h5>报警通知</h5>
+          <div class="low with-border">
+            <ps-alert-info></ps-alert-info>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="block margin-5 padding-5">
+          <h5>离线诊断</h5>
+          <div class="low with-border">
+            <ps-online-diagnose></ps-online-diagnose>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {}
+</script>
+<style lang="less" scoped>
+.top {
+  min-height: 600px;
+  position: relative;
+}
+.item {
+  height: 600px;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.art {
+  height: 483px;
+}
+.wrap {
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

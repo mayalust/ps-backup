@@ -1,0 +1,173 @@
+<config injector="$rootScope,growl"></config>
+<template>
+    <div class="wrap">
+        <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-2">
+                    <span class="title pull-right">
+                       <span class="text-danger">*</span>
+                       <span class="title pull-right">材料类型:</span>
+                    </span>
+
+                </div>
+                <div class="col-md-4">
+                    <input ng-model="clone.materialType" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.materialType" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+                <div class="col-md-2">
+                    <span class="title pull-right">
+                         <span class="text-danger">*</span>
+                         <span class="title pull-right">材料名称:</span>
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <input ng-model="clone.materialName" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.materialName" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+            </div>
+
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                         <span class="text-danger">*</span>
+                         <span class="title pull-right">申报日期:</span>
+                     </span>
+
+                </div>
+                <div class="col-md-4">
+                    <ps-date2 ng-model="clone.declarationDate" ng-if="mode=='edit'"></ps-date2>
+                    <input ng-model="clone.declarationDate" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                         <span class="text-danger">*</span>
+                         <span class="title pull-right">需求到货日期:</span>
+                     </span>
+
+                </div>
+                <div class="col-md-4">
+                    <ps-date2 ng-model="clone.requiredDeliveryDate" ng-if="mode=='edit'"></ps-date2>
+                    <input ng-model="clone.requiredDeliveryDate" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                          <span class="title pull-right">到达日期:</span>
+                     </span>
+
+                </div>
+                <div class="col-md-4">
+                    <ps-date2 ng-model="clone.dateOfArrival" ng-if="mode=='edit'"></ps-date2>
+                    <input ng-model="clone.dateOfArrival" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                          <span class="title pull-right">供应商:</span>
+                     </span>
+                </div>
+                <div class="col-md-4">
+                    <input ng-model="clone.supplier" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.supplier" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                        <span class="title pull-right">联系人:</span>
+                     </span>
+                </div>
+                <div class="col-md-4">
+                    <input ng-model="clone.contact" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.contact" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                         <span class="title pull-right">联系电话:</span>
+                     </span>
+
+                </div>
+                <div class="col-md-4">
+                    <input ng-model="clone.contactTel" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.contactTel" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-2">
+                     <span class="title pull-right">
+                         <span class="title pull-right">备      注:</span>
+                     </span>
+
+                </div>
+                <div class="col-md-10">
+                    <input ng-model="clone.descr" class="form-control" ng-if="mode=='edit'"/>
+                    <input ng-model="clone.descr" class="form-control" ng-if="mode=='view'" readonly="readonly"/>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-5">
+            </div>
+            <div class="col-md-7">
+                <button class="btn btn-primary" ng-click="submitFn(clone)" ng-if="mode !== 'view'">提交</button>
+                <button class="btn btn-default" ng-click="close()" ng-if="mode !== 'view'">取消</button>
+            </div>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+    import { extend } from "ps-ultility";
+    import { dateparser } from "ps-ultility";
+    export default function(rootScope,growl){
+        return {
+            link(scope, element, attr) {
+                scope.mode = scope.params.mode;
+                var newData = scope.params.data;
+                if(scope.params.data.declarationDate){
+                    scope.params.data.declarationDate = dateparser(scope.params.data.declarationDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                };
+                if(scope.params.data.requiredDeliveryDate){
+                    scope.params.data.requiredDeliveryDate = dateparser(scope.params.data.requiredDeliveryDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                };
+                if(scope.params.data.requiredDeliveryDate){
+                    scope.params.data.dateOfArrival = dateparser(scope.params.data.dateOfArrival).getDateString("yyyy-MM-dd,hh:mm:ss");
+                };
+                scope.clone = extend({}, scope.params.data);
+                scope.submitFn = function(d){
+
+                    if(!d.materialType){
+                        growl.warning("材料类型不可为空");
+                        return;
+                    }
+                    if(!d.materialName){
+                        growl.warning("材料名称不可为空");
+                        return;
+                    }
+                    if(!d.declarationDate){
+                        growl.warning("申报日期不可为空");
+                        return;
+                    }
+                    if(!d.requiredDeliveryDate){
+                        growl.warning("需求到货日期不可为空");
+                        return;
+                    }
+                    scope.submit(d);
+                }
+            }
+        }
+
+    }
+</script>
+<style type="less" scoped="true">
+    .wrap{
+        width : 80%;
+        margin : auto;
+    .title{
+        line-height : 26px;
+        padding-right : 20px;
+    }
+    .value {
+        line-height : 26px;
+    }
+    }
+</style>

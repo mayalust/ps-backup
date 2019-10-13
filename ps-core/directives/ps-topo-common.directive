@@ -1,0 +1,282 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,psTopo,commonMethodService"
+    deps="psTopoDir"
+></config>
+<template>
+  <div>
+    <ps-topo-dir data-init="initFn(event)" data-complete="completeFn()">
+    </ps-topo-dir>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(rootScope, q, ajax, $state, SwSocket, psTopo, cms2) {
+  return {
+    scope: {
+      init: "&",
+      complete: "&"
+    },
+    link(scope, element, attr) {
+      let kpisMap = {},
+        deviceDetail;
+      function parse(str) {
+        let a;
+        try {
+          a = JSON.parse(str);
+        } catch (e) {
+          return;
+        }
+        return a;
+      }
+
+      function isNotUndefined(d) {
+        return typeof d !== "undefined";
+      }
+
+      function sensorMap(a, b) {
+        a[b.name] = b;
+        return a;
+      }
+
+      function childrenMap(a, b) {
+        a[b.id] = b;
+        return a;
+      }
+
+      function getDataItemId(dataItem) {
+        return dataItem.dataItemId;
+      }
+
+      function bind(target, fn) {
+        return function() {
+          return fn.apply(target, arguments);
+        };
+      }
+
+      function lessThan(num) {
+        return function(d, i) {
+          return i < num;
+        };
+      }
+
+      function getNumber(str) {
+        let match = /(?:.*\:)*([^\:]*)/.exec(str);
+        if (typeof str == "string" || typeof str == "number") {
+          return match ? match[1] - 0 : str;
+        }
+      }
+
+      function getString(str) {
+        let match = /(?:.*\:)*([^\:]*)/.exec(str);
+        if (typeof str == "string" || typeof str == "number") {
+          return match ? match[1] : str;
+        }
+      }
+
+      function prop(cell, attr, val) {
+        let attrs = attr.split("/").filter(isNotUndefined),
+          item;
+        if (typeof val === "undefined") {
+          rs = cell;
+          while ((item = attrs.shift()) && rs) {
+            rs = rs[item];
+          }
+          return rs;
+        }
+        let last = attrs.pop(),
+          rs = cell;
+        while ((item = attrs.shift()) && rs) {
+          rs = rs[item];
+        }
+        if (typeof rs === "object") {
+          rs[last] = val;
+        }
+      }
+
+      function attr(cell, attr, val) {
+        let attrs = attr.split("/").filter(isNotUndefined),
+          item;
+        if (typeof val === "undefined") {
+          rs = cell.attrs;
+          while ((item = attrs.shift()) && rs) {
+            rs = rs[item];
+          }
+          return rs;
+        }
+        let last = attrs.pop(),
+          rs = cell.attrs;
+        while ((item = attrs.shift()) && rs) {
+          rs = rs[item];
+        }
+        if (typeof rs === "object") {
+          rs[last] = val;
+        }
+      }
+
+      class DeviceDetail {
+        constructor() {
+          scope.initFn = event => {
+            scope.init();
+            this.target = event.target;
+            this.hookToView((cells, next) => {
+              cells.forEach(bind(this, this.handleEachCell));
+              next(cells);
+            });
+          };
+          scope.completeFn = function() {
+            scope.complete();
+          };
+        }
+        handleEachCell(cell) {
+          let name = attr(cell, "text/text"),
+            nodeId = getNumber(prop(cell, "nodeId")),
+            kpiId = getNumber(prop(cell, "kpiId")),
+            modelId = this.resource.modelId,
+            ext = prop(cell, "extend");
+          attr(cell, "rect/visibility", "hidden");
+          attr(cell, "circle/visibility", "hidden");
+          attr(cell, "text/visibility", "hidden");
+          attr(cell, ".connection/stroke", "#1f8fd8");
+          attr(cell, ".connection/stroke-width", 2);
+          attr(cell, ".marker-target/visibility", "hidden");
+          if (ext) {
+            if (ext == "kpis" && modelId > 1000) {
+              prop(cell, "currentdevice", 1);
+            }
+            return;
+          }
+          if (typeof this.sensors[name] !== "undefined") {
+            this.sensors[name].kpis.sort((a, b) => {
+              var k1 = this.kpisMap[modelId][a.dataItemId] || {},
+                k2 = this.kpisMap[modelId][b.dataItemId] || {},
+                s1 = k1.serial || 0,
+                s2 = k2.serial || 0;
+              return s1 - s2;
+            });
+            prop(cell, "extend", "kpis");
+            prop(cell, "sensor", name);
+            prop(cell, "currentdevice", 1);
+            prop(
+              cell,
+              "dataItem",
+              this.sensors[name].kpis.filter(lessThan(4)).map(getDataItemId)
+            );
+            return;
+          }
+          if (nodeId) {
+            if (typeof this.children[nodeId] !== "undefined") {
+              prop(cell, "extend", "alert");
+            } else {
+              prop(cell, "sensor", "00");
+              prop(cell, "extend", "dataItem");
+              prop(cell, "nodeId", "number:" + this.resource.id);
+              prop(cell, "currentdevice", 1);
+              prop(cell, "dataItem", [kpiId]);
+            }
+            return;
+          }
+        }
+        hookToView(callback) {
+          this.getView(json => {
+            this.target.hooks.tap("viewloaded", callback);
+            this.target.render(json);
+            this.target.addCam();
+            this.target.$on(
+              "$loadCiKpiComplete",
+              bind(this, this.loadCiKpiComplete)
+            );
+          });
+        }
+        loadCiKpiComplete(cells) {
+          let offsetParent = element[0].offsetParent;
+          if (offsetParent == null) {
+            return;
+          }
+          let position = { x: offsetParent.clientWidth / 2, y: 0 },
+            is = this.target.createCurrentStatus(
+              this.resource.label,
+              position,
+              this.resource.getAlertState()
+            );
+          this.clear = this.resource.$on("alertStateChange", function(value) {
+            is.setAlarmStatus(value);
+          });
+        }
+        destroy() {
+          this.clear && this.clear.call(this);
+        }
+        getView(callback) {
+          this.getBrothers(brothers => {
+            let fd =
+                brothers.find(function(v) {
+                  return v.$attr("values/view/viewId");
+                }) || {},
+              viewId =
+                this.resource.$attr("view/viewId") ||
+                this.resource.$attr("values/view/viewId") ||
+                fd.$attr("values/view/viewId");
+            if (!viewId) {
+              return callback();
+            }
+            this.target.getViewById(viewId, view => {
+              if (view == null) {
+                return callback();
+              }
+              return callback(parse(view.content));
+            });
+          });
+        }
+        getBrothers(callback) {
+          this.getChildren(children => {
+            this.resource.getBrothers().then(brothers => {
+              this.brothers = brothers;
+              callback(brothers);
+            });
+          });
+        }
+        getChildren(callback) {
+          this.getMeasureLocate(sensor => {
+            this.resource
+              .getChildren(function(n, i, l) {
+                return true;
+              })
+              .then(children => {
+                this.children = children;
+                callback(children);
+              });
+          });
+        }
+        getMeasureLocate(callback) {
+          this.getDataItemsByModelIdFromCache(kpisMap => {
+            this.resource.getMeasureLocate().then(sensors => {
+              this.sensors = sensors.reduce(sensorMap, {});
+              callback(sensors);
+            });
+          });
+        }
+        getDataItemsByModelIdFromCache(callback) {
+          this.getDomainAreaLineTree_alertStatus(resource => {
+            this.target.getDataItemsByModelIdFromCache(
+              resource.modelId,
+              kpisMap => {
+                this.kpisMap = kpisMap;
+                callback(kpisMap);
+              }
+            );
+          });
+        }
+        getDomainAreaLineTree_alertStatus(callback) {
+          this.target.getDomainAreaLineTree_alertStatus(resource => {
+            this.resource = resource;
+            callback(resource);
+          });
+        }
+      }
+      deviceDetail = new DeviceDetail();
+      scope.$on("$destroy", function() {
+        deviceDetail.destroy();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

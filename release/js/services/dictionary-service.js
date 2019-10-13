@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("dictionaryService",["serviceProxy",function(c){var n="dictionaryService",e={getAllDicts:function(e){c.get(n,"getAllDicts",null,e)},getDictValues:function(e,t){c.get(n,"getDictValues",e,t)},getDictValuesByDictCodeAndValueCode:function(e,t,i){c.get(n,"getDictValuesByDictCodeAndValueCode",e,t,i)}};return e}])});
+//# sourceMappingURL=../../map/js/services/dictionary-service.js.map

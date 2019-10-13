@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-baogang/css/tab.css"],"names":[],"mappings":"AAAA,cACI,MAAO,IACP,OAAQ,IAAI,KACZ,OAAQ,IAAI,MAAM,KAClB,OAAQ","file":"app-baogang/css/tab.css","sourceRoot":"/source/","sourcesContent":[".tab .content{\n    width: 99%;\n    margin: 5px auto;\n    border: 1px solid #000000;\n    height: 300px;\n}"]}

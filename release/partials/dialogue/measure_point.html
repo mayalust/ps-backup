@@ -1,0 +1,98 @@
+<!--添加解析协议模态框-->
+<div class="modal bootstrap-dialog type-primary fade size-normal in" style="display : block;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-f2">
+                <a role="button" ng-click="closeDialog();" class="close">×</a>
+                <h4 class="modal-title info-box-number">测点参数</h4>
+            </div>
+            <div class="modal-body clearfix row ">
+
+                <!--专业（domain）、测点（measurePoint）、数据项（indicator）-->
+                <form  class="form-horizontal" >
+                    <div class="form-group col-sm-4">
+                        <label class="col-sm-4 dialog-control-label no-padding-right dialog-control-h">
+                            测点类型
+                        </label>
+                        <div class="col-sm-8">
+                            <select ng-change="pointTypeDataFunc(pointType)" ng-model="pointType"
+                                    ng-options="pointType.label for pointType in pointTypes"
+                                    class="form-control input-sm">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group col-sm-4">
+                        <label class="col-sm-4 dialog-control-label no-padding-right dialog-control-h">
+                            测点
+                        </label>
+                        <div class="col-sm-8">
+                            <select ng-change="measurePointDataFunc(measurePoint)" ng-model="measurePoint"
+                                    ng-options="measurePointData.label for measurePointData in measurePointDatas"
+                                    class="form-control input-sm">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group col-sm-4">
+                        <label class="col-sm-4 dialog-control-label no-padding-right dialog-control-h">
+                            参数
+                        </label>
+                        <div class="col-sm-8">
+                            <select ng-change="domainFunc(specialty)" ng-model="specialty"
+                                    ng-options="specialtyProp.label for specialtyProp in specialtyProps"
+                                    class="form-control input-sm">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <button class="btn btn-primary btn-sm" ng-click="addConfiguration()">加入配置</button>
+                </form>
+
+
+                <div class="box-body col-sm-12  table-responsive margin-bottom-20 bg-write table-overflow">
+                    <table class="table table-hover dataTable">
+                        <thead>
+                        <tr role="row">
+                            <th>测点类型</th>
+                            <th>测点别名</th>
+                            <th>测点</th>
+                            <th>参数</th>
+                            <th>参数值</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody ng-repeat="kpi in protocolInfoData">
+                        <tr>
+                            <td>{{kpi.pointType}}</td>
+                            <td><input type="text" ng-model="kpi.pointTypeAlias" style="width:80px;"></td>
+                            <td>{{kpi.pointName}}</td>
+                            <td>{{kpi.paramName}}</td>
+                            <td><input type="text" ng-model="kpi.paramValue" style="width:40px;"></td>
+                            <td class="optioncol2">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-default" ng-click="deleteMeasurePointLocateChange(kpi,$index);">
+                                        <i class="fa fa-trash  hidden-lg hidden-md hidden-sm"></i>
+                                        <span class="hidden-xs"> 删除</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" ng-click="saveMeasurePoint()" >
+                    确定
+                </button>
+                <button class="btn btn-default" ng-click="closeDialog();">取消</button>
+            </div>
+        </div>
+    </div>
+</div>

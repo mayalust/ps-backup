@@ -1,0 +1,104 @@
+<config injector="$filter,$timeout,$q"
+></config>
+<template>
+  <div>
+    <input type="text" readonly="readonly" class="form-control" ng-class="renderClass()" ng-disabled="config.disabled"/>
+  </div>,
+</template>
+<script type="text/javascript">
+  import { dateparser, extend, random } from "ps-ultility";
+  export default function($filter, timeout,q){
+    return {
+      scope : {
+        ngModel: '=?',
+        config: '=?'
+      },
+      require : '?ngModel',
+      link(scope, element, attr, ngModel) {
+        let dom = element.find('input')[0],
+          change = attr['change'];
+        scope.config = scope.config || {};
+        scope.renderClass = function(){
+          let cls = scope.config.class || "";
+          if(typeof cls == "object" && typeof cls.join === "function"){
+            return cls.join(" ")
+          } else if(typeof cls === "string"){
+            return cls;
+          } else {
+            return "";
+          }
+        };
+        function exec( command ){
+          let regex = /([a-zA-Z\.\_\$\[\]"'][a-zA-Z\.\_\$\d\[\]"']*)/g;
+          command = command.replace(regex, "scope.$parent.$1");
+          eval( command );
+        }
+        ngModel.$render = function(){
+          if( ngModel.$viewValue
+            && typeof ngModel.$viewValue.getDateString === "function" ){
+            dom.value = ngModel.$viewValue.getDateString("yyyy-MM-dd hh:mm:ss")
+          };
+        };
+        [].push.apply(ngModel.$parsers, [(n,o) => {
+          if(!n){ return; }
+          return dateparser(n).date;
+        }]);
+        [].push.apply(ngModel.$formatters, [(n,o) => {
+          if(!n){ return; }
+          return dateparser(n);
+        }]);
+        initLaydates().then( laydate => {
+          laydate.path = '../../toolkit/laydate/';
+          let defaultConfig = {
+            elem: dom,
+            placeholder: '---请选择---',
+            type: 'datetime',
+            pos: 'left',
+            err: '*开始日期超出了结束日期，请重新选择',
+            trigger: 'click',
+            done: value => {
+              scope.$apply( d => {
+                let dt = new Date(value);
+                ngModel.$setViewValue(dateparser(dt));
+                if(change){
+                  exec( change );
+                }
+              });
+            }
+          };
+          dom.setAttribute("placeholder", '---请选择---');
+          dom.id = random( 12 );
+          laydate.render(extend({}, defaultConfig, scope.config ))
+        })
+        function initLaydates(){
+          window.__laydate = typeof window.__laydate === "undefined" ?(function(){
+            let defer = q.defer();
+            window["require"](["laydate"], laydate => {
+              defer.resolve( laydate );
+            }, e => {
+              defer.reject( e );
+            });
+            return defer.promise
+          })() :  window.__laydate;
+          return window.__laydate.then( laydate => {
+            return success( laydate );
+          });
+        }
+        function success( d ){
+          let defer = q.defer();
+          defer.resolve( d );
+          return defer.promise
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    margin : 5px;
+    padding : 10px;
+    color : #333;
+    background-color : #eee;
+    border : 1px solid #ddd;
+  }
+</style>

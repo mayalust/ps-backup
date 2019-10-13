@@ -1,0 +1,1249 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl,commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="layout"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  ajax,
+  location,
+  psDialog,
+  $routeParams,
+  growl,
+  commonMethodService
+) {
+  var resource,
+    itemList = [],
+    target = commonMethodService();
+  var clist = [],
+    mlist = [],
+    stepsList = [],
+    rowValue,
+    devList = [],
+    maintainStandardName = "";
+
+  return {
+    link(scope, element, attr, ngModel) {
+      target.on("tree_resourceChange", function(e) {
+        resource = e.resource;
+         
+        scope.layout = {
+          init: function(next) {
+            ajax
+              .post(
+                "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,domains,modelId",
+                [{}]
+              )
+              .then(a => {
+                devList = a;
+              });
+          },
+          modals: {
+            //添加、编辑弹窗页面
+            wholeModel: {
+              label: "人工检查结果维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "设备名称",
+                      key: "selectDeviceName",
+                      value: resource.label
+                    },
+                    {
+                      type: "label",
+                      label: "设备编号",
+                      key: "selectDeviceCode",
+                      value: resource.externalDevId
+                    },
+                    {
+                      type: "input",
+                      label: "规则模型名称",
+                      key: "ruleName",
+                      composory: true
+                    },
+                    {
+                      type: "checkbox",
+                      key: "state",
+                      label: "是否启用",
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "上机服役时间(天)",
+                      key: "createBoardDays",
+                      config: {
+                        type: "number"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "过钢量(万吨)",
+                      key: "createSteelNumber",
+                      config: {
+                        type: "number"
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "状态规则",
+                  type: "table-form",
+                  key: "itemList",
+                  config: {
+                    attributes: {
+                      stateMantainStandardId: ["维护项目", "text"],
+                      stepsIndex: ["项次", "text"],
+                      resultIndex: ["判断规则", "text"],
+                      needState: ["是否必须", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "stateMantainStandardId",
+                          bind: function(row) {
+                            if (
+                              row.stateMaintinStandard &&
+                              row.stateMaintinStandard.standardName
+                            ) {
+                              return row.stateMaintinStandard.standardName;
+                            } else {
+                              return "";
+                            }
+                          }
+                        },
+                        {
+                          name: "stepsIndex",
+                          bind: function(row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var obj = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var label = "";
+                            if (obj.content) {
+                              label = obj.content;
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "resultIndex",
+                          bind: function(row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var objStep = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var ruleList = objStep.ruleList;
+                            var objRule = ruleList.find(a => {
+                              return a.index == row.resultIndex;
+                            });
+                            var label = "";
+                            if (
+                              objRule &&
+                              objStep.dataType &&
+                              objStep.dataType != null
+                            ) {
+                              if (objStep.dataType == "定量") {
+                                var unit = objRule.unit ? objRule.unit : "";
+                                var upperLimit = objRule.upperLimit
+                                  ? objRule.upperLimit
+                                  : "";
+                                var lowerLimit = objRule.lowerLimit
+                                  ? objRule.lowerLimit
+                                  : "";
+                                if (
+                                  (upperLimit != null &&
+                                    upperLimit != "" &&
+                                    lowerLimit == null) ||
+                                  lowerLimit == ""
+                                ) {
+                                  label =
+                                    " X < " + upperLimit + "(" + unit + ")";
+                                } else if (
+                                  (upperLimit == null &&
+                                    lowerLimit != null &&
+                                    lowerLimit != "") ||
+                                  upperLimit == ""
+                                ) {
+                                  label =
+                                    " X >= " + lowerLimit + "(" + unit + ")";
+                                } else if (
+                                  upperLimit != null &&
+                                  lowerLimit != null &&
+                                  upperLimit != "" &&
+                                  lowerLimit != ""
+                                ) {
+                                  label =
+                                    lowerLimit +
+                                    " <= X < " +
+                                    upperLimit +
+                                    "(" +
+                                    unit +
+                                    ")";
+                                }
+                              } else if (objStep.dataType == "定性") {
+                                label = objRule.result;
+                              }
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "needState",
+                          bind: function(row) {
+                            if (row.needState == 0) {
+                              return "非必须";
+                            } else if (row.needState == 1) {
+                              return "必须";
+                            }
+                          }
+                        }
+                      ],
+                      buttons: {
+                        outGrid: [
+                          {
+                            label: "添加",
+                            class: "primary",
+                            symbol: "inline"
+                          }
+                        ],
+                        inGrid: [
+                          {
+                            label: "删除",
+                            class: "primary",
+                            on: {
+                              click: function(e) {
+                                e.removeInline();
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      config: {
+                        composory: true,
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: false,
+                        inlineAdd: {
+                          stateMantainStandardId: {
+                            type: "select",
+                            url:
+                              "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                            parameter: [
+                              {
+                                deviceId: resource.id,
+                                ticketCategory: "310",
+                                taskStatus: 0
+                              },
+                              {
+                                start: 0,
+                                length: 1000,
+                                statCount: true
+                              }
+                            ],
+                            after: function(d) {
+                              return d.data;
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardName"
+                            }
+                          },
+                          stepsIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stateMantainStandardId",
+                              handler: function(newValue, next) {
+                                stepsList = newValue.stepsList;
+                                next(stepsList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "content"
+                            }
+                          },
+                          resultIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stepsIndex",
+                              handler: function(newValue, next) {
+                                var ruleList = [];
+                                var dataType = newValue.dataType
+                                  ? newValue.dataType
+                                  : null;
+                                if (dataType && dataType != null) {
+                                  ruleList = newValue.ruleList;
+                                  if (dataType == "定性") {
+                                    for (var i = 0; i < ruleList.length; i++) {
+                                      ruleList[i].label = ruleList[i].result;
+                                    }
+                                  } else if (dataType == "定量") {
+                                    for (var i in ruleList) {
+                                      var unit = ruleList[i].unit
+                                        ? ruleList[i].unit
+                                        : "";
+                                      var upperLimit = ruleList[i].upperLimit
+                                        ? ruleList[i].upperLimit
+                                        : "";
+                                      var lowerLimit = ruleList[i].lowerLimit
+                                        ? ruleList[i].lowerLimit
+                                        : "";
+                                      if (
+                                        (upperLimit != null &&
+                                          upperLimit != "" &&
+                                          lowerLimit == null) ||
+                                        lowerLimit == ""
+                                      ) {
+                                        ruleList[i].label =
+                                          " X < " +
+                                          upperLimit +
+                                          "(" +
+                                          unit +
+                                          ")";
+                                      } else if (
+                                        (upperLimit == null &&
+                                          lowerLimit != null &&
+                                          lowerLimit != "") ||
+                                        upperLimit == ""
+                                      ) {
+                                        ruleList[i].label =
+                                          " X >= " +
+                                          lowerLimit +
+                                          "(" +
+                                          unit +
+                                          ")";
+                                      } else if (
+                                        upperLimit != null &&
+                                        lowerLimit != null &&
+                                        upperLimit != "" &&
+                                        lowerLimit != ""
+                                      ) {
+                                        ruleList[i].label =
+                                          lowerLimit +
+                                          " <= X < " +
+                                          upperLimit +
+                                          "(" +
+                                          unit +
+                                          ")";
+                                      }
+                                    }
+                                  }
+                                }
+                                next(ruleList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "label"
+                            }
+                          },
+                          needState: {
+                            type: "select",
+                            options: [
+                              { id: 1, label: "必须" },
+                              { id: 0, label: "非必须" }
+                            ]
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            var item = {};
+                            item.stateMantainStandardId =
+                              b.stateMantainStandardId &&
+                              b.stateMantainStandardId.id
+                                ? b.stateMantainStandardId.id
+                                : 0;
+                            item.stepsIndex =
+                              b.stepsIndex && b.stepsIndex.index
+                                ? b.stepsIndex.index
+                                : 0;
+                            item.resultIndex =
+                              b.resultIndex && b.resultIndex.index
+                                ? b.resultIndex.index
+                                : 0;
+                            item.needState =
+                              b.needState && b.needState.id
+                                ? b.needState.id
+                                : 0;
+                            item.stateMaintinStandard = b.stateMantainStandardId
+                              ? b.stateMantainStandardId
+                              : null;
+                            refreshGrid(false);
+                            allData.push(item);
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "select",
+                      label: "作用设备名称",
+                      composory: true,
+                      key: "deviceId",
+                      options: {
+                        url:
+                          "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,domains,modelId",
+                        parameter: [{}],
+                        after: function(d) {
+                          return d;
+                        }
+                      },
+                      watch: {
+                        key: "deviceCode",
+                        handler: function(e) {
+                          e.update({
+                            value: e.$value
+                          });
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "作用设备编码",
+                      composory: true,
+                      key: "deviceCode",
+                      options: {
+                        url:
+                          "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,domains,modelId",
+                        parameter: [{}],
+                        after: function(d) {
+                          return d;
+                        }
+                      },
+                      watch: {
+                        key: "deviceId",
+                        handler: function(e) {
+                          e.update({
+                            value: e.$value
+                          });
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "externalDevId"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "异常名称",
+                      composory: true,
+                      key: "abnormalName"
+                    },
+                    {
+                      type: "select",
+                      label: "维护标准名称",
+                      key: "stateStandardId",
+                      watch: {
+                        key: "deviceId",
+                        handler: function(d) {
+                          if (
+                            d.$value &&
+                            (typeof d.$value == "string" ||
+                              typeof d.$value == "number")
+                          ) {
+                            ajax
+                              .post(
+                                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                [
+                                  {
+                                    deviceId: Number(d.$value),
+                                    ticketCategory: "310",
+                                    taskStatus: 0
+                                  },
+                                  {
+                                    start: 0,
+                                    length: 1000,
+                                    statCount: true
+                                  }
+                                ]
+                              )
+                              .then(function(res) {
+                                clist = res.data;
+                                clist.push({
+                                  id: 0,
+                                  standardName: "无",
+                                  standardNo: " "
+                                });
+                                d.update({
+                                  options: clist
+                                });
+                              });
+                          } else {
+                            return [
+                              { id: 0, standardName: "无", standardNo: " " }
+                            ];
+                          }
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "standardName"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "维护标准编号",
+                      key: "stateStandardNo",
+                      watch: {
+                        key: "stateStandardId",
+                        handler: function(e) {
+                          var id = e.$value;
+                          var obj = clist.find(a => {
+                            return a.id == id;
+                          });
+                          if (obj && obj.standardNo) {
+                            e.update({
+                              value: obj.standardNo
+                            });
+                          }else{
+                              e.update({
+                                  value: ""
+                              });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "维护周期单位",
+                      key: "executionCycle",
+                      options: target.getRootScope("myDicts")["executionCycle"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期间隔",
+                      key: "cycleNum",
+                      watch: {
+                        key: "executionCycle",
+                        handler: function(e) {
+                          if (e.$value == "none") {
+                            e.update({
+                              value: 0,
+                              config: {
+                                disabled: true
+                              }
+                            });
+                          } else {
+                            e.update({
+                              config: {
+                                disabled: false
+                              }
+                            });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "检修标准名称",
+                      key: "maintainStandardId",
+                      watch: {
+                        key: "deviceId",
+                        handler: function(d) {
+                          if (
+                            d.$value &&
+                            (typeof d.$value == "string" ||
+                              typeof d.$value == "number")
+                          ) {
+                            ajax
+                              .post(
+                                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                [
+                                  {
+                                    deviceId: Number(d.$value),
+                                    ticketCategory: "320",
+                                    taskStatus: 0
+                                  },
+                                  {
+                                    start: 0,
+                                    length: 1000,
+                                    statCount: true
+                                  }
+                                ]
+                              )
+                              .then(function(res) {
+                                mlist = res.data;
+                                mlist.push({
+                                  id: 0,
+                                  standardProjectName: "无",
+                                  standardProjectId: " "
+                                });
+                                d.update({
+                                  options: mlist
+                                });
+                              });
+                          } else {
+                            return [
+                              {
+                                id: 0,
+                                standardProjectName: "无",
+                                standardProjectId: " "
+                              }
+                            ];
+                          }
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "standardProjectName"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "检修标准编号",
+                      key: "maintainStandardNo",
+                      watch: {
+                        key: "maintainStandardId",
+                        handler: function(e) {
+                          var id = e.$value;
+                          var obj = mlist.find(a => {
+                            return a.id == id;
+                          });
+                          if (obj && obj.standardProjectId) {
+                            e.update({
+                              value: obj.standardProjectId
+                            });
+                          }else{
+                              e.update({
+                                  value: ""
+                              });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修完成期限(天)",
+                      key: "maintainLimitDay"
+                    }
+                  ]
+                }
+              ]
+            },
+            //详情查看页面
+            wholeModelDis: {
+              label: "人工检查结果维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "设备名称",
+                      key: "selectDeviceName",
+                      value: resource.label
+                    },
+                    {
+                      type: "label",
+                      label: "设备编号",
+                      key: "selectDeviceCode",
+                      value: resource.externalDevId
+                    },
+                    {
+                      type: "input",
+                      label: "规则模型名称",
+                      key: "ruleName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "checkbox",
+                      key: "state",
+                      label: "是否启用",
+                      format: {
+                        true: 1,
+                        false: 0
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "上机服役时间(天)",
+                      key: "createBoardDays",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "过钢量(万吨)",
+                      key: "createSteelNumber",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "状态规则",
+                  type: "table-form",
+                  key: "itemList",
+                  config: {
+                    attributes: {
+                      stateMantainStandardId: ["维护项目", "text"],
+                      stepsIndex: ["项次", "text"],
+                      resultIndex: ["判断规则", "text"],
+                      needState: ["是否必须", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "stateMantainStandardId",
+                          bind: function(row) {
+                            return row.stateMaintinStandard.standardName;
+                          }
+                        },
+                        {
+                          name: "stepsIndex",
+                          bind: function(row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var obj = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var label = "";
+                            if (obj.content) {
+                              label = obj.content;
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "resultIndex",
+                          bind: function(row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var objStep = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var ruleList = objStep.ruleList;
+                            var objRule = ruleList.find(a => {
+                              return a.index == row.resultIndex;
+                            });
+                            var label = "";
+                            if (objStep.dataType && objStep.dataType != null) {
+                              if (objStep.dataType == "定量") {
+                                var unit = objRule.unit ? objRule.unit : "";
+                                var upperLimit = objRule.upperLimit
+                                  ? objRule.upperLimit
+                                  : "";
+                                var lowerLimit = objRule.lowerLimit
+                                  ? objRule.lowerLimit
+                                  : "";
+                                if (
+                                  (upperLimit != null &&
+                                    upperLimit != "" &&
+                                    lowerLimit == null) ||
+                                  lowerLimit == ""
+                                ) {
+                                  label =
+                                    " X < " + upperLimit + "(" + unit + ")";
+                                } else if (
+                                  (upperLimit == null &&
+                                    lowerLimit != null &&
+                                    lowerLimit != "") ||
+                                  upperLimit == ""
+                                ) {
+                                  label =
+                                    " X >= " + lowerLimit + "(" + unit + ")";
+                                } else if (
+                                  upperLimit != null &&
+                                  lowerLimit != null &&
+                                  upperLimit != "" &&
+                                  lowerLimit != ""
+                                ) {
+                                  label =
+                                    lowerLimit +
+                                    " <= X < " +
+                                    upperLimit +
+                                    "(" +
+                                    unit +
+                                    ")";
+                                }
+                              } else if (objStep.dataType == "定性") {
+                                label = objRule.result;
+                              }
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "needState",
+                          bind: function(row) {
+                            if (row.needState == 0) {
+                              return "非必须";
+                            } else if (row.needState == 1) {
+                              return "必须";
+                            }
+                          }
+                        }
+                      ],
+                      buttons: {},
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: false,
+                        inlineAdd: {
+                          stateMantainStandardId: {
+                            type: "select",
+                            url:
+                              "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                            parameter: [
+                              {
+                                deviceId: resource.id,
+                                ticketCategory: "310"
+                              },
+                              {
+                                start: 0,
+                                length: 1000,
+                                statCount: true
+                              }
+                            ],
+                            after: function(d) {
+                              d.data.push({
+                                id: 0,
+                                standardName: "无"
+                              });
+                              return d.data;
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardName"
+                            }
+                          },
+                          stepsIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stateMantainStandardId",
+                              handler: function(newValue, next) {
+                                stepsList = newValue.stepsList
+                                  ? newValue.stepsList
+                                  : [];
+                                next(stepsList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "content"
+                            }
+                          },
+                          resultIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stepsIndex",
+                              handler: function(newValue, next) {
+                                var ruleList = [];
+                                var dataType = newValue.dataType
+                                  ? newValue.dataType
+                                  : false;
+                                if (dataType && dataType != null) {
+                                  ruleList = newValue.ruleList;
+                                  if (dataType == "定性") {
+                                    for (var i = 0; i < ruleList.length; i++) {
+                                      ruleList[i].label = ruleList[i].result;
+                                    }
+                                  } else if (dataType == "定量") {
+                                    var unit = ruleList[i].label.unit;
+                                    var upperLimit =
+                                      ruleList[i].label.upperLimit;
+                                    var lowerLimit =
+                                      ruleList[i].label.lowerLimit;
+                                    if (
+                                      upperLimit != null &&
+                                      lowerLimit == null
+                                    ) {
+                                      ruleList[i].label =
+                                        " X < " + upperLimit + unit;
+                                    } else if (
+                                      upperLimit == null &&
+                                      lowerLimit != null
+                                    ) {
+                                      ruleList[i].label =
+                                        " X >= " + lowerLimit + unit;
+                                    } else if (
+                                      upperLimit != null &&
+                                      lowerLimit != null
+                                    ) {
+                                      ruleList[i].label =
+                                        lowerLimit +
+                                        " <= X < " +
+                                        upperLimit +
+                                        unit;
+                                    }
+                                  }
+                                }
+                                next(ruleList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "label"
+                            }
+                          },
+                          needState: {
+                            type: "select",
+                            options: [
+                              { id: 1, label: "必须" },
+                              { id: 0, label: "非必须" }
+                            ]
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            var item = {};
+                            item.stateMantainStandardId =
+                              b.stateMantainStandardId &&
+                              b.stateMantainStandardId.id
+                                ? b.stateMantainStandardId.id
+                                : 0;
+                            item.stepsIndex =
+                              b.stepsIndex && b.stepsIndex.index
+                                ? b.stepsIndex.index
+                                : 0;
+                            item.resultIndex =
+                              b.resultIndex && b.resultIndex.index
+                                ? b.resultIndex.index
+                                : 0;
+                            item.needState =
+                              b.needState && b.needState.id
+                                ? b.needState.id
+                                : 0;
+                            item.stateMaintinStandard = b.stateMantainStandardId
+                              ? b.stateMantainStandardId
+                              : null;
+                            refreshGrid(false);
+                            allData.push(item);
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "input",
+                      label: "作用设备名称",
+                      composory: true,
+                      key: "deviceName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "作用设备编码",
+                      composory: true,
+                      key: "deviceCode",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "异常名称",
+                      composory: true,
+                      key: "abnormalName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护标准名称",
+                      key: "stateStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "维护标准编号",
+                      key: "stateStandardNo"
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期单位",
+                      key: "executionCycle",
+                      watch: {
+                        key: "stateStandardNo",
+                        handler: function(e) {
+                          var list = target.getRootScope("myDicts")[
+                            "executionCycle"
+                          ];
+                          var obj = list.find(a => {
+                            return a.valueCode == rowValue.executionCycle;
+                          });
+                          e.update({
+                            value: obj && obj.label ? obj.label : ""
+                          });
+                        }
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期间隔",
+                      key: "cycleNum",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修标准名称",
+                      key: "maintainStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "检修标准编号",
+                      key: "maintainStandardNo"
+                    },
+                    {
+                      type: "input",
+                      label: "检修完成期限(天)",
+                      key: "maintainLimitDay",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+
+          label: "人工检查结果维护规则",
+          children: [
+            {
+              type: "table",
+              config: {
+                attributes: {
+                  customerName: ["产线", "text"],
+                  deviceName: ["设备名称", "text"],
+                  deviceCode: ["设备编码", "text"],
+                  ruleName: ["规则名称", "text"],
+                  stateStandardName: ["状态维护标准", "text"],
+                  maintainStandardName: ["智能检修标准", "text"],
+                  state: ["是否启用", "text"],
+                  createDate: ["制定时间", "text"]
+                },
+                search: {
+                  body: [
+                    {
+                      name: "ruleName",
+                      label: "规则名称",
+                      searchType: "input"
+                    },
+                    {
+                      name: "createDate",
+                      searchType: "date",
+                      label: "制定时间"
+                    }
+                  ]
+                },
+                grid: {
+                  body: [
+                    "customerName",
+                    "deviceName",
+                    "deviceCode",
+                    "ruleName",
+                    "stateStandardName",
+                    "maintainStandardName",
+                    {
+                      name: "state",
+                      bind: function(row) {
+                        if (row.state == 1) {
+                          return "已启用";
+                        } else if (row.state == 0) {
+                          return "已停用";
+                        }
+                      }
+                    },
+                    {
+                      name: "createDate",
+                      gridType: "date"
+                    }
+                  ],
+                  buttons: {
+                    outGrid: [
+                      {
+                        label: "添加规则",
+                        class: "primary",
+                        icon: "fa fa-plus",
+                        on: {
+                          click: function(e) {
+                            if (resource.category == "Device") {
+                              e.add({
+                                width: "80%",
+                                template: "wholeModel",
+                                before: function(d) {
+                                    //选中设备相关
+                                  d.selectDeviceId = resource.id;
+                                  d.state = d.state ? 1 : 0;
+
+                                  //作用设备相关
+                                  var dev = devList.find(a => {
+                                    return a.id == d.deviceId;
+                                  });
+                                  d.deviceCode =
+                                    dev && dev.externalDevId
+                                      ? dev.externalDevId
+                                      : "";
+                                  d.deviceName=dev && dev.label ? dev.label : "";
+
+                                  d.createBoardDays = Number(d.createBoardDays);
+                                  d.createSteelNumber = Number(
+                                    d.createSteelNumber
+                                  );
+                                  d.maintainStandardName = "";
+                                  var obj = mlist.find(a => {
+                                    return a.id == d.maintainStandardId;
+                                  });
+                                  if (obj && obj.standardProjectName) {
+                                    d.maintainStandardName =
+                                      obj.standardProjectName;
+                                  }
+                                  d.stateStandardName = "";
+                                  var obj = clist.find(a => {
+                                    return a.id == d.stateStandardId;
+                                  });
+                                  if (obj && obj.standardName) {
+                                    d.stateStandardName = obj.standardName;
+                                  }
+                                  return d;
+                                },
+                                url:
+                                  "maintenanceTaskUIService.addPersonJudgeRule",
+                                after: function(d) {
+                                  return d;
+                                }
+                              });
+                            } else {
+                              growl.warning("请选择设备");
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    inGrid: [
+                      {
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function(e) {
+                            rowValue = e.$row;
+                            e.update({
+                              width: "80%",
+                              template: "wholeModelDis",
+                              before: function(d) {
+                                return d;
+                              }
+                            });
+                          }
+                        }
+                      },
+                      {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function(e) {
+                            e.$row.deviceCode = e.$row.deviceId;
+                            e.update({
+                              width: "80%",
+                              template: "wholeModel",
+                              before: function(d) {
+                                var dev = devList.find(a => {
+                                  return a.id == d.deviceId;
+                                });
+                                d.deviceCode =
+                                  dev && dev.externalDevId
+                                    ? dev.externalDevId
+                                    : "";
+                                d.deviceName=dev && dev.label ? dev.label : "";
+
+                                d.state = d.state ? 1 : 0;
+                                var obj = mlist.find(a => {
+                                  return a.id == d.maintainStandardId;
+                                });
+                                if (obj && obj.standardProjectName) {
+                                  d.maintainStandardName =
+                                    obj.standardProjectName;
+                                }
+                                var obj = clist.find(a => {
+                                  return a.id == d.stateStandardId;
+                                });
+                                if (obj && obj.standardName) {
+                                  d.stateStandardName = obj.standardName;
+                                }
+                                return d;
+                              },
+                              url: "maintenanceTaskUIService.addPersonJudgeRule"
+                            });
+                          }
+                        }
+                      },
+                      {
+                        label: "删除",
+                        class: "btn btn-default",
+                        on: {
+                          click: function(e) {
+                            if (e.$row.state == 1) {
+                              growl.warning("该规则启用中，无法删除！");
+                              return;
+                            }
+                            e.remove({
+                              before: function(d) {
+                                return e.$row.id;
+                              },
+                              url: "maintenanceTaskUIService.delPersonJudgeRule"
+                            });
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  config: {
+                    url:
+                      "maintenanceTaskUIService.getPersonJudgeRuleListByConditionWithPage",
+                    parameter: { selectDeviceId: resource.id },
+                    showIndex: false,
+                    showSelector: false,
+                    showPage: true,
+                    showSearch: false
+                  },
+                  options: []
+                }
+              }
+            }
+          ]
+        };
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

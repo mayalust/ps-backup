@@ -1,0 +1,1773 @@
+<config injector="api, $rootScope, growl, commonMethodService, $timeout, $q"></config>
+<template>
+  <div class="wrap">
+    <div class="title" ng-if="params.type !== 'global'">
+      <p class="title-item">设备名称:</p>
+      <p class="title-item">{{ params.resource.label }}</p>
+      <p class="title-item">设备编号:</p>
+      <p class="title-item">{{ params.resource.externalDevId }}</p>
+    </div>
+    <div class="form-rule">
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span class="text-red">*</span>
+          <span>报警规则名称</span>
+        </div>
+        <div class="value">
+          <ps-input1 ng-model="ruleName"></ps-input1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label" ng-if="params.type === 'global'">
+          <span>设备模板</span>
+        </div>
+        <div class="value" ng-if="params.type === 'global'">
+          <ps-select1
+              ng-model="$parent.modelId"
+              options="$parent.modelIdOptions"
+              config="$parent.modelIdConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <p style="margin: 0;font-size: 16px;font-weight: bold;">
+          单指标规则条件
+        </p>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <ps-grid1
+            ng-model="singleConditionModel"
+            config="singleConditionModelConfig"
+        ></ps-grid1>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <p style="margin: 0;font-size: 16px;font-weight: bold;">
+          多指标规则条件
+        </p>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <ps-grid1
+            ng-model="multiConditionModel"
+            config="multiConditionModelConfig"
+        ></ps-grid1>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span class="text-red">*</span>
+          <span>报警级别</span>
+        </div>
+        <div class="value">
+          <ps-select1
+              ng-model="severity"
+              options="severityOptions"
+              config="severityConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>是否启用</span>
+        </div>
+        <div class="value">
+          <input type="checkbox" ng-model="enabled" value="1"/>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>报警消息</span>
+        </div>
+        <div class="value">
+          <ps-textarea ng-model="message"></ps-textarea>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>规则描述</span>
+        </div>
+        <div class="value">
+          <ps-textarea ng-model="desc"></ps-textarea>
+        </div>
+      </div>
+    </div>
+    <div class="form-rule-footer">
+      <button
+          class="btn btn-primary"
+          ng-click="submitFn()"
+          ng-if="params.mode !== 'view'"
+          style="margin-right: 10px;"
+      >
+        提交
+      </button>
+      <button
+          class="btn btn-default"
+          ng-click="close()"
+          ng-if="params.mode !== 'view'"
+          style="margin-left: 10px;"
+      >
+        取消
+      </button>
+      <button
+          class="btn btn-default"
+          ng-click="close()"
+          ng-if="params.mode === 'view'"
+      >
+        关闭
+      </button>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (api, rootScope, growl, cms, timeout, $q) {
+  return {
+    link: function (scope, element, attr) {
+      const findKpi = (id, allKpi) => {
+        for (let key in allKpi) {
+          if (allKpi[key] && allKpi[key]["kpiDic"] && allKpi[key]["kpiDic"][id]) {
+            return allKpi[key]["kpiDic"][id] || {};
+          }
+        }
+        return {};
+      };
+      const target = cms();
+      const dateType = [
+        {
+          id: 0,
+          label: "持续时间"
+        }, {
+          id: 1,
+          label: "间隔时间"
+        }
+      ];
+      //@PropertyDesc("数据类型,0:数值,1:差值,2.累加值,3:平均值,4:绝对值,5:增长率,6:偏差率")
+      const dataType = [
+        {
+          id: 0,
+          label: "数值"
+        },
+        {
+          id: 1,
+          label: "差值"
+        },
+        {
+          id: 2,
+          label: "累加值"
+        },
+        {
+          id: 3,
+          label: "平均值"
+        },
+        {
+          id: 4,
+          label: "绝对值"
+        },
+        {
+          id: 5,
+          label: "增长率"
+        },
+        {
+          id: 6,
+          label: "偏差率"
+        }
+      ];
+      const conditions = [
+        {
+          id: "value>refValue",
+          label: "大于"
+        },
+        {
+          id: "value>=refValue",
+          label: "大于等于"
+        },
+        {
+          id: "value==refValue",
+          label: "等于"
+        },
+        {
+          id: "value<=refValue",
+          label: "小于等于"
+        },
+        {
+          id: "value<refValue",
+          label: "小于"
+        },
+        {
+          id: "value!=refValue",
+          label: "不等于"
+        }
+      ];
+      const multiConditions = [
+        {
+          id: ">",
+          label: "大于"
+        },
+        {
+          id: ">=",
+          label: "大于等于"
+        },
+        {
+          id: "==",
+          label: "等于"
+        },
+        {
+          id: "<=",
+          label: "小于等于"
+        },
+        {
+          id: "<",
+          label: "小于"
+        },
+        {
+          id: "!=",
+          label: "不等于"
+        }
+      ];
+      let deviceLists = [];
+      let currentSingleModelId, currentMultiModelId, currentMultiExtendModelId;
+      let globalInstanceList = [];
+      let instances = {};
+      let getInstancePromises = [];
+      const init = (rule, type) => {
+        let multiInlineAddFlag = false;
+        let singleInlineAddFlag = false;
+        let singleColumns = [{
+          key: "dataType",
+          label: "数据类型",
+          type: "text",
+          bind (row, value) {
+            return dataType.find(d => {
+              return d.id == value;
+            }).label;
+          },
+          edit: {
+            type: "select",
+            //数据类型,0:数值,1:差值,2.累加值,3:平均值,4:绝对值,5:增长率,6:偏差率
+            options: dataType.filter(d => {
+              return d.id == 0 || d.id == 1;
+            })
+          },
+          add: {
+            type: "select",
+            //数据类型,0:数值,1:差值,2.累加值,3:平均值,4:绝对值,5:增长率,6:偏差率
+            options: dataType.filter(d => {
+              return d.id == 0 || d.id == 1;
+            })
+          }
+        }, {
+          key: "condition",
+          label: "条件",
+          type: "text",
+          add: {
+            type: "select",
+            options: conditions
+          },
+          bind (row, value) {
+            return conditions.find(d => {
+              return d.id == value;
+            }).label;
+          },
+          edit: {
+            type: "select",
+            options: conditions
+          }
+        }, {
+          key: "refValue",
+          label: "阈值",
+          type: "text",
+          edit: {
+            type: "input"
+          }
+        }, {
+          key: "dateType",
+          label: "时间类型",
+          type: "text",
+          add: {
+            type: "select",
+            options: dateType
+          },
+          bind (row, value) {
+            let findDateType = dateType.find(d => {
+              return d.id == value;
+            });
+            return findDateType && findDateType.label || '';
+          },
+          edit: {
+            type: "select",
+            options: dateType
+          }
+        }, {
+          key: "time",
+          label: "时间(s)",
+          type: "text",
+          edit: {
+            type: "input"
+          }
+        }];
+        let multiColumns = [{
+          key: "dataType",
+          label: "数据类型",
+          type: "text",
+          bind (row, value) {
+            return dataType.filter(d => {
+              return d.id == 1 || d.id == 4;
+            }).find(d => {
+              return d.id == value;
+            }).label;
+          },
+          edit: {
+            type: "select",
+            //数据类型,0:数值,1:差值,2.累加值,3:平均值,4:绝对值,5:增长率,6:偏差率
+            options: dataType.filter(d => {
+              return d.id == 1 || d.id == 4;
+            })
+          },
+          add: {
+            type: "select",
+            //数据类型,0:数值,1:差值,2.累加值,3:平均值,4:绝对值,5:增长率,6:偏差率
+            options: dataType.filter(d => {
+              return d.id == 1 || d.id == 4;
+            })
+          }
+        }, {
+          key: "tempCondition",
+          label: "条件",
+          type: "text",
+          add: {
+            type: "select",
+            options: multiConditions
+          },
+          bind (row, value) {
+            return multiConditions.find(d => {
+              return d.id == value;
+            }).label;
+          },
+          edit: {
+            type: "select",
+            options: multiConditions
+          }
+        }, {
+          key: "refValue",
+          label: "阈值",
+          type: "text",
+          edit: {
+            type: "input"
+          }
+        }];
+        if (type !== "global") {
+          singleColumns = [{
+            key: "nodeId",
+            label: "设备名称",
+            type: "text",
+            add: {
+              type: "select",
+              value: scope.params.resource.id,
+              options: deviceLists
+            },
+            edit: {
+              type: "select",
+              options: deviceLists
+            },
+            bind (row, value) {
+              return deviceLists.find(d => {
+                return d.id == value;
+              }).label;
+            }
+          }, {
+            key: "instance",
+            label: "测点名称",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "nodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $value: null,
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "nodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            bind (row, value) {
+              let findDevice = deviceLists.find(d => {
+                return d.id == row.nodeId;
+              });
+              let findInstances = instances[findDevice.id];
+              if (findInstances) {
+                let findInstance = findInstances.find(item => {
+                  return item.name == value;
+                });
+                return findInstance && findInstance.label;
+              } else {
+                return row.instanceName;
+              }
+            }
+          }, {
+            key: "kpiCode",
+            label: "指标参数",
+            type: "text",
+            add: {
+              type: "select",
+              watch: {
+                key: "nodeId,instance",
+                handler (d, next) {
+                  if (d && d.nodeId && d.instance) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.nodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.instance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $value: null,
+                      $options: options
+                    };
+                  }
+                  return {
+                    $value: null,
+                    $options: []
+                  };
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              watch: {
+                key: "nodeId,instance",
+                handler (d, next) {
+                  if (d && d.nodeId && d.instance) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.nodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.instance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $options: options
+                    };
+                  }
+                  return {
+                    $options: []
+                  };
+                }
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, ...singleColumns];
+          multiColumns = [{
+            key: "nodeId",
+            label: "设备名称1",
+            type: "text",
+            add: {
+              type: "select",
+              value: scope.params.resource.id,
+              options: deviceLists
+            },
+            edit: {
+              type: "select",
+              options: deviceLists
+            },
+            bind (row, value) {
+              return deviceLists.find(d => {
+                return d.id == value;
+              }).label;
+            }
+          }, {
+            key: "instance",
+            label: "测点名称1",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "nodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $value: null,
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "nodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            bind (row, value) {
+              let findDevice = deviceLists.find(d => {
+                return d.id == row.nodeId;
+              });
+              let findInstances = instances[findDevice.id];
+              if (findInstances) {
+                let findInstance = findInstances.find(item => {
+                  return item.name == value;
+                });
+                return findInstance && findInstance.label;
+              } else {
+                return row.instanceName;
+              }
+            }
+          }, {
+            key: "kpiCode",
+            label: "指标参数1",
+            type: "text",
+            add: {
+              type: "select",
+              watch: {
+                key: "nodeId,instance",
+                handler (d, next) {
+                  if (d && d.instance && d.nodeId) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.nodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.instance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $value: null,
+                      $options: options
+                    };
+                  }
+                  return {
+                    $value: null,
+                    $options: []
+                  };
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              watch: {
+                key: "nodeId,instance",
+                handler (d, next) {
+                  if (d && d.instance && d.nodeId) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.nodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.instance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $options: options
+                    };
+                  }
+                  return {
+                    $options: []
+                  };
+                }
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, {
+            key: "extendNodeId",
+            label: "设备名称2",
+            type: "text",
+            add: {
+              type: "select",
+              value: scope.params.resource.id,
+              options: deviceLists
+            },
+            edit: {
+              type: "select",
+              options: deviceLists
+            },
+            bind (row, value) {
+              return deviceLists.find(d => {
+                return d.id == value;
+              }).label;
+            }
+          }, {
+            key: "extendInstance",
+            label: "测点名称2",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "extendNodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $value: null,
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              watch: {
+                key: "extendNodeId",
+                handler (d, next) {
+                  if (d) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d;
+                    });
+                    let sourceValue = findDevice.values.MeasurePointLocate;
+                    let instanceList = [];
+                    let list = [];
+                    try {
+                      instanceList = JSON.parse(sourceValue);
+                    } catch (e) {
+                      console.warning("sourceValue cannot be cast JSON");
+                    }
+                    instanceList.forEach(instance => {
+                      for (let key in instance) {
+                        instance[key].forEach(item => {
+                          if (parseFloat(item.name) < 1000) {
+                            list = [...list, item];
+                          }
+                        });
+                      }
+                    });
+                    instances[findDevice.id] = instances[findDevice.id] || [];
+                    instances[findDevice.id] = list;
+                    next({
+                      $value: null,
+                      $options: list
+                    });
+                  }
+                }
+              }
+            },
+            bind (row, value) {
+              let findDevice = deviceLists.find(d => {
+                return d.id == row.extendNodeId;
+              });
+              let findInstances = instances[findDevice.id];
+              if (findInstances) {
+                let findInstance = findInstances.find(item => {
+                  return item.name == value;
+                });
+                return findInstance && findInstance.label;
+              } else {
+                return row.instanceName;
+              }
+            }
+          }, {
+            key: "extendKpiCode",
+            label: "指标参数2",
+            type: "text",
+            add: {
+              type: "select",
+              watch: {
+                key: "extendNodeId,extendInstance",
+                handler (d, next) {
+                  if (d && d.extendNodeId && d.extendInstance) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.extendNodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.extendInstance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $value: null,
+                      $options: options
+                    };
+                  }
+                  return {
+                    $value: null,
+                    $options: []
+                  };
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              watch: {
+                key: "extendNodeId,extendInstance",
+                handler (d, next) {
+                  if (d && d.extendNodeId && d.extendInstance) {
+                    let findDevice = deviceLists.find(device => {
+                      return device.id == d.extendNodeId;
+                    });
+                    let accessConfig = findDevice.physicalConfig.accessConfigs || [];
+                    let options = accessConfig.filter(ac => {
+                      return ac.instance == d.extendInstance;
+                    }).map(ac => {
+                      return {
+                        id: ac.dataItemId,
+                        label: ac.kpiName,
+                        ...ac
+                      }
+                    });
+                    return {
+                      $options: options
+                    };
+                  }
+                  return {
+                    $options: []
+                  };
+                }
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, ...multiColumns];
+        } else {
+          singleColumns = [{
+            key: "instance",
+            label: "测点名称",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (next) {
+                api
+                .post("resourceUIService.getAttrsByModelId", [
+                  scope.modelId
+                ])
+                .then(ret => {
+                  let sourceValue = ret.data.filter(
+                    d => d.name == "MeasurePointLocate"
+                  )[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (row, next) {
+                api
+                .post("resourceUIService.getAttrsByModelId", [
+                  scope.modelId
+                ])
+                .then(ret => {
+                  let sourceValue = ret.data.filter(
+                    d => d.name == "MeasurePointLocate"
+                  )[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            bind (row, value) {
+              let findInstance = globalInstanceList.find(item => {
+                return item.name == value;
+              });
+              return findInstance && findInstance.label;
+            }
+          }, {
+            key: "kpiCode",
+            label: "指标参数",
+            type: "text",
+            add: {
+              type: "select",
+              options: function () {
+                let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                return Object.keys(kpiDic).map(item => {
+                  return kpiDic[item];
+                });
+              }
+            },
+            edit: {
+              type: "select",
+              options: function () {
+                let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                return Object.keys(kpiDic).map(item => {
+                  return kpiDic[item];
+                });
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, ...singleColumns];
+          multiColumns = [{
+            key: "instance",
+            label: "测点名称1",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (next) {
+                api.post("resourceUIService.getAttrsByModelId", [scope.modelId]).then(ret => {
+                  let sourceValue = ret.data.filter(d => d.name == "MeasurePointLocate")[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (row, next) {
+                api
+                .post("resourceUIService.getAttrsByModelId", [
+                  scope.modelId
+                ])
+                .then(ret => {
+                  let sourceValue = ret.data.filter(
+                    d => d.name == "MeasurePointLocate"
+                  )[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            bind (row, value) {
+              let findInstance = globalInstanceList.find(item => {
+                return item.name == value;
+              });
+              return findInstance && findInstance.label;
+            }
+          }, {
+            key: "kpiCode",
+            label: "指标参数1",
+            type: "text",
+            add: {
+              type: "select",
+              options: function () {
+                if (type === "global") {
+                  let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                  return Object.keys(kpiDic).map(item => {
+                    return kpiDic[item];
+                  });
+                } else {
+                  if (currentMultiModelId) {
+                    let kpiDic =
+                      rootScope.rootModelsDic[currentMultiModelId].kpiDic;
+                    return Object.keys(kpiDic).map(item => {
+                      return kpiDic[item];
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              options: function () {
+                if (type === "global") {
+                  let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                  return Object.keys(kpiDic).map(item => {
+                    return kpiDic[item];
+                  });
+                } else {
+                  if (currentMultiModelId) {
+                    let kpiDic =
+                      rootScope.rootModelsDic[currentMultiModelId].kpiDic;
+                    return Object.keys(kpiDic).map(item => {
+                      return kpiDic[item];
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, {
+            key: "extendInstance",
+            label: "测点名称2",
+            type: "text",
+            add: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (next) {
+                api.post("resourceUIService.getAttrsByModelId", [
+                  scope.modelId
+                ]).then(ret => {
+                  let sourceValue = ret.data.filter(
+                    d => d.name == "MeasurePointLocate"
+                  )[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            edit: {
+              type: "select",
+              config: {
+                format: {
+                  id: "name",
+                  value: "name"
+                }
+              },
+              options: function (row, next) {
+                api.post("resourceUIService.getAttrsByModelId", [
+                  scope.modelId
+                ]).then(ret => {
+                  let sourceValue = ret.data.filter(d => d.name == "MeasurePointLocate")[0].sourceValue;
+                  let instanceList = [];
+                  let list = [];
+                  try {
+                    instanceList = JSON.parse(sourceValue);
+                  } catch (e) {
+                    console.warning("sourceValue cannot be cast JSON");
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  globalInstanceList = list;
+                  next(list);
+                });
+              }
+            },
+            bind (row, value) {
+              let findInstance = globalInstanceList.find(item => {
+                return item.name == value;
+              });
+              return findInstance && findInstance.label;
+            }
+          }, {
+            key: "extendKpiCode",
+            label: "指标参数2",
+            type: "text",
+            add: {
+              type: "select",
+              options: function () {
+                if (type === "global") {
+                  let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                  return Object.keys(kpiDic).map(item => {
+                    return kpiDic[item];
+                  });
+                } else {
+                  if (currentMultiExtendModelId) {
+                    let kpiDic =
+                      rootScope.rootModelsDic[currentMultiExtendModelId].kpiDic;
+                    return Object.keys(kpiDic).map(item => {
+                      return kpiDic[item];
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              options: function () {
+                if (type === "global") {
+                  let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+                  return Object.keys(kpiDic).map(item => {
+                    return kpiDic[item];
+                  });
+                } else {
+                  if (currentMultiExtendModelId) {
+                    let kpiDic =
+                      rootScope.rootModelsDic[currentMultiExtendModelId].kpiDic;
+                    return Object.keys(kpiDic).map(item => {
+                      return kpiDic[item];
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            bind (row, value) {
+              let ret = findKpi(value, rootScope.rootModelsDic);
+              return ret.label || "";
+            }
+          }, ...multiColumns];
+        }
+        scope.singleConditionModel = rule ? rule.singleIndex : [];
+        scope.singleConditionModelConfig = {
+          inlineAddConfirm: function (row, next) {
+            singleInlineAddFlag = false;
+            this.addRow(row);
+            next();
+          },
+          inlineAddCancel: function () {
+            singleInlineAddFlag = false;
+          },
+          outButtons: scope.params.mode === "view" ? [] : [{
+            label: "添加",
+            symbol: "inlineAdd",
+            on: {
+              click: function () {
+                if (scope.params.type === "global" && !scope.modelId) {
+                  growl.warning("请选择一个设备模板");
+                  return false;
+                }
+                singleInlineAddFlag = true;
+                return true;
+              }
+            }
+          }],
+          bodyButtons: scope.params.mode === "view" ? [] : [{
+            label: "编辑",
+            symbol: "inlineEdit"
+          }, {
+            label: "删除",
+            on: {
+              click: function (row) {
+                this.deleteRow(row);
+              }
+            }
+          }],
+          columns: singleColumns
+        };
+
+        scope.multiConditionModel = rule ? rule.multiIndex : [];
+        scope.multiConditionModelConfig = {
+          inlineAddConfirm: function (row, next) {
+            multiInlineAddFlag = false;
+            this.addRow(row);
+            next();
+          },
+          inlineAddCancel: function () {
+            multiInlineAddFlag = false;
+          },
+          outButtons: scope.params.mode === "view" ? [] : [{
+            label: "添加",
+            symbol: "inlineAdd",
+            on: {
+              click: function () {
+                if (scope.params.type === "global" && !scope.modelId) {
+                  growl.warning("请选择一个设备模板");
+                  return false;
+                }
+                multiInlineAddFlag = true;
+                return true;
+              }
+            }
+          }],
+          bodyButtons: scope.params.mode === "view" ? [] : [{
+            label: "编辑",
+            symbol: "inlineEdit"
+          }, {
+            label: "删除",
+            on: {
+              click: function (row) {
+                this.deleteRow(row);
+              }
+            }
+          }],
+          columns: multiColumns
+        };
+
+        scope.modelIdConfig = {
+          disabled: true
+        };
+        scope.modelIdOptions = Object.keys(rootScope.rootModelsDic).map(modelId => {
+            return {
+              ...rootScope.rootModelsDic[modelId].model
+            };
+          }
+        );
+        scope.severityOptions = target.getRootScope("myDicts")["alertSeverity"];
+        scope.severityConfig = {
+          format: {
+            value: "valueCode"
+          }
+        };
+        scope.submitFn = function () {
+          if (!scope.ruleName) {
+            growl.warning("请填写报警规则名称");
+            return;
+          }
+          if (!scope.severity) {
+            growl.warning("请选择报警级别");
+            return;
+          }
+          if (singleInlineAddFlag) {
+            growl.warning(
+              "有正在添加的单指标规则条件，请先点击确定，再保存该告警规则"
+            );
+            return;
+          }
+          if (multiInlineAddFlag) {
+            growl.warning(
+              "有正在添加的多指标规则条件，请先点击确定，再保存该告警规则"
+            );
+            return;
+          }
+          let findMultiCondition = scope.multiConditionModel.find(multi => {
+            return !!multi.$$edit;
+          });
+          if (findMultiCondition) {
+            growl.warning(
+              "有正在编辑的多指标规则条件，请先点击确定，再保存该告警规则"
+            );
+            return;
+          }
+          let findSingleCondition = scope.singleConditionModel.find(single => {
+            return !!single.$$edit;
+          });
+          if (findSingleCondition) {
+            growl.warning(
+              "有正在编辑的单指标规则条件，请先点击确定，再保存该告警规则"
+            );
+            return;
+          }
+          if (
+            scope.multiConditionModel.length < 1 &&
+            scope.singleConditionModel.length < 1
+          ) {
+            growl.warning("请至少添加一条单指标规则条件或者多指标规则条件");
+            return;
+          }
+          let resource = scope.params.resource;
+          let params;
+          if (scope.params.type === "global") {
+            let kpiDic = rootScope.rootModelsDic[scope.modelId].kpiDic;
+            params = {
+              modelId: scope.modelId,
+              domain: resource.domainPath,
+              customerId: resource.customerId,
+              projectId: resource.projectId,
+              severity: scope.severity,
+              title: scope.ruleName,
+              enabled: scope.enabled,
+              message: scope.message,
+              desc: scope.desc,
+              multiIndex: scope.multiConditionModel.map(item => {
+                let findInstance = globalInstanceList.find(ins => {
+                  return ins.name == item.instance;
+                });
+                let findExtendInstance = globalInstanceList.find(ins => {
+                  return ins.name == item.extendInstance;
+                });
+                return {
+                  instance: findInstance.name,
+                  instanceName: findInstance.label,
+                  kpiCode: item.kpiCode,
+                  extendInstance: findExtendInstance.name,
+                  extendInstanceName: findExtendInstance.label,
+                  extendKpiCode: item.extendKpiCode,
+                  condition: item.tempCondition,
+                  refValue: item.refValue,
+                  dataType: item.dataType
+                };
+              }),
+              singleIndex: scope.singleConditionModel.map(item => {
+                let findInstance = globalInstanceList.find(ins => {
+                  return ins.name == item.instance;
+                });
+                return {
+                  instance: findInstance.name,
+                  instanceName: findInstance.label,
+                  kpiCode: item.kpiCode,
+                  dataType: item.dataType,
+                  condition: item.condition,
+                  refValue: item.refValue,
+                  dateType: item.dateType,
+                  time: item.time
+                };
+              })
+            };
+          } else {
+            params = {
+              nodeIds: resource.id + "",
+              modelId: resource.modelId,
+              domain: resource.domainPath,
+              customerId: resource.customerId,
+              projectId: resource.projectId,
+              severity: scope.severity,
+              title: scope.ruleName,
+              enabled: scope.enabled,
+              message: scope.message,
+              desc: scope.desc,
+              multiIndex: scope.multiConditionModel.map(item => {
+                let findDevice = deviceLists.find(d => {
+                  return d.id == item.nodeId;
+                });
+                let extendFindDevice = deviceLists.find(d => {
+                  return d.id == item.extendNodeId;
+                });
+                let findInstance = instances[findDevice.id].find(ins => {
+                  return ins.name == item.instance;
+                });
+                let findExtendInstance = instances[extendFindDevice.id].find(
+                  ins => {
+                    return ins.name == item.extendInstance;
+                  }
+                );
+                return {
+                  nodeId: item.nodeId,
+                  modelId: findDevice.modelId,
+                  extendNodeId: item.extendNodeId,
+                  extendModelId: extendFindDevice.modelId,
+                  instance: findInstance.name,
+                  instanceName: findInstance.label,
+                  kpiCode: item.kpiCode,
+                  extendInstance: findExtendInstance.name,
+                  extendInstanceName: findExtendInstance.label,
+                  extendKpiCode: item.extendKpiCode,
+                  condition: item.tempCondition,
+                  refValue: item.refValue,
+                  dataType: item.dataType
+                };
+              }),
+              singleIndex: scope.singleConditionModel.map(item => {
+                let findDevice = deviceLists.find(d => {
+                  return d.id == item.nodeId;
+                });
+                let findInstance = instances[findDevice.id].find(ins => {
+                  return ins.name == item.instance;
+                });
+                return {
+                  nodeId: item.nodeId,
+                  modelId: findDevice.modelId,
+                  instance: findInstance.name,
+                  instanceName: findInstance.label,
+                  kpiCode: item.kpiCode,
+                  dataType: item.dataType,
+                  condition: item.condition,
+                  refValue: item.refValue,
+                  dateType: item.dateType,
+                  time: item.time
+                };
+              })
+            };
+          }
+          if (scope.params.mode === "edit") {
+            //params.id = rule.id;
+            params = Object.assign({}, rule, params);
+          }
+          api.post("resourceUIService.saveKpiThreshold", params).then(ret => {
+            if (ret.code == 0) {
+              let controllerScope = scope.$parent.$parent;
+              let gridScope = controllerScope.$$childHead;
+              while (!gridScope.gridInstance) {
+                gridScope = gridScope.$$nextSibling;
+              }
+              if (scope.params.mode !== "edit") {
+                growl.success("添加报警规则成功");
+                gridScope.gridInstance.addRow(ret.data);
+              } else {
+                growl.success("编辑报警规则成功");
+                gridScope.gridInstance.goSearch();
+              }
+              scope.close();
+            }
+          });
+        };
+      };
+
+      if (scope.params.rule) {
+        let rule = scope.params.rule;
+        scope.severity = rule.severity;
+        scope.ruleName = rule.title;
+        scope.message = rule.message;
+        scope.enabled = rule.enabled;
+        scope.desc = rule.desc;
+
+        if (scope.params.type !== "global") {
+          let defer = $q.defer();
+          getInstancePromises.push(defer.promise);
+          defer.resolve();
+        } else {
+          scope.modelId = rule.modelId;
+          if (rule.multiIndex && Array.isArray(rule.multiIndex) && rule.multiIndex.length > 0) {
+            rule.multiIndex.forEach(item => {
+              item.tempCondition = item.condition.split("refValue")[0].split(")")[1];
+            });
+          }
+          let defer = $q.defer();
+          getInstancePromises.push(defer.promise);
+          api.post("resourceUIService.getAttrsByModelId", [rule.modelId]).then(ret => {
+            let sourceValue = ret.data.filter(d => d.name == "MeasurePointLocate")[0].sourceValue;
+            let instanceList = [];
+            let list = [];
+            try {
+              instanceList = JSON.parse(sourceValue);
+            } catch (e) {
+              console.warning("sourceValue cannot be cast JSON");
+            }
+            instanceList.forEach(instance => {
+              for (let key in instance) {
+                instance[key].forEach(item => {
+                  if (parseFloat(item.name) < 1000) {
+                    list = [...list, item];
+                  }
+                });
+              }
+            });
+            globalInstanceList = list;
+            defer.resolve();
+          });
+        }
+      }
+
+      if (scope.params.type !== "global") {
+        api.post("resourceUIService.getDevicesByCondition", [{
+          domains: scope.params.resource.domains
+        }]).then(ret => {
+          deviceLists = ret.data;
+          $q.all(getInstancePromises).then(() => {
+            let rule = scope.params.rule;
+            if (rule && rule.singleIndex && Array.isArray(rule.singleIndex) && rule.singleIndex.length > 0) {
+              rule.singleIndex.forEach(item => {
+                let findDevice = deviceLists.find(device => {
+                  return device.id == item.nodeId;
+                });
+                let sourceValue = findDevice.values.MeasurePointLocate;
+                let instanceList = [];
+                let list = [];
+                try {
+                  instanceList = JSON.parse(sourceValue);
+                } catch (e) {
+                  console.warning("sourceValue cannot be cast JSON");
+                }
+                instanceList.forEach(instance => {
+                  for (let key in instance) {
+                    instance[key].forEach(item => {
+                      if (parseFloat(item.name) < 1000) {
+                        list = [...list, item];
+                      }
+                    });
+                  }
+                });
+                instances[findDevice.id] = instances[findDevice.id] || [];
+                instances[findDevice.id] = list;
+              });
+            }
+            if (rule && rule.multiIndex && Array.isArray(rule.multiIndex) && rule.multiIndex.length > 0) {
+              rule.multiIndex.forEach(item => {
+                item.tempCondition = item.condition.split("refValue")[0].split(")")[1];
+                let findDevice = deviceLists.find(device => {
+                  return device.id == item.nodeId;
+                });
+                let findExtendDevice = deviceLists.find(device => {
+                  return device.id == item.extendNodeId;
+                });
+                let sourceValue = findDevice.values.MeasurePointLocate;
+                let extendSourceValue =
+                  findExtendDevice.values.MeasurePointLocate;
+                let instanceList = [];
+                let list = [];
+                let extendInstanceList = [];
+                let extendList = [];
+                try {
+                  instanceList = JSON.parse(sourceValue);
+                  extendInstanceList = JSON.parse(extendSourceValue);
+                } catch (e) {
+                  console.warning("sourceValue cannot be cast JSON");
+                }
+                instanceList.forEach(instance => {
+                  for (let key in instance) {
+                    instance[key].forEach(item => {
+                      if (parseFloat(item.name) < 1000) {
+                        list = [...list, item];
+                      }
+                    });
+                  }
+                  extendInstanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          extendList = [...extendList, item];
+                        }
+                      });
+                    }
+                  });
+                });
+                extendInstanceList.forEach(instance => {
+                  for (let key in instance) {
+                    instance[key].forEach(item => {
+                      if (parseFloat(item.name) < 1000) {
+                        extendList = [...extendList, item];
+                      }
+                    });
+                  }
+                  instanceList.forEach(instance => {
+                    for (let key in instance) {
+                      instance[key].forEach(item => {
+                        if (parseFloat(item.name) < 1000) {
+                          list = [...list, item];
+                        }
+                      });
+                    }
+                  });
+                  instances[item.extendModelId] =
+                    instances[item.extendModelId] || [];
+                  instances[item.extendModelId] = list;
+                });
+                instances[findDevice.id] = instances[findDevice.id] || [];
+                instances[findDevice.id] = list;
+                instances[findExtendDevice.id] = instances[findExtendDevice.id] || [];
+                instances[findExtendDevice.id] = extendList;
+              });
+            }
+            init(scope.params.rule);
+          });
+        });
+      } else {
+        scope.modelId = scope.params.resource.modelId;
+        $q.all(getInstancePromises).then(() => {
+          init(scope.params.rule, "global");
+        });
+      }
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+}
+
+.form-rule {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form-rule-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.label-value {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+
+  &.half-width {
+    width: 50%;
+  }
+
+  &.fully-width {
+    width: 100%;
+  }
+
+  .label {
+    flex-basis: 120px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .value {
+    flex: 1;
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+
+  .title-item {
+    padding: 5px;
+    min-width: 10px;
+    margin: 0;
+  }
+}
+</style>

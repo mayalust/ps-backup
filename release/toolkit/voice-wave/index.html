@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <title>Highstock Example</title>
+</head>
+<body>
+<script src="./js/jquery-3.1.1.min.js"></script>
+<script src="./js/highstock.js"></script>
+<div id="container" style="height: 400px"></div>
+
+
+<script type="text/javascript">
+var title = "烈度 (Hz)";
+var tooltip = "音频烈度: <b>{point.y:.1f} Hz</b>";
+var name = '音频烈度';
+var interval = 1000;
+
+function GenerateLabel (count) {
+  var Result = [];
+  for (var i = 1; i < count; i++) {
+    var item = '';
+    if (i >= 10) {
+      item = `${i}`;
+    } else {
+      item = `0${i}`;
+    }
+    Result.push(item);
+  }
+  return Result;
+}
+
+function GenerateBaseData (count, base = 0) {
+  var Result = [];
+  for (var i = 1; i < count; i++) {
+    Result.push(base);
+  }
+  return Result;
+}
+
+var labelItem = GenerateLabel(87);
+var dataItem = GenerateBaseData(87, 50);
+
+function GenerateData (label = [], minnum = 48, maxnum = 55) {
+  var result = [];
+  for (var i = 0; i < label.length; i++) {
+    var itemdata = 0;
+    var distance = 0;
+    var direction = Math.random() > 0.5 ? 1 : -1;
+    var itemvalue = dataItem[i];
+    if (direction > 0) {
+      if (dataItem[i] >= maxnum) {
+        itemdata = 0;
+      } else {
+        distance = maxnum - dataItem[i];
+        itemdata = distance * Math.random();
+      }
+      itemvalue = itemvalue + itemdata;
+    } else {
+      if (dataItem[i] <= minnum) {
+        itemdata = 0;
+      } else {
+        distance = dataItem[i] - minnum;
+        itemdata = distance * Math.random();
+      }
+      itemvalue = itemvalue - itemdata;
+    }
+
+    var itemdata = minnum + Math.random() * distance;
+    var item = [label[i], itemvalue];
+    dataItem[i] = itemdata;
+    result.push(item);
+  }
+  return result;
+}
+
+var data = GenerateData(labelItem);
+
+var chart = Highcharts.chart('container', {
+  chart: {
+    type: 'column'
+  },
+  title: {
+    text: '音浪图'
+  },
+  xAxis: {
+    type: 'category',
+    labels: {
+      rotation: -45  // 设置轴标签旋转角度
+    }
+  },
+  yAxis: {
+    min: 0,
+    title: {
+      text: title
+    }
+  },
+  legend: {
+    enabled: false
+  },
+  tooltip: {
+    pointFormat: tooltip
+  },
+  credits: {enabled: false},
+  series: [{
+    name: name,
+    data: data,
+    dataLabels: {
+      enabled: true,
+      rotation: -90,
+      color: '#FFFFFF',
+      align: 'right',
+      format: '{point.y:.1f}', // :.1f 为保留 1 位小数
+      y: 10
+    }
+  }]
+});
+
+setInterval(function () {
+  chart.series[0].setData(GenerateData(labelItem))
+}, interval);
+</script>
+<script type="text/css">
+.highcharts-exporting-group {
+  display: none;
+}
+
+.highcharts-credits {
+  display: none;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-oil/js/services/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,wCAAyC","file":"app-oil/js/services/index.js","sourcesContent":["define(['../../js/services/localdb-service.js'], function () {});"],"sourceRoot":"/source/"}

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-freeboard/js/filters/filters.js"],"names":["define","angular","module"],"mappings":"AAAAA,OAAO,CAAC,WAAY,SAAUC,GAC5B,aAEA,OAAOA,EAAQC,OAAO,UAAW","file":"app-freeboard/js/filters/filters.js","sourcesContent":["define(['angular'], function (angular) {\n  'use strict';\n\n  return angular.module('filters', []);\n});"],"sourceRoot":"/source/"}

@@ -1,0 +1,73 @@
+<config injector="$compile"
+></config>
+<template>
+  <div>
+    <div class="wrap">
+      <div class="form-control">
+        <i class="file-upload">---请选择上传文件---</i>
+        <span class="proudsmart ps-add"></span>
+      </div>
+      <input type="file" style="display : none;"/>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function () {
+    return {
+      scope: {
+        ngModel: "=?",
+        config: "=?"
+      },
+      replace: true,
+      require: '?ngModel',
+      link (scope, element, attr, ngModel) {
+        let $dom = element[0].children[0].children[0],
+          invisDom = element[0].children[0].children[1],
+          spaUpload = element[0].children[0].children[0].children[0],
+          icon = element[0].children[0].children[0].children[1];
+        $dom.onclick = function () {
+          invisDom.click();
+        }
+        ngModel.$render = function(){
+          let v = typeof ngModel.$viewValue;
+          icon.style.display = v === "object"
+            ? "none" : "inline";
+          spaUpload.innerText = v === "object"
+            ? ngModel.$viewValue.name : "---请选择上传文件---";
+        }
+        invisDom.onchange = function (e) {
+          let fileObject = this.files;
+          ngModel.$setViewValue(fileObject[0]);
+          ngModel.$render();
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap {
+    position: relative;
+    cursor: pointer;
+    .bk-form-input{
+      overflow : hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    input {
+      overflow : hidden;
+      text-overflow: ellipsis;
+    }
+    span {
+      position: absolute;
+      top: 50%;
+      margin-top: -6px;
+      right: 6px;
+      cursor: pointer;
+      z-index: 99;
+      display: block;
+    }
+    i {
+      list-style: none;
+    }
+  }
+</style>

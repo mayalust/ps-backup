@@ -1,0 +1,48 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="row" ng-if="$parent.params.mode == 'szCam'">
+      <div class="block">
+        <ps-video-cam data-index="index"></ps-video-cam>
+      </div>
+    </div>
+    <ul class="nav nav-tabs" ng-if="$parent.params.mode == 'videoCam'">
+      <li
+        ng-class="{true:'active'}[$index == index]"
+        ng-repeat="u in url"
+        ng-click="btnClick($index)"
+      >
+        <a role="button" ng-bind="'视频' + ( $index + 1 )"></a>
+      </li>
+    </ul>
+    <div class="row" ng-if="$parent.params.mode == 'videoCam'">
+      <div class="col-md-12" ng-repeat="u in url" ng-if="$index == index">
+        <div class="block">
+          <ps-video-cam data-url="u"></ps-video-cam>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+import { extend } from "ps-ultility";
+export default function(rootScope) {
+  return {
+    link(scope, element, attr) {
+      if (scope.$parent.params.mode == "szCam") {
+        scope.index = scope.$parent.params.index;
+      } else if (scope.$parent.params.mode == "videoCam") {
+        scope.url = scope.$parent.params.url;
+      }
+      scope.index = 0;
+      scope.btnClick = function(i) {
+        scope.index = i;
+      };
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+}
+</style>

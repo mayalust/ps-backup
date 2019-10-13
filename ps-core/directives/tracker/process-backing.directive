@@ -1,0 +1,303 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-backing -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item" >
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border"><a>{{ item.title }}</a></h3>
+      <process-common-dir class="timeline-header no-border"
+                          data-process="elem"
+                          ng-repeat="elem in item.data">
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+  export default function(rootScope,psTracker){
+    return {
+      scope : {
+        tracker : "="
+      },
+      link(scope, element, attr) {
+        let {
+          createAttr,
+          createButton,
+          createTitle,
+          _icon,
+          _alertArisingTime,
+          _ticketNo,
+          _attrsMap,
+          _data : {
+            ticketTask : {
+              values,
+              handlerName
+            }
+          },
+          _ticketTaskVariables : {
+            deviceCode,
+            standardProjectId,
+            standardInfo,
+            tempDealType,
+            recallExplain,
+            ticket : {
+              category,
+              theTicketType
+            }
+          }
+        } = scope.tracker;
+        class Handler {
+          fixingPlanA(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "检修计划",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              },{
+                key : "检修标准编号",
+                value : standardInfo.standardProjectId
+              },{
+                key : "标准项目名称",
+                value : standardInfo.standardProjectName
+              },{
+                key : "处理方式",
+                value : "重新下发"
+              }]
+            }]
+          }
+          fixingPlanB() {
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "检修计划",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              },{
+                key : "检修标准编号",
+                value : standardInfo.standardProjectId
+              },{
+                key : "标准项目名称",
+                value : standardInfo.standardProjectName
+              },{
+                key : "处理方式",
+                value : "点检关闭"
+              },{
+                key : "关闭说明",
+                value : values.closeReason
+              },{
+                type : "button",
+                cls : "btn btn-primary btn-sm",
+                label : "合并告警",
+                click : function(){
+                   
+                }
+              }]
+            }]
+          }
+          fixingPlanC(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "检修计划",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              }]
+            }]
+          }
+          tranformPlanA(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "临时委托",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              },{
+                key : "检修标准编号",
+                value : ticket.values.standardProjectId
+              },{
+                key : "标准项目名称",
+                value : ticket.values.standardProjectName
+              },{
+                key : "处理方式",
+                value : "重新下发"
+              },{
+                type : "button",
+                cls : "btn btn-primary btn-sm",
+                label : "合并告警",
+                click : function(){
+                   
+                }
+              }]
+            }];
+          }
+          tranformPlanB(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "临时委托",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              },{
+                key : "处理方式",
+                value : "关闭委托"
+              },{
+                key : "关闭说明",
+                value : values.closeReason
+              }]
+            }]
+          }
+          tranformPlanC(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "临时委托",
+              data : [{
+                key : "处理人",
+                value : handlerName
+              }]
+            }]
+          }
+          retreat(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "退回",
+              data : [{
+                key : "工单号",
+                value : _attrsMap.get("工单号")
+              },{
+                key : "任务分类",
+                value : _attrsMap.get("任务分类")
+              },{
+                key : "任务来源",
+                value : _attrsMap.get("任务来源")
+              },{
+                key : "处理人",
+                value : _attrsMap.get("处理人")
+              },{
+                key : "退回说明",
+                value : "重新下发"
+              }]
+            }]
+          }
+          handler_c290(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "退回",
+              data : [{
+                key : "工单号",
+                value : _attrsMap.get("工单号")
+              },{
+                key : "任务分类",
+                value : _attrsMap.get("任务分类")
+              },{
+                key : "任务来源",
+                value : _attrsMap.get("任务来源")
+              },{
+                key : "处理人",
+                value : _attrsMap.get("处理人")
+              },{
+                key : "退回说明",
+                value : "重新下发"
+              }]
+            }]
+          }
+          c280_default(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "退回",
+              data : [{
+                key : "工单号",
+                value : _attrsMap.get("工单号")
+              },{
+                key : "任务分类",
+                value : _attrsMap.get("任务分类")
+              },{
+                key : "任务来源",
+                value : _attrsMap.get("任务来源")
+              },{
+                key : "处理人",
+                value : _attrsMap.get("处理人")
+              },{
+                key : "退回说明",
+                value : "重新下发"
+              }]
+            },{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "退回处理",
+              data : [{
+                key : "工单号",
+                value : _attrsMap.get("工单号")
+              },{
+                key : "任务分类",
+                value : _attrsMap.get("任务分类")
+              },{
+                key : "任务来源",
+                value : _attrsMap.get("任务来源")
+              },{
+                key : "处理人",
+                value : _attrsMap.get("处理人")
+              },
+                createButton.call(scope.tracker, "检修方案", "fixingPlan"),
+                createButton.call(scope.tracker, "检修实绩", "fixingResult")]
+            }]
+          }
+          default_handler(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "退回",
+              data : [createAttr("工单号"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr("处理人"),
+                createAttr(["退回说明", "重新下发"])
+              ]
+            }]
+          }
+        }
+        function createRenderList(){
+          let handler = new Handler;
+          if( category == 280 ){
+            return handler.c280_default();
+          }
+          if( category == 120 ){
+            if ( tempDealType == 5 ){
+              return handler.fixingPlanA()
+            } else if ( tempDealType == 4 ){
+              return handler.fixingPlanB()
+            } else {
+              return handler.fixingPlanC()
+            }
+          } else if( category == 290 ){
+            return handler.handler_c290();
+          } else if( theTicketType == "tempTrust" ){
+            if ( tempDealType == 5 ){
+              return handler.tranformPlanA()
+            } else if ( tempDealType == 4 ){
+              return handler.tranformPlanB();
+            } else {
+              return handler.tranformPlanC();
+            }
+          }
+          return handler.default_handler();
+        }
+        scope.tracker.__dicsloaded__.then(() => {
+          scope.renderList = createRenderList();
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

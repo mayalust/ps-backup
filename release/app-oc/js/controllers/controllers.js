@@ -1,0 +1,2 @@
+define(["angular"],function(r){"use strict";var l=r.module("controllers",[]);return l.config(["$controllerProvider",function(r){l.registerController=r.register}]),l.initController=function(r,e){var n=[],t=null;t=jQuery.isArray(e)?(n=e.slice(0,e.length-1),e[e.length-1]):e,l.registerController(r,t),0<n.length&&(t.$inject=n)},l});
+//# sourceMappingURL=../../../map/app-oc/js/controllers/controllers.js.map

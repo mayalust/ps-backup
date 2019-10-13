@@ -1,0 +1,40 @@
+<html>
+
+<head>
+  <script src="node_modules/jquery/dist/jquery.js"></script>
+  <script src="node_modules/lodash/index.js"></script>
+  <script src="node_modules/backbone/backbone.js"></script>
+  <script src="toolkit/rappid/dist/rappid.js"></script>
+</head>
+
+<body>
+  <div id="a"></div>
+  <script>
+    var json = { "cells": [{ "type": "basic.Image", "position": { "x": 100, "y": 150 }, "size": { "width": 60, "height": 60 }, "angle": 0, "extend": "value", "id": "3cb0e253-6dcf-45a3-a873-b53d20f14904", "embeds": "", "z": 1, "valueConfig": [{ "label": "第一组数据", "id": 0, "stateDisplay": true, "$$hashKey": "object:665", "valueIcon": "../images/ouke/jz12.png", "valueText": "0" }, { "label": "第二组数据", "id": 1, "stateDisplay": false, "$$hashKey": "object:666", "valueIcon": "../images/ouke/ldb.png", "valueText": "1" }, { "label": "第三组数据", "id": 2, "stateDisplay": false, "$$hashKey": "object:667" }, { "label": "第四组数据", "id": 3, "stateDisplay": false, "$$hashKey": "object:668" }, { "label": "第五组数据", "id": 4, "stateDisplay": false, "$$hashKey": "object:669" }], "modelId": "number:2013359220068", "domainPath": "number:/0/515445641576227/", "nodeId": "number:2013359220546", "sn": "01696020E01000", "kpiId": "number:32091", "unitType": "number:1", "attrs": { "text": { "font-size": 12, "text": "0", "font-family": "Microsoft YaHei", "ref-y": 0.5, "stroke": "#ffffff", "stroke-width": 0 }, "image": { "width": 60, "height": 60, "xlink:href": "../images/ouke/jz12.png" } } }], "gridSize": 10, "width": 1200, "height": 700, "bgcolor": "#ffffff" }
+    var el = document.getElementById("a"),
+      graph = new joint.dia.Graph(),
+      cells,
+      paper = new joint.dia.Paper(makeConfig()),
+      paperScroller = new joint.ui.PaperScroller({
+        el: el,
+        paper: paper,
+        autoResizePaper: false,
+        padding: 0
+      });
+
+    function makeConfig() {
+      return {
+        width: 300,
+        height: 300,
+        model: graph
+      }
+    }
+    graph.fromJSON(json);
+    cells = graph.getCells();
+    var cell = cells[0];
+    cell.attr("text/text", 10);
+    console.log(cell);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1034 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,commonMethodService2, psRouter"
+        deps="frockDialog,frockQrDialog"
+></config>
+<template>
+    <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+        <ps-layout data-option="option">
+        </ps-layout>
+    </div>
+</template>
+<script type="text/javascript">
+  export default function (q, ajax, psDialog, routeParams, psUltility, location, growl, commonMethodService,cms2, psRouter) {
+    var target = commonMethodService(), resource,repairArr=[],consumableArr=[],allRollerTypes= [];
+    return {
+      link(scope, element, attr) {
+        let modePlan = target.getValue("modePlan"),
+            smartObj = {}, lastPage,objList = {};//smartObj  当前新增的对象 objList 中间量 解决删除问题
+        smartObj = modePlan != "add" ? target.getValue("smartObj") : {};//上一个页面检修
+        lastPage =target.getValue("currentPage") || {};
+        function showDelete(str) {
+          if(str === "智能工装准备"){
+            return modePlan != "detail" ? [{
+              label: "二维码",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  cms2.modal({
+                    title : "智能工装",
+                    directive : "frock-qr-dialog",
+                    width : "80%",
+                    scope : scope,
+                    params : {
+                      data : e.$row
+                    },
+                  })
+                }
+              }
+            },{
+              label: "详情",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  cms2.modal({
+                    title : "智能工装",
+                    directive : "frock-dialog",
+                    width : "80%",
+                    scope : scope,
+                    params : {
+                      mode: "detail",
+                      data : this
+                    },
+                  })
+                }
+              }
+            },{
+              label: "删除",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  e.removeInline();
+                }
+              }
+            }] : [{
+              label: "二维码",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  // e.removeInline();
+                }
+              }
+            },{
+              label: "详情",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  // e.removeInline();
+                }
+              }
+            },];
+          }else {
+            return modePlan != "detail" ? [{
+              label: "删除",
+              class: "btn btn-primary",
+              on: {
+                click: function (e) {
+                  e.removeInline();
+                }
+              }
+            }] : [];
+          }
+        }
+
+        function getOutGrid(str) {
+          return [{
+            label: str,
+            symbol: "inline",
+            class: "primary",
+            show: function () {
+              return modePlan == "detail" ? false : true;
+            },
+          }]
+        }
+
+        function fillTables(str, refreshGrid, b, allData) {
+          if (str.indexOf("stepsList") != -1 ) {
+            allData.push(b);
+          } else {
+              if(str.indexOf("listDeviceList") != -1){
+                  let tempData = [];
+                  if(allData.length == 0) {
+                      b["inx"] = 1;
+                      b["deviceName"] += "////" + b["inx"].toString();
+                  }else {
+                      if(allData[0].deviceName.includes("////")){
+                          tempData =  allData.map((v,i) => {
+                              return v = v.deviceName.split("////")[1];
+                          });
+                          b["inx"] = Number(Math.max.apply(null,tempData)) +1;
+                          b["deviceName"] += "////" + b["inx"].toString();
+                      }
+
+                  }
+              }
+              allData.unshift(b);
+          }
+          smartObj[str] = allData;
+          refreshGrid(false);
+        }
+
+        target.on("tree_resourceChange", function (e) {
+          resource = e.resource;
+          repairArr = smartObj ? smartObj.repairableParts : [];
+          consumableArr = smartObj ? smartObj.consumableParts : [];
+          ajax.post("rollerPartUIService.getRollerPartByConditionWithPage", [{
+            "type": 3,
+            "values.deviceIds": resource.id
+          }, {}]).then(d => {
+            if (d && d.length != 0) {
+              return scope.res = d.data;
+            }
+          }).then(function () {
+            ajax.post("rollerPartUIService.getLinkRepairableParts",[resource.id,false]).then(d => {
+              if(d && d.length != 0){
+                return allRollerTypes = d;
+              }
+            }).then(function (result) {
+              let resultArr = [], resultArr2 = [];
+              if (consumableArr && consumableArr.length != 0 && scope.res && scope.res.length != 0) {
+                for (var i = 0; i < scope.res.length; i++) {
+                  for (var j = 0; j < consumableArr.length; j++) {
+                    if (consumableArr[j].rollerNo == scope.res[i].rollerNo) {
+                      consumableArr[j].reserveNum = scope.res[i].reserveNum;
+                      resultArr2.push(consumableArr[j]);
+                    }
+                  }
+                }
+              }
+              // maintainPlanList0.consumableParts = resultArr2;
+              scope.option = {
+                title: "方案概况",
+                type: "layout",
+                init: function () {
+                  if(smartObj && smartObj.toString()!='{}'){
+                    //兼容旧数据
+                    if(smartObj && smartObj.listDeviceList && !smartObj.listDeviceList[0].deviceName.includes('////')){
+                      objList = smartObj && smartObj.listDeviceList ? smartObj.listDeviceList.filter(d => {
+                        return d;
+                      }).sort((a, b) => {
+                        return a.deviceName - 0 - b.deviceName
+                      }).map((d, ind) => {
+                        d.inx = ind+1;
+                        return d;
+                      }): [];
+                    }else {
+                      objList = smartObj && smartObj.listDeviceList ? smartObj.listDeviceList.filter(d => {
+                        return d && d.deviceName.includes('////');
+                      }).sort((a, b) => {
+                        return a.deviceName.split("////")[1] - 0 - b.deviceName.split("////")[1]
+                      }).map((d, ind) => {
+                        d.inx = ind+1;
+                        return d;
+                      }): [];
+                    }
+                    if(modePlan != "add") {
+                      smartObj.listDeviceList =  objList;
+                      if(smartObj && smartObj.stepsList){
+                        smartObj.stepsList.sort((a,b)=>{ return a.stepsNo - 0 - b.stepsNo });
+                      }
+                      if(modePlan != "add"){
+                        let arr = [];
+                        if(smartObj && smartObj.repairableParts && smartObj.length!=0){
+                          for (var i = 0; i < smartObj.repairableParts.length; i++) {
+                            for (var j = 0; j <allRollerTypes.length ; j++) {
+                              let obj ={};
+                              if(allRollerTypes[j].rollerType == smartObj.repairableParts[i]){
+                                obj["rollerType"] = smartObj.repairableParts[i];
+                                obj["reserveNum"] = allRollerTypes[j].count || "";
+                                arr.push(obj);
+                              }
+                            }
+                          }
+                          smartObj.repairablePartsBak = arr;
+                          smartObj.consumableParts = resultArr2;
+                        }
+                      }
+                    }
+                  }
+                  return {
+                    smartObj : modePlan != "add" ? smartObj : {},
+                  }
+                },
+                children: [{//项目概况
+                  label: "项目概况",
+                  type: "panel",
+                  children: [{
+                    type: "form-grid",
+                    scope: "smartObj",
+                    children: [{
+                      type: "input",
+                      label: "项目方案名称",
+                      key: "maintainPlanName",
+                      composory: true,
+                      config: {
+                        disabled: modePlan == "detail" ? "disabled" : false
+                      },
+                    }, {
+                      type: "auto",
+                      label: "危险源",
+                      key: "dangerSource",
+                      composory: true,
+                      config: {
+                        search: false,
+                        disabled: modePlan == "detail" ? "disabled" : false
+                      },
+                      options: target.getRootScope("myDicts")["dangerSource"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      },
+                    }, {
+                      type: "select",
+                      label: "动火等级",
+                      key: "fireGrade",
+                      composory: true,
+                      config: {
+                        disabled: modePlan == "detail" ? "disabled" : false
+                      },
+                      options: target.getRootScope("myDicts")["fireGrade"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      },
+                    }]
+                  }]
+                }, {//人员准备
+                  label: "人员准备",
+                  type: "panel",
+                  scope : "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "personList",
+                    config: {
+                      attributes: {
+                        "personType": ["人员类型", "text"],
+                        "personNum": ["人员数量", "text"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "personType",
+                        }, {
+                          name: "personNum",
+                        }],
+                        buttons: {
+                          inGrid: showDelete(),
+                          outGrid: getOutGrid("新增人员")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          inlineAdd: {
+                            personType: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            personNum: {
+                              type: 'input',
+                              composory: true,
+                              isNumber: true
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              b["personNum"] = Number(b["personNum"]);
+                              fillTables("personList", refreshGrid, b, allData);
+                            }
+                          },
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                }, {//工器具准备
+                  label: "工器具准备",
+                  type: "panel",
+                  scope: "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "toolList",
+                    config: {
+                      attributes: {
+                        "name": ["名称", "text"],
+                        "format": ["规格", "text"],
+                        "num": ["数量", "text"],
+                        "unit": ["单位", "text"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "name",
+                        }, {
+                          name: "format",
+                        }, {
+                          name: "num",
+                        }, {
+                          name: "unit",
+                        }],
+                        buttons: {
+                          inGrid: showDelete(),
+                          outGrid: getOutGrid("新增工器具")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          inlineAdd: {
+                            name: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            format: {
+                              type: 'input',
+                            },
+                            num: {
+                              type: 'input',
+                              composory: true,
+                              isNumber: true
+                            },
+                            unit: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              b["num"] = Number(b["num"]);
+                              b["format"] = typeof b["format"] != "undefined"? b["format"]:"";
+                              if(b["num"] > 999999) {
+                                growl.info("请输入合法数量");
+                              }else {
+                                fillTables("toolList", refreshGrid, b, allData);
+                              }
+
+                            }
+                          },
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                }, /*{//智能工装准备   暂停只差调接口  2019.5.6 勿删
+                  label: "智能工装准备",
+                  type: "panel",
+                  scope: "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "fixtureList",
+                    config: {
+                      attributes: {
+                        "fCategory": ["分类", "dict"],
+                        "fName": ["工装设备名称", "dict"],
+                        "fCode": ["工装代码", "text"],
+                        "fAdress": ["存放地点", "text"],
+                        "manageUnit": ["管理单位", "text"],
+                        "scope": ["适用范围", "text"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "fCategory",
+                        }, {
+                          name: "fName",
+                        }, {
+                          name: "fCode",
+                        }, {
+                          name: "fAdress",
+                        },{
+                          name: "manageUnit",
+                        },{
+                          name: "scope",
+                        }],
+                        buttons: {
+                          inGrid: showDelete("智能工装准备"),
+                          outGrid: getOutGrid("新增智能工装")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          inlineAdd: {
+                            fCategory: {
+                              type: 'select',
+                              composory: true,
+                              options: target.getRootScope("myDicts")["fCategory"],
+                              format : {
+                                id: 'valueCode',
+                                label: "label"
+                              },
+                            },
+                            fName: {
+                              type: 'select',
+                              composory: true,
+                              watch: {
+                                key: 'fCategory',
+                                handler: function (newValue) {
+                                  debugger
+                                  ajax.post("rollerPartUIService.getFixtureByConditionWithPage",[{"fCategory" : newValue.valueCode},{}]).then( d=> {
+                                    next(d);
+                                  })
+                                }
+                              },
+                              format: {
+                                id: "fName",
+                                label: "fName",
+                              }
+                            },
+                            fCode: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            fAdress: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            manageUnit: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            scope: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              b["num"] = Number(b["num"]);
+                              b["format"] = typeof b["format"] != "undefined"? b["format"]:"";
+                              if(b["num"] > 999999) {
+                                growl.info("请输入合法数量");
+                              }else {
+                                fillTables("toolList", refreshGrid, b, allData);
+                              }
+
+                            }
+                          },
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                },*/{//常用材料准备
+                  label: "常用材料准备",
+                  type: "panel",
+                  scope: "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "materialList",
+                    config: {
+                      attributes: {
+                        "name": ["名称", "text"],
+                        "format": ["规格", "text"],
+                        "num": ["数量", "text"],
+                        "unit": ["单位", "text"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "name",
+                        }, {
+                          name: "format",
+                        }, {
+                          name: "num",
+                        }, {
+                          name: "unit",
+                        }],
+                        buttons: {
+                          inGrid: showDelete(),
+                          outGrid: getOutGrid("新增常用材料")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          inlineAdd: {
+                            name: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            format: {
+                              type: 'input',
+                              composory: false,
+                            },
+                            num: {
+                              type: 'input',
+                              composory: true,
+                              isNumber: true
+                            },
+                            unit: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              b["num"] = Number(b["num"]);
+                              b["format"] = typeof b["format"] != "undefined"? b["format"]:"";
+                              fillTables("materialList", refreshGrid, b, allData);
+                            }
+                          },
+
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                }, {//备件准备
+                  label: "备件准备",
+                  type: "panel",
+                  // scope: "smartObj",
+                  children: [{//易耗件
+                    type: "new-grid",
+                    key : "smartObj.consumableParts",
+                    config: {
+                      inlineAddConfirm: function (row, next) {
+                        row.rollerName["useNum"] = row["useNum"];
+                        this.addRow(row.rollerName, true);
+                        smartObj.consumableParts = smartObj.consumableParts || [];
+                        smartObj.consumableParts.unshift(row.rollerName);
+                        next();
+                      },
+                      outButtons: [{
+                        label: '新增易耗件',
+                        show: function () {
+                          return modePlan == "detail" ? false : true;
+                        },
+                        symbol: 'inlineAdd'
+                      }],
+                      bodyButtons: [{
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return modePlan == "detail" ? false : true;
+                        },
+                        symbol: 'inlineEdit'
+                      }, {
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return modePlan == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (row) {
+                            this.deleteRow(row);
+                          }
+                        }
+                      }],
+                      columns: [{
+                        key: 'rollerName',
+                        label: '备件名称',
+                        type: 'text',
+                        add: {
+                          type: 'select',
+                          config: {
+                            format: {
+                              id: 'rollerName',
+                              label: "rollerName",
+                              value: '$this',
+                              compare: function (item, value) {
+                                if (value) {
+                                  return item.id == value.id;
+                                }
+                                return false;
+                              }
+                            }
+                          },
+                          options: {
+                            url: 'rollerPartUIService.getRollerPartByConditionWithPage',
+                            parameter: [{
+                              "type": 3,
+                              "values.deviceIds": resource.id
+                            }, {}],
+                            after: function (d) {
+                              return d.data;
+                            }
+                          }
+                        }
+                      }, {
+                        key: 'rollerNo',
+                        label: '备件编码',
+                        type: 'text',
+                        add: {
+                          config: {
+                            disabled: true
+                          },
+                          watch: {
+                            key: 'rollerName',
+                            handler: function (d) {
+                              return d ? d.rollerNo: '';
+                            }
+                          }
+                        }
+                      }, {
+                        key: 'format',
+                        label: '规格型号',
+                        type: 'text',
+                        add: {
+                          config: {
+                            disabled: true
+                          },
+                          watch: {
+                            key: 'rollerName',
+                            handler: function (d) {
+                              return d ?d.format: '';
+                            }
+                          }
+                        }
+                      }, {
+                        key: 'manufacturer',
+                        label: '生产厂家',
+                        type: 'text',
+                        add: {
+                          config: {
+                            disabled: true
+                          },
+                          watch: {
+                            key: 'rollerName',
+                            handler: function (d) {
+                              return d ? d.manufacturer : '';
+                            }
+                          }
+                        }
+                      }, {
+                        key: 'useNum',
+                        label: '使用数量',
+                        type: 'text',
+                        edit: {
+                          type: 'input'
+                        },
+                        add: {
+                          watch: {
+                            key: 'rollerName',
+                            handler: function (d) {
+                              return d ? d.useNum : '';
+                            }
+                          }
+                        }
+                      }]
+                    }
+                  },{//可修复件
+                    type: "new-grid",
+                    key: "smartObj.repairablePartsBak",//repairableParts
+                    config: {
+                      inlineEditConfirm: function (newRow, oldRow, next) {
+                        let ind;
+                        smartObj.repairableParts.forEach((r,index) => {
+                          if(r == oldRow["rollerType"]["rollerType"]){
+                            ind = index;
+                          };
+                        });
+                        newRow["rollerType"] = newRow["rollerType"]["rollerType"];
+                        // smartObj.repairablePartsBak.splice(ind,1,newRow);
+                        smartObj.repairableParts.splice(ind,1,newRow["rollerType"]);
+                        next();
+                      },
+                      inlineAddConfirm: function (row, next) {
+                        row["rollerType"] = row["rollerType"]["rollerType"];
+                        this.addRow(row,true);
+                        smartObj.repairableParts = smartObj.repairableParts || [];
+                        smartObj.repairableParts.unshift(row["rollerType"]);
+                        next();
+                      },
+                      outButtons: [{
+                        label: "新增可修复件",
+                        symbol: 'inlineAdd',
+                        show: function () {
+                          return modePlan == "detail" ? false : true
+                        },
+                      }],
+                      bodyButtons : [{
+                        label: "编辑" ,
+                        class: "btn btn-primary",
+                        symbol: "inlineEdit",
+                        show: function () {
+                          return modePlan == "detail" ? false : true
+                        },
+                      },{
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return modePlan == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (row) {
+                            let ind;
+                            smartObj.repairableParts.forEach((r,index) => {
+                              if(r == row["rollerType"]){
+                                ind = index;
+                              }
+                            });
+                            smartObj.repairableParts.splice(ind,1);
+                            this.deleteRow(row);
+                          }
+                        }
+                      }],
+                      columns: [{
+                        key: "rollerType",
+                        label: "类型",
+                        type: "text",
+                        add: {
+                          type: 'select',
+                          config: {
+                            format: {
+                              id: 'rollerType',
+                              label: "rollerType",
+                              value: '$this'
+                            }
+                          },
+                          options: allRollerTypes
+                        },
+                        edit: {
+                          type: "select",
+                          config: {
+                            format: {
+                              id: 'rollerType',
+                              label: "rollerType",
+                              value: '$this',
+                              compare: function (item, value) {
+                                if (value) {
+                                  return item.rollerType == value || item.rollerType == value.rollerType;
+                                }
+                                return false;
+                              }
+                            }
+                          },
+                          options: allRollerTypes
+                        },
+                        bind: function (row, value) {
+                          return Object.prototype.toString.call(value) === '[object String]'? value : value.rollerType;
+                        }
+                      },{
+                        key: "reserveNum",
+                        label: "可更换库存",
+                        type: "text",
+                        edit: {
+                          type: 'text',
+                          watch: {
+                            key: "rollerType",
+                            handler: function (d, next) {
+                              if (typeof d === 'string') {
+                                return;
+                              }
+                              next( d ?  d.count : "") ;
+                            }
+                          }
+                        },
+                        add: {
+                          config: {
+                            disabled: true
+                          },
+                          type: "input",
+                          watch: {
+                            key: "rollerType",
+                            handler: function (d, next) {
+                              next( d ? d.count : "") ;
+                            }
+                          }
+                        },
+                        bind: function (row,value){
+                          return value ? value : 0;
+                        }
+                      }]
+                    },
+                  }]
+                }, {//挂牌准备
+                  label: "挂牌准备",
+                  type: "panel",
+                  scope: "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "listDeviceList",
+                    config: {
+                      attributes: {
+                        "inx" : ["序号", "text"],
+                        "safeNature": ["安全牌性质", "text"],
+                        "listPosition": ["挂牌位置", "text"],
+                        "deviceName": ["挂牌设备", "text"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "inx"
+                        },{
+                          name: "safeNature",
+                        }, {
+                          name: "listPosition",
+                        }, {
+                          name: "deviceName",
+                          bind: function (row) {
+                            return row.deviceName.includes("////")? row.deviceName.split("////")[0] : row.deviceName;
+                          }
+                        }],
+                        buttons: {
+                          inGrid: showDelete(),
+                          outGrid: getOutGrid("新增挂牌")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          inlineAdd: {
+                            inx : {
+                              type : "label"
+                            },
+                            safeNature: {
+                              type: 'input',
+                              composory : true,
+                            },
+                            listPosition: {
+                              type: 'input',
+                              composory : true
+                            },
+                            deviceName: {
+                              type: 'input',
+                              composory : true
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              fillTables("listDeviceList", refreshGrid, b, allData);
+                            }
+                          },
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                }, {//施工步骤
+                  label: "施工步骤",
+                  type: "panel",
+                  scope: "smartObj",
+                  children: [{
+                    type: "table-form",
+                    key: "stepsList",
+                    config: {
+                      attributes: {
+                        "stepsNo": ["步骤", "text"],
+                        "content": ["作业内容", "text"],
+                        "planNeedTime": ["预计作业时间", "text"],
+                        "dataType": ["数据类别", "dict"],
+                        "technicalPoints": ["技术要点", "text"],
+                        "safetyMeasures": ["安全措施", "text"],
+                        "unit": ["单位", "text"],
+                        "upperLimit": ["上限", "dict"],
+                        "lowerLimit": ["下限", "dict"],
+                      },
+                      grid: {
+                        body: [{
+                          name: "stepsNo",
+                        }, {
+                          name: "content",
+                        }, {
+                          name: "planNeedTime",
+                        }, {
+                          name: "dataType",
+                        }, {
+                          name: "technicalPoints",
+                        }, {
+                          name: "safetyMeasures",
+                        }, {
+                          name: "unit",
+                        }, {
+                          name: "upperLimit",
+                        }, {
+                          name: "lowerLimit",
+                        }],
+                        buttons: {
+                          inGrid: showDelete(),
+                          outGrid: getOutGrid("新增步骤")
+                        },
+                        config: {
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                          composory: true,
+                          inlineAdd: {
+                            stepsNo: {
+                              type: 'input',
+                              composory: true,
+                              isNumber: true
+                            },
+                            content: {
+                              type: 'input',
+                              composory: true,
+                            },
+                            planNeedTime: {
+                              type: 'input',
+                              composory: true,
+                              isNumber: true
+                            },
+                            dataType: {
+                              type: 'select',
+                              composory: true,
+                              key: "baowuDataType",
+                              options: target.getRootScope("myDicts")["baowuDataType"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+                            },
+                            technicalPoints: {
+                              type: 'input'
+                            },
+                            safetyMeasures: {
+                              type: 'input'
+                            },
+                            unit: {
+                              type: 'input'
+                            },
+                            upperLimit: {
+                              type: 'input'
+                            },
+                            lowerLimit: {
+                              type: 'input'
+                            },
+                            submit: function (a, b, refreshGrid, allData) {
+                              var stepObj = b;
+                              b["dataType"] = stepObj["dataType"].valueCode;
+                              fillTables("stepsList", refreshGrid, b, allData);
+                            }
+                          },
+                        },
+                        options: []
+                      }
+                    }
+                  }]
+                }, {
+                  type: "form-inline",
+                  children: [{
+                    type: "button",
+                    width: 10,
+                    config: {
+                      class: "btn-primary btn-100",
+                      validCheck: true,
+                      label: "确 定",
+                      show: modePlan == "detail" ? false : true,
+                      // validCheck: "smartObj",
+                      on: {
+                        click: function (e) {
+                          // 获取到maintainPlanList检修方案所有的数组
+                          var maintainPlanList = target.getValue("maintainPlanList") || [];
+                          smartObj["updateDate"] = new Date();
+                          smartObj["type"] = 0;
+                          smartObj["domains"] = resource.domains;
+                          smartObj["deviceId"] = resource.id;
+                          smartObj["deviceCode"] = resource.externalDevId;
+                          smartObj["deviceName"] = resource.label;
+                          smartObj["standardProjectNo"] = lastPage.standardProjectId;
+                          smartObj["standardName"] = lastPage.standardProjectName;
+                          if(scope.smartObj && scope.smartObj.dangerSource && typeof scope.smartObj.dangerSource == "object"){
+                            scope.smartObj.dangerSource = scope.smartObj.dangerSource.valueCode;
+                          }
+                          if( modePlan == "add") {
+                            smartObj = angular.extend(smartObj, scope.smartObj);
+                            maintainPlanList.push(smartObj);
+                            growl.info("新增检修方案成功")
+                          }else{
+                            var index = target.getValue("index");
+                            maintainPlanList[index] = angular.extend(maintainPlanList[index], scope.smartObj) ;
+                            growl.info("编辑检修方案成功")
+                          }
+                          target.setValue("maintainPlanList", maintainPlanList);
+                          // 跳转页面
+                          target.navigateTo("index", {
+                            main: 6,
+                            sub: [1, "viewId:baowu-check-standard-operation"]
+                          });
+
+                        }
+                      }
+                    },
+                    key: "save"
+                  }, {
+                    type: "button",
+                    width: 10,
+                    config: {
+                      label: "取 消",
+                      class: "btn-default btn-100",
+                      show: modePlan == "detail" ? false : true,
+                      click: function () {
+                        target.navigateTo("index", {
+                          main: 6,
+                          sub: [1, "viewId:baowu-check-standard-operation"],
+                        });
+                      }
+                    },
+                  }, {
+                    type: "button",
+                    width: 10,
+                    config: {
+                      label: "返 回",
+                      class: "btn-default btn-100",
+                      show: modePlan == "detail" ? true : false,
+                      click: function () {
+                        target.navigateTo("index", {
+                          main: 6,
+                          sub: [1, "viewId:baowu-check-standard-operation"],
+                          // mode: "detail",
+                        });
+                      }
+                    },
+                  }]
+                }],
+              }
+            })
+          });
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

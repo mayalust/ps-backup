@@ -1,0 +1,308 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,psTopo,commonMethodService,commonMethodService2"
+    deps="psTopoDir"
+></config>
+<template>
+  <div>
+    <ps-topo-dir data-init="initFn(event)" data-complete="completeFn()">
+    </ps-topo-dir>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  SwSocket,
+  psTopo,
+  cms,
+  cms2
+) {
+  return {
+    scope: {
+      init: "&",
+      complete: "&"
+    },
+    link(scope, element, attr) {
+      let kpisMap = {},
+        productDetail,
+        target = cms(null, scope);
+      function parse(str) {
+        let a;
+        try {
+          a = JSON.parse(str);
+        } catch (e) {
+          return;
+        }
+        return a;
+      }
+
+      function isNotUndefined(d) {
+        return typeof d !== "undefined";
+      }
+
+      function sensorMap(a, b) {
+        a[b.name] = b;
+        return a;
+      }
+
+      function childrenMap(a, b) {
+        a[b.id] = b;
+        return a;
+      }
+
+      function getDataItemId(dataItem) {
+        return dataItem.dataItemId;
+      }
+
+      function bind(target, fn) {
+        return function() {
+          return fn.apply(target, arguments);
+        };
+      }
+
+      function lessThan(num) {
+        return function(d, i) {
+          return i < num;
+        };
+      }
+
+      function getNumber(str) {
+        let match = /(?:.*\:)*([^\:]*)/.exec(str);
+        if (typeof str == "string" || typeof str == "number") {
+          return match ? match[1] - 0 : str;
+        }
+      }
+
+      function getString(str) {
+        let match = /(?:.*\:)*([^\:]*)/.exec(str);
+        if (typeof str == "string" || typeof str == "number") {
+          return match ? match[1] : str;
+        }
+      }
+
+      function prop(cell, attr, val) {
+        let attrs = attr.split("/").filter(isNotUndefined),
+          item;
+        if (typeof val === "undefined") {
+          rs = cell;
+          while ((item = attrs.shift()) && rs) {
+            rs = rs[item];
+          }
+          return rs;
+        }
+        let last = attrs.pop(),
+          rs = cell;
+        while ((item = attrs.shift()) && rs) {
+          rs = rs[item];
+        }
+        if (typeof rs === "object") {
+          rs[last] = val;
+        }
+      }
+
+      function attr(cell, attr, val) {
+        let attrs = attr.split("/").filter(isNotUndefined),
+          item;
+        if (typeof val === "undefined") {
+          rs = cell.attrs;
+          while ((item = attrs.shift()) && rs) {
+            rs = rs[item];
+          }
+          return rs;
+        }
+        let last = attrs.pop(),
+          rs = cell.attrs;
+        while ((item = attrs.shift()) && rs) {
+          rs = rs[item];
+        }
+        if (typeof rs === "object") {
+          rs[last] = val;
+        }
+      }
+      class Popup {
+        constructor(node, target, position) {
+          this.node = node;
+          this.target = target;
+          this.getChildren(children => {
+            this.target.createDeviceDropList(children, position, {
+              click: item => {
+                this.refreshToGraph(item);
+              },
+              titleClick() {
+                this.refreshToGraph(this.node);
+              }
+            });
+          });
+        }
+        refreshToGraph(node) {
+          let params = [];
+          node.getPathAndShowTreeLocation().then(function(d) {
+            let { controller, showTree, location } = d;
+            if (controller) {
+              return target.refresh("prod_" + controller, {
+                id: node.id,
+                showTree: showTree,
+                viewId: null
+              });
+            }
+            let params = [
+              "dashboard",
+              {
+                id: node.id,
+                showTree: showTree,
+                sensor: "null",
+                index: location,
+                startdate: "null",
+                enddate: "null"
+              }
+            ];
+            cms2.refresh.apply(null, params);
+          });
+        }
+        getChildren(callback) {
+          this.node
+            .getChildren(function(n, i, l) {
+              return true;
+            })
+            .then(children => {
+              this.children = children;
+              callback(children);
+            });
+        }
+      }
+      class ProductDetail {
+        constructor() {
+          //this.cellsMap = new Map();
+          scope.initFn = event => {
+            scope.init();
+            this.target = event.target;
+            this.viewloaded(cells => {
+              cells.forEach(bind(this, this.handleEachCell));
+              //this.children.forEach(bind(this, this.handleEachChild));
+            });
+          };
+          scope.completeFn = function() {
+            scope.complete();
+          };
+        }
+        handleEachCell(cell) {
+          let text = cell.attr("text/text"),
+            child = this.children.find(d => d.label.indexOf(text) != -1);
+          text = text.trim().toLowerCase();
+          cell.attr("circle/opacity", 0);
+          cell.attr("text/opacity", 0);
+          cell.attr("rect/opacity", 0);
+          if (child == null) {
+            return;
+          }
+          let position =
+            cell && typeof cell.position == "function" && cell.position();
+          this.loaded = true;
+          this.target.createAlarm(child.label, ins => {
+            ins.setPos(position);
+            ins.setAlarmStatus(child.getAlertState());
+            ins.on("mouseover", e => {
+              this.popup = new Popup(child, this.target, position);
+            });
+          });
+        }
+        viewloaded(callback) {
+          this.getView(json => {
+            //this.target.hooks.tap("viewloaded", callback);
+            this.target.render(json);
+            this.target.addCam();
+            this.target.$on("$loadCiKpiComplete", cells => {
+              callback(cells);
+              this.loadCiKpiComplete(cells);
+            });
+          });
+        }
+        loadCiKpiComplete(cells) {
+          let position = { x: 500, y: 0 },
+            is = this.target.createCurrentStatus(
+              this.resource.label,
+              position,
+              this.resource.getAlertState()
+            );
+          this.clear = this.resource.$on("alertStateChange", function(value) {
+            is.setAlarmStatus(value);
+          });
+        }
+        destroy() {
+          this.clear && this.clear.call(this);
+        }
+        getView(callback) {
+          this.getBrothers(brothers => {
+            let fd =
+                brothers.find(function(v) {
+                  return v.$attr("values/view/viewId");
+                }) || {},
+              viewId =
+                this.resource.$attr("view/viewId") ||
+                this.resource.$attr("values/view/viewId") ||
+                fd.$attr("values/view/viewId");
+            if (!viewId) {
+              callback();
+            }
+            this.target.getViewById(viewId, view => {
+              callback(parse(view.content));
+            });
+          });
+        }
+        getBrothers(callback) {
+          this.getChildren(children => {
+            this.resource.getBrothers().then(brothers => {
+              this.brothers = brothers;
+              callback(brothers);
+            });
+          });
+        }
+        getChildren(callback) {
+          this.getMeasureLocate(sensor => {
+            this.resource
+              .getChildren(function(n, i, l) {
+                return true;
+              })
+              .then(children => {
+                this.children = children;
+                callback(children);
+              });
+          });
+        }
+        getMeasureLocate(callback) {
+          this.getDataItemsByModelIdFromCache(kpisMap => {
+            this.resource.getMeasureLocate().then(sensors => {
+              this.sensors = sensors.reduce(sensorMap, {});
+              callback(sensors);
+            });
+          });
+        }
+        getDataItemsByModelIdFromCache(callback) {
+          this.getDomainAreaLineTree_alertStatus(resource => {
+            this.target.getDataItemsByModelIdFromCache(
+              resource.modelId,
+              kpisMap => {
+                this.kpisMap = kpisMap;
+                callback(kpisMap);
+              }
+            );
+          });
+        }
+        getDomainAreaLineTree_alertStatus(callback) {
+          this.target.getDomainAreaLineTree_alertStatus(resource => {
+            this.resource = resource;
+            callback(resource);
+          });
+        }
+      }
+      productDetail = new ProductDetail();
+      scope.$on("$destroy", function() {
+        productDetail.destroy();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

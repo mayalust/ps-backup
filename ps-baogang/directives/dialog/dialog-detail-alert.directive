@@ -1,0 +1,144 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="titleHead">
+      <div class="col-md-6">
+        设备名称: <span ng-bind="clone.devName"></span>
+      </div>
+      <div class="col-md-6">
+        设备编号: <span ng-bind="clone.nodeId"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">报警消息：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.message" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.message" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-right col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">报警次数：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.count" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.count" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">首次报警时间：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.firstArisingTime" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="formatTime(clone.firstArisingTime)" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-right col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">最近报警时间：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.receiveTime" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="formatTime(clone.receiveTime)" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">处理方式：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.ruleType" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.state == 5 ? '确认'
+        : clone.state == 20 ? '解决'
+        : clone.state == 30 ? '忽略'
+        : '-'" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-right col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">处理时间：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.updateTime" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="formatTime(clone.updateTime)" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-6">
+      <div class="col-md-4">
+        <span class="title pull-right">处理人：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="clone.owner" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.owner" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-right col-md-12">
+    <div class="col-md-2">
+      <span class="title pull-right">原因：</span>
+    </div>
+    <div class="col-md-10">
+      <input ng-model="clone.comments" class="form-control" ng-if="mode=='edit'"/>
+      <div style="width: 100%;white-space: normal;word-break: break-word;" ng-show="mode=='view'" class="value">
+        <!--<span ng-bind=""></span>-->
+        {{strFormat(clone.comments)}}
+      </div>
+    </div>
+  </div>
+
+
+    <div class="row">
+      <div class="col-md-4">
+
+      </div>
+      <div class="col-md-8">
+        <button class="btn btn-primary" ng-click="close()">确定</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+    import { extend , dateparser } from "ps-ultility";
+    export default function(rootScope){
+        return {
+            link(scope, element, attr) {
+                scope.mode = scope.params.mode;
+                scope.type = scope.params.type ? scope.params.type : ""
+                scope.clone = extend({}, scope.params.data);
+                scope.cos = false;
+                scope.strFormat = function(d){
+                    return d.split(":")[1]
+                }
+                scope.formatTime = function (d) {
+                    return d
+                        ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+                        : "-";
+                }
+                scope.submitFn = function(d){
+                    scope.submit(d);
+                }
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .titleHead{
+      border-bottom: 1px solid;
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

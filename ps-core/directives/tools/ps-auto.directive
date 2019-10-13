@@ -1,0 +1,111 @@
+<config injector=" $q, $timeout, $location, psUi, psUltility"
+></config>
+<template>
+  <div>
+    <div class="input-group">
+      <input type="text" class="form-control" ng-class="renderClass()"/>
+      <span class="input-group-btn">
+        <button ng-click="open()"
+            class="btn btn-default" style="height:28px; padding:0 5px;font-size:1px;margin-top: -6px;">
+          <span class="glyphicon glyphicon-option-horizontal" style="margin-top:5px;"></span>
+        </button>
+      </span>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function( q, timeout,$location, psUi, psUltility){
+    return {
+      scope : {
+        ngModel : "=?",
+        options : "@",
+        config : "=?",
+      },
+      require : '?ngModel',
+      replace : true,
+      link(scope, element, attr, ngModel) {
+          let ins,
+          defaultConfig = {},
+          change = attr['change'],
+          dom = element[0].children[0].children[0],
+          btn = element[0].children[0].children[1].children[0],
+          spa = element[0].children[0].children[1].children[0].children[0];
+          scope.config =  angular.extend({},defaultConfig,scope.config||{});
+          // btn.style.marginTop = scope.config.marginTop || '-6px';
+          if(scope.config.disabled){
+              dom.setAttribute("disabled",true);
+              spa.setAttribute("disabled",true);
+              btn.setAttribute("disabled",true);
+              $(spa).unbind("click");
+              $(btn).unbind("click");
+              if(ins){
+                  ins.destroy();
+              }
+              // $(checkbox).prop('disabled', true);
+          }
+        scope.open = function(){
+          ins = extend();
+        };
+        function exec( command ){
+          let regex = /([a-zA-Z\.\_\$\[\]"'][a-zA-Z\.\_\$\d\[\]"']*)/g;
+          command = command.replace(regex, "scope.$parent.$1");
+          eval( command );
+        }
+        function extend(str){
+          let ins,
+            dataConf = psUltility.trimngOptions(scope, "options"),
+              label = dataConf.label;
+          str = typeof str === "string" ? str : "";
+          ins = psUi.createAutotDrop(element[0].children[0], dataConf.rawOptions, function(d){
+            d = psUltility.runFormat(d, label);
+            return d.indexOf(str) !== -1;
+          }, function(op){
+            return psUltility.runFormat(op, label);
+          });
+          ins.on("submit", (d) => {
+            ngModel.$setViewValue(d);
+            if(change){
+              exec(change);
+            }
+            ngModel.$render();
+          });
+          return ins
+        }
+        dom.onkeydown = function(){
+          timeout(() => {
+            let str = this.value;
+            ins && ins.destroy();
+            if(str.length > 0){
+              ins = extend(str);
+            }
+            ngModel.$setViewValue(str);
+          })
+        };
+        ngModel.$render = function(e){
+          let dataConf = psUltility.trimngOptions(scope, "options"),
+              label = dataConf.label;
+          if(typeof ngModel.$viewValue == "string"){
+            dom.value = ngModel.$viewValue;
+          } else if(typeof ngModel.$viewValue == "object"){
+            dom.value = psUltility.runFormat(ngModel.$viewValue, label);
+          }
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .form-control{
+    height : 28px;
+    padding : 0 6px;
+    width : ~'calc( 100% - 14px )';
+  }
+  .sp-replacer {
+    padding : 4px;
+  }
+  .color-txt{
+    line-height : 32px;
+    margin-left : 10px;
+    font-weight : bold;
+  }
+</style>

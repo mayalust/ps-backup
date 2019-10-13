@@ -1,0 +1,427 @@
+<config
+    injector="$scope,$rootScope,$timeout,$state,$registerService,psTreeData,ajax,commonMethodService2,commonMethodService,growl,resourceUIService,psPolling"
+    deps="winding"
+></config>
+<template>
+  <div class="row wrap">
+    <div class="col-md-6 padding5">
+      <div class="row block margin-5 top">
+        <div
+          class="tree-loading ng-scope"
+          ng-if="!loaded"
+          data-a-58306b0e=""
+        ></div>
+        <winding data-init="init(event)"></winding>
+      </div>
+    </div>
+    <div class="col-md-6 padding5">
+      <div class="row block margin-5 top-part">
+        <p class="title">送风支管状态总览</p>
+        <table class="small">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table1.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table1.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                  ng-bind="v.value"
+                  data-show-time="v.arisingTime"
+                ></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="small">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table2.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table2.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                  ng-bind="v.value"
+                  data-show-time="v.arisingTime"
+                ></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-md-12" style="padding: 5px;">
+      <div style="border: 1px solid #25729d;padding: 15px;">
+        <p class="title">送风支管状态总览</p>
+        <table class="big">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table3.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table3.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                  ng-bind="v.value"
+                  data-show-time="v.arisingTime"
+                ></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  rootScope,
+  timeout,
+  $state,
+  registerService,
+  psTreeData,
+  ajax,
+  commonMethodService2,
+  cms,
+  growl,
+  resourceUIService,
+  psPolling
+) {
+  let windctrl,
+    windState = {},
+    id = $state.params.id;
+  let kpiNameArr = ["A温度", "B温度", "C温度", "D温度", "E温度"];
+  let kpiCodeArr = [40058, 40059, 40060, 40061, 40062];
+  let kpiArr = [
+    { code: 40058, name: "A温度" },
+    { code: 40059, name: "B温度" },
+    { code: 40060, name: "C温度" },
+    { code: 40061, name: "D温度" },
+    { code: 40062, name: "E温度" }
+  ];
+  scope.loaded = false;
+  scope.text = "prod_wind";
+  function toAry(obj) {
+    let arr = [];
+    for (let i = 1; i <= 40; i++) {
+      arr.push(fillZero(i) + i + "_" + (obj[fillZero(i) + i] || 0));
+    }
+    arr.sort((a, b) => {
+      return a < b ? -1 : 1;
+    });
+    return arr;
+  }
+  function fillZero(num) {
+    if (num < 10) {
+      return "0" + fillZero(num * 10);
+    } else {
+      return "";
+    }
+  }
+  class Wind {
+    constructor(target) {
+      this.target = target;
+    }
+    init(callback) {
+      this.getMeasureLocate().then(sensors => {
+        this.sensors = sensors.filter(d => d.label.indexOf("送风支管") == -1);
+        callback(sensors);
+      });
+    }
+    render(datas) {
+      return this.target && this.target.render(datas);
+    }
+    getMeasureLocate() {
+      return psTreeData(id).getMeasureLocate();
+    }
+  }
+  class WindCtrl {
+    constructor(target, time, isWebSocket, isDebug) {
+      this.polling = psPolling(time, isWebSocket, isDebug);
+      this.wind = new Wind(target);
+      this.wind.init(() => {
+        let nodeIds = [id],
+          kpiCodes = kpiCodeArr.concat([999997]),
+          instances = this.getInstances();
+        this.polling.getData(nodeIds, kpiCodes, instances, valueList => {
+          this.handleValues(valueList);
+        });
+      });
+    }
+    saveApply(fn) {
+      if (rootScope.$$phase == "$apply" || rootScope.$$phase == "$digest") {
+        fn && fn.call(this);
+        return;
+      }
+      scope.$apply(fn);
+    }
+    render(datas) {
+      return this.wind.render(datas);
+    }
+    getInstances() {
+      let instances = createConsequenceInsNum(1, 40);
+      return instances.concat(
+        instances.reduce((a, b) => {
+          return a.concat(
+            kpiCodeArr.map(kpiCode => {
+              return kpiCode + "_" + b;
+            })
+          );
+        }, [])
+      );
+    }
+    setStateToTables(item) {
+      let instanceArr = item.instance.split("_");
+      let find = kpiArr.find(item => {
+        return item.code == instanceArr[0];
+      });
+      if (find) {
+        if (Number(instanceArr[1]) < 11) {
+          setState(item, instanceArr[1], find, scope.table1);
+        } else if (Number(instanceArr[1]) > 10 && Number(instanceArr[1]) < 21) {
+          setState(item, instanceArr[1], find, scope.table2);
+        } else if (Number(instanceArr[1]) > 20) {
+          setState(item, instanceArr[1], find, scope.table3);
+        }
+      }
+    }
+    setValueToTables(item) {
+      if (Number(item.instance) < 11) {
+        setV(item, scope.table1);
+      } else if (Number(item.instance) > 10 && Number(item.instance) < 21) {
+        setV(item, scope.table2);
+      } else if (Number(item.instance) > 20) {
+        setV(item, scope.table3);
+      }
+    }
+    destroy() {
+      this.polling.destroy();
+    }
+    handleValues(dt) {
+      scope.loaded = true;
+      dt.forEach(this.setStateToTables);
+      let tcData = dt.filter(function(item) {
+        return Number(item.instance) < 100;
+      });
+      tcData.forEach(this.setValueToTables);
+      windState = dt
+        .filter(d => d.kpiCode == 999997)
+        .reduce((a, b) => {
+          let ins = b.instance.split("_")[1],
+            kpi = b.instance.split("_")[0];
+          if (kpiCodeArr.indexOf(kpi - 0) == -1) {
+            return a;
+          }
+          a[ins] = a[ins] == null || b.value > a[ins] ? b.value : a[ins];
+          return a;
+        }, windState);
+      if (this.ins) {
+        this.ins(toAry(windState));
+      } else {
+        this.ins = this.render(toAry(windState));
+      }
+      this.saveApply();
+    }
+  }
+
+  scope.turnTo = function(item, key) {
+    let instance = toInsString(item.header),
+      find = kpiArr.find(d => {
+        return d.name === key;
+      }),
+      enddate = item.arisingTime && new Date(item.arisingTime) - 0,
+      startdate = enddate && enddate - 2 * 60 * 60 * 1000;
+    commonMethodService2.navigateTo("专业分析", {
+      startdate,
+      enddate,
+      id: $state.params.id,
+      sensor: instance,
+      dataItems: find.code
+    });
+  };
+
+  function setValue(obj, dataLength) {
+    kpiArr.forEach(item => {
+      obj.value[item.name] = [];
+    });
+    obj.header.forEach(item => {
+      for (let key in obj.value) {
+        obj.value[key].push({
+          header: Number(item),
+          value: "--",
+          state: 1
+        });
+      }
+    });
+  }
+  function toInsString(val) {
+    return val < 10 ? "0" + val : "" + val;
+  }
+  function setInstance(start) {
+    return function(d, i) {
+      let val = i + start;
+      return toInsString(val);
+    };
+  }
+  function createConsequenceInsNum(start, length) {
+    return new Array(length + 1)
+      .join(0)
+      .split("")
+      .map(setInstance(start));
+  }
+  scope.table1 = {
+    header: createConsequenceInsNum(1, 10),
+    value: {}
+  };
+  setValue(scope.table1);
+  scope.table2 = {
+    header: createConsequenceInsNum(11, 10),
+    value: {}
+  };
+  setValue(scope.table2);
+  scope.table3 = {
+    header: createConsequenceInsNum(21, 20),
+    value: {}
+  };
+  setValue(scope.table3);
+
+  function setV(item, obj) {
+    let findKpi = kpiArr.find(function(k) {
+      return k.code == item.kpiCode;
+    });
+    for (let i = 0; i < obj.value[findKpi.name].length; i++) {
+      if (Number(item.instance) == obj.value[findKpi.name][i].header) {
+        obj.value[findKpi.name][i].value = item.value;
+        obj.value[findKpi.name][i].arisingTime = item.arisingTime;
+        break;
+      }
+    }
+  }
+
+  function setState(item, point, find, obj) {
+    let { name } = find,
+      { value } = obj,
+      fd = value[name].find(({ header }) => {
+        return point == header;
+      });
+    if (fd && item.value > 1) {
+      console.log(fd, item.value);
+    }
+    fd ? (fd.state = item.value) : null;
+  }
+
+  var params = [
+    "kpi",
+    {
+      includeInstance: true,
+      isRealTimeData: true,
+      nodeIds: [$state.params.id * 1],
+      kpiCodes: [40058, 40059, 40060, 40061, 40062]
+    }
+  ];
+  scope.init = event => {
+    windctrl = new WindCtrl(event.target, 6000, true);
+  };
+  scope.$on("$destroy", () => {
+    windctrl.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  .top {
+    position: relative;
+    min-height: 600px;
+  }
+  .title {
+    font-size: 16px;
+    color: #fff;
+    font-weight: 300;
+  }
+
+  .top-part {
+    height: 600px;
+    padding: 20px !important;
+  }
+
+  table {
+    margin: 10px;
+    width: 100%;
+
+    thead {
+      background-color: #214770;
+      color: #fff;
+
+      th {
+        padding: 5px 0;
+      }
+    }
+
+    th {
+      text-align: center;
+    }
+
+    td {
+      padding: 5px;
+      text-align: center;
+    }
+  }
+
+  .item {
+    padding: 5px;
+    background-color: #00bb7b;
+    color: white;
+    cursor: pointer;
+
+    &.state-1 {
+      background-color: #00bb7b;
+    }
+
+    &.state-2 {
+      background-color: #efd80b;
+    }
+
+    &.state-3 {
+      background-color: #ff8800;
+    }
+
+    &.state-4 {
+      background-color: #fd0001;
+    }
+  }
+
+  .margin-5 {
+    margin: 5px !important;
+  }
+
+  .big {
+    table-layout: fixed;
+    width: 100%;
+    td {
+      width: 4.5%;
+    }
+  }
+
+  .small {
+    table-layout: fixed;
+    width: 100%;
+    td {
+      width: 9%;
+    }
+  }
+}
+</style>

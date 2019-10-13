@@ -1,0 +1,1041 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl,commonMethodService,psRouter"></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="option"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  ajax,
+  location,
+  psDialog,
+  $routeParams,
+  growl,
+  commonMethodService,
+  psRouter
+) {
+  var target = commonMethodService();
+  var resource,
+    resultObj,
+    stepsList = [],
+    devList = [];
+  return {
+    link(scope, element, attr, ngModel) {
+      var data = psRouter.params("obj");
+      resultObj = data;
+      let bool = psRouter.params("showSubmit");
+       
+      //GMT转普通格式
+      function GMTToStr(time) {
+        let date = new Date(time);
+        let hour = date.getHours();
+        let minute = date.getMinutes();
+        let second = date.getSeconds();
+        if (hour < 10) {
+          hour = "0" + hour.toString();
+        }
+        if (minute < 10) {
+          minute = "0" + minute.toString();
+        }
+        if (second < 10) {
+          second = "0" + second.toString();
+        }
+        let Str =
+          date.getFullYear() +
+          "-" +
+          (date.getMonth() + 1) +
+          "-" +
+          date.getDate() +
+          " " +
+          hour +
+          ":" +
+          minute +
+          ":" +
+          second;
+        return Str;
+      }
+
+      function getName(id) {
+        var allUsers = target.getRootScope("getAllUserInfo");
+        var user = allUsers.find(a => {
+          return id == a.userID;
+        });
+        if (user && user != null && user.userName) {
+          return user.userName;
+        } else {
+          return "";
+        }
+      }
+
+      function getExecutionCycle(executionCycle) {
+        var list = target.getRootScope("myDicts")["executionCycle"];
+        var obj = list.find(a => {
+          return a.valueCode == executionCycle;
+        });
+        return obj.label;
+      }
+
+      ajax
+        .post(
+          "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,domains,modelId",
+          [{}]
+        )
+        .then(a => {
+          devList = a;
+        });
+
+      target.on("tree_resourceChange", function(e) {
+        resource = e.resource;
+        scope.option = {
+          init: function(next) {
+            return {
+              toolList: data.toolList,
+              listDeviceList: data.listDeviceList,
+              stepsList: data.stepsList,
+              resetCondtionList: data.resetCondtionList
+            };
+          },
+
+          modals: {
+            //定性
+            dxmodel: {
+              label: "维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "作业内容",
+                      key: "content"
+                    },
+                    {
+                      type: "input",
+                      label: "数据类别",
+                      key: "dataType",
+                      config: {
+                        disabled: true
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "规则条件",
+                  type: "table-form",
+                  key: "ruleList",
+                  config: {
+                    attributes: {
+                      result: ["结果", "text"],
+                      effectDeviceId: ["作用设备", "text"],
+                      stateStandardName: ["维护标准名称", "text"],
+                      executionCycle: ["维护周期单位", "text"],
+                      cycleNum: ["维护周期间隔", "text"],
+                      maintainStandardName: ["检修标准名称", "text"],
+                      maintainLimitDay: ["检修完成期限（天）", "text"]
+                    },
+                    grid: {
+                      body: [
+                        "result",
+                        {
+                          name: "effectDeviceId",
+                          bind: function(row) {
+                            var obj = devList.find(a => {
+                              return a.id == row.effectDeviceId;
+                            });
+                            if (obj) {
+                              return obj.label + obj.externalDevId;
+                            } else {
+                              return "无";
+                            }
+                          }
+                        },
+                        "stateStandardName",
+                        {
+                          name: "executionCycle",
+                          bind: function(row) {
+                            var obj = target
+                              .getRootScope("myDicts")
+                              ["executionCycle"].find(a => {
+                                return row.executionCycle == a.valueCode;
+                              });
+                            if (obj && obj.label) {
+                              return obj.label;
+                            } else {
+                              return "";
+                            }
+                          }
+                        },
+                        "cycleNum",
+                        "maintainStandardName",
+                        "maintainLimitDay"
+                      ],
+                      buttons: {
+                        outGrid: [
+                          {
+                            label: "新增规则",
+                            symbol: "inline",
+                            class: "primary"
+                          }
+                        ],
+                        inGrid: [
+                          {
+                            label: "删除",
+                            class: "primary",
+                            on: {
+                              click: function(e) {
+                                e.removeInline();
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      config: {
+                        composory: true,
+                        showIndex: true,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        inlineAdd: {
+                          result: {
+                            type: "input"
+                          },
+                          effectDeviceId: {
+                            type: "select",
+                            url:
+                              "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,externalDevId,domains,modelId",
+                            parameter: [{}],
+                            after: function(d) {
+                              for (var i in d) {
+                                d[i].selectName =
+                                  d[i].label + d[i].externalDevId;
+                              }
+                              return d;
+                            },
+                            format: {
+                              id: "id",
+                              label: "selectName"
+                            }
+                          },
+                          stateStandardName: {
+                            type: "select",
+                            watch: {
+                              key: "effectDeviceId",
+                              handler: function(newValue, next) {
+                                ajax
+                                  .post(
+                                    "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                    [
+                                      newValue.id && newValue.id != 0
+                                        ? {
+                                            deviceId: newValue.id,
+                                            ticketCategory: "310",
+                                            taskStatus: 0
+                                          }
+                                        : {
+                                            deviceId: resource.id,
+                                            ticketCategory: "310",
+                                            taskStatus: 0
+                                          },
+                                      {
+                                        start: 0,
+                                        length: 1000,
+                                        statCount: true
+                                      }
+                                    ]
+                                  )
+                                  .then(a => {
+                                    var list = a.data;
+                                    next(list);
+                                  });
+                              }
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardName"
+                            }
+                          },
+                          executionCycle: {
+                            type: "select",
+                            options: target.getRootScope("myDicts")[
+                              "executionCycle"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          cycleNum: { type: "input" },
+                          maintainStandardName: {
+                            type: "select",
+                            url:
+                              "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                            watch: {
+                              key: "effectDeviceId",
+                              handler: function(newValue, next) {
+                                ajax
+                                  .post(
+                                    "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                    [
+                                      newValue.id && newValue.id != 0
+                                        ? {
+                                            deviceId: newValue.id,
+                                            ticketCategory: "320",
+                                            taskStatus: 0
+                                          }
+                                        : {
+                                            deviceId: resource.id,
+                                            ticketCategory: "310",
+                                            taskStatus: 0
+                                          },
+                                      {
+                                        start: 0,
+                                        length: 1000,
+                                        statCount: true
+                                      }
+                                    ]
+                                  )
+                                  .then(a => {
+                                    var list = a.data;
+                                    next(list);
+                                  });
+                              }
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardProjectName"
+                            }
+                          },
+                          maintainLimitDay: { type: "input" },
+                          submit: function(a, b, refreshGrid, allData) {
+                            var newData = {};
+                            newData.result = b.result ? b.result : "";
+                            newData.stateStandardId = b.stateStandardName
+                              ? b.stateStandardName.id
+                              : 0;
+                            newData.stateStandardNo = b.stateStandardName
+                              ? b.stateStandardName.standardNo
+                              : "";
+                            newData.stateStandardName = b.stateStandardName
+                              ? b.stateStandardName.standardName
+                              : "";
+                            newData.executionCycle =
+                              b.stateStandardName && b.executionCycle
+                                ? b.executionCycle.valueCode
+                                : "";
+                            newData.cycleNum =
+                              b.stateStandardName && b.cycleNum
+                                ? b.cycleNum
+                                : 0;
+                            newData.maintainStandardId = b.maintainStandardName
+                              ? b.maintainStandardName.id
+                              : 0;
+                            newData.maintainStandardNo = b.maintainStandardName
+                              ? b.maintainStandardName.standardProjectId
+                              : "";
+                            newData.maintainStandardName = b.maintainStandardName
+                              ? b.maintainStandardName.standardProjectName
+                              : "";
+                            newData.maintainLimitDay =
+                              b.maintainStandardName && b.maintainLimitDay
+                                ? b.maintainLimitDay
+                                : 0;
+                            newData.effectDeviceId =
+                              b.effectDeviceId && b.effectDeviceId.id
+                                ? b.effectDeviceId.id
+                                : 0;
+                            newData.effectDeviceCode =
+                              b.effectDeviceId && b.effectDeviceId.externalDevId
+                                ? b.effectDeviceId.externalDevId
+                                : "";
+                            allData.push(newData);
+                            refreshGrid(false);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            //定量
+            dlmodel: {
+              label: "维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "作业内容",
+                      key: "content"
+                    },
+                    {
+                      type: "input",
+                      label: "数据类别",
+                      key: "dataType",
+                      config: {
+                        disabled: true
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "规则条件",
+                  type: "table-form",
+                  key: "ruleList",
+                  config: {
+                    attributes: {
+                      unit: ["计量单位", "text"],
+                      upperLimit: ["上限", "text"],
+                      lowerLimit: ["下限", "text"],
+                      effectDeviceId: ["作用设备", "text"],
+                      stateStandardName: ["维护标准名称", "text"],
+                      executionCycle: ["维护周期单位", "text"],
+                      cycleNum: ["维护周期间隔", "text"],
+                      maintainStandardName: ["检修标准名称", "text"],
+                      maintainLimitDay: ["检修完成期限（天）", "text"]
+                    },
+                    grid: {
+                      body: [
+                        "unit",
+                        "upperLimit",
+                        "lowerLimit",
+                        {
+                          name: "effectDeviceId",
+                          bind: function(row) {
+                            var obj = devList.find(a => {
+                              return a.id == row.effectDeviceId;
+                            });
+                            if (obj) {
+                              return obj.label + obj.externalDevId;
+                            } else {
+                              return "无";
+                            }
+                          }
+                        },
+                        "stateStandardName",
+                        {
+                          name: "executionCycle",
+                          bind: function(row) {
+                            var obj = target
+                              .getRootScope("myDicts")
+                              ["executionCycle"].find(a => {
+                                return row.executionCycle == a.valueCode;
+                              });
+                            return obj.label;
+                          }
+                        },
+                        "cycleNum",
+                        "maintainStandardName",
+                        "maintainLimitDay"
+                      ],
+                      buttons: {
+                        outGrid: [
+                          {
+                            label: "新增规则",
+                            symbol: "inline",
+                            class: "primary"
+                          }
+                        ],
+                        inGrid: [
+                          {
+                            label: "删除",
+                            class: "primary",
+                            on: {
+                              click: function(e) {
+                                e.removeInline();
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      config: {
+                        composory: true,
+                        showIndex: true,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        inlineAdd: {
+                          unit: { type: "input" },
+                          upperLimit: { type: "input" },
+                          lowerLimit: { type: "input" },
+                          effectDeviceId: {
+                            type: "select",
+                            url:
+                              "resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,externalDevId,domains,modelId",
+                            parameter: [{}],
+                            after: function(d) {
+                              for (var i in d) {
+                                d[i].selectName =
+                                  d[i].label + d[i].externalDevId;
+                              }
+                              return d;
+                            },
+                            format: {
+                              id: "id",
+                              label: "selectName"
+                            }
+                          },
+                          stateStandardName: {
+                            type: "select",
+                            watch: {
+                              key: "effectDeviceId",
+                              handler: function(newValue, next) {
+                                ajax.post(
+                                    "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                    [
+                                      newValue.id && newValue.id != 0
+                                        ? {
+                                            deviceId: newValue.id,
+                                            ticketCategory: "310",
+                                            taskStatus: 0
+                                          }
+                                        : {
+                                            deviceId: 0,
+                                            ticketCategory: "310",
+                                            taskStatus: 0
+                                          },
+                                      {
+                                        start: 0,
+                                        length: 1000,
+                                        statCount: true
+                                      }
+                                    ]
+                                  ).then(a => {
+                                    var list = a.data;
+                                    list.push({
+                                      id: 0,
+                                      standardName: "无",
+                                      standardNo: ""
+                                    });
+                                    next(list);
+                                  });
+                              }
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardName"
+                            }
+                          },
+                          executionCycle: {
+                            type: "select",
+                            options: target.getRootScope("myDicts")[
+                              "executionCycle"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          cycleNum: { type: "input" },
+                          maintainStandardName: {
+                            type: "select",
+                            watch: {
+                              key: "effectDeviceId",
+                              handler: function(newValue, next) {
+                                ajax .post(
+                                    "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                    [
+                                      newValue.id && newValue.id != 0
+                                        ? {
+                                            deviceId: newValue.id,
+                                            ticketCategory: "320",
+                                            taskStatus: 0
+                                          }
+                                        : {
+                                            deviceId: 0,
+                                            ticketCategory: "320",
+                                            taskStatus: 0
+                                          },
+                                      {
+                                        start: 0,
+                                        length: 1000,
+                                        statCount: true
+                                      }
+                                    ]
+                                  ).then(a => {
+                                    var list = a.data;
+                                    list.push({
+                                      id: 0,
+                                      standardProjectName: "无",
+                                      standardProjectId: ""
+                                    });
+                                    next(list);
+                                  });
+                              }
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardProjectName"
+                            }
+                          },
+                          maintainLimitDay: { type: "input" },
+                          submit: function(a, b, refreshGrid, allData) {
+                            var newData = {};
+                            newData.unit = b.unit ? b.unit : "";
+                            newData.upperLimit = b.upperLimit
+                              ? b.upperLimit
+                              : "";
+                            newData.lowerLimit = b.lowerLimit
+                              ? b.lowerLimit
+                              : "";
+                            newData.stateStandardId = b.stateStandardName
+                              ? b.stateStandardName.id
+                              : 0;
+                            newData.stateStandardNo = b.stateStandardName
+                              ? b.stateStandardName.standardNo
+                              : "";
+                            newData.stateStandardName = b.stateStandardName
+                              ? b.stateStandardName.standardName
+                              : "";
+                            newData.executionCycle =
+                              b.stateStandardName && b.executionCycle
+                                ? b.executionCycle.valueCode
+                                : "";
+                            newData.cycleNum =
+                              b.stateStandardName && b.cycleNum
+                                ? b.cycleNum
+                                : 0;
+                            newData.maintainStandardId = b.maintainStandardName
+                              ? b.maintainStandardName.id
+                              : 0;
+                            newData.maintainStandardNo = b.maintainStandardName
+                              ? b.maintainStandardName.standardProjectId
+                              : "";
+                            newData.maintainStandardName = b.maintainStandardName
+                              ? b.maintainStandardName.standardProjectName
+                              : "";
+                            newData.maintainLimitDay =
+                              b.maintainStandardName && b.maintainLimitDay
+                                ? b.maintainLimitDay
+                                : 0;
+                            newData.effectDeviceId =
+                              b.effectDeviceId && b.effectDeviceId.id
+                                ? b.effectDeviceId.id
+                                : 0;
+                            newData.effectDeviceCode =
+                              b.effectDeviceId && b.effectDeviceId.externalDevId
+                                ? b.effectDeviceId.externalDevId
+                                : "";
+                            allData.push(newData);
+                            refreshGrid(false);
+                          }
+                        }
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            }
+          },
+
+          type: "layout",
+          children: [
+            {
+              type: "form-inline",
+              children: [
+                {
+                  type: "label",
+                  width: 10,
+                  value: "设备名称:"
+                },
+                {
+                  type: "label",
+                  width: 10,
+                  value: resource.label
+                },
+                {
+                  type: "label",
+                  width: 10,
+                  value: "设备编号:"
+                },
+                {
+                  type: "label",
+                  width: 10,
+                  value: resource.externalDevId
+                }
+              ]
+            },
+            {
+              type: "panel",
+              children: [
+                {
+                  type: "form-grid",
+                  scope: "model",
+                  children: [
+                    {
+                      type: "input",
+                      label: "状态维护标准编号",
+                      key: "standardNo",
+                      col: 4,
+                      value: data.standardNo,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "状态维护项目名称",
+                      key: "standardName",
+                      col: 4,
+                      value: data.standardName,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "实施依据",
+                      key: "maintainBasis",
+                      col: 4,
+                      value: data.maintainBasis,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "设备状态",
+                      col: 4,
+                      key: "deviceState",
+                      value: data.deviceState,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "实施方",
+                      col: 4,
+                      key: "actionUser",
+                      value: data.actionUser,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "安全挂牌",
+                      col: 4,
+                      key: "safetyPoint",
+                      value: data.safetyPoint,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护人",
+                      col: 4,
+                      key: "executioner",
+                      value: getName(data.executioner),
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "岗位号",
+                      col: 4,
+                      key: "jobNo",
+                      value: data.jobNo,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "周期单位",
+                      col: 4,
+                      key: "executionCycle",
+                      value: getExecutionCycle(data.executionCycle),
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "周期间隔",
+                      col: 4,
+                      key: "cycleNum",
+                      value: data.cycleNum,
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "开始时间",
+                      col: 4,
+                      key: "firstExecutionTime",
+                      value: GMTToStr(data.firstExecutionTime),
+                      config: {
+                        disabled: true
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "作业时长(H)",
+                      col: 4,
+                      key: "needTime",
+                      value: data.needTime,
+                      config: {
+                        disabled: true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              label: "工器具准备",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "toolList",
+                  config: {
+                    attributes: {
+                      name: ["名称", "text"],
+                      format: ["规格", "text"],
+                      num: ["数量", "text"],
+                      unit: ["单位", "text"]
+                    },
+                    grid: {
+                      body: ["name", "format", "num", "unit"],
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              label: "挂牌准备",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "listDeviceList",
+                  config: {
+                    attributes: {
+                      safeNature: ["安全牌性质", "text"],
+                      listPosition: ["挂牌位置", "text"],
+                      deviceName: ["挂牌设备", "text"]
+                    },
+                    grid: {
+                      body: ["safeNature", "listPosition", {
+                        name: "deviceName",
+                        bind: function (row) {
+                          return row.deviceName.includes("////")? row.deviceName.split("////")[0] : row.deviceName;
+                        }
+                      }],
+                      config: {
+                        showIndex: true,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              label: "施工步骤",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "stepsList",
+                  config: {
+                    attributes: {
+                      stepsNo: ["步骤", "text"],
+                      content: ["作业步骤", "text"],
+                      dataType: ["数据类别", "text"]
+                    },
+                    grid: {
+                      body: [
+                        "stepsNo",
+                        "content",
+                        {
+                          name: "dataType",
+                          gridType: "select",
+                          options: function(row) {
+                            return [
+                              { id: "定性", label: "定性" },
+                              { id: "定量", label: "定量" }
+                            ];
+                          }
+                        }
+                      ],
+                      buttons: {
+                        inGrid:
+                          bool != false
+                            ? [
+                                {
+                                  label: "规则编辑",
+                                  on: {
+                                    click: function(e) {
+                                      var dataType = e.$row.dataType;
+                                      if (dataType == "定性") {
+                                        e.update({
+                                          width: "80%",
+                                          template: "dxmodel",
+                                          before: function(d) {
+                                            for (
+                                              var i = 0;
+                                              i < resultObj.stepsList.length;
+                                              i++
+                                            ) {
+                                              var stepsNo =
+                                                resultObj.stepsList[i].stepsNo;
+                                              if (stepsNo == d.stepsNo) {
+                                                resultObj.stepsList[i] = d;
+                                              }
+                                            }
+                                            e.$row.ruleList = d.ruleList;
+                                          },
+                                          url: "rrr"
+                                        });
+                                        e.$row.dataType = dataType;
+                                      } else if (dataType == "定量") {
+                                        e.update({
+                                          width: "80%",
+                                          template: "dlmodel",
+                                          before: function(d) {
+                                            for (
+                                              var i = 0;
+                                              i < resultObj.stepsList.length;
+                                              i++
+                                            ) {
+                                              var stepsNo =
+                                                resultObj.stepsList[i].stepsNo;
+                                              if (stepsNo == d.stepsNo) {
+                                                resultObj.stepsList[i] = d;
+                                              }
+                                            }
+                                            e.$row.ruleList = d.ruleList;
+                                          }
+                                        });
+                                        e.$row.dataType = dataType;
+                                      } else {
+                                        growl.warning("请选择数据类别!");
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            : []
+                      },
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              label: "回复初始设置条件",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "resetCondtionList",
+                  config: {
+                    attributes: {
+                      standardProjectName: ["标准项目名称", "text"],
+                      standardProjectId: ["标准项目编号", "text"]
+                    },
+                    grid: {
+                      body: ["standardProjectName", "standardProjectId"],
+                      config: {
+                        showIndex: true,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              type: "form-inline",
+              children: [
+                {
+                  type: "button",
+                  width: 10,
+                  config: {
+                    show: bool != false ? true : false,
+                    class: "btn-primary",
+                    label: "确定",
+                    on: {
+                      click: function(e) {
+                        ajax
+                          .post(
+                            "maintenanceTaskUIService.addStateMaintinStandardUpdate",
+                            resultObj
+                          )
+                          .then(d => {
+                            growl.info("编辑维护状态标准成功");
+                            target.navigateTo(
+                              "index",
+                              {
+                                main: 7,
+                                sub: 0
+                              },
+                              "self"
+                            );
+                          });
+                      }
+                    }
+                  },
+                  key: "save"
+                },
+                {
+                  type: "button",
+                  width: 10,
+                  config: {
+                    show: bool != false ? true : false,
+                    label: "取消",
+                    on: {
+                      click: function() {
+                        target.navigateTo(
+                          "index",
+                          {
+                            main: 7,
+                            sub: 0
+                          },
+                          "self"
+                        );
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        };
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

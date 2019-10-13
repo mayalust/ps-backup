@@ -1,0 +1,179 @@
+<config injector="$q,$timeout"
+></config>
+<template>
+  <div class="wrap ">
+    <select></select>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (q, timeout) {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?",
+      options: '=?'
+    },
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let $dom = element.find('select');
+      let dom = $dom[0];
+      let dataOptions = scope.options || [];
+      let prepend = $('<option value="-1">----移除所选----</option>');
+      let defaultConfig = {
+        placeholder: '---请选择---',
+        search: true,
+        multiple: false,
+        width: '100%'
+      };
+      let defaultFormat = {
+        id: 'id',
+        label: 'label',
+        value: 'id'
+      };
+      let config = Object.assign({}, defaultConfig, scope.config || {});
+      let format = Object.assign({}, defaultFormat, config.format);
+      $dom.css({
+        width: config.width,
+        height: config.height
+      });
+
+      function findIdex (arr, fn) {
+        for (let i = 0; i < arr.length; i++) {
+          if (fn(arr[i], i)) {
+            return i;
+          }
+        }
+        return -1;
+      }
+
+      function reRender (options) {
+        let str1 = '';
+        options.forEach((op, index) => {
+          str1 += `<option value="${index}">${op[format.label]}</option>`;
+        });
+        $dom.html(str1);
+
+        let ind = findIdex(dataOptions, function (item) {
+          if (format.value === '$this') {
+            if (typeof format.compare === 'function') {
+              return format.compare(item, ngModel.$viewValue);
+            }
+            return item == ngModel.$viewValue;
+          }
+          return item[format.value] == ngModel.$viewValue;
+        });
+        if (ind === -1) {
+          $dom.val(null).trigger('change');
+        } else {
+          $dom.prepend(prepend);
+          timeout(function () {
+            $dom.val(ind).trigger('change');
+            //$dom.val(inx).trigger('change');
+          }, 5);
+
+
+        }
+      }
+
+      function render (options) {
+        let str1 = '';
+        options.forEach((op, index) => {
+          str1 += `<option value="${index}">${op[format.label]}</option>`;
+        });
+        $dom.html(str1);
+        window['require'](['select2'], () => {
+          $dom.select2(config);
+          $dom.off("select2:select");
+          $dom.on("select2:select", function (e) {
+            let inx = $dom.val();
+            let value = null;
+            if (inx == -1) {
+              prepend.remove();
+              timeout(function () {
+                $dom.val(null).trigger('change');
+              }, 5);
+            } else {
+              let item = dataOptions[inx];
+              if (format.value === '$this') {
+                value = item;
+              } else {
+                value = item[format.value];
+              }
+              $dom.prepend(prepend);
+              timeout(function () {
+                $dom.val(inx).trigger('change');
+              }, 5);
+            }
+            ngModel.$setViewValue(value);
+          });
+        });
+      }
+
+      render(dataOptions);
+
+      scope.$watch(`options`, function (n) {
+        if (n) {
+          dataOptions = n || [];
+          reRender(dataOptions);
+        }
+      });
+      scope.$watch(`config`, function (n) {
+        if (n) {
+          config = Object.assign({}, defaultConfig, n);
+          format = Object.assign({}, defaultFormat, config.format);
+          reRender(dataOptions);
+        }
+      });
+
+      Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+        if (typeof n === 'undefined') {
+          return;
+        }
+        return n;
+      });
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        let ind = findIdex(dataOptions, function (item) {
+          if (format.value === '$this') {
+            if (typeof format.compare === 'function') {
+              return format.compare(item, n);
+            }
+            return item == n;
+          }
+          return item[format.value] == n;
+        });
+        if (ind === -1) {
+          $dom.val(null).trigger('change');
+        } else {
+
+          $dom.prepend(prepend);
+          timeout(function () {
+            $dom.val(ind).trigger('change');
+          }, 5);
+        }
+        return n;
+      });
+      scope.$on('destroy', function () {
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+  color: #333;
+  background-color: #eee;
+  position: relative;
+  
+  span {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    margin-top: -10px;
+    
+    &:hover {
+      font-weight: bold;
+      
+    }
+  }
+}
+</style>

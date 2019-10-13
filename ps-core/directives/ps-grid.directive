@@ -1,0 +1,1437 @@
+<config injector="$q,$timeout,$location,$filter,psEvent,psUltility,psDialog,ajax,growl,psExplainer,$rootScope,psUi"
+></config>
+<template>
+  <div class="angular-dataTable mobile-suitable">
+    <div class="ps-grid">
+      <div class="angular-dataTable-header" ng-if="source.showheader != false" style="margin : 0px auto 5px auto">
+        <a href="" download="export.xlsx" id="_exportFile"></a>
+        <span ng-repeat="head in getTableButtons()">
+            <button ng-disabled="head.disabled(dataTable.data)"
+                    class="btn btn-sm"
+                    ng-click="buttonClick(head, row, $event);$event.stopPropagation();" type="button"
+                    ng-class="buttonClass(head)"
+                    style="margin-right: 5px;">
+              <i ng-class="head.icon"></i>
+              <span ng-class="hidden-sm" ng-bind="getButtonLabel(head)"></span>
+            </button>
+            <span ng-if="head.type=='multiSelect'" data-id="head.id" data-mark="head.mark"
+                  data-submit="head.events.submit(data)" data-options="head.options" multi-select></span>
+            </span>
+        <div ng-if="source.showSearch" class="combined-query pull-right">
+          <div class="btn-group" ng-class="{true:'open', false:''}[open]"
+               style="display:block; float:left; margin-top : 0;">
+            <button type="button" ng-disabled="wholeDisabled" class="btn btn-default btn-sm dropdown-toggle"
+                    ng-click="searchTypeClick();">
+              <span ng-bind="{true:'查询条件',false:getLabel(querytype)}[querytype==undefined]"></span>
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li>
+                <a role="button" ng-click="conditionClick(header, key);"
+                   ng-repeat="(key, header) in getSearchBody()"
+                   ng-bind="getLabel(header)">
+                </a>
+              </li>
+            </ul>
+          </div>
+          <span ng-if="querytype.search=='text' || querytype.search == undefined"
+                style="display:block; float:left; margin : 0 6px;">
+                 <input class="form-control input-sm"
+                        ng-model="$parent.$parent.$parent.keyInput"
+                        maxlength="40" type="text"/>
+                </span>
+          <span ng-if="querytype.search=='select'" style="display:block; float:left; margin : 0 6px;">
+                 <select ng-model="$parent.$parent.keyInput"
+                         class="form-control"
+                         style="padding-top: 2px;"
+                         ng-options="item[querytype.filterFormat.value]
+                          as item[querytype.filterFormat.label]
+                         for item in querytype.options"><option value="">请选择...</option></select>
+            </span>
+          <span ng-if="querytype.type=='selectObj'" style="display:block; float:left; margin : 0 6px;">
+                 <select ng-model="$parent.$parent.keyInput"
+                         class="form-control"
+                         style="padding-top: 2px;"
+                         ng-options="item[querytype.filterFormat.label] for item in querytype.options"><option value="">请选择...</option></select>
+            </span>
+          <span ng-if="querytype.type=='tree'" style="display:block; float:left; margin : 0 10px;">
+                <div class="dropdowntree select-sm"
+                     placeholder="请选择..."
+                     showclear="true"
+                     ng-model="$parent.$parent.keyInput"
+                     dt-key="querytype.key"
+                     options="querytype.options"
+                     dt-mark="querytype.mark"></div>
+            </span>
+          <span ng-if="querytype.type=='status'" style="display:block; float:left; margin : 0 10px;">
+                 <select ng-model="$parent.$parent.keyInput"
+                         class="form-control"
+                         style="padding-top: 2px;"
+                         ng-options="item.value as item.label for item in [{label : '已启用', value : 0},{label : '未启用', value : -1}]"><option
+                     value="">请选择...</option></select>
+            </span>
+          <button class="btn btn-primary btn-sm" style="display:block; float:left;margin-top : 0;"
+                  ng-disabled="wholeDisabled" ng-click="goSearch()" type="button">
+            <i class="fa fa-search"></i>
+            <span class="hidden-sm">查询</span>
+          </button>
+        </div>
+      </div>
+      <!-- dataTable's body, include filter search etc.-->
+      <div class="angular-dataTable-body">
+        <div class="dataTables_wrapper dt-bootstrap no-footer">
+          <div class="dataTables_scroll">
+            <div class="dataTables" style="position: relative; overflow: auto; width: 100%;">
+              <table width="100%" class="table table-hover no-footer dataTable"
+                     role="grid" aria-describedby="DataTables_Table_0_info"
+                     style="width: 100%;">
+                <thead>
+                <tr role="row" style="height: 0px;">
+                  <th style="width:14px;"
+                      ng-if="dataTable.showSelector != false"
+                      style="width:20px;"
+                      ng-click="allClick()">
+                                    <span ng-show="dataTable.multipleSelect">
+                                        <input type="checkbox"
+                                               ng-model="$parent.allcheck"
+                                               ng-disabled="wholeDisabled"/>
+                                    </span>
+                    <span ng-show="!dataTable.multipleSelect">
+                                    </span>
+                  </th>
+                  <th ng-if="dataTable.showIndex==true" style="width:20px;">序号</th>
+                  <th ng-repeat="(key, header) in dataTable.body"
+                      ng-click="sortClick(header, key)"
+                      ng-class="sorting(sortBy, header, key)">
+                    <div class="dataTables_sizing" ng-bind="getLabel(header)"></div>
+                  </th>
+                  <th ng-if="dataTable.hasButtons()" ng-style="btnColStyle(row)">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-if="showNoData()">
+                  <td ng-attr-colspan="{{$parent.getFullLength()}}" style="text-align: center;">
+                    没有符合条件的记录
+                  </td>
+                </tr>
+                <tr ng-if="inlineAddObj.show">
+                  <td ng-if="dataTable.showSelector != false">
+                    <input type="checkbox"/>
+                  </td>
+                  <td ng-if="dataTable.showIndex==true">0</td>
+                  <td ng-repeat="(key, header) in dataTable.body">
+                                            <span ng-if="dataTable.inlineAdd[key].type === 'label'"
+                                                  ng-bind="'系统生成'">
+                                            </span>
+                    <span ng-if="dataTable.inlineAdd[key].type === 'input' || dataTable.inlineAdd[key].type == undefined">
+                                        <input class="form-control" type="text" ng-model="inlineAddObj.data[key]"/>
+                                    </span>
+                    <span ng-if="dataTable.inlineAdd[key].type === 'select'">
+                                        <select class="form-control"
+                                                ng-model="inlineAddObj.data[key]"
+                                                ng-options="item as item.label for item in dataTable.inlineAdd[key].options">
+                                        </select>
+                                    </span>
+                  </td>
+                  <td data-field-label="操作" style="width: 120px;">
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-default" ng-click="inlineAddConfirm()">
+                        确定
+                      </button>
+                      <button class="btn btn-default" ng-click="inlineAddCancel()">
+                        取消
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- ng-repeat="row in currentPageData = (filterResult = (dataTable.data | filtersort : dataTable.body : sortBy : searchBy : dataTable.search) | limitTo : getSize() : getStartPoint())" -->
+                <tr role="row" ng-if="currentPageData.length > 0"
+                    ng-repeat="row in currentPageData track by $index"
+                    ng-init="rowInx = $index"
+                    ng-class="trClass(row, source.rowclass)">
+                  <td ng-if="dataTable.showSelector != false">
+                    <input type="checkbox"
+                           ng-change="selectRow(row)"
+                           ng-model="row.selected"/>
+                  </td>
+                  <td ng-bind="$index+1" ng-if="dataTable.showIndex==true"></td>
+                  <td ng-repeat="(key, header) in dataTable.body"
+                      data-field-label="{{header.label || header}}">
+
+                    <ps-tools-grid data-header="header" data-key="key" data-row="row"
+                                   index="$index"></ps-tools-grid>
+                  </td>
+                  <td ng-if="dataTable.hasButtons()" data-field-label="操作"
+                      ng-style="btnColStyle(row)">
+                    <div class="btn-group btn-group-sm"
+                         ng-style="btnColStyle(row)"
+                         ng-class="{true:'open', false :''}[row.open]">
+                      <button ng-repeat="op in getBodyButtons(row) | limitTo : 3"
+                              class="btn"
+                              ng-disabled="op.disabled(row)"
+                              ng-class="renderClass(op.class, row)"
+                              ng-click="buttonClick(op, row, $event)">
+                        <i class="fa hidden-lg hidden-md hidden-sm"
+                           ng-class="getButtonIcon(op)"></i>
+                        <span class="hidden-xs" ng-bind="getButtonLabel(op)"></span>
+                      </button>
+                      <button ng-if="getBodyButtons(row).length > 3"
+                              type="button" class="btn btn-default dropdown-toggle"
+                              ng-disabled="row.disabled"
+                              ng-click="moreClick(op, row, $event)">
+                        更多
+                        <span class="caret"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row" ng-if="hasPages()">
+            <div ng-class="{true:'col-sm-3', false : 'col-sm-2'}[source.miniSize == true]">
+              <div class="dataTables_length"><label>每页显示
+                <select class="form-control input-sm"
+                        ng-disabled="wholeDisabled != false && pageResize"
+                        ng-change="sizeChange(page.size)"
+                        ng-model="page.size" ng-options="size as size for size in sizes"></select>
+                项</label></div>
+            </div>
+          <!--  去掉第几页，页脚重叠-->
+            <div ng-class="{true:'col-sm-3', false : 'col-sm-4'}[source.miniSize == true]">
+              <div class="dataTables_info" aria-live="polite" ></div>
+            </div>
+            <div ng-if="false" ng-class="{true:'col-sm-3', false : 'col-sm-4'}[source.miniSize == true]">
+              <div class="dataTables_info" aria-live="polite" ng-bind="pageDescription()"></div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dataTables_paginate paging_simple_numbers" id="DataTables_Table_0_paginate">
+                <ul class="pagination">
+                  <li class="paginate_button previous" ng-class="isPrevBtnDisabled()"
+                      ng-click="page.prevPage()">
+                    <a>上页</a>
+                  </li>
+                  <li class="paginate_button"
+                      ng-class="{true:'active',false:''}[page.current == 0]"
+                      ng-if="true" ng-click="page.moveTo(0)">
+                    <a>1</a>
+                  </li>
+                  <li class="paginate_button disabled" ng-if="ifBeforeMarkShow()">
+                    <a>…</a>
+                  </li>
+                  <li class="paginate_button"
+                      ng-click="page.moveTo(pg)"
+                      ng-class="{true:'active',false:''}[page.current == pg]"
+                      ng-repeat="pg in middleRange()">
+                    <a ng-bind="pg + 1"></a>
+                  </li>
+                  <li class="paginate_button disabled" ng-if="ifAfterMarkShow()">
+                    <a>…</a>
+                  </li>
+                  <li class="paginate_button"
+                      ng-class="{true:'active',false:''}[page.current == page.total - 1]"
+                      ng-if="page.total > 1"
+                      ng-click="page.moveTo(page.total - 1)">
+                    <a ng-bind="page.total"></a>
+                  </li>
+                  <li class="paginate_button next" ng-class="isNextBtnDisabled()"
+                      ng-click="page.nextPage()">
+                    <a>下页</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import {attribute, deepClone} from "ps-ultility";
+
+  export default function (q, timeout, $location, $filter, psEvent, psUltility, psDialog, ajax, growl, psExplainer, rootScope, psUi) {
+    return {
+      scope: {
+        source: "="
+      },
+      link: function (scope, element, attr) {
+        const renderObjectData = function (obj, key) {
+            let rs = null;
+            try {
+              rs = eval(`obj.${key}`);
+            } finally {
+              return rs;
+            }
+          },
+          toString = Object.prototype.toString,
+          isArray = isType("Array"),
+          isObject = isType("Object"),
+          isFunction = isType("Function"),
+          isNumber = isType("Number"),
+          isUndefined = isType("Undefined"),
+          isNull = isType("Null"),
+          _position = ["label", "type", "bind", "search", "filter", "options"],
+          _btnPosition = ["label", "on.click"],
+          _size = [5, 10, 15, 20, 25, 50, 100];
+        let _objectType = "[object ";
+        let mergeObj = function () {
+          let arr = Array.prototype.slice.call(arguments);
+          let obj = {};
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i]) {
+              for (let key in arr[i]) {
+                obj[key] = arr[i][key];
+              }
+            }
+          }
+          return obj;
+        };
+
+        function extend (a, b) {
+          for (var i in b) {
+            a[i] = b[i];
+          }
+        }
+
+        function isType (type) {
+          return function (target) {
+            return toString.call(target) == _objectType + type + "]";
+          }
+        }
+
+        function getTextFromType (type, header) {
+          if (isArray(header)) {
+            var inx = _position.indexOf(type)
+            return header[inx];
+          } else if (isObject(header)) {
+            return header[type];
+          } else if (isFunction(header)) {
+            return header[type];
+          } else {
+            return null
+          }
+        }
+
+        function getAttrs (obj, attrs) {
+          var arr = attrs.split(".");
+          var target = obj;
+          for (var i in arr) {
+            target = target[arr[i]]
+            if (!target) {
+              break;
+            }
+          }
+          return target;
+        }
+
+        function getButtonFromType (type, header) {
+          if (isArray(header)) {
+            var inx = _btnPosition.indexOf(type)
+            return header[inx];
+          } else if (isObject(header)) {
+            return getAttrs(header, type);
+          } else {
+            return null
+          }
+        }
+
+        function getButtonFunction (op) {
+          var fn = getButtonFromType("on.click", op);
+          return fn;
+        }
+
+        function windClick () {
+          $("body").off("click.windClick");
+          scope.$apply(function () {
+            scope.open = false;
+            scope.searchTypeClick = searchTypeClickFn;
+          });
+        }
+
+        function searchTypeClickFn () {
+          scope.searchTypeClick = undefined;
+          scope.open = true;
+          timeout(function () {
+            $("body").on("click.windClick", windClick)
+          });
+        };
+
+        function dataTable (data) {
+          dataTable.init = function (data) {
+            extend(this, data);
+          }
+          extend(dataTable.init.prototype, {
+            getSelected: function () {
+              let ret = [];
+              for (var i in scope.currentPageData) {
+                if (scope.currentPageData[i].selected) {
+                  ret.push(scope.currentPageData[i]);
+                }
+              }
+              return ret;
+            },
+            getPageSize: function () {
+              return data.pageSize || 10;
+            },
+            getData: function () {
+              return data['data'];
+            },
+            push: function (obj) {
+              this.data.unshift(obj);
+            },
+            unshift: function (obj) {
+              this.data.unshift(obj);
+            },
+            remove: function (inx) {
+              this.data.splice(inx, 1);
+            },
+            get: function (inx) {
+              return this.data[inx];
+            },
+            select: function (inx) {
+              this.data[inx].selected = true;
+            },
+            selectAll: function () {
+              for (var i in scope.currentPageData) {
+                scope.currentPageData[i].selected = true;
+              }
+              scope.allcheck = true;
+            },
+            deselectAll: function () {
+              for (var i in scope.currentPageData) {
+                scope.currentPageData[i].selected = false;
+              }
+              scope.allcheck = false;
+            },
+            hasButtons: function () {
+              return isArray(this.bodyButtons) && this.bodyButtons.length > 0;
+            }
+          })
+          return new dataTable.init(data);
+        }
+
+        function currentPageDataChanges () {
+          timeout(function () {
+            var n = scope.currentPageData;
+            if (isArray(n) && n.length > 0) {
+              scope.allcheck = n.every(function (elem) {
+                return elem.selected == true;
+              });
+            }
+          });
+        }
+
+        function pages (length, s) {
+          pages.init = function (length, s) {
+            this.current = 0
+            this.length = length;
+            this.total = Math.ceil(length / s);
+            this.size = s;
+          }
+          extend(pages.init.prototype, {
+            setSize: function (s) {
+              this.size = s;
+              this.total = Math.ceil(this.length / s);
+              this.current = 0;
+              let realPage = scope.source.realPage;
+              if (!realPage) {
+                getCurrentPageData();
+              } else {
+                scope.realPageParameter.start = this.current * this.size;
+                scope.realPageParameter.length = this.size;
+                scope.$emit('PS_REFRESH_GRID', {
+                  needInitPage: false,
+                  realPageParameter: scope.realPageParameter
+                });
+              }
+            },
+            setLength: function (l) {
+              this.length = l;
+              this.total = Math.ceil(l / this.size);
+              this.current = 0;
+              //getCurrentPageData();
+            },
+            getTotal: function () {
+              return this.total;
+            },
+            getCurrent: function () {
+              return this.current;
+            },
+            isFirst: function () {
+              return this.current == 0;
+            },
+            isLast: function () {
+              return this.current == this.total.length - 1;
+            },
+            nextPage: function () {
+              this.current < this.total - 1 && this.current++;
+              let realPage = scope.source.realPage;
+              if (!realPage) {
+                getCurrentPageData();
+              } else {
+                scope.realPageParameter.start = this.current * this.size;
+                scope.$emit('PS_REFRESH_GRID', {
+                  needInitPage: false,
+                  realPageParameter: scope.realPageParameter
+                });
+              }
+            },
+            prevPage: function () {
+              this.current > 0 && this.current--;
+              let realPage = scope.source.realPage;
+              if (!realPage) {
+                getCurrentPageData();
+              } else {
+                scope.realPageParameter.start = this.current * this.size;
+                scope.$emit('PS_REFRESH_GRID', {
+                  needInitPage: false,
+                  realPageParameter: scope.realPageParameter
+                });
+              }
+            },
+            moveTo: function (inx) {
+              this.current = inx;
+              let realPage = scope.source.realPage;
+              if (!realPage) {
+                getCurrentPageData();
+              } else {
+                scope.realPageParameter.start = this.current * this.size;
+                scope.$emit('PS_REFRESH_GRID', {
+                  needInitPage: false,
+                  realPageParameter: scope.realPageParameter
+                });
+              }
+            },
+            getSize: function () {
+              return this.size;
+            },
+            getStartPoint: function () {
+              return this.current * this.size;
+            }
+          })
+          return new pages.init(length, s);
+        }
+
+        function getSearchFields (body) {
+          var rs = [];
+          for (var i in body) {
+            if (body[i].search !== false) {
+              rs.push(i)
+            }
+          }
+          return rs;
+        }
+
+        function headerToObj (header) {
+          if (typeof header === "string") {
+            return {
+              label: header,
+              type: "text"
+            }
+          } else if (isArray(header)) {
+            var obj = {};
+            for (var i in header) {
+              obj[_position[i]] = header[i]
+            }
+            return obj;
+          } else if (isObject(header)) {
+            return header;
+          }
+        }
+
+        function isNullOrEmptyStringOrUndefined (val) {
+          return isUndefined(val) || isNull(val) || val === '';
+        }
+
+        function getCurrentPageData (needInitPage, fromFirstPage) {
+          timeout(function () {
+            let realPage = scope.source.realPage;
+            scope.currentPageData = [];
+            if (!realPage) {
+              if (scope.sortBy.value && scope.sortBy.direction) {
+                scope.dataTable.data.sort(function (a, b) {
+                  if (isNullOrEmptyStringOrUndefined(a[scope.sortBy.value]) && isNullOrEmptyStringOrUndefined(b[scope.sortBy.value])) {
+                    return 0;
+                  }
+                  if (!a[scope.sortBy.value] && b[scope.sortBy.value]) {
+                    return 1;
+                  }
+                  if (a[scope.sortBy.value] && !b[scope.sortBy.value]) {
+                    return -1;
+                  }
+                  if (scope.sortBy.direction === 'asc') {
+                    return a[scope.sortBy.value] > b[scope.sortBy.value] ? 1 : -1;
+                  }
+                  if (scope.sortBy.direction === 'desc') {
+                    return a[scope.sortBy.value] > b[scope.sortBy.value] ? -1 : 1;
+                  }
+                });
+              }
+              let searchKey = scope.searchBy.key;
+              let searchValue = scope.searchBy.keyInput;
+              let searchBind = scope.searchBy.keyBind;
+              if (typeof searchKey !== 'undefined' && typeof searchValue !== 'undefined') {
+                scope.filterData = [];
+                scope.dataTable.data.forEach(d => {
+                  let value = d[searchKey] + '';
+                  if (typeof searchBind === 'function') {
+                    value = searchBind(d);
+                  }
+                  if (value.indexOf(searchValue) > -1) {
+                    scope.filterData.push(d);
+                  }
+                });
+              }
+              if (typeof searchKey === 'undefined' && typeof searchValue === 'undefined') {
+                scope.filterData = scope.dataTable.data || [];
+              }
+              if (needInitPage) {
+                scope.page = pages(scope.filterData.length, scope.dataTable.getPageSize());
+              }
+              if (scope.page) {
+                for (let i = 0; i < scope.filterData.length; i++) {
+                  if (i >= (scope.page.current * scope.page.size) && i <= ((scope.page.current + 1) * scope.page.size) - 1) {
+                    scope.currentPageData.push(scope.filterData[i]);
+                  }
+                }
+              }
+            } else {
+              scope.filterData = scope.dataTable.data;
+              let length = scope.filterData.total || 0;
+              if (needInitPage) {
+                scope.page = pages(length, scope.dataTable.getPageSize());
+              }
+              if (typeof scope.page === 'undefined' && length > 0) {
+                scope.page = pages(length, scope.dataTable.getPageSize());
+              }
+//              console.error("pppp----->" + scope.filterData.length);
+              if (fromFirstPage) {
+                scope.page.setLength(length);
+              }
+              scope.currentPageData = scope.filterData;
+            }
+            //  
+          });
+        };
+
+        /****** 行内新增，临时添加 ******/
+        scope.inlineAddObj = {
+          show: false,
+          data: {}
+        };
+        scope.inlineAddCancel = function () {
+          scope.inlineAddObj.show = false;
+          scope.inlineAddObj.data = {};
+        }
+        function validate(inlineAddObj, data, dic){
+          var err = null;
+          dic = dic || {};
+          function loop(elem, attr, data){
+            if(elem.composory == true){
+              if(typeof data[attr] === "undefined" || data[attr] === "" || data[attr] === null){
+                return `[${( dic[attr] && dic[attr].label || attr )}]是必填项`;
+              }
+            }
+            if(elem.isNumber == true){
+              if( !/^\d+(?:\.\d+)?$/.test(data[attr]) ){
+                return `[${( dic[attr] && dic[attr].label || attr )}]必须是数字（如 5, 1.5）`;
+              }
+            }
+          }
+          for(var i in inlineAddObj){
+            err = loop(inlineAddObj[i], i, data)
+            if(err){
+              return err;
+            };
+          }
+          return err;
+        }
+        scope.inlineAddConfirm = function () {
+          if (scope.dataTable.inlineAdd.submit && typeof scope.dataTable.inlineAdd.submit === 'function') {
+            let o1 = {}, err = validate(scope.dataTable.inlineAdd, scope.inlineAddObj.data, scope.dataTable.body);
+            if(err){
+              growl.error(err);
+              return;
+            }
+            for (let key in scope.inlineAddObj.data) {
+
+              o1[key] = scope.inlineAddObj.data[key]['id'];
+            }
+            scope.dataTable.inlineAdd.submit(o1, scope.inlineAddObj.data, function (flag) {
+              scope.inlineAddObj.show = false;
+              scope.inlineAddObj.data = {};
+              if (flag !== false) {
+                scope.$emit('PS_REFRESH_GRID');
+              }
+              /*scope.$apply();*/
+            }, scope.dataTable.data);
+          }
+        }
+        /****** 行内新增，临时添加 ******/
+        scope.getTableButtons = function () {
+          if (scope.dataTable && scope.dataTable.buttons && scope.dataTable.buttons.length > 0) {
+            return scope.dataTable.buttons.filter(b => {
+              if (b.functionCode) {
+                return !!rootScope.menuitems[b.functionCode];
+              }
+              if (b.show) {
+                if (typeof b.show === "function") {
+                  return b.show.call(scope.dataTable);
+                } else {
+                  return b.show;
+                }
+              }
+              return true;
+            });
+          } else {
+            return [];
+          }
+        }
+        scope.selectRow = function (row) {
+          if (!scope.dataTable.multipleSelect) {
+            let flag = row.selected;
+            scope.currentPageData.forEach(d => {
+              d.selected = false;
+            });
+            row.selected = flag;
+          } else {
+            let length = 0;
+            scope.currentPageData.forEach(d => {
+              if (d.selected) {
+                length++;
+              }
+            });
+            if (length === scope.currentPageData.length) {
+              scope.allcheck = true;
+            } else {
+              scope.allcheck = false;
+            }
+          }
+        }
+        scope.showNoData = function () {
+          if (scope.inlineAddObj.show) {
+            return false;
+          } else {
+            if (scope.currentPageData && scope.currentPageData.length < 1) {
+              return true;
+            }
+            return false;
+          }
+
+        };
+        scope.filterData = [];
+        scope.realPageParameter = {};
+        scope.filterResult;
+        scope.searchBy = {
+          searchFields: []
+        };
+        scope.sortBy = {};
+        scope.pageSize = 10;
+        scope.buttonClass = function (format) {
+          var cls = format.class;
+          return cls ? "btn-" + cls : "btn-default";
+        }
+        scope.pageDescription = function () {
+          var from = scope.page.current * scope.page.size + 1;
+          var to = (scope.page.current + 1) * scope.page.size;
+          to = to < scope.page.length && to || scope.page.length;
+          var total = scope.page.length;
+          return '第 ' + from + ' 至 ' + to + ' 项，共 ' + total + ' 项'
+        }
+        scope.isPrevBtnDisabled = function () {
+          return scope.page.isFirst() ? "disabled" : "";
+        }
+        scope.isNextBtnDisabled = function () {
+          return scope.page.isLast() ? "disabled" : "";
+        }
+        scope.sizes = _size;
+        scope.getSize = function () {
+          return scope.page && scope.page.size || 10;
+        }
+        scope.getStartPoint = function () {
+          return scope.page ? scope.page.getStartPoint() : 0;
+        }
+        scope.getData = function (row, header, key) {
+          var type = getTextFromType("gridType", header) || "text";
+          var dt = getTextFromType("bind", header) || attribute(row, key);
+          return typeof dt === "function" ? dt(row) : dt;
+        }
+        scope.getItemData = function (row, header, key) {
+          let dic = {
+              text: "label"
+            }, type = getTextFromType("gridType", header) || "text",
+            options = getTextFromType("options", header) || [];
+          type = dic[type] || type;
+          let dt = getTextFromType("bind", header) || attribute(row, key),
+            d = dt === "function" ? dt(row) : dt;
+          return {
+            type: type,
+            key: key,
+            value: d
+          }
+        }
+        scope.checkButtonShow = function (op, row) {
+          var fn = getButtonFromType("show", op);
+          if (isFunction(fn)) {
+            return fn(row);
+          } else {
+            return fn !== false;
+          }
+        }
+        scope.getType = function (header) {
+          return getTextFromType("gridType", header) || "text";
+        }
+        scope.getLabel = function (header) {
+          return getTextFromType("label", header) || header
+        }
+        scope.sizeChange = function (size) {
+          scope.page.setSize(size);
+        };
+        scope.hasPages = function () {
+          //  
+          return (scope.source && scope.source.showPage !== false) && scope.page && scope.page.getTotal() > 0 || false;
+        }
+        scope.ifBeforeMarkShow = function () {
+          var current = scope.page.current;
+          var total = scope.page.total;
+          return current > 2 && total > 3;
+        }
+        scope.middleRange = function () {
+          var arr = [];
+          var current = scope.page.current;
+          var total = scope.page.total;
+          current > 1 && arr.push(current - 1);
+          current > 0 && current < total - 1 && arr.push(current);
+          current < total - 2 && arr.push(current + 1);
+          return arr;
+        }
+        scope.ifAfterMarkShow = function () {
+          var current = scope.page.current;
+          var total = scope.page.total;
+          return current < total - 3 && total > 3;
+        }
+        scope.open = false;
+        scope.renderClass = function (target, row) {
+          var type = typeof target, match;
+          if (type == 'function') {
+            return target(row);
+          } else if (type == 'string') {
+            match = /^btn\-/.exec(target);
+            return match ? target : `btn-${target}`;
+          } else {
+            return 'btn btn-default';
+          }
+        };
+        scope.colClick = function (event, col, row, i) {
+          event.stopPropagation();
+          isObject(col) && isObject(col.on) && isFunction(col.on.click) && col.on.click(row, i);
+        };
+        scope.sorting = function (sortBy, head, key) {
+          var cls = "";
+          if (head.sortable !== false) {
+            cls += "sorting"
+          }
+          if (sortBy.value == key) {
+            if (sortBy.direction === 'desc') {
+              cls += "_desc";
+            } else {
+              cls += "_asc";
+            }
+          }
+          return cls;
+        };
+        scope.getSearchBody = function () {
+          let obj = {};
+          if (scope.dataTable && scope.dataTable.body) {
+            for (let key in scope.dataTable.body) {
+              if (scope.dataTable.body[key].inquery) {
+                obj[key] = scope.dataTable.body[key];
+              }
+            }
+          }
+          return obj;
+        };
+        scope.getButtonLabel = function (op) {
+          return getButtonFromType("label", op)
+        };
+        scope.getButtonIcon = function (op) {
+          return op.iconClass || 'fa-edit';
+        };
+        scope.buttonClick = function (op, row, event) {
+          var fn = getButtonFunction(op), evt = psEvent(event);
+          function createUploader(){
+            let uloader = document.createElement("input");
+            uloader.setAttribute("type", "file");
+            uloader.setAttribute("multiple", "multiple");
+            uloader.style.display = "none";
+            return uloader;
+          }
+          if (op.symbol === 'inline') {
+            scope.inlineAddObj.show = true;
+            return;
+          }
+          if (op.symbol === 'upload' || op.symbol === 'import') {
+            let uploadFile = createUploader(), files;
+            document.body.appendChild( uploadFile );
+            uploadFile.addEventListener('change', function (e) {
+              var _this = this;
+              if (this.value) {
+                let formData = new FormData();
+                files = [].slice.call(this.files).map( d => d.name);
+                let before = op.param.before(this.files);
+                for (let key in before) {
+                  if (before[key] instanceof File) {
+                    formData.append(key, before[key]);
+                  } else {
+                    formData.append(key, encodeURIComponent(before[key]));
+                  }
+                }
+                ajax[op.symbol](op.param.url, formData).then(d => {
+                  _this.value = null;
+                  d.files = files;
+                  d.$row = row;
+                  op.param.after && typeof op.param.after === 'function' && op.param.after(d);
+                  uploadFile.remove();
+                  uploadFile = null;
+                });
+              }
+            });
+            uploadFile.click();
+            return;
+          }
+          if (op.symbol === 'export') {
+            let arr = [];
+            scope.currentPageData.forEach(d => {
+              let obj = {};
+              let data = scope.dataTable;
+              for (let key in scope.dataTable.body) {
+                let attr = scope.dataTable.body[key];
+                let val = '';
+                let keys = key.split(".");
+                if (keys.length > 1) {
+                  let nd = d;
+                  keys.forEach(k => {
+                    val = nd[k];
+                    nd = val;
+                  });
+                } else {
+                  val = d[keys[0]];
+                }
+                obj[attr.label] = typeof attr.bind === 'function' ? (isArray(attr.bind(d)) ? attr.bind(d)[0] : attr.bind(d)) : val;
+              }
+              arr.push(obj);
+            });
+            if (op.filename) {
+              document.getElementById("_exportFile").setAttribute("download", op.filename + ".xlsx");
+            }
+            document.getElementById("_exportFile").href = "#";// psExport.downloadExl(arr); //绑定a标签
+            document.getElementById("_exportFile").click(); //模拟点击实现下载
+
+            return;
+          }
+          if (typeof fn === "function") {
+            var inx = scope.dataTable.data.indexOf(row);
+
+            function add (obj, data) {
+              let url = obj.url,
+                width = obj.width,
+                method = obj.method || 'post',
+                successMsg = obj.successMsg || "添加成功",
+                template = obj.template,
+                before = obj.before || function (source) {
+                  return [source];
+                },
+                after = obj.after || function (source) {
+                  return source;
+                };
+                return evt.pipe({
+                    command: "openModal",
+                    args: [template, data || null, width]
+                }).pipe({
+                    command: method,
+                    args: [url, before]
+                }).pipe({
+                    command: "unshift",
+                    args: [after]
+                }).pipe(function (d, next) {
+                    growl.success(successMsg);
+                    next();
+                });
+
+            }
+
+            function remove (obj) {
+              let url = obj.url,
+                message = obj.message || "是否删除此项内容",
+                successMsg = obj.successMsg || "删除成功",
+                before = obj.before || function (source) {
+                  return [[evt.$row.id]];
+                };
+              return evt.pipe({
+                command: "openAlert",
+                args: [message]
+              }).pipe({
+                command: "post",
+                args: [url, before]
+              }).pipe({
+                command: "remove"
+              }).pipe(function (d, next) {
+                growl.success(successMsg);
+                next();
+              })
+            }
+
+            function removeInline (obj) {
+              obj = obj || {};
+              let message = obj.message || "是否删除此项内容",
+                successMsg = obj.successMsg || "删除成功";
+              return evt.pipe({
+                command: "remove"
+              }).pipe(function (d, next) {
+                next();
+              });
+            }
+
+            function update (obj) {
+              let url = obj.url,
+                width = obj.width,
+                template = obj.template,
+                successMsg = obj.successMsg || "更新成功",
+                before = obj.before || function (source) {
+                  return [source]
+                },
+                after = obj.after || function (source) {
+                  return source;
+                };
+              return evt.pipe({
+                  command: "openModal",
+                  args: [template, evt.$row, width]
+              }).pipe({
+                  command: "post",
+                  args: [url, before]
+              }).pipe({
+                  command: "update",
+                  args: [after]
+              }).pipe(function (d, next) {
+                  growl.success(successMsg);
+                  next()
+              });
+            }
+
+            function $add (obj) {
+              let o;
+              try {
+                o = JSON.parse(decodeURIComponent(JSON.stringify(obj)))
+              } catch (e) {
+                o = obj;
+              }
+              scope.dataTable.unshift(o);
+            }
+
+            evt.extend({
+              $row: row,
+              $index: inx,
+              $add: $add,
+              open: open,
+              add: add,
+              remove: remove,
+              removeInline: removeInline,
+              update: update
+            });
+            evt.registerCommand("openModal", function (name, data, width, dt, next, freeze) {
+              let dialog;
+              if (typeof name == 'object') {
+                dialog = psDialog.popup(name, data, width);
+              } else {
+                let customRootScope = psUltility.getRootScope(scope),
+                  modal = customRootScope[psUltility.keyPattern(name)] || psDialog.getModelTemplate(name) || function () {
+                    return deepClone(name)
+                  };
+                dialog = psDialog.popup(modal(), data, width);
+              }
+              dialog.on("submit", (d) => {
+                next(d);
+              });
+              dialog.on("close", (d) => {
+                freeze();
+              })
+            });
+            evt.registerCommand("openAlert", function (message, dt, next, freeze) {
+              let customRootScope = psUltility.getRootScope(scope),
+                alertd = psDialog.getAlertTemplate("commonAlert"),
+                dialog = psDialog.confirm(message);
+              dialog.on("submit", (d) => {
+                next(dt);
+              });
+              dialog.on("close", (d) => {
+                freeze();
+              })
+            });
+            evt.registerCommand("post", function (url, param, data, next, freeze) {
+              param = typeof param === "function" ? param(data) : param;
+              if(url != ""){
+                  ajax.post(url, param).then((d) => {
+                      next(d);
+                  }).catch((e) => {
+                      freeze(e);
+                  })
+              }
+
+            });
+            evt.registerCommand("remove", function (data, next, freeze) {
+              scope.dataTable.remove(inx);
+              next();
+            });
+            evt.registerCommand("unshift", function (method, data, next, freeze) {
+              let dt = typeof method === "function" ? method(data) : data;
+              scope.dataTable.unshift(dt);
+              next(dt);
+            });
+            evt.registerCommand("update", function (method, data, next, freeze) {
+              let dt = typeof method === "function" ? method(data) : data;
+              extend(scope.dataTable.data[inx], dt);
+              next(dt);
+            });
+            fn.call(scope.dataTable, evt);
+          } else if (typeof fn === "string") {
+            $location.path(fn);
+          }
+        }
+
+        function remapRowStruc (arr) {
+          return arr.map(n => {
+            if (isObject(n)) {
+              return n;
+            } else if (isArray(n)) {
+              return {
+                label: n[0],
+                on: {
+                  click: n[1]
+                }
+              }
+            } else if (isString(n)) {
+              return {
+                label: n
+              }
+            }
+          })
+        }
+
+        scope.moreClick = function (op, row, e) {
+          let buttons = scope.getBodyButtons(row);
+          buttons = buttons.slice(2);
+          typeof e.currentTarget.ins === "undefined"
+            ? e.currentTarget.ins = psUi.createDrop(e.currentTarget, remapRowStruc(buttons), "right")
+              .on("submit", d => {
+                scope.buttonClick && scope.buttonClick(d, row, e);
+                delete e.currentTarget.ins;
+              }).on("close", d => {
+                delete e.currentTarget.ins;
+              })
+            : null;
+        };
+        scope.trClass = function (row, customClass) {
+          var cls = [];
+          if (row && row.selected) {
+            cls.push("selected");
+          }
+          if (typeof customClass == 'function') {
+            var fn = customClass(row);
+            if (fn) {
+              cls.push(fn);
+            }
+          }
+          var result = cls.toString().replace(",", " ")
+          return result;
+        };
+        scope.searchTypeClick = searchTypeClickFn;
+        scope.conditionClick = function (header, key) {
+          delete scope.querytype;
+          delete scope.key;
+          delete scope.keyBind;
+          delete scope.keyinput;
+          /** add a timespan for renew the menu*/
+          timeout(function () {
+            scope.keyBind = header.bind;
+            scope.key = key;
+            scope.querytype = headerToObj(header);
+          });
+        };
+        scope.goSearch = function () {
+          let attrs = scope.source.body;
+          let searchKey;
+          for (let k in attrs) {
+            if (attrs[k]['inquery'] && attrs[k]['asDefaultQuery']) {
+              searchKey = k;
+            }
+          }
+          extend(scope.searchBy, {
+            key: scope.key || searchKey,
+            keyInput: scope.keyInput,
+            keyBind: scope.keyBind
+          });
+          getCurrentPageData(true);
+        };
+        scope.allClick = function () {
+          scope.allcheck = scope.allcheck ? false : true;
+          for (var i in scope.currentPageData) {
+            if (scope.key) {
+              if (scope.currentPageData[i].queryStatus == '1') {
+                scope.currentPageData[i].selected = scope.allcheck;
+              }
+            } else {
+              scope.currentPageData[i].selected = scope.allcheck;
+            }
+          }
+        };
+        scope.pageChange = function (value) {
+          if (scope.wholeDisabled != true) {
+            if (value != undefined) {
+              scope.page = value;
+            }
+            if (scope.source.source.length > 0) {
+              scope.from = scope.page * scope.size + 1;
+            } else {
+              scope.from = 0;
+            }
+            if (scope.page < scope.totalpage - 1) {
+              scope.to = (scope.page + 1) * scope.size;
+            } else {
+              scope.to = scope.total;
+            }
+          }
+        };
+        scope.sortClick = function (head, key) {
+          var sortable = head.sortable === false && false || true;
+          if (sortable) {
+            let realPage = scope.source.realPage;
+            if (!realPage) {
+              if (scope.sortBy.value != key) {
+                scope.sortBy.value = key;
+                scope.sortBy.direction = 'asc';
+              } else {
+                scope.sortBy.direction === 'asc' ? scope.sortBy.direction = 'desc' : scope.sortBy.direction = 'asc';
+              }
+              getCurrentPageData(true);
+            } else {
+              if (scope.sortBy.value != key) {
+                scope.sortBy.value = key;
+                scope.sortBy.direction = 'asc';
+              } else {
+                scope.sortBy.direction === 'asc' ? scope.sortBy.direction = 'desc' : scope.sortBy.direction = 'asc';
+              }
+              scope.realPageParameter.sort = scope.sortBy.value;
+              scope.realPageParameter.sortType = scope.sortBy.direction;
+              scope.page.current = 0;
+              scope.realPageParameter.start = scope.page.current * scope.page.size;
+              scope.$emit('PS_REFRESH_GRID', {
+                needInitPage: false,
+                realPageParameter: scope.realPageParameter
+              });
+            }
+          }
+        };
+        scope.getFullLength = function () {
+          var showIndex = scope.source && scope.source.showIndex;
+          var showSelector = scope.source && scope.source.showSelector;
+          var bodyLength = scope.source && Object.keys(scope.source.body).length;
+          var bodyButtons = scope.source && scope.source.bodyButtons;
+          return bodyLength + (showIndex ? 1 : 0) + (showSelector ? 1 : 0) + (bodyButtons ? 1 : 0);
+        };
+        scope.trClick = function (event, row, col, i) {
+          //isObject(col) && isObject(col.on) && isFunction(col.on.click) && col.on.click(row, i);
+          isObject(col) && isObject(col.on) && isFunction(col.on.click) && col.on.click(row, i, event);
+          if (!event.isPropagationStopped()) {
+            if (!row.disabled && !scope.wholeDisabled) {
+              if (scope.source.couldSelect) {
+                if (scope.source.singleSelect) {
+                  scope.currentPageData.map(function (elem) {
+                    elem.selected = false;
+                  });
+                  row.selected = true;
+                } else {
+                  row.selected = row.selected ? false : true;
+                  scope.allcheck = scope.currentPageData.every(function (elem) {
+                    return elem.selected == true;
+                  });
+                }
+              }
+            }
+          }
+        };
+        scope.btnColStyle = function (row) {
+          let btn = scope.getBodyButtons(row),
+            avbtn = btn.slice(0,3),
+            length = avbtn.reduce((a,b)=>{
+              b = b instanceof Array ? b[0] : b.label;
+              let num = b ? ( b.length - 2 ) : 0;
+              num = ( typeof num ==="number" &&  num > 0 ) ? num : 0;
+              return a + 60 + 10 *  num;
+            }, 0)
+          return {
+            width: length + "px"
+          }
+        }
+        scope.getBodyButtons = function (row) {
+          let rs = scope.source.bodyButtons.filter(function (n) {
+            if (n&&n.functionCode) {
+              return !!rootScope.menuitems[n.functionCode];
+            }
+            if (n&&n.show) {
+              if (typeof n.show === "function") {
+                return n.show(row);
+              } else {
+                return n.show
+              }
+            }
+            if (n&&n.hide) {
+              if (typeof n.hide === "function") {
+                return !n.hide(row);
+              } else {
+                return !n.hide
+              }
+            }
+            return true;
+          });
+          return rs;
+        };
+        var source3Watch, source4Watch, source5Watch;
+        var sourceWatch = scope.$watch("source", function (n, o, s) {
+          if (n) {
+            scope.dataTable = dataTable(n);
+            scope.sortBy = scope.source.sortBy || {};
+            let realPage;
+            if (/WithPage$/.test(n.url)) {
+              realPage = true;
+              scope.realPageParameter = n.realPageParameter;
+            }
+            source4Watch = scope.$watch("source.data", function (n, o, s) {
+              if (!isUndefined(n) && isArray(n)) {
+                scope.dataTable.data = n;
+                getCurrentPageData(n.needInitPage, n.fromFirstPage);
+              }
+            });
+            if (!realPage) {
+              source3Watch = scope.$watch("source.data.length", function (n, o, s) {
+                if (!isUndefined(n)) {
+                  let customRootScope = psUltility.getRootScope(scope),
+                    depth = psUltility.getCurrentDepth(scope.$parent.$parent),
+                    path = ["__valid__"].concat(depth).join(".");
+                  if(s.source.composory === true){
+                    attribute(customRootScope, path, n > 0);
+                  };
+                  getCurrentPageData(true);
+                }
+              });
+            }
+            source5Watch = scope.$watch("source.inlineAdd", function (n, o, s) {
+              if (!isUndefined(n)) {
+                for (let key in n) {
+                  if (key === 'submit') {
+                    continue;
+                  }
+                  if (n[key].type === 'select') {
+                    if (!n[key].options) {
+                      (function (k) {
+                        if (n[k] && n[k].url && !n[k].watch) {
+                          ajax.post(n[k].url, n[k].parameter).then(function (d) {
+                            let options = [];
+                            if (n[k].after && typeof n[k].after === 'function') {
+                              options = n[k].after(d);
+                            } else {
+                              if (d) {
+                                options = d.map(x => {
+                                  return x;
+                                });
+                              }
+                            }
+                            options.forEach(l => {
+                              l.label = l[(n[k].format || {}).label || 'label'];
+                            });
+                            n[k].options = options;
+                          });
+                        } else if (n[k] && n[k].watch) {
+                          scope.$watch(`inlineAddObj.data["${n[k].watch.key}"]`, function (newValue, o, s) {
+                            if (newValue) {
+                              if (typeof n[k].watch.handler === 'function') {
+                                let defer = q.defer();
+                                var options = n[k].watch.handler(newValue, function (data) {
+                                  defer.resolve(data);
+                                });
+                                defer.promise.then(function (ops) {
+                                  ops.forEach(l => {
+                                    l.label = l[(n[k].format || {}).label || 'label'];
+                                  });
+                                  n[k].options = ops;
+                                });
+
+                              }
+                            }
+                          });
+                        }
+                      })(key);
+                    } else {
+                      n[key].options.forEach(l => {
+                        l.label = l[(n[key].format || {}).label || 'label'];
+                      })
+                    }
+                  } else if(n[key].type === 'input'){
+                    ( n[key].watch && n[key].watch.key ) ?
+                      scope.$watch(`inlineAddObj.data.${n[key].watch.key}`, (v,o,s)=>{
+                        psUltility.createLoadEvent(n[key].watch, v).then(d => {
+                          typeof n[key].watch.handler == "function" && typeof d !== "undefined" ?
+                            psUltility.createPromise(n[key].watch.handler, d).then(d=>{
+                              scope.inlineAddObj.data[key] = d;
+                            }) : null;
+                        })
+                      }) : null;
+                  }
+                }
+              }
+            });
+          }
+        });
+        scope.$on('$destroy', function () {
+          sourceWatch && sourceWatch();
+          $("body").off("click.drop");
+          source3Watch && source3Watch();
+          source4Watch && source4Watch();
+          source5Watch && source5Watch();
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .ps-grid {
+    select.form-control {
+      padding: 0 5px !important;
+    }
+    table.dataTable {
+      > thead {
+        > tr {
+          > th {
+            border-bottom: none !important;
+          }
+        }
+      }
+      > tbody {
+        > tr {
+          > td {
+            max-width: 90px !important;
+            border-bottom: none !important;
+            &:first-child {
+              border-left: none !important;
+            }
+            &:last-child {
+              border-right: none !important;
+            }
+          }
+        }
+      }
+    }
+
+  }
+</style>

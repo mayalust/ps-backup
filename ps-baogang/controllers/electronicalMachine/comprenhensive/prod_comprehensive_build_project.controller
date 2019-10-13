@@ -1,0 +1,649 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading,psDialog"
+        deps="dialogBuildProjectList2,dialogTempProjectList2"
+></config>
+<template>
+  <div class="wrap block" style="overflow-y:auto;height:calc(100vh - 180px);">
+    <!--委托单详情-->
+    <div class="row">
+      <div class="margin-bottom-5">
+          <div class="col-md-12 margin-bottom-5 margin-top-15">
+            <div class="table-title pull-left">委托单详情</div>
+            <div class="pull-right">
+              <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#entrust_detail" aria-haspopup="false" aria-expanded="true"></span>
+            </div>
+          </div>
+          <div class="col-md-12 margin-bottom-10">
+            <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+          </div>
+          <div class="wrap padding-right-40 padding-left-40" id="entrust_detail" class="collapse in">
+            <div class="row margin-bottom-5">
+              <div class="col-md-4">
+                <label class="pull-left tit" >委托单号:</label>
+                <input class="pull-right value"type="text" ng-model="entrustObj.entrustOrderNo" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4">
+                <label class="pull-left tit" >设备等级:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.equipmentLevel" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4">
+                <label class="pull-left tit" >工程名称:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.projectName" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+            </div>
+            <div class="row margin-bottom-5">
+              <div class="col-md-4">
+                <label class="pull-left tit">设备原值:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.originalValueOfEquipment" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4">
+                <label class="pull-left tit">委托单位:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.entrustDepartments" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4">
+                <label class="pull-left tit">点检:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.examine" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+            </div>
+            <div class="row margin-bottom-5">
+              <div class="col-md-4" >
+                <label class="pull-left tit" >联系方式:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.contac" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4" >
+                <label class="pull-left tit" >备件管理号:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.sparePartsManagementNo" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+              <div class="col-md-4" >
+                <label class="pull-left tit" >质量层级:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.qualityLevel" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+            </div>
+            <div class="row margin-bottom-5">
+              <div class="col-md-4" >
+                <label class="pull-left tit">委托日期:</label>
+                <!--<input ng-model="entrustObj.entrustDate" class="form-control" readonly="readonly" style="width:calc(100% - 80px);"/>-->
+                <ps-date2 class="value" ng-model="entrustObj.entrustDate" data-config="{disabled:true}" style="width:calc(100% - 80px);"></ps-date2>
+              </div>
+              <div class="col-md-4" >
+                <label class="pull-left tit">需求交货日期:</label>
+               <!-- <input ng-model="entrustObj.requiredDeliveryDate" class="form-control" readonly="readonly" style="width:calc(100% - 80px);"/>-->
+                <ps-date2 class="value" ng-model="entrustObj.requiredDeliveryDate"  data-config="{disabled:true}" style="width:calc(100% - 80px);" ></ps-date2>
+              </div>
+            </div>
+            <div class="row margin-bottom-5">
+              <div class="col-md-12">
+                <label class="pull-left tit">型号:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.model" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+            </div>
+            <div class="row margin-bottom-5">
+              <div class="col-md-12">
+                <label class="pull-left tit">委托内容:</label>
+                <input type="text" class="pull-right value" ng-model="entrustObj.entrustContent" ng-disabled="true" class="form-control" style="width:calc(100% - 80px);"/>
+              </div>
+            </div>
+          </div>
+      </div>
+
+    </div>
+    <!--工程单详情-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">工程单详情</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse" data-target="#pro_new" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-5">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div>
+        <div class="col-md-12 margin-bottom-5" id="pro_new" class="collapse in">
+            <div class="col-md-12 margin-bottom-5 margin-top-5">
+              <button ng-click="addProList()"
+                      class="btn btn-primary pull-right margin-left-5">新增工程单</button>
+              <button ng-click="relateTempList()"
+                      class="btn btn-primary pull-right margin-left-5">关联临时工程单</button>
+            </div>
+             <table ps-table-sync
+                    data-paginate="pageonly"
+                    data-source="resources"
+                    data-filter="filter"
+                    data-sort="sort"
+                    data-page="page">
+               <thead>
+               <tr>
+                 <th>序号</th>
+                 <th>所属厂部</th>
+                 <th>设备类型</th>
+                 <th>设备型号</th>
+                 <th>宝钢号</th>
+                 <th>额定容量</th>
+                 <th>制造厂商</th>
+                 <th>制造编号</th>
+                 <th class="option">操作</th>
+               </tr>
+               </thead>
+               <tbody>
+               <tr ng-repeat="(key,item) in items track by key">
+                 <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+                 <td ng-bind="item.department"></td>
+                 <td ng-bind="item.motorType == 'AC_MOTOR' ? '交流电机'
+                             : item.motorType == 'DC_MOTOR' ? '直流电机'
+                             : item.motorType == 'TRANSFORMER'? '变压器'
+                             : '-'"></td>
+                 <td ng-bind="item.motorModel"></td>
+                 <td ng-bind="item.baogangNo"></td>
+                 <td ng-bind="item.ratedCapacity"></td>
+                 <td ng-bind="item.manufacturers"></td>
+                 <td ng-bind="item.manufacturingNumber"></td>
+                 <td>
+                   <div ps-option-group>
+                     <button class="btn btn-default" ng-click="item.view()">详情</button>
+                     <button class="btn btn-default" ng-click="item.edit(key)">编辑</button>
+                     <button class="btn btn-default" ng-click="item.remove(key)">删除</button>
+                   </div>
+                 </td>
+               </tr>
+               </tbody>
+             </table>
+           </div>
+
+        </div>
+      </div>
+
+    </div>
+    <!--提交 取消-->
+    <div class="row margin-top-10">
+      <div class="col-md-5">
+
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary btn-100" ng-click="submitFn()">提交</button>
+        <button class="btn btn-default btn-100" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psLoading,psDialog){
+        var target = commonMethodService();
+        scope.entrustObj = target.getValue("entrustObj");
+        scope.entrustObj.implementOrderList = scope.entrustObj.implementOrderList || [];
+        //自动生成工程单号  暂时不用了
+        function randomNumber() {
+          const now = new Date()
+          let month = now.getMonth() + 1;
+          let day = now.getDate();
+          let hour = now.getHours();
+          let minutes = now.getMinutes();
+          let seconds = now.getSeconds();
+          return now.getFullYear().toString() + month.toString() + day + hour + minutes + seconds + (Math.round(Math.random() * 89 + 100)).toString();
+        }
+        //关联临时工程单
+        function relateOrderList(d) {
+          d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+          ajax.post("motorRepairUIService.findImplementOrder",{implementOrderNo:d.clone.implementOrderNo}).then(r=>{
+            if(scope.entrustObj && scope.entrustObj.implementOrderList.find(v=> v.implementOrderNo == d.clone.implementOrderNo)){
+              growl.warning('该临时工程单已关联');
+              return;
+            }
+            scope.entrustObj.implementOrderList.push(Object.assign(r[0],d.clone));
+            growl.info("关联临时工程单成功");
+            ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+              scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                d.push(v);
+              });
+              scope.entrustObj.implementOrderList = d;
+              scope.resources =d.map( a => new tableCell(a));
+            });
+          });
+        }
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                    ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                    : "-";
+            }
+            view(){
+                var flag = (typeof this.implementOrderNo == 'undefined' && this.implementOrderNo != '');
+                cms2.modal({
+                    title : "工程单详情",
+                    // directive : !!flag ? "dialog-build-project-list" : "dialog-temp-project-list",
+                    directive :  "dialog-build-project-list2",
+                    width : "80%",
+                    params : {
+                        mode : "view",
+                        data : this
+                    }
+                }).then( d => {
+
+                });
+            }
+            edit(key){
+                var flag = (typeof this.implementOrderNo == 'undefined' && this.implementOrderNo != '');
+                cms2.modal({
+                    title : "编辑工程单",
+                    // directive : !!flag ? "dialog-build-project-list" : "dialog-temp-project-list",
+                    directive :  "dialog-build-project-list2",
+                    width : "80%",
+                    params : {
+                        mode : "edit",
+                        data : this
+                    }
+                }).then( d => {
+                    if(typeof d !== "undefined" && d.clone){
+                    d["clone"] = angular.extend(this,d.clone);
+                    if( typeof (d.clone) != "undefined" && d.clone.attachmentList && d.clone.attachmentList.length != 0){
+                        function getFiles(data) {
+                            let keys = Object.keys(data);
+                            let values = Object.values(data);
+                            let temp = [];
+                            let ret = [];
+                            keys.forEach((key, index) => {
+                                let obj = {};
+                                obj.key = key;
+                                obj.files = values[index];
+                                temp.push(obj);
+                            });
+
+                            let index = 0;
+                            temp.forEach(item => {
+                                if (item.files.length > 0) {
+                                    item.files.forEach(file => {
+                                        ret.push({
+                                            name: file.name || file.fileName,
+                                            key: item.key,
+                                            file: file,
+                                            index: index
+                                        });
+                                        index ++ ;
+                                    });
+                                }
+                            });
+
+                            return ret;
+                        }
+                        function setValueEmpty(data) {
+                            for(let key in data) {
+                                d.clone[key] = [];
+                            }
+                        }
+                        let formData = new FormData();
+                        let obj = {
+                            'attachmentList':  d.clone.attachmentList || [],
+                        };
+                        let files = getFiles(obj);
+                        setValueEmpty(obj);
+                        formData.append("resourceId",2);
+                        files = files.filter((v,i) => {
+                            if(v.file.fileName || v.file.filePath){
+                                d.clone.attachmentList.push(v.file);
+                            }else {
+                                return v;
+                            }
+                        })
+                        if(files.length >0){
+                            files.forEach((v,i) => {
+                                formData.append(`file${v.index}`,v.file);
+                            })
+                        }
+                        if(files.length !== 0){
+                            psLoading.showLoadingTip();
+                            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                                if(s.code == "0"){
+                                    psLoading.closeLoading();
+                                    let obj = {},sArr = s.data || [];
+                                    if(isArray(s.data)){
+                                        s.data.forEach((v,i)=>{
+                                            obj = {};
+                                            obj["fileName"] = files[i].name;
+                                            // obj["filePath"] = v.qualifiedName;
+                                            obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                                            d.clone[files[i].key].push(obj);
+                                        })
+                                    }else {
+                                        obj["fileName"] = files[0].name;
+                                        obj["filePath"] = s.data.qualifiedName;
+                                        d.clone[files[0].key].push(obj);
+                                    }
+                                    return cms2.success( scope);
+                                }
+                            }).then(function (scope) {
+                                d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                                scope.entrustObj.implementOrderList.splice(key,1,d.clone);
+                                growl.info("编辑工程单成功");
+                                ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                                    scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                        d.push(v);
+                                    });
+                                    scope.entrustObj.implementOrderList = d;
+                                    scope.resources =d.map( a => new tableCell(a));
+                                });
+                            }).catch(function (err) {
+                                 
+                            })
+                        }else {
+                            d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                            scope.entrustObj.implementOrderList.splice(key,1,d.clone);
+                            growl.info("编辑工程单成功");
+                            ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                                scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                    d.push(v);
+                                });
+                                scope.entrustObj.implementOrderList = d;
+                                scope.resources =d.map( a => new tableCell(a));
+                            });
+                        }
+                    }else {
+                        d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                        scope.entrustObj.implementOrderList.splice(key,1,d.clone);
+                        growl.info("编辑工程单成功");
+                        ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                            scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                d.push(v);
+                            });
+                            scope.entrustObj.implementOrderList = d;
+                            scope.resources =d.map( a => new tableCell(a));
+                        });
+                    }
+
+                }
+            });
+            }
+            remove(key){
+                psDialog.confirm("是否要删除？",()=>{
+                  if(scope.entrustObj && scope.entrustObj.implementOrderList && scope.entrustObj.implementOrderList.length){
+                    scope.entrustObj.implementOrderList.splice(key,1);
+                    growl.info("删除成功！");
+                    if(scope.entrustObj.implementOrderList.length == 0){
+                      scope.resources = [];
+                    }else {
+                      scope.resources =scope.entrustObj.implementOrderList.map( a => new tableCell(a));
+                    }
+
+                  }
+                })
+            }
+        }
+        function timer(){
+            ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                scope.resources = d.map( a => new tableCell(a));
+            })
+        }
+        timer();
+        let interval = setInterval(()=>{
+            timer();
+            scope.$apply();
+        },300000);
+        scope.addProList = function(){
+          scope.entrustObj.entrustOrderNo = scope.entrustObj.entrustOrderNo || "";
+            cms2.modal({
+                title : "新增工程单",
+                directive : "dialog-build-project-list2",
+                width : "80%",
+                params : {
+                    mode : "add",
+                    data : {"implementOrderNo": scope.entrustObj.entrustOrderNo}
+                }
+            }).then( d => {
+                if(typeof d !== "undefined"){
+                    if( typeof (d.clone) != "undefined" && d.clone.attachmentList && d.clone.attachmentList.length != 0){
+                        function getFiles(data) {
+                            let keys = Object.keys(data);
+                            let values = Object.values(data);
+                            let temp = [];
+                            let ret = [];
+                            keys.forEach((key, index) => {
+                                let obj = {};
+                                obj.key = key;
+                                obj.files = values[index];
+                                temp.push(obj);
+                            });
+
+                            let index = 0;
+                            temp.forEach(item => {
+                                if (item.files.length > 0) {
+                                    item.files.forEach(file => {
+                                        ret.push({
+                                            name: file.name,
+                                            key: item.key,
+                                            file: file,
+                                            index: index
+                                        });
+                                        index ++ ;
+                                    });
+                                }
+                            });
+
+                            return ret;
+                        }
+                        function setValueEmpty(data) {
+                            for(let key in data) {
+                                d.clone[key] = [];
+                            }
+                        }
+                        let formData = new FormData();
+                        let obj = {
+                            'attachmentList':  d.clone.attachmentList || [],
+                        };
+                        let files = getFiles(obj);
+                        setValueEmpty(obj);
+                        formData.append("resourceId",2);
+                        if(files.length >0){
+                            files.forEach((v,i) => {
+                                formData.append(`file${v.index}`,v.file);
+                            })
+                        }
+                        if(files.length !== 0){
+                            psLoading.showLoadingTip();
+                            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                                if(s.code == "0"){
+                                    psLoading.closeLoading();
+                                    let obj = {},sArr = s.data || [];
+                                    if(isArray(s.data)){
+                                        s.data.forEach((v,i)=>{
+                                            obj = {};
+                                            obj["fileName"] = files[i].name;
+                                            // obj["filePath"] = v.qualifiedName;
+                                            obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                                            d.clone[files[i].key].push(obj);
+                                        })
+                                    }else {
+                                        obj["fileName"] = files[0].name;
+                                        obj["filePath"] = s.data.qualifiedName;
+                                        d.clone[files[0].key].push(obj);
+                                    }
+                                    return cms2.success( scope);
+                                }
+                            }).then(function (scope) {
+                                d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                                scope.entrustObj.implementOrderList.push(d.clone);
+                                growl.info("新增工程单成功");
+                                ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                                    scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                        d.push(v);
+                                    });
+                                    scope.entrustObj.implementOrderList = d;
+                                    scope.resources =d.map( a => new tableCell(a));
+                                });
+                            }).catch(function (err) {
+                                 
+                            })
+                        }else {
+                            d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                            scope.entrustObj.implementOrderList.push(d.clone);
+                            growl.info("新增工程单成功");
+                            ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                                scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                    d.push(v);
+                                });
+                                scope.entrustObj.implementOrderList = d;
+                                scope.resources =d.map( a => new tableCell(a));
+                            });
+                        }
+                    }else {
+                        d.clone.entrustOrderNo = scope.entrustObj.entrustOrderNo;
+                        scope.entrustObj.implementOrderList.push(d.clone);
+                        growl.info("新增工程单成功");
+                        ajax.post("motorRepairUIService.findImplementOrder",{entrustOrderNo: scope.entrustObj.entrustOrderNo}).then( d => {
+                            scope.entrustObj.implementOrderList.forEach((v,i)=>{
+                                d.push(v);
+                            });
+                            scope.entrustObj.implementOrderList = d;
+                            scope.resources =d.map( a => new tableCell(a));
+                        });
+                    }
+
+                }
+            });
+        }
+        scope.relateTempList = function(){
+            cms2.modal({
+                title : "关联临时工程单",
+                directive : "dialog-temp-project-list2",
+                width : "80%",
+                params : {
+                    mode : "edit",
+                    type : "temp",
+                    data : {}
+                }
+            }).then( d => {
+                if(typeof d !== "undefined"){
+                    if( typeof (d.clone) != "undefined" && d.clone.attachmentList && d.clone.attachmentList.length != 0){
+                        function getFiles(data) {
+                            let keys = Object.keys(data);
+                            let values = Object.values(data);
+                            let temp = [];
+                            let ret = [];
+                            keys.forEach((key, index) => {
+                                let obj = {};
+                                obj.key = key;
+                                obj.files = values[index];
+                                temp.push(obj);
+                            });
+
+                            let index = 0;
+                            temp.forEach(item => {
+                                if (item.files.length > 0) {
+                                    item.files.forEach(file => {
+                                        ret.push({
+                                            name: file.name,
+                                            key: item.key,
+                                            file: file,
+                                            index: index
+                                        });
+                                        index ++ ;
+                                    });
+                                }
+                            });
+
+                            return ret;
+                        }
+                        function setValueEmpty(data) {
+                            for(let key in data) {
+                                d.clone[key] = [];
+                            }
+                        }
+                        let formData = new FormData();
+                        let obj = {
+                            'attachmentList':  d.clone.attachmentList || [],
+                        };
+                        let files = getFiles(obj);
+                        setValueEmpty(obj);
+                        formData.append("resourceId",2);
+                        if(files.length >0){
+                            files.forEach((v,i) => {
+                                formData.append(`file${v.index}`,v.file);
+                            })
+                        }
+                        if(files.length !== 0){
+                            psLoading.showLoadingTip();
+                            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                                if(s.code == "0"){
+                                    psLoading.closeLoading();
+                                    let obj = {},sArr = s.data || [];
+                                    if(isArray(s.data)){
+                                        s.data.forEach((v,i)=>{
+                                            obj = {};
+                                            obj["fileName"] = files[i].name;
+                                            // obj["filePath"] = v.qualifiedName;
+                                            obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                                            d.clone[files[i].key].push(obj);
+                                        })
+                                    }else {
+                                        obj["fileName"] = files[0].name;
+                                        obj["filePath"] = s.data.qualifiedName;
+                                        d.clone[files[0].key].push(obj);
+                                    }
+                                    return cms2.success( scope);
+                                }
+                            }).then(function () {
+                              relateOrderList(d);
+                            }).catch(function (err) {
+                                 
+                            })
+                        }else {
+                          relateOrderList(d)
+                        }
+                    }else {
+                      relateOrderList(d);
+
+                    }
+
+                }
+            });
+        }
+        scope.modelChange = function(a){
+            //  
+        };
+        scope.submitFn = function(){
+            psLoading.showLoading();
+            scope.paramArr = [];
+            scope.paramArr.push(scope.entrustObj.entrustOrderNo);
+            scope.paramArr.push(scope.entrustObj.implementOrderList || []);
+            ajax.post("motorRepairUIService.saveImplementOrderList",scope.paramArr).then( d => {
+                if( d!= null){
+                    psLoading.closeLoading();
+                    growl.info("建立工程单成功！");
+                    // cms2.navigateTo(0);
+                    cms2.refresh("prod_comprehensive_admin_home");
+                }
+            })
+
+        }
+        scope.close = function(){
+            // cms2.navigateTo(0);
+            cms2.refresh("prod_comprehensive_admin_home");
+        }
+        scope.$on("$destroy",()=>{
+            clearInterval(interval);
+        })
+    }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .value {
+      line-height: 26px!important;
+    }
+    .option{
+      width : 160px;
+    }
+    .arrow {
+      font-size: 18px;
+    }
+    .tit {
+      width:80px;
+      text-align:right;
+      margin-right: 4px;
+    }
+  }
+</style>

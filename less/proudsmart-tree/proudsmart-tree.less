@@ -1,0 +1,39 @@
+@lineColor : #ddd; @highlightcolor : #e1f1f4;
+.proud-smart-tree {
+  background-color : rgba(0,0,0,0) !important;
+  .tree-element{
+    .ps{
+      position : relative;
+      width : 10px;
+      height : 10px;
+      border : 0;
+      margin-right : 5px;
+      &.ps-fold:before{
+        left : 0;
+        opacity : .3;
+      }
+      &.ps-fold:after{
+        display : none;
+      }
+      &.ps-unfold:before{
+        left : 0;
+        opacity : .3;
+      }
+    }
+  }
+  .tree-wrap {
+    position : relative;
+    &.hide {
+      display : none;
+    }
+  }
+  .tree-item {
+    position : relative;
+    &.searched {
+      & > .tree-element{
+        transition : 1s background-color #fff;
+        background-color : @highlightcolor;
+      }
+    }
+  }
+}

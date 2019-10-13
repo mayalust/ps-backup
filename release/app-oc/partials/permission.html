@@ -1,0 +1,138 @@
+<!-- Main content -->
+<section class="content" id="permission">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="box">
+        <div class="box-header">
+          <div class="box-tools pull-left nav-tabs-header">
+            <ul class="nav nav-tabs" role="tablist">
+              <li  ng-class="{'menus': 'active'}[panel]"
+                   ng-click="navigateTo('menus')"
+                  >
+                <a role="button" name="user">菜单功能</a>
+              </li>
+              <li  ng-class="{'view': 'active'}[panel]"
+                   ng-click="navigateTo('view')">
+                <a role="button" name="role">视图权限</a>
+              </li>
+              <li  ng-class="{'equipment': 'active'}[panel]"
+                   ng-click="navigateTo('equipment')">
+                <a role="button" name="role">设备控制</a>
+              </li>
+              <!--新加的组件权限-->
+              <!--<li  ng-class="{'component': 'active'}[panel]"-->
+                   <!--ng-click="navigateTo('component')">-->
+                <!--<a role="button" name="role">组件权限</a>-->
+              <!--</li>-->
+              <li  ng-class="{'component': 'active'}[panel]"
+                   ng-click="navigateTo('prod_componentpermiss')">
+                <a role="button" name="role">新组件权限</a>
+              </li>
+            </ul>
+          </div>
+          <div class="box-tools pull-right">
+            <h5 style="display: inline-block;"><strong >当前角色是：</strong>{{roleName}}</h5>
+            <span class="history-btn" role="button" ng-show="menuitems['#'+treeviewIndex] == null" data-toggle="返回" title="" data-original-title="返回" onclick="window.history.back();"><i
+                class="proudsmart ps-back-01"></i></span>
+          </div>
+        </div>
+        <div class="box-body">
+          <div ng-if="panel=='menus'">
+            <div class="btn btn-primary" style="margin-bottom:10px;"
+                 ng-click="saveMenuPremission()">
+              <span class="glyphicon glyphicon-floppy-save"></span>
+              保存
+            </div>
+            <div tree-view
+                 data-mark="'function'"
+                 data-checkbox="'belong'"
+                 data-source="functionTree">
+            </div>
+          </div>
+          <div ng-if="panel=='view'">
+            <div class="bk-scope bk-theme-mini" ng-repeat="view in views">
+              <dl class="bk-group">
+                <dt class="bk-group-title"><span ng-bind="view.title"></span></dt>
+                <dd class="bk-group-detail">
+                  <div table-dom source="view.source"></div>
+                </dd>
+              </dl>
+            </div>
+          </div>
+          <div ng-if="panel=='equipment'" style="height : calc(100vh - 200px);">
+            <div table-dom source="equipments"></div>
+          </div>
+          <div ng-if="panel=='component'" style="height : calc(100vh - 200px);">
+            <div class="col-md-8" style="margin-bottom:10px;">
+              <button class="btn btn-primary" ng-click="save()">
+                <span class="glyphicon glyphicon-floppy-save"></span>保存
+              </button>
+            </div>
+            <div class="col-md-4" style="margin-bottom:10px;">
+              <div class="input-group">
+                <span class="input-group-addon" id="basic-addon1">选择视图组件</span>
+                <div select-two
+                     data-options="alldashboards"
+                     data-change="onSelect(view)"
+                     data-init="onInit(view)"
+                     class="form-control"></div>
+                <div class="input-group-btn">
+                  <button class="btn btn-primary" type="button" ng-click="addView()">
+                    <span class="glyphicon glyphicon-plus"></span> 添加
+                  </button>
+                </div>
+              </div>
+            </div>
+            <table width="100%" class="table table-hover dataTable no-footer" style="width: 100%;">
+              <thead>
+              <tr role="row">
+                <th>序号</th>
+                <th>视图名称</th>
+                <th>页签名称</th>
+                <th>别名</th>
+                <th>操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr role="row" class="ng-scope"
+                  ng-repeat="view in allSelectedDashboard" ng-if="allSelectedDashboard.length > 0">
+                <td ng-bind="$index + 1"
+                    ng-style="{true : {'background-color' : '#eee'}}[view.active]"
+                    class="col-md-1" style="text-align:center"></td>
+                <td ng-bind="view.text"
+                    ng-style="{true : {'background-color' : '#eee'}}[view.active]"
+                    class="col-md-3"></td>
+                <td class="col-md-3" ng-style="{true : {'background-color' : '#eee'}}[view.active]">
+                  <input ng-model="view.name" class="form-control"/>
+                </td>
+                <td class="col-md-3" ng-style="{true : {'background-color' : '#eee'}}[view.active]">
+                  <input ng-model="view.alias" class="form-control"/>
+                </td>
+                <td class="col-md-2" ng-style="{true : {'background-color' : '#eee'}}[view.active]">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default" ng-click="movedown(view)">
+                      <span class="glyphicon glyphicon-arrow-down"></span>下移
+                    </button>
+                    <button type="button" class="btn btn-default" ng-click="moveup(view)">
+                      <span class="glyphicon glyphicon-arrow-up"></span>上移
+                    </button>
+                    <button type="button" class="btn btn-danger" ng-click="remove(view)">
+                      <span class="glyphicon glyphicon-remove"></span>删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr role="row" class="odd ng-scope" ng-if="allSelectedDashboard.length == 0">
+                <td class="col-md-12" colspan="4" style="text-align:center;">
+                  没有视图组件
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <!-- <div table-dom source="equipments"></div> -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

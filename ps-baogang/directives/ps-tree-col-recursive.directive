@@ -1,0 +1,49 @@
+<config injector="$rootScope"
+        deps = "psTreeColRecursive"
+></config>
+<template>
+  <div class="wrap">
+    <div class="item">
+      <div class="inner" ng-style="{'paddingLeft': depth * 10 + 'px'}">
+        <ng-transclude></ng-transclude>
+      </div>
+    </div>
+    <ps-tree-col-recursive
+        ng-repeat="item in options"
+        data-key="key"
+        data-item="item"
+        data-depth="depth"
+        data-options="item.children">
+      <ng-transclude></ng-transclude>
+    </ps-tree-col-recursive>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function(rootScope){
+    return {
+      replace : true,
+      scope : {
+        key : "=",
+        item : "=",
+        depth : "=",
+        options : "="
+      },
+      restrice : "E",
+      transclude : true,
+      link(scope, element, attr, ngModel, transclude) {
+        let item = scope;
+        scope.depth++;
+        while(item.$$childHead){
+          item = item.$$childHead;
+        }
+        item['$depth'] = scope.depth;
+        item[scope.key] = scope.item;
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .inner{
+    border: 1px solid red;
+  }
+</style>

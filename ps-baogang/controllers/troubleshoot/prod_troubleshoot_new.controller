@@ -1,0 +1,216 @@
+<config injector="$scope,$q,$timeout,$state,$location,$registerService,api,ajax,commonMethodService2,growl,userUIService,psLoading,psDialog,commonMethodService,$filter"
+        deps="troubleshootDialog"
+></config>
+<template>
+    <div class="box" style="background-color: transparent;">
+        <div class="box-body">
+            <form role="form" class="search-area">
+                <div class="col-md-2 item">
+                    <label class="form-label">排故手顺名称：</label>
+                    <ps-input ng-model="excavationBookName"></ps-input>
+                </div>
+                <div class="col-md-2 item">
+                    <label class="form-label">排故手顺编号</label>
+                    <ps-input ng-model="excavationBookNo"></ps-input>
+                </div>
+                <div class="form-group col-sm-2 no-pad">
+                    <label class="col-sm-12 control-label" style="color: transparent;">操作：</label>
+                    <div class="btn-group block" style="padding: 0;border: none;">
+                        <button type="button" class="btn btn-primary btn-sm" ng-click="goSearch()">
+                            <i class="fa fa-search"></i>
+                            <span class="hidden-sm"> 查询</span>
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" ng-click="goClear()">
+                            <i class="fa fa-close"></i>
+                            <span class="hidden-sm"> 清除</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="box-footer">
+            <ps-grid1 ng-model="gridModel" config="config"></ps-grid1>
+        </div>
+    </div>
+</template>
+<script>
+    import {dateparser, extend, isArray} from "ps-ultility"
+
+    export default function (scope, q, timeout, $state, location, registerService,api, ajax, cms2, growl, userUIService, psLoading, psDialog, commonMethodService, $filter) {
+
+        let getResource = "deviceResumeUIService.getDeviceExcavationBookListWithPage",
+            deleteResource = "deviceResumeUIService.deleteDeviceExcavationBook";
+
+        var target = commonMethodService();
+
+        const getConfig = (e,param) => {
+            var res = e.resource;
+
+            param.deviceId= res && res.id ? res.id : 0;
+
+            scope.config = {
+                url: getResource,
+                parameter: param,
+                outButtons: [{
+                    label: '新增手顺书',
+                    on: {
+                        click: function () {
+                            if(res.category=="Device"){
+                                cms2.modal({
+                                    title: "排故手顺书详情",
+                                    directive: "troubleshoot-dialog",
+                                    width: "60%",
+                                    scope: scope,
+                                    params: {type:"add",data:res}
+                                });
+                            }else{
+                                 
+                                growl.warning("请选择设备！");
+                            }
+                        }
+                    }
+                }],
+                bodyButtons: [{
+                    label: '详情',
+                    on: {
+                        click: function (row) {
+                            cms2.modal({
+                                title: "排故手顺书详情",
+                                directive: "troubleshoot-dialog",
+                                width: "70%",
+                                scope: scope,
+                                params: {type:"view",data:row}
+                            })
+                        }
+                    }
+                }, {
+                    label: '编辑',
+                    on: {
+                        click: function (row) {
+                            cms2.modal({
+                                title: "排故手顺书详情",
+                                directive: "troubleshoot-dialog",
+                                width: "70%",
+                                scope: scope,
+                                params: {type:"update",data:row}
+                            });
+                        }
+                    }
+                }, {
+                    label: '删除',
+                    on: {
+                        click: function (row) {
+                            psDialog.confirm("确定要删除吗？", () => {
+                                api.post(deleteResource, row.id).then(d => {
+                                    this.deleteRow(row);
+                                    growl.success("删除手顺书成功！");
+                                });
+                            });
+                        }
+                    }
+                }],
+                columns: [{
+                    key: 'customerName',
+                    label: '产线',
+                    type: 'text'
+                }, {
+                    key: 'deviceName',
+                    label: '设备信息',
+                    type: 'text'
+                }, {
+                    key: 'deviceCode',
+                    label: '设备编码',
+                    type: 'text'
+                }, {
+                    key: 'excavationBookNo',
+                    label: '排故手顺编号',
+                    type: 'text'
+                }, {
+                    key: 'excavationBookName',
+                    label: '排故手顺名称',
+                    type: 'text'
+                }, {
+                    key: 'createUserName',
+                    label: '创建人',
+                    type: 'text'
+                }, {
+                    key: 'updateDate',
+                    label: '创建日期',
+                    type: 'text',
+                    bind: function (row) {
+                        return $filter('date')(new Date(row.updateDate), 'yyyy-MM-dd HH:mm:ss');
+                    }
+                }]
+            };
+
+        }
+
+        var getData=function(param){
+            target.on("tree_resourceChange", function (e) {
+                getConfig(e,param)
+            });
+        }
+
+        scope.goSearch=function(){
+            var param={};
+            if( scope.excavationBookName ){
+                param.excavationBookName = scope.excavationBookName;
+            }
+            if( scope.excavationBookNo ){
+                param.excavationBookNo = scope.excavationBookNo;
+            }
+            getData(param);
+        }
+
+        scope.goClear=function(){
+            var param={};
+            scope.excavationBookName=param.excavationBookNo=undefined;
+            getData(param);
+        }
+
+        var init=function(){
+            var param={};
+            getData(param);
+        }
+
+        init();
+    }
+</script>
+<style lang="less" scoped>
+    table {
+        td {
+            height: 28px !important;
+        }
+    }
+
+    .margin-5 {
+        margin: 5px;
+    }
+
+    .item {
+        padding: 5px !important;
+    }
+
+    .padding-5 {
+        padding: 5px;
+    }
+
+    label.form-label {
+        text-align: center;
+    }
+
+    .wrap {
+        padding: 10px 0px !important;
+        a {
+            cursor: pointer;
+            font-weigh: bold;
+        }
+        .drop {
+            float: left;
+            width: 200px;
+        }
+        .option {
+            width: 160px;
+        }
+    }
+</style>

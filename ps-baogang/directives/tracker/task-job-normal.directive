@@ -1,0 +1,71 @@
+<config injector="commonMethodService2"
+        deps="dialogProjectMaintain"></config>
+<template>
+  <div class="task-job-normal">
+    <p class="content-item" ng-repeat="content in contentArr">{{content.key}}:{{content.value}}</p>
+    <button class="btn btn-primary btn-sm" ng-click="showDetail()">查看详情</button>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (cms2) {
+  return {
+    scope: {
+      process: "="
+    },
+    link (scope, element, attr) {
+      scope.contentArr = [];
+      scope.showDetail = function () {
+        if (typeof scope.process === 'undefined') {
+          return;
+        }
+        cms2.modal({
+          title: "详情",
+          directive: scope.process.detailDialog,//弹框数据？deps?
+          width: "50%",
+          params: {
+            mode: "view",
+          }
+        })
+      };
+      scope.$watch('process', (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          s.contentArr = Object.keys(n).reduce((prev, curr) => {
+            if(typeof n[curr] !== 'object'){
+              return prev;
+            }
+            prev.push(n[curr]);
+            return prev;
+          }, []);
+        }
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.task-job-normal {
+  padding-bottom: 10px;
+
+  .content-item {
+    white-space: nowrap;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 16px;
+    padding-top: 10px;
+    padding-left: 10px;
+    line-height: 1.1;
+    font-weight: 600;
+    color: #bbb;
+
+
+  }
+
+  button {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+
+</style>

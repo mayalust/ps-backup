@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>宝钢</title>
+	<link rel="stylesheet" href="css/css.css">
+</head>
+<body>
+<div class="container">
+	<div id="center">
+		<form id="login" class="login" action="">
+			<!-- <input class="username" name="username" type="text" value="用户名"> -->
+
+			<input id="username" name="username" ng-model="user" ng-change="hasError=false" class="username" placeholder="邮箱/手机号" accesskey="n" type="text" value="" autocomplete="false" />
+
+			<!-- <input class="passwd" name="passwd" type="passwd" value="密 码"> -->
+			<input id="password" name="password" ng-model="password" ng-change="hasError=false" class="passwd" placeholder="登录密码" accesskey="p" type="password" value="" autocomplete="off" />
+
+
+			<input class="submit" id="logBtn" name="logBtn" name="submit" ng-click="login()" accesskey="l" value="登　录" tabindex="4" type="submit" />
+			<label class="checkbox">
+				<input name="" type="checkbox" value="" checked="checked" />记住密码
+			</label>
+
+			<!--  <input class="submit" type="submit" value="登陆"> -->
+		</form>
+	</div>
+</div>
+<script type="text/javascript">
+
+</script>
+</body>
+</html>

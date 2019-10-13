@@ -1,0 +1,100 @@
+<config injector="$q,$rootScope,growl,commonMethodService2"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"
+              ><span style="color: red;">*</span>备件类型:</span
+            >
+          </td>
+          <td>
+            <ps-select
+              ng-model="params.rollerType"
+              data-options="item.label as item.label for item in rollerTypes"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"
+              ><span style="color: red;">*</span>文件类型:</span
+            >
+          </td>
+          <td>
+            <ps-select
+              ng-model="params.craftsType"
+              data-options="item.valueCode as item.label for item in craftsTypes"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"
+              ><span style="color: red;">*</span>附件:</span
+            >
+          </td>
+          <td>
+            <ps-file2 ng-model="params.fileList"></ps-file2>
+          </td>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5"></div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+import { extend } from "ps-ultility";
+export default function(q, rootScope, growl, cms2) {
+  return {
+    link(scope, element, attr) {
+      scope.submitFn = function() {
+        let promise = cms2.validate(
+          {
+            "params.rollerType": "备件类型不可为空",
+            "params.craftsType": "文件类型不可为空",
+            "params.fileList": "附件不可为空"
+          },
+          scope
+        );
+        promise
+          .then(() => {
+            scope.submit(scope.params);
+          })
+          .catch(e => {
+            growl.error(e);
+          });
+      };
+    }
+  };
+}
+</script>
+<style lang="less" scoped="true">
+table.item {
+  width: 100%;
+  td.title {
+    width: 130px;
+  }
+}
+.wrap {
+  margin: auto;
+  .title {
+    line-height: 26px;
+    padding-right: 5px;
+  }
+  .value {
+    line-height: 26px;
+  }
+}
+</style>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html
+    lang="en">
+<head>
+  <meta
+      charset="UTF-8">
+  <title>
+    Title</title>
+  <script src="dist/ps-tree.js"></script>
+  <link rel="stylesheet" type="text/css" href="dist/css/ps-tree-basic.css" />
+  <link rel="stylesheet" type="text/css" href="dist/css/themes/ps-tree-industry.css" />
+  <style>
+    body {
+      background-color : #eee;
+    }
+  </style>
+</head>
+<body>
+  <div style = "width : 600px; margin:auto;">
+    <div style="padding : 0 0 10px 0;">
+      <span>search: </span><input id="key" /><button id="search">submit</button>
+    </div>
+    <div style="padding : 0 0 10px 0;">
+      <input type="checkbox" id="hasLine"/><span>show line: </span>
+      <input type="checkbox" id="hasCheckbox"/><span>show checkbox: </span>
+      <input type="checkbox" id="pullright"/><span>handler pull right: </span>
+      <input type="checkbox" id="condense"/><span>condensed </span>
+      <input type="checkbox" id="animation"/><span>animation </span>
+    </div>
+    <div style="padding : 0 0 10px 0;">
+      <span>theme select</span>
+      <select id="theme">
+        <option value="">basic</option>
+        <option value="steel-industry">steel industry</option>
+      </select>
+    </div>
+    <div style="padding : 0 0 10px 0;">
+      <span>create & destroy: </span><button id="reset">destroy</button>
+    </div>
+    <div id="ps-tree" style="max-height : 600px; overflow : auto;"></div>
+  </div>
+  <!--  -->
+  <script>
+    var mapData = [], removeTree;
+    function each(arr, callback){
+      var i, rs;
+      arr = arr || [];
+      for(i=0; i<arr.length; i++){
+        rs = typeof callback == "function" ? callback(arr[i], i) : undefined;
+        if(rs !== undefined){
+          return rs;
+        }
+      }
+    }
+    function getJSON(url, param, callback){
+      var xmlhttp = new XMLHttpRequest();
+      param = JSON.stringify(param);
+      xmlhttp.onreadystatechange = state_Change;
+      xmlhttp.withCredentials = true;
+      xmlhttp.open("GET",url,true);
+      xmlhttp.send(param);
+      function state_Change(){
+        if(xmlhttp.readyState == 4){
+          if(xmlhttp.status == 200){
+            var json = JSON.parse(xmlhttp.responseText);
+
+            callback(json);
+          }
+        };
+      }
+    }
+    function getChinaMapToTree(callback){
+      getJSON("china.json", null, getJsonSuccess)
+      function getJsonSuccess(data){
+        each(data, function(address){
+          var addressArr = address.split(",");
+          var children = mapData;
+          each(addressArr, function(name, i){
+            var find = children.find(function(e){
+              return e.label == name;
+            })
+            if(find){
+              children = find.children;
+            } else {
+              var newAddress = {
+                id : addressArr.slice(0,i + 1).toString(),
+                label : name
+              }
+              i !== addressArr.length - 1 && (newAddress.children = []);
+              children.push(newAddress);
+              children = newAddress.children;
+            }
+          })
+        });
+        callback(mapData);
+      }
+    }
+    function getChinaMapToTreeSuccess(data){
+      var checked = [], tree,
+        selected = ["北京,北京,东城区", "北京,北京,朝阳区"],
+        reset = document.getElementById("reset"),
+        dom = document.getElementById("ps-tree"),
+        search = document.getElementById("search"),
+        input = document.getElementById("key"),
+        hasline = document.getElementById("hasLine"),
+        hasCheckbox = document.getElementById("hasCheckbox"),
+        pullright = document.getElementById("pullright"),
+        theme = document.getElementById("theme"),
+        condense = document.getElementById("condense"),
+        animation = document.getElementById("animation"),
+        themeCache;
+      tree = psTree(dom, {
+        showline : true,
+        animate : false,
+        data : data,
+        themes : "show-line folder-pull-right show-checkbox",
+        on : {
+          init : function(event){
+            var id = this.id;
+            this.icon = "circle";
+            this.checked = selected.some(function(n){
+              return id.indexOf(n) != -1
+            })
+            this.open = selected.some(function(n){
+              return n.indexOf(id) != -1
+            });
+
+             var cur = this;
+             var group = this.createGroup("group");
+             var text = this.createText("a", event.node.label, {
+              color : "#aaa"
+            });
+             var removeBtn = this.createButton("b", "remove", {
+              float : "right"
+            }, function(e){
+              this.remove();
+            });
+             var addBtn = this.createButton("c", "add", {
+              float : "right"
+            }, function(e){
+              this.append({
+                label : "sub000"
+              })
+            });
+             group.appendChild(text);
+             group.appendChild(removeBtn);
+             group.appendChild(addBtn);
+             this.render(group);
+          },
+          click : function(event){
+            /**
+            if(this.children){
+              event.preventDefault();
+              this.toggle();
+            };
+            this.traverseParents(function(n){
+              console.log(n);
+            })
+            console.log(tree.getSelected(), this.getSelected());*/
+          }
+        }
+      });
+      console.log(tree);
+      hasline.setAttribute("checked", "checked");
+      pullright.setAttribute("checked", "checked");
+      hasCheckbox.setAttribute("checked", "checked");
+      themeCache = theme.value = "";
+      reset.onclick = function(e){
+        if(reset.innerText === "destroy"){
+          tree.destroy();
+          reset.innerText = "create";
+        } else {
+          getChinaMapToTreeSuccess(mapData);
+          reset.innerText = "destroy";
+        }
+      }
+      pullright.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("folder-pull-right");
+        } else {
+          tree.removetheme("folder-pull-right");
+        }
+      }
+      hasline.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("show-line");
+        } else {
+          tree.removetheme("show-line");
+        }
+      }
+      hasCheckbox.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("show-checkbox");
+        } else {
+          tree.removetheme("show-checkbox");
+        }
+      }
+      condense.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("condense");
+        } else {
+          tree.removetheme("condense");
+        }
+      }
+      search.onclick = function(e){
+        tree.search(input.value);
+      }
+      animation.onchange = function(e){
+        tree.setAnimate(this.checked);
+      }
+      theme.onchange = function(){
+        if(typeof themeCache == "string" && themeCache.length > 0){
+          tree.removetheme(themeCache);
+        };
+        tree.addtheme(this.value);
+        themeCache = this.value;
+      };
+      return function(){
+        tree.destroy();
+      }
+    };
+    getChinaMapToTree(getChinaMapToTreeSuccess);
+  </script>
+</body>
+</html>

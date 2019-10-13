@@ -1,0 +1,120 @@
+<config injector="$rootScope,ajax"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="titleHead">
+        <div class="col-md-6">
+          设备名称: <span ng-bind="clone.label"></span>
+        </div>
+        <div class="col-md-6">
+          设备编号: <span ng-bind="clone.sn"></span>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <button class="btn btn-primary pull-right" ng-click="add()">添加指标</button>
+      </div>
+      <div class="col-md-12">
+        <table ps-table-sync
+               data-paginate="all"
+               data-source="kpiAndInstance"
+               data-filter="filter2"
+               data-sort="sort2"
+               data-page="page2">
+          <thead>
+          <tr>
+            <th>测点</th>
+            <th>指标</th>
+            <th class="option">操作</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="(key,item) in items track by key">
+            <td>
+              <ps-select ng-model="item.instance"
+                         data-options="instance as instance.label for instance in MeasurePointLocateList"></ps-select>
+            </td>
+            <td>
+              <ps-select ng-model="item.kpiCode"
+                         data-options="kpi as kpi.label for kpi in modelKpiDicArr"></ps-select>
+            </td>
+            <td>
+              <div ps-option-group>
+                <!--<button class="btn btn-primary" ng-click="">确定</button>-->
+                <button class="btn btn-primary" ng-click="cancel2(key)">取消</button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+
+      </div>
+      <div class="col-md-9">
+        <button class="btn btn-primary" ng-click="submitFn()">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope,ajax){
+    return {
+      link(scope, element, attr) {
+        scope.clone = extend({}, scope.params.data);
+        scope.lists = scope.params.list;
+        var kpiAAIns = scope.lists;
+        class tableCell{
+              constructor(data){
+                  for(var i in data){
+                      this[i] = data[i];
+                  }
+              }
+        }
+        scope.MeasurePointLocateList = rootScope.MeasurePointLocateList;
+        let modelKpiDicObj = rootScope.rootModelsDic[scope.clone.modelId]["kpiDic"];
+        scope.modelKpiDicArr = []
+        for(var i in modelKpiDicObj){
+            scope.modelKpiDicArr.push(modelKpiDicObj[i])
+        }
+
+        scope.kpiAndInstance = kpiAAIns.map(e => new tableCell(e))
+        scope.add = function(){
+            // kpiAAIns.push({
+            //     instance : scope.MeasurePointLocateList[0],
+            //     kpiCode : scope.modelKpiDicArr[0]
+            // })
+            scope.kpiAndInstance.push({
+                instance : scope.MeasurePointLocateList[0],
+                kpiCode : scope.modelKpiDicArr[0]
+            })
+            scope.kpiAndInstance =scope.kpiAndInstance.map(e => new tableCell(e));
+        }
+        scope.cancel2 = function(index){
+            // kpiAAIns.splice(index,1);
+            scope.kpiAndInstance.splice(index,1)
+            scope.kpiAndInstance = scope.kpiAndInstance.map(e => new tableCell(e));
+        }
+        scope.submitFn = function(){
+            scope.submit(scope.kpiAndInstance);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

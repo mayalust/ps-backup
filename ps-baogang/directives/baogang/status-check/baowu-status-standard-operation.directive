@@ -1,0 +1,764 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,psRouter"
+></config>
+<template>
+  <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+    <ps-layout data-option="option"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  q,
+  ajax,
+  psDialog,
+  routeParams,
+  psUltility,
+  location,
+  growl,
+  commonMethodService,
+  psRouter
+) {
+  let target = commonMethodService(),
+    resource;
+  return {
+    link(scope, element, attr) {
+      let mode = target.getValue("mode"),
+        // id = target.getParameter("id"),
+        resultObj = {},
+        obj,
+        objList = {};
+      obj = mode != "add" ? target.getValue("obj") : {};
+       
+      function showDelete() {
+        return mode != "detail"
+          ? [
+              {
+                label: "删除",
+                class: "btn btn-primary",
+                on: {
+                  click: function(e) {
+                    e.removeInline();
+                  }
+                }
+              }
+            ]
+          : [];
+      }
+      function getOutGrid(str) {
+        return [
+          {
+            label: str,
+            symbol: "inline",
+            class: "primary",
+            show: function() {
+              return mode == "detail" ? false : true;
+            }
+          }
+        ];
+      }
+      function fillTables(str, refreshGrid, b, allData) {
+        if (str.indexOf("stepsList") != -1) {
+          allData.push(b);
+        } else {
+          if (str.indexOf("listDeviceList") != -1) {
+            let tempData = [];
+            if (allData.length == 0) {
+              b["inx"] = 1;
+              b["deviceName"] += "////" + b["inx"].toString();
+            } else {
+              if (allData[0].deviceName.includes("////")) {
+                tempData = allData.map((v, i) => {
+                  return (v = v.deviceName.split("////")[1]);
+                });
+                b["inx"] = Number(Math.max.apply(null, tempData)) + 1;
+                b["deviceName"] += "////" + b["inx"].toString();
+              }
+            }
+          }
+          allData.unshift(b);
+        }
+        if (mode == "add") {
+          resultObj[str] = allData;
+        } else {
+          obj[str] = allData;
+        }
+        refreshGrid(false);
+      }
+      target.on("tree_resourceChange", function(e) {
+        resource = e.resource;
+        scope.option = {
+          type: "layout",
+          init: function() {
+            obj &&
+              obj.stepsList &&
+              obj.stepsList.sort((a, b) => {
+                return a.stepsNo - 0 - b.stepsNo;
+              });
+            objList =
+              obj && obj.listDeviceList
+                ? obj.listDeviceList
+                    .filter(d => {
+                      return d && d.deviceName.includes("////");
+                    })
+                    .sort((a, b) => {
+                      return (
+                        a.deviceName.split("////")[1] -
+                        0 -
+                        b.deviceName.split("////")[1]
+                      );
+                    })
+                    .map((d, ind) => {
+                      d.inx = ind + 1;
+                      return d;
+                    })
+                : [];
+            return {
+              toolList: mode != "add" ? obj.toolList : [],
+              resetCondtionList: mode != "add" ? obj.resetCondtionList : [],
+              listDeviceList: mode != "add" ? objList : [],
+              stepsList: mode != "add" ? obj.stepsList : []
+            };
+          },
+          children: [
+            {
+              type: "form-inline",
+              children: [
+                {
+                  name: "deviceName",
+                  type: "label",
+                  width: 10,
+                  value: "设备名称:"
+                },
+                {
+                  type: "label",
+                  width: 10,
+                  value: resource.label
+                },
+                {
+                  name: "deviceCode",
+                  type: "label",
+                  width: 10,
+                  value: "设备编号:"
+                },
+                {
+                  type: "label",
+                  width: 10,
+                  value: resource.externalDevId
+                }
+              ]
+            },
+            {
+              //新建状态维护标准
+              label: "状态标准基础信息",
+              type: "panel",
+              children: [
+                {
+                  type: "form-grid",
+                  scope: "model",
+                  children: [
+                    {
+                      type: "input",
+                      label: "状态维护标准编号",
+                      key: "standardNo",
+                      value: mode != "add" ? obj.standardNo : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "状态维护项目名称",
+                      key: "standardName",
+                      value: mode != "add" ? obj.standardName : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "实施依据",
+                      key: "maintainBasis",
+                      value: mode != "add" ? obj.maintainBasis : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "设备状态",
+                      key: "deviceState",
+                      value: mode != "add" ? obj.deviceState : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      options: target.getRootScope("myDicts")["pcsDeviceState"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "实施方",
+                      key: "actionUser",
+                      value: mode != "add" ? obj.actionUser : "",
+                      composory: true,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      col: 4,
+                      options: target.getRootScope("myDicts")["pcsActionUser"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "安全挂牌",
+                      key: "safetyPoint",
+                      value: mode != "add" ? obj.safetyPoint : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      options: target.getRootScope("myDicts")["pcsSafetyPoint"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "维护人",
+                      key: "executioner",
+                      value: mode != "add" ? obj.executioner : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      options: function() {
+                        var allUsers = target.getRootScope("getAllUserInfo"),
+                          smartUsers = [],
+                          roleArr = [];
+                        allUsers.forEach(function(item) {
+                          if (item.roleID && item.roleID.indexOf(",") !== -1) {
+                            roleArr = item.roleID.split(",");
+                            roleArr.some(v => {
+                              if (v == "496878991490167") {
+                                smartUsers.push(item);
+                                return true;
+                              }
+                            });
+                          } else {
+                            if (item.roleID == "496878991490170") {
+                              //智能检修工程师roleID
+                              smartUsers.push(item);
+                            }
+                          }
+                        });
+                        return smartUsers;
+                      },
+                      format: {
+                        id: "userID",
+                        label: "userName"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "岗位号",
+                      key: "jobNo",
+                      value: mode != "add" ? obj.jobNo : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "周期单位",
+                      key: "executionCycle",
+                      value: mode != "add" ? obj.executionCycle : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      options: target.getRootScope("myDicts")["executionCycle"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "周期间隔",
+                      key: "cycleNum",
+                      value: mode != "add" ? obj.cycleNum : "",
+                      composory: true,
+                      col: 4,
+                      watch: {
+                        key: "model.executionCycle",
+                        handler: function(row) {
+                          if (row.$value == "none") {
+                            row.$scope.option.config.disabled = true;
+                            row.update({
+                              value: 0
+                            });
+                          } else {
+                            row.$scope.option.config.disabled = false;
+                            /* row.update({
+                                                    value: ""
+                                                })*/
+                          }
+                        }
+                      },
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false,
+                        type: "number",
+                        min: 0
+                      }
+                    },
+                    {
+                      type: "date2",
+                      label: "开始时间",
+                      key: "firstExecutionTime",
+                      value: mode != "add" ? obj.firstExecutionTime : "",
+                      composory: true,
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      }
+                    },
+                    {
+                      type: "checkbox",
+                      label: "是否启用",
+                      key: "taskStatus",
+                      value: mode != "add" ? obj.taskStatus : "",
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      format: {
+                        true: 0,
+                        false: 1
+                      }
+                    },
+                    {
+                      type: "checkbox",
+                      label: "是否需要停机",
+                      key: "needStop",
+                      value: mode != "add" ? obj.needStop : "",
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false
+                      },
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "作业时长(H)",
+                      key: "needTime",
+                      value: mode != "add" ? obj.needTime : "",
+                      col: 4,
+                      config: {
+                        disabled: mode == "detail" ? "disabled" : false,
+                        type: "number",
+                        min: 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              //工器具准备
+              label: "工器具准备",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "toolList",
+                  config: {
+                    attributes: {
+                      name: ["名称", "text"],
+                      format: ["规格", "text"],
+                      num: ["数量", "text"],
+                      unit: ["单位", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "name"
+                        },
+                        {
+                          name: "format"
+                        },
+                        {
+                          name: "num"
+                        },
+                        {
+                          name: "unit"
+                        }
+                      ],
+                      buttons: {
+                        inGrid: showDelete(),
+                        outGrid: getOutGrid("新增项次")
+                      },
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        // composory : true,
+                        inlineAdd: {
+                          name: {
+                            type: "input",
+                            composory: true
+                          },
+                          format: {
+                            type: "input"
+                          },
+                          num: {
+                            type: "input",
+                            isNumber: true,
+                            composory: true
+                          },
+                          unit: {
+                            type: "input",
+                            composory: true
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            b["num"] = Number(b["num"]);
+                            if (b["num"] > 999999) {
+                              growl.info("请输入合法数量");
+                            } else {
+                              fillTables("toolList", refreshGrid, b, allData);
+                            }
+                          }
+                        }
+                      },
+                      options: []
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              //挂牌准备
+              label: "挂牌准备",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "listDeviceList",
+                  config: {
+                    attributes: {
+                      inx: ["序号", "text"],
+                      safeNature: ["安全牌性质", "text"],
+                      listPosition: ["挂牌位置", "text"],
+                      deviceName: ["挂牌设备", "dict"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "inx"
+                        },
+                        {
+                          name: "safeNature"
+                        },
+                        {
+                          name: "listPosition"
+                        },
+                        {
+                          name: "deviceName",
+                          bind: function(row) {
+                            return row.deviceName.includes("////")
+                              ? row.deviceName.split("////")[0]
+                              : row.deviceName;
+                          }
+                        }
+                      ],
+                      buttons: {
+                        inGrid: showDelete(),
+                        outGrid: getOutGrid("新增项次")
+                      },
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        inlineAdd: {
+                          inx: {
+                            type: "label"
+                          },
+                          safeNature: {
+                            type: "input",
+                            composory: true
+                          },
+                          listPosition: {
+                            type: "input",
+                            composory: true
+                          },
+                          deviceName: {
+                            type: "input",
+                            composory: true
+                            // type: 'select',
+                            // url: 'resourceUIService.getDevicesByCondition',
+                            // // {domains:"/0/515445641576227/515445641576264/515445641576272/554925002946064/41736732360005/562400653818885/"}
+                            // parameter: {domains: resource.domains},
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            // var listObj = b["deviceName"];
+                            // b["deviceName"] = listObj["label"];
+                            // b["deviceId"] = listObj["id"];
+                            fillTables(
+                              "listDeviceList",
+                              refreshGrid,
+                              b,
+                              allData
+                            );
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              //施工步骤
+              label: "施工步骤",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "stepsList",
+                  config: {
+                    attributes: {
+                      stepsNo: ["步骤", "text"],
+                      content: ["作业内容", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "stepsNo"
+                        },
+                        {
+                          name: "content"
+                        }
+                      ],
+                      buttons: {
+                        inGrid: showDelete(),
+                        outGrid: getOutGrid("新增项次")
+                      },
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        composory: true,
+                        inlineAdd: {
+                          stepsNo: {
+                            type: "input",
+                            composory: true,
+                            isNumber: true
+                          },
+                          content: {
+                            type: "input",
+                            composory: true
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            fillTables("stepsList", refreshGrid, b, allData);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              //恢复初始设置条件
+              label: "恢复初始设置条件",
+              type: "panel",
+              children: [
+                {
+                  type: "table-form",
+                  key: "resetCondtionList",
+                  config: {
+                    attributes: {
+                      standardProjectName: ["标准项目名称", "dict"],
+                      standardProjectId: ["标准项目编号", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "standardProjectName"
+                        },
+                        {
+                          name: "standardProjectId"
+                        }
+                      ],
+                      buttons: {
+                        inGrid: showDelete(),
+                        outGrid: getOutGrid("添加条件")
+                      },
+                      config: {
+                        showIndex: true,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: true,
+                        inlineAdd: {
+                          standardProjectName: {
+                            type: "select",
+                            composory: true,
+                            url:
+                              "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                            parameter: [
+                              { deviceId: resource.id, ticketCategory: "320" },
+                              {}
+                            ],
+                            after: function(d) {
+                              return d.data;
+                            },
+                            format: {
+                              id: "standardProjectId",
+                              label: "standardProjectName"
+                            }
+                          },
+                          standardProjectId: {
+                            type: "input",
+                            composory: true,
+                            watch: {
+                              key: "standardProjectName",
+                              handler: function(newValue, next) {
+                                return newValue.standardProjectId;
+                              }
+                            }
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            b["standardProjectName"] =
+                              b["standardProjectName"].label;
+                            fillTables(
+                              "resetCondtionList",
+                              refreshGrid,
+                              b,
+                              allData
+                            );
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              type: "form-inline",
+              children: [
+                {
+                  type: "button",
+                  width: 10,
+                  config: {
+                    class: "btn-primary btn-100",
+                    label: "确 定",
+                    validCheck: true,
+                    show: mode == "detail" ? false : true,
+                    on: {
+                      click: function(e) {
+                        if (mode == "add") {
+                          resultObj["deviceId"] = resource.id;
+                          resultObj = angular.extend(
+                            resultObj,
+                            e.getData().model
+                          );
+                          ajax
+                            .post(
+                              "maintenanceTaskUIService.addStateMaintinStandard",
+                              resultObj
+                            )
+                            .then(d => {
+                              growl.info("添加维护状态标准成功");
+                              target.navigateTo("index", {
+                                main: 6,
+                                sub: [0, "viewId:494624133620022"]
+                              });
+                            });
+                        } else {
+                          //objList 更新内存中的obj["listDeviceList"]
+                          obj["listDeviceList"] = objList;
+                          obj = angular.extend(obj, e.getData().model);
+                          ajax
+                            .post(
+                              "maintenanceTaskUIService.addStateMaintinStandard",
+                              obj
+                            )
+                            .then(d => {
+                              growl.info("编辑维护状态标准成功");
+                              target.navigateTo("index", {
+                                main: 6,
+                                sub: [0, "viewId:494624133620022"]
+                              });
+                            });
+                        }
+                      }
+                    }
+                  },
+                  key: "save"
+                },
+                {
+                  type: "button",
+                  width: 10,
+                  config: {
+                    label: "取 消",
+                    class: "btn-default btn-100",
+                    show: mode == "detail" ? false : true,
+                    click: function() {
+                      target.navigateTo("index", {
+                        main: 6,
+                        sub: [0, "viewId:494624133620022"]
+                      });
+                    }
+                  }
+                },
+                {
+                  type: "button",
+                  width: 10,
+                  config: {
+                    label: "返 回",
+                    class: "btn-default btn-100",
+                    show: mode == "detail" ? true : false,
+                    click: function() {
+                      // target.back();
+                      target.navigateTo("index", {
+                        main: 6,
+                        sub: [0, "viewId:494624133620022"]
+                      });
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        };
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

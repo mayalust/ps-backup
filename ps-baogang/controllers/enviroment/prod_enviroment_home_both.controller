@@ -1,0 +1,791 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService,$rootScope,growl"
+        deps="dialogGlobalRule,dialogCommonAlert,dialogDetailAlert"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-10">
+      <div ng-class="classN" ng-repeat="tabs in statusTabs">
+        <div class="status-tabs" ng-style="{'background-color':tabs.color,'border-color':tabs.border}">
+          <div>
+            <table>
+              <tbody>
+              <tr>
+                <td class="title col-md-12">
+                  <span>{{tabs.value}}</span>
+                </td>
+                <td class="icon col-md-12" rowspan="2">
+                  <span class="proudsmart" ng-class="tabs.icon"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="desc col-md-12">
+                  <span>{{tabs.text}}</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">类别:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="customerId1"
+                           data-options="customer as customer.label for customer in customerDic"></ps-select>
+              </div>
+              <span class="padding-right-10">厂区:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="projectId1"
+                           data-options="project as project.label for project in projectDic | filter : { parentID : customerId1.id }"></ps-select>
+              </div>
+              <!--<span class="padding-right-10">关注程度:</span>-->
+              <!--<div class="horizontal width-200">-->
+                <!--<ps-select ng-model="attention1"-->
+                           <!--data-change="modelChange( attention1 + attention1.length )"-->
+                           <!--data-options="attention.id as attention.label for attention in attentions"></ps-select>-->
+              <!--</div>-->
+              <span class="padding-right-10">报警级别:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="level1"
+                           data-options="level.id as level.label for level in levels"></ps-select>
+              </div>
+              <button class="btn btn-primary" ng-click="search1()">查询</button>
+              <button class="btn btn-primary" ng-click="clear1()">清空</button>
+            </div>
+            <h4 class="margin-10">待处理告警</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="resources"
+                   data-filter="filter1"
+                   data-sort="sort1"
+                   data-page="page1">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>类别</th>
+                <th>厂区</th>
+                <th>设备名称</th>
+                <th>设备编码</th>
+                <th>关注程度</th>
+                <th>报警信息</th>
+                <th>报警级别</th>
+                <th>首次报警时间</th>
+                <th>报警次数</th>
+                <th>最近报警时间</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                <td ng-bind="deviceDic[item.nodeId].customerLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].projectLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].label"></td>
+                <td ng-bind="deviceDic[item.nodeId].sn"></td>
+                <td ng-bind="deviceDic[item.nodeId].values.Focus == 'country_control' ? '国控' : '市控'"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.severity ==2 ? '注意'
+              : item.severity ==3 ? '警告'
+              : item.severity ==4 ? '危险'
+              : '-'"></td>
+                <td ng-bind="formatTime(item.firstArisingTime)"></td>
+                <td ng-bind="item.count"></td>
+                <td ng-bind="formatTime(item.arisingTime)"></td>
+                <td ng-bind="item.state ? '新产生' : '-'"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.analysis()">分析</button>
+                    <button class="btn btn-default" ng-click="item.confirm()">确认</button>
+                    <button class="btn btn-default" ng-click="item.neglect()">忽略</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">类别:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="customerId2"
+                           data-options="customer as customer.label for customer in customerDic"></ps-select>
+              </div>
+              <span class="padding-right-10">厂区:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="projectId2"
+                           data-options="project as project.label for project in projectDic| filter : { parentID : customerId2.id }"></ps-select>
+              </div>
+              <!--<span class="padding-right-10">关注程度:</span>-->
+              <!--<div class="horizontal width-200">-->
+                <!--<ps-select ng-model="attention2"-->
+                           <!--data-change="modelChange( attention2 + attention2.length )"-->
+                           <!--data-options="attention.id as attention.label for attention in attentions"></ps-select>-->
+              <!--</div>-->
+              <span class="padding-right-10">报警级别:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="level2"
+                           data-options="level.id as level.label for level in levels"></ps-select>
+              </div>
+              <button class="btn btn-primary" ng-click="search2()">查询</button>
+              <button class="btn btn-primary" ng-click="clear2()">清空</button>
+            </div>
+            <h4 class="margin-10">已处理告警</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="alertOk"
+                   data-filter="filter2"
+                   data-sort="sort2"
+                   data-page="page2">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>类别</th>
+                <th>厂区</th>
+                <th>设备名称</th>
+                <th>设备编码</th>
+                <th>关注程度</th>
+                <th>报警信息</th>
+                <th>报警级别</th>
+                <!--<th>首次报警时间</th>-->
+                <!--<th>报警次数</th>-->
+                <th>关闭时间</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                <td ng-bind="deviceDic[item.nodeId].customerLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].projectLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].label"></td>
+                <td ng-bind="deviceDic[item.nodeId].sn"></td>
+                <td ng-bind="deviceDic[item.nodeId].values.Focus == 'country_control' ? '国控' : '市控'"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.severity ==2 ? '注意'
+              : item.severity ==3 ? '警告'
+              : item.severity ==4 ? '危险'
+              : '-'"></td>
+                <!--<td ng-bind="formatTime(item.firstArisingTime)"></td>-->
+                <!--<td ng-bind="item.count"></td>-->
+                <td ng-bind="formatTime(item.closeTime)"></td>
+                <td ng-bind="item.state == 5 ? '已确认'
+                : item.state == 20 ? '已解决'
+                : item.state == 30 ? '已忽略'
+                : '-'"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.detail()">详情</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,cms,rootScope,growl){
+      let target = cms(),
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToMonth = date.trimmToMonth().date;
+       
+      scope.deviceDic = rootScope.deviceDic;
+      scope.formatTime = function (d) {
+          return d
+              ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+              : "-";
+      }
+
+      class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      getDevSn(){
+          if(this.nodeId && scope.deviceDic){
+              var d = scope.deviceDic.filter((e)=>{
+                  return e.id == this.nodeId;
+              })
+              return d[0] && d[0].sn;
+          }else {
+              return "-"
+          }
+      }
+    getCustomer(){
+        if(this.nodeId && scope.deviceDic){
+            var d = scope.deviceDic.filter((e)=>{
+                return e.id == this.nodeId;
+            })
+            this.deviceObj =  d[0];
+            if(this.deviceObj && this.deviceObj.customerId && scope.customerDic){
+                var d = scope.customerDic.filter((e)=>{
+                    return e.id == this.deviceObj.customerId;
+                })
+                return d[0] && d[0].customerLabel;
+            }else {
+                return "-"
+            }
+        } else {
+            return "-"
+        }
+    }
+    getProject(){
+        if(this.nodeId && scope.deviceDic){
+            var d = scope.deviceDic.filter((e)=>{
+                return e.id == this.nodeId;
+            })
+            this.deviceObj =  d[0];
+            if(this.deviceObj && this.deviceObj.projectId && scope.projectDic){
+                var d = scope.projectDic.filter((e)=>{
+                    return e.id == this.deviceObj.projectId;
+                })
+                return d[0] && d[0].projectLabel;
+            }else{
+                return "-"
+            }
+        }else {
+            return "-"
+        }
+    }
+      analysis(){
+        cms2.navigateTo(2);
+      }
+      confirm(){
+          cms2.modal({
+              title : "确认",
+              directive : "dialog-common-alert",
+              width : "50%",
+              params : {
+                  mode : "edit",
+                  type : "确定",
+                  data : this
+              }
+          }).then( d => {
+              if(d){
+                  if(d.value && d.value.length > 500){
+                      growl.warning("长度限制500字以内！")
+                  }else{
+                      let parms = {
+                          "actionType": "recover",
+                          "recoverAll": true,
+                          "resolved": true,
+                          "clearOut": true,
+                      };
+                      parms["comment"] = d.value;
+                      parms["alertIds"] = [d.alertId];
+                      ajax.post("alertManageFlexService.sendRecoverAction", parms).then( dt => {
+                          if(dt){
+                               
+                              scope.resources = createRenderFunction({"severities":"1,2,3,4","states":"-100,0,10"});
+                              scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30"});
+                          }
+                      });
+                  }
+              }
+          });
+      }
+      neglect(){
+          cms2.modal({
+              title : "忽略",
+              directive : "dialog-common-alert",
+              width : "50%",
+              params : {
+                  mode : "edit",
+                  type : "",
+                  data :this
+              }
+          }).then( d => {
+              if(d){
+                  if(d.value && d.value.length > 500){
+                      growl.warning("长度限制500字以内！")
+                  }else{
+                      let parms = {
+                          "actionType": "recover",
+                          "recoverAll": true,
+                          "resolved": false,
+                          "clearOut": true,
+                      };
+                      parms["comment"] = d.value;
+                      parms["alertIds"] = [d.alertId];
+                      ajax.post("alertManageFlexService.sendRecoverAction", parms).then( dt => {
+                          // scope.deviceDic = dt;
+                          if(dt){
+                               
+                              scope.resources = createRenderFunction({"severities":"1,2,3,4","states":"-100,0,10"});
+                              scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30"});
+                              // scope.$apply();
+                          }
+                      });
+                  }
+              }
+          });
+      }
+      detail(){
+            cms2.modal({
+                title : "详情",
+                directive : "dialog-detail-alert",
+                width : "50%",
+                params : {
+                    mode : "view",
+                    type : "",
+                    data :this
+                }
+            }).then( d => {
+                 
+                 
+            });
+      }
+    }
+      if(rootScope.$$childTail.menuitems["A42_01"] && !rootScope.$$childTail.menuitems["A42_02"]){//废气
+          ajax.post("alertQueryFlexService.getAlertByPage", [{
+              "severities":"1,2,3,4",
+              "states":"-100,0,10",
+          },
+              {"start":0,"length":1,"statCount":true}
+          ]).then( alert1 => {
+              return ajax.post("alertQueryFlexService.getAlertByPage", [{
+                  "firstTimeFrom":trimToMonth,
+                  "firstTimeTo":currentTime,
+                  "severities":"1,2,3,4",
+                  "states":"20",
+              },
+                  {"start":0,"length":1,"statCount":true}
+              ]).then( alert2 => {
+                  return ajax.post("environmentService.countAbnormalReport", [
+                          {
+                              "startTime":trimToMonth,
+                              "endTime":currentTime,
+                              "state":1,   // -1:待处理,0:待审核,1:已完成
+                              "dailyReportType":"gas",// gas:废气,water:废水
+                          },
+                      ]
+                  ).then( yichang1 => {
+                      return ajax.post("environmentService.countExcessiveAbnormal", [
+                          trimToMonth,  //startTime currentTime trimToMonth
+                          currentTime,  //endTime
+                          "gas"
+                          ]).then(yichang2 => {
+                          return [{
+                              value : alert1.total,
+                              color : "rgb(12, 70, 109)",
+                              border : "#21a6fb",
+                              text : "待处理报警",
+                              icon : "ps-bw_01",
+                              classN : "col-md-3"
+                          },{
+                              value : alert2.total,
+                              color : "rgb(102, 72, 109)",
+                              border : "rgb(224, 162, 239)",
+                              text : "已确认报警（当月内）",
+                              icon : "ps-bw_02",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang1,
+                              color : "rgb(72, 75, 47)",
+                              border : "rgb(231, 181, 43)",
+                              text : "废气异常报告（当月内）",
+                              icon : "ps-bw_03",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang2,
+                              color : "rgb(32, 45, 57)",
+                              border : "rgb(131, 121, 53)",
+                              text : "废气超标类异常（当月内）",
+                              icon : "ps-bw_04",
+                              classN : "col-md-3"
+                          }]
+                      })
+                  })
+              });
+          }).then(d => {
+              scope.statusTabs = d;
+              scope.classN = "col-md-3"
+          })
+      }
+      if(rootScope.$$childTail.menuitems["A42_02"] && !rootScope.$$childTail.menuitems["A42_01"]){//废水 待处理，已确定，废水异常报告，废水超标异常
+          ajax.post("alertQueryFlexService.getAlertByPage", [{
+              "severities":"1,2,3,4",
+              "states":"-100,0,10",
+          },
+              {"start":0,"length":1,"statCount":true}
+          ]).then( alert1 => {
+              return ajax.post("alertQueryFlexService.getAlertByPage", [{
+                  "firstTimeFrom":trimToMonth,
+                  "firstTimeTo":currentTime,
+                  "severities":"1,2,3,4",
+                  "states":"20",
+              },
+                  {"start":0,"length":1,"statCount":true}
+              ]).then( alert2 => {
+                  return ajax.post("environmentService.countAbnormalReport", [
+                          {
+                              "startTime":trimToMonth,
+                              "endTime":currentTime,
+                              "state":1,   // -1:待处理,0:待审核,1:已完成
+                              "dailyReportType":"water",// gas:废气,water:废水
+                          },
+                      ]
+                  ).then( yichang1 => {
+                      return ajax.post("environmentService.countExcessiveAbnormal", [
+                          trimToMonth,  //startTime currentTime trimToMonth
+                          currentTime,  //endTime
+                          "water",// gas:废气,water:废水
+                      ]).then(yichang2 => {
+                          return [{
+                              value : alert1.total,
+                              color : "rgb(12, 70, 109)",
+                              border : "#21a6fb",
+                              text : "待处理报警",
+                              icon : "ps-bw_01",
+                              classN : "col-md-3"
+                          },{
+                              value : alert2.total,
+                              color : "rgb(102, 72, 109)",
+                              border : "rgb(224, 162, 239)",
+                              text : "已确认报警（当月内）",
+                              icon : "ps-bw_02",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang1,
+                              color : "rgb(72, 75, 47)",
+                              border : "rgb(231, 181, 43)",
+                              text : "废水异常报告（当月内）",
+                              icon : "ps-bw_03",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang2,
+                              color : "rgb(32, 45, 57)",
+                              border : "rgb(131, 121, 53)",
+                              text : "废水超标类异常（当月内）",
+                              icon : "ps-bw_04",
+                              classN : "col-md-3"
+                          }]
+                      })
+                  })
+              });
+          }).then(d => {
+              scope.statusTabs = d;
+              scope.classN = "col-md-3"
+          })
+      }
+
+      if(rootScope.$$childTail.menuitems["A42_01"] && rootScope.$$childTail.menuitems["A42_02"]){//环保 待处理，已确定，废水异常报告，废水超标异常
+          ajax.post("alertQueryFlexService.getAlertByPage", [{
+              "severities":"1,2,3,4",
+              "states":"-100,0,10",
+          },
+              {"start":0,"length":1,"statCount":true}
+          ]).then( alert1 => {
+              return ajax.post("alertQueryFlexService.getAlertByPage", [{
+                  "firstTimeFrom":trimToMonth,
+                  "firstTimeTo":currentTime,
+                  "severities":"1,2,3,4",
+                  "states":"20",
+              },
+                  {"start":0,"length":1,"statCount":true}
+              ]).then( alert2 => {
+                  return ajax.post("environmentService.countAbnormalReport", [
+                          {
+                              "startTime":trimToMonth,
+                              "endTime":currentTime,
+                              "state":1,   // -1:待处理,0:待审核,1:已完成
+                              "dailyReportType":"gas",// gas:废气,water:废水
+                          },
+                      ]
+                  ).then( gas1 => {
+                      return ajax.post("environmentService.countExcessiveAbnormal", [
+                          trimToMonth,  //startTime currentTime trimToMonth
+                          currentTime,  //endTime
+                          "gas"
+                      ]).then(gas2 => {
+                          return ajax.post("environmentService.countAbnormalReport", [
+                              {
+                                  "startTime":trimToMonth,
+                                  "endTime":currentTime,
+                                  "state":1,   // -1:待处理,0:待审核,1:已完成
+                                  "dailyReportType":"water",// gas:废气,water:废水
+                              },
+                          ]).then(water1 => {
+                              return ajax.post("environmentService.countExcessiveAbnormal", [
+                                  trimToMonth,  //startTime currentTime trimToMonth
+                                  currentTime,  //endTime
+                                  "water"
+                              ]).then(water2 => {
+                                  return [{
+                                      value : alert1.total,
+                                      color : "rgb(12, 70, 109)",
+                                      border : "#21a6fb",
+                                      text : "待处理报警",
+                                      icon : "ps-bw_01",
+                                      classN : "col-md-3"
+                                  },{
+                                      value : alert2.total,
+                                      color : "rgb(102, 72, 109)",
+                                      border : "rgb(224, 162, 239)",
+                                      text : "已确认报警（当月内）",
+                                      icon : "ps-bw_02",
+                                      classN : "col-md-3"
+                                  },{
+                                      value :water1,
+                                      color : "rgb(72, 75, 47)",
+                                      border : "rgb(231, 181, 43)",
+                                      text : "废水异常报告（当月内）",
+                                      icon : "ps-bw_03",
+                                      classN : "col-md-3"
+                                  },{
+                                      value :water2,
+                                      color : "rgb(32, 45, 57)",
+                                      border : "rgb(131, 121, 53)",
+                                      text : "废水超标类异常（当月内）",
+                                      icon : "ps-bw_04",
+                                      classN : "col-md-3"
+                                  },{
+                                      value : gas1,
+                                      color : "rgb(72, 75, 47)",
+                                      border : "rgb(231, 181, 43)",
+                                      text : "废气异常报告（当月内）",
+                                      icon : "ps-bw_03",
+                                      classN : "col-md-3"
+                                  },{
+                                      value : gas2,
+                                      color : "rgb(32, 45, 57)",
+                                      border : "rgb(131, 121, 53)",
+                                      text : "废气超标类异常（当月内）",
+                                      icon : "ps-bw_04",
+                                      classN : "col-md-3"
+                                  }]
+                              })
+                          })
+                      })
+                  })
+              });
+          }).then(d => {
+              scope.statusTabs = d;
+              scope.classN = "col-md-2"
+          })
+      }
+
+    // scope.statusTabs = [{
+    //       value : "-",
+    //       color : "rgb(12, 70, 109)",
+    //       border : "#21a6fb",
+    //       text : "待处理任务",
+    //       icon : "ps-bw_01",
+    //       kpi : 3017
+    //   },{
+    //       value : "-",
+    //       color : "rgb(102, 72, 109)",
+    //       border : "rgb(224, 162, 239)",
+    //       text : "已处理任务",
+    //       icon : "ps-bw_02",
+    //       kpi : 3045
+    //   },{
+    //       value : "-",
+    //       color : "rgb(72, 75, 47)",
+    //       border : "rgb(231, 181, 43)",
+    //       text : "其他任务",
+    //       icon : "ps-bw_03",
+    //       kpi : 3046
+    //   }]
+
+    function createRenderFunction(states){
+
+        return function( page, pageSize ){
+            let params = [states,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("alertQueryFlexService.getAlertByPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+
+    function timer(){
+        // ajax.post("resourceUIService.getDevicesByCondition", [{}]).then( dt => {
+        //     // scope.deviceDic = dt;
+        //     return ajax.post("customerUIService.findCustomersByCondition",{}).then(customer => {
+        //         scope.customerDic = customer;
+        //         return ajax.post("projectUIService.findProjectsByCondition",{}).then(project => {
+        //             scope.projectDic = project;
+        //             scope.resources = createRenderFunction({"severities":"1,2,3,4","states":"-100,0,10"});
+        //             scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30"});
+        //         })
+        //     })
+        // });
+        ajax.post("resourceUIService.getResourceByModelId", 301).then( customers => {
+            scope.customerDic = customers;
+        })
+        ajax.post("resourceUIService.getResourceByModelId", 302).then( projects => {
+            scope.projectDic = projects;
+        })
+        scope.resources = createRenderFunction({"severities":"1,2,3,4","states":"-100,0,10"});
+        scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30"});
+    }
+    timer()
+
+    scope.attentions = [{
+        id : "国控",
+        label : "国控"
+    },{
+        id : "市控",
+        label : "市控"
+    }];
+    scope.levels = [{
+        id : 2,
+        label : "注意"
+    },{
+        id : 3,
+        label : "警告"
+    },{
+        id : 4,
+        label : "危险"
+    }];
+
+    scope.modelChange = function( a ){
+       
+    };
+
+    scope.clearFn = function(){
+      scope.filter1 = ( d => {
+          scope.type1 = "";
+          scope.customer1 = "";
+          scope.attention1 = "";
+          scope.level1 = "";
+          return true;
+      });
+      scope.filter2 = ( d => {
+            scope.type2 = "";
+            scope.customer2 = "";
+            scope.attention2 = "";
+            scope.level2 = "";
+            return true;
+        });
+    }
+    scope.clear1 = function(){
+        scope.projectId1 = "";
+        scope.customerId1 = "";
+        scope.attention1 = "";
+        scope.level1 = "";
+    }
+    scope.clear2 = function(){
+        scope.projectId2 = "";
+        scope.customerId2 = "";
+        scope.attention2 = "";
+        scope.level2 = "";
+    }
+    scope.searchFn = function(){
+      scope.filter1 = ({ type,customer,attention,level }) => {
+        if( scope.type1 && type !== scope.type1){
+            return false;
+        }
+        if( scope.customer1 && customer !== scope.customer1){
+            return false;
+        }
+        if( scope.attention1 && attention !== scope.attention1){
+            return false;
+        }
+        if( scope.level1 && level !== scope.level1){
+            return false;
+        }
+        return true;
+      }
+      scope.filter2 = ({ type,customer,attention,level }) => {
+            if( scope.type2 && type !== scope.type2){
+                return false;
+            }
+            if( scope.customer2 && customer !== scope.customer2){
+                return false;
+            }
+            if( scope.attention2 && attention !== scope.attention2){
+                return false;
+            }
+            if( scope.level2 && level !== scope.level2){
+                return false;
+            }
+            return true;
+        }
+    };
+    scope.search1 = function () {
+        var search1Parms = {"severities":scope.level1?scope.level1 :"1,2,3,4","states":"-100,0,10","domain" : scope.projectId1 ? scope.projectId1.domainPath : scope.customerId1 ? scope.customerId1.domainPath : ''}
+        scope.resources = createRenderFunction(search1Parms);
+    }
+    scope.search2 = function () {
+        var search2Parms = {"severities":scope.level2 ? scope.level2 :"1,2,3,4","states":"5,20,30","domain" : scope.projectId2 ? scope.projectId2.domainPath : scope.customerId2 ? scope.customerId2.domainPath : ''}
+        scope.alertOk = createRenderFunction(search2Parms);
+    }
+    // scope.$on("$destroy",()=>{
+    //      
+    //     clearInterval(interval);
+    // })
+
+        // cms2.getRoot().then( root => {
+        //     let id = root[0].id,
+        //     statusTabs = [{
+        //             value : "-",
+        //             color : "rgb(12, 70, 109)",
+        //             border : "#21a6fb",
+        //             text : "待处理任务",
+        //             icon : "ps-bw_01",
+        //             kpi : 3017
+        //       },{
+        //             value : "-",
+        //             color : "rgb(102, 72, 109)",
+        //             border : "rgb(224, 162, 239)",
+        //             text : "已处理任务",
+        //             icon : "ps-bw_02",
+        //             kpi : 3045
+        //       },{
+        //             value : "-",
+        //             color : "rgb(72, 75, 47)",
+        //             border : "rgb(231, 181, 43)",
+        //             text : "其他任务",
+        //             icon : "ps-bw_03",
+        //             kpi : 3046
+        //       }],
+        //       statusTabsIds = statusTabs.map(({kpi}) => kpi );
+        //     return cms2.getKpiValue( id, statusTabsIds ).then( vals => {
+        //               return cms2.success(statusTabs.map( d => {
+        //                     d.value = vals[d.kpi];
+        //                   }));
+        //             })
+        //       }).then(d =>{
+        //       scope.statusTabs = d;
+        //   })
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

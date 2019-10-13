@@ -1,0 +1,138 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,userUIService,growl" params="/:id?">
+</config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+export default function (scope, ajax, location, psDialog, routeParams, userUIService, growl) {
+  scope.layout = {
+    label: '设备文档',
+    children: [{
+      label: '设备文档',
+      type: "panel",
+      children: [{
+        type: "table",
+        config: {
+          attributes: {
+            "name": ["文档名称", "text"],
+            "description": ["文档描述", "text"]
+          },
+          grid: {
+            body: ["name", "description"],
+            buttons: {
+              outGrid: [{
+                label: "添加文档",
+                class: "primary",
+                icon: "fa fa-plus",
+                on: {
+                  click: function (evt) {
+                    psDialog.modal({
+                      label: "添加文档",
+                      type: "layout",
+                      children: [{
+                        type: "form-dialog",
+                        data: null,
+                        children: [{
+                          type: "input",
+                          label: "文档名称",
+                          composory: true,
+                          key: "name",
+                        }, {
+                          type: "file",
+                          label: "选择文件",
+                          composory: true,
+                          key: "file",
+                        }, {
+                          type: "input",
+                          label: "文档描述",
+                          key: "description",
+                        }]
+                      }],
+                      buttons: [{
+                        label: "确定",
+                        class: "btn btn-primary",
+                        click: function (e) {
+                          let inputData = e.getData();
+                          if (!inputData.name) {
+                            growl.warning('请输入文档名称');
+                            return;
+                          }
+                          if (!inputData.file) {
+                            growl.warning('请选择文件');
+                            return;
+                          }
+                          e.upload({
+                            before: function (d, formData) {
+                              return {
+                                deviceId: routeParams.id,
+                                name: d.name,
+                                description: d['description'] || '',
+                                file: d.file
+                              };
+                            },
+                            url: 'resourceUIService.uploadDeviceFile',
+                            after: function (d) {
+                              if (d.code == 0) {
+                                evt.$add(d.data);
+                                growl.success("上传成功", {});
+                              } else {
+                                growl.warning(d.message || d);
+                              }
+
+                            }
+                          });
+                        }
+                      }, {
+                        label: "取消",
+                        click: function () {
+                          this.close();
+                        }
+                      }]
+                    });
+                  }
+                }
+              }],
+              inGrid: [{
+                label: "下载",
+                class: "btn btn-primary",
+                on: {
+                  click: function (e) {
+                    var url = userUIService.uploadFileUrl + e.$row.qualifiedName;
+                    window.open(url);
+                  }
+                }
+              }, {
+                label: "删除",
+                class: "btn btn-default",
+                on: {
+                  click: function (evt) {
+                    evt.remove({
+                      message: "是否删除此项",
+                      url: "resourceUIService.deleteDeviceFile",
+                      before: function () {
+                        return evt.$row;
+                      }
+                    })
+                  }
+                }
+              }]
+            },
+            config: {
+              url: 'resourceUIService.getUploadDeviceFileList',
+              parameter: routeParams.id,
+              showIndex: false,
+              showSelector: false,
+              showSearch: false
+            },
+            options: []
+          }
+        }
+      }]
+    }]
+  }
+};
+</script>
+<style type="less">
+</style>

@@ -1,0 +1,223 @@
+<config injector="$timeout,psEvent"
+></config>
+<template>
+  <div>
+    <div class="wrap">
+      <input class="form-control"
+             ng-disabled="config.disabled"
+             ng-class="renderClass()"/>
+      <span class="instruction"></span>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+    export default function(timeout,psEvent){
+        return {
+            scope : {
+                ngModel : "=?",
+                config : "=?",
+                validate : "=?",
+                composory : "=?",
+                show : "=?",
+                options: "@"
+            },
+            require : '?ngModel',
+            link(scope, element, attr, ngModel) {
+                var $dom = element.find('input'),
+                    evt = psEvent(),
+                    dom = $dom[0],//get有的版本不支持
+                    $p = element.find('span'),
+                    domP = $p[0],
+                    defaultConfig = {
+                        placeholder: '请输入...',
+                        validInput: '',
+                        maxlength: 1/0,
+                        required:false
+                    },
+                    config = $.extend({},defaultConfig,scope.config || {}),//如果不传config 默认为空,
+                    updateOn = config.updateOn,
+                    validInput = config.validInput,
+                    commitFn,
+                    commitValue = function(d){
+                        /** 增加一个延迟提交功能 **/
+                        evt.off(updateOn, commitFn)
+                        commitFn = function(){
+                            ngModel.$setViewValue(d);
+                            ngModel.$render();
+                        };
+                        updateOn ? evt.on(updateOn, commitFn) : commitFn();
+                    },
+                    mLength = config.maxlength;
+                dom.placeholder = config.placeholder;
+                dom.type = config.type || "text";
+                if(config.type == "number"){
+                    dom.min = config.min;
+                    dom.max = config.max;
+                }
+                dom.onkeyup = function() {
+                    if(this.value.length > mLength) {
+                        domP.innerText = '*最多输入'+mLength+'位';
+                        domP.style.backgroundColor = 'red';
+                        this.value = this.value.substring(0,mLength);
+                    }
+                    if(config.min && this.value < config.min) {
+                        domP.innerText = '*值必须大于等于'+config.min;
+                        domP.style.backgroundColor = 'red';
+                        this.value = config.min;
+                    }
+                    if(config.max && this.value > config.max) {
+                        domP.innerText = '*值必须小于等于'+config.max;
+                        domP.style.backgroundColor = 'red';
+                        this.value = config.max;
+                    }
+                }
+                function validate(n){
+                    scope.validate = (function(){
+                        if(scope.show !== false){
+                            if(scope.composory == true){
+                                if(typeof n === "undefined"){
+                                    return false
+                                }
+                            }
+                        }
+                        return true;
+                    })();
+                }
+                scope.renderClass = function(){
+                    let cls = config.class || "";
+                    if(typeof cls == "object" && typeof cls.join === "function"){
+                        return cls.join(" ")
+                    } else if(typeof cls === "string"){
+                        return cls;
+                    } else {
+                        return "";
+                    }
+                };
+                dom.onfocus = function () {
+                    domP.innerText = '';
+                };
+                function validRegex(str){
+                    var regex = scope.config && scope.config.regex;
+                    function extractValidChar(str){
+                        var sofar = "", match;
+                        while(match = regex.exec(str)){
+                            sofar += match[0];
+                        }
+                        return sofar;
+                    }
+                    regex = typeof regex == "string"
+                        ? new RegExp(regex, "g") : regex;
+                    return regex instanceof RegExp
+                        ? extractValidChar(str) : str;
+                }
+                dom.onkeydown = function() {
+                    var self = this;
+                    timeout(function(){
+                        var val = validRegex(self.value);
+                        val = typeof val === "string" && val.length > 0 ? val : undefined;
+                        if(!val && config.required){
+                            domP.innerText = '*不能为空';
+                            domP.style.backgroundColor = 'red';
+                        } else {//传入正则
+                            if(validInput && typeof validInput === 'string') {
+                                var reg = new RegExp(validInput).test(val);
+                                if(reg) {
+                                    commitValue(val)
+                                    domP.innerText = '验证通过';
+                                    domP.style.backgroundColor = 'green';
+                                }else {
+                                    domP.innerText = '*只能输入数字';
+                                    domP.style.backgroundColor = 'red';
+                                    return;
+                                }
+                            } else if(validInput && typeof validInput == 'function') {//传入函数
+                                validInput(val,function (successMsg){
+                                    commitValue(val)
+                                    domP.innerText = successMsg;
+                                    domP.style.backgroundColor = 'green';
+                                },function (errorMsg) {
+                                    domP.innerText = errorMsg;
+                                    domP.style.backgroundColor = 'red';
+                                    return;
+                                });
+                            }else {//什么都不传
+                                if(!validInput){
+                                    commitValue(val)
+                                    domP.innerText = '';
+                                }
+                            }
+                        }
+                        //scope.$apply();
+                    }, 5);
+
+                }
+                dom.onchange = function() {
+                    var self = this;
+                    timeout(function(){
+                        var val = validRegex(self.value);
+                        val = typeof val === "string" && val.length > 0 ? val : undefined;
+                        if(!val && config.required){
+                            domP.innerText = '*不能为空';
+                            domP.style.backgroundColor = 'red';
+                        } else {//传入正则
+                            if(validInput && typeof validInput === 'string') {
+                                var reg = new RegExp(validInput).test(val);
+                                if(reg) {
+                                    commitValue(val)
+                                    domP.innerText = '验证通过';
+                                    domP.style.backgroundColor = 'green';
+                                }else {
+                                    domP.innerText = '*只能输入数字';
+                                    domP.style.backgroundColor = 'red';
+                                    return;
+                                }
+                            } else if(validInput && typeof validInput == 'function') {//传入函数
+                                validInput(val,function (successMsg){
+                                    commitValue(val)
+                                    domP.innerText = successMsg;
+                                    domP.style.backgroundColor = 'green';
+                                },function (errorMsg) {
+                                    domP.innerText = errorMsg;
+                                    domP.style.backgroundColor = 'red';
+                                    return;
+                                });
+                            }else {//什么都不传
+                                if(!validInput){
+                                    commitValue(val)
+                                    domP.innerText = '';
+                                }
+                            }
+                        }
+                        //scope.$apply();
+                    }, 5);
+
+                }
+                ngModel.$render = function (e) {//如果modelvalue改变 两条管道都走完 自动触发$render 因为默认$render空函数 则需要手动赋值
+                    //最后渲染页面对文本输入框赋值
+                    validate(ngModel.$viewValue);
+                    dom.value = typeof ngModel.$viewValue === "undefined" ? "" : ngModel.$viewValue;
+                }
+                scope.$on("destroy", ()=>{
+                    evt.off(updateOn, commitFn);
+                    commitFn = null;
+                    commitValue = null;
+                })
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    position : relative;
+    .instruction {
+      top : 20px;
+      left : 25px;
+      position : absolute;
+      color: red;
+      font-size: 12px;
+      background-color : red;
+      color : #fff;
+      border-radius : 3px;
+    }
+  }
+</style>

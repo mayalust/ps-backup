@@ -1,0 +1,330 @@
+<config injector="$rootScope,ajax,commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <!--出入库-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">出入库</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#check_in" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="check_in" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    入库时间:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.warehouseEntry" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    库位信息:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="clone.warehouseLocation" class="form-control" ng-disabled="currentRoleID != 70153973788934 && currentRoleID != 59846674150228"/>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    出库时间:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.outOfWarehouse" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  备注:
+                </div>
+                <div class="tbl-cell">
+                  <input type="text" ng-model="clone.descrWarehouse" class="form-control" ng-disabled="currentRoleID != 70153973788934 && currentRoleID != 59846674150228"/>
+                </div>
+                <div class="radio-unit">
+                  <span></span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  附件:
+                </div>
+                <div class="tbl-cell">
+                  <ps-file2  ng-model="clone.attachmentListWarehouse" ng-disabled="currentRoleID != 70153973788934 && currentRoleID != 59846674150228"></ps-file2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!--送货信息-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">送货信息</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#send_info" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="send_info" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    送货时间:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.deliveryTime" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  备注:
+                </div>
+                <div class="tbl-cell">
+                  <input type="text" ng-model="clone.descrDeliveryTime" class="form-control" ng-disabled="currentRoleID != 70153973788934 && currentRoleID != 59846674150228"/>
+                </div>
+                <div class="radio-unit">
+                  <span></span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  附件:
+                </div>
+                <div class="tbl-cell">
+                  <ps-file2  ng-model="clone.attachmentListDelivery"></ps-file2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!--交工结算-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">交工结算</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#finish_check" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="finish_check" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    资料上传完成日期:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.dataUploadFinishDate" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    送货单上交日期:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.deliveryOrderHandInDate" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    送货单签字完成日期:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.deliveryOrderSignFinishDate" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    交工资料上交日期:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-date2 ng-model="clone.handoverDataHandInDate" data-config="{disabled:ifDis}"></ps-date2>
+                  </div>
+                  <div class="radio-unit">
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  备注:
+                </div>
+                <div class="tbl-cell">
+                  <input type="text" ng-model="clone.descrHandover" class="form-control" ng-disabled="currentRoleID != 70153973788934 && currentRoleID != 59846674150228"/>
+                </div>
+                <div class="radio-unit">
+                  <span></span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="tbl">
+                <div class="radio-lbl">
+                  附件:
+                </div>
+                <div class="tbl-cell">
+                  <ps-file2  ng-model="clone.attachmentListHandover"></ps-file2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--提交取消按钮-->
+    <div class="row">
+      <div class="col-md-5">
+
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()" ng-if=" currentRoleID == 70153973788934 ||currentRoleID == 59846674150228">提交</button>
+        <button class="btn btn-default" ng-click="close()" ng-if=" currentRoleID == 70153973788934 ||currentRoleID == 59846674150228">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope,ajax,commonMethodService){
+    return {
+      link(scope, element, attr) {
+        let target = new commonMethodService();
+        scope.flag = true;
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.ifDis = scope.currentRoleID != 70153973788934 && scope.currentRoleID != 59846674150228;
+        scope.toggle = function(e){
+          scope.flag = !scope.flag;
+        };
+        scope.submitFn = function(){
+          scope.submit(scope);
+        };
+        scope.mode = scope.params.mode;
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.clone = extend({}, scope.params.data);
+        if(scope.clone && scope.clone.implementOrderNo){
+          ajax.post("motorRepairUIService.findCompletionManagement",[scope.clone.implementOrderNo]).then(res => {
+            scope.clone = Object.assign({},scope.clone,res);
+          })
+        }
+
+
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap {
+    padding : 5px 10px !important;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+    .option{
+      width : 160px;
+    }
+    .arrow {
+      font-size: 18px;
+    }
+    .tbl {
+      width: 100%;
+      display: table;
+    }
+    .tbl-cell {
+      display: table-cell;
+    }
+    .radio-lbl {
+      display: table-cell;
+      width: 150px;
+      text-align:right;
+      padding-right: 5px;
+    }
+    .radio-inp {
+      vertical-align:-2px;
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+    }
+    .radio-spa {
+      padding: 0 15px 0 2px;
+    }
+    .radio-unit {
+      display: table-cell;
+      padding-left: 2px;
+      width: 40px;
+    }
+    .chx {
+      vertical-align: -2px;
+      margin-left: 40px;
+    }
+  }
+</style>

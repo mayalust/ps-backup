@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("projectUIService",["serviceProxy",function(c){var o="projectUIService",e={addProject:function(e,t){c.get(o,"addProject",e,t)},updateProject:function(e,t){c.get(o,"updateProject",e,t)},deleteProjectById:function(e,t){c.get(o,"deleteProjectById",e,t)},findProjectsByCondition:function(e,t){c.get(o,"findProjectsByCondition",e,t)},findProjectById:function(e,t){c.get(o,"findProjectById",e,t)}};return e}])});
+//# sourceMappingURL=../../map/js/services/project-service.js.map

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-uc/js/controllers/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,sBAIL","file":"app-uc/js/controllers/index.js","sourcesContent":["define(['./user-manger-ctrl' //\t'./user-ctrl',\n//\t'./message-ctrl',\n//\t'./expenses-manage-ctrl',\n//\t'./approve-ctrl'\n], function () {});"],"sourceRoot":"/source/"}

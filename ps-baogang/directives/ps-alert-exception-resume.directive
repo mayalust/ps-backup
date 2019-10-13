@@ -1,0 +1,1886 @@
+<config injector="$rootScope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading"
+></config>
+<template>
+    <div>
+        <!--type: 异常履历 在线预警280 智能决策290 临时委托330-->
+        <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+            <!--返回-->
+            <div class="titleHead">
+                <div class="col-md-6" style="font-weight: 700;font-size: 75%;">
+                    设备名称:<label ng-bind="resumeObj.ticket.values.devName"></label>
+                </div>
+                <div class="col-md-6" style="font-weight: 700;font-size: 75%;">
+                    设备编号:<label ng-bind="resumeObj.ticket.values.deviceCode"></label>
+                </div>
+            </div>
+            <!--状态诊断-->
+            <div class="row" ng-if="category === '280'">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">状态诊断</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#status_check" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div id="status_check" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            设备告警信息:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.message"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            异常现象:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.abnPhenomenon"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            工艺状况:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.technicsStatus"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            检测部位:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.position"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            注意事项	:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.attention"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            判断标准:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standard"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            判断依据:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.basis"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            判断依据图片:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <img class="prev" ng-attr-src="{{im.value}}" ng-repeat="im in resumeObj.ticket.values.basisImage"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            综合状态等级:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <span ng-bind="$parent.getStatusGrade(resumeObj.ticket.values.statusGrade)"></span>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            异常部位:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.abnPosition"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            异常类型:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.abnType"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            综合判断结论:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.multipleConclusion"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            处理方案建议:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.cessingScheme"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            备注:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.remark"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            附件:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <a ng-attr-href="im" 
+                                            ng-bind="im.label"
+                                            ng-repeat="im in resumeObj.ticket.values.attUpload"></a>
+                                        </div>
+                                        <!-- <div class="tbl-cell">
+                                            <ps-file2 ng-model="resumeObj.ticket.values.attUpload"></ps-file2>
+                                        </div> -->
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            精密检测:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <span  ng-bind="resumeObj.ticket.values.statusGrade == 2 ? '同步告警'
+                                                            :resumeObj.ticket.values.statusGrade == 1 ? '全部'
+                                                            : '-'
+                                            "></span>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-1"></div>
+                                <div class="col-md-10">
+                                    <table ps-table-sync
+                                           data-paginate="pageonly"
+                                           data-source="resumeObj.ticket.values.offlineReportList"
+                                           data-filter="filter0"
+                                           data-sort="sort0"
+                                           data-page="page0">
+                                        <thead>
+                                        <tr>
+                                            <th>报告编号</th>
+                                            <th>完成时间</th>
+                                            <th>诊断责任人</th>
+                                            <th>专业类型</th>
+                                            <th>报告结论</th>
+                                            <th>诊断描述</th>
+                                            <th>检修建议</th>
+                                            <th>备注</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="(key,item) in items track by key">
+                                            <td ng-bind="item.rptNo"></td>
+                                            <td ng-bind="formatTime(item.rptDate)"></td>
+                                            <td ng-bind="item.reportor"></td>
+                                            <td ng-bind="item.specialtyName"></td>
+                                            <td ng-bind="item.conclusion"></td>
+                                            <td ng-bind="item.diagnoseDesc"></td>
+                                            <td ng-bind="item.dealOption"></td>
+                                            <td ng-bind="item.comment"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-1"></div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5" ng-if="$parent.$parent.params.showHandler != false">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            处理方式:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <span ng-bind="resumeObj.ticket.values.dealType == 3 ? '发起委托'
+                                                          :resumeObj.ticket.values.dealType == 2 ? '自行处理'
+                                                          :resumeObj.ticket.values.dealType == 1 ? '暂不处理'
+                                                          : '-'
+                                            "></span>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 自行处理-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 2">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">自行处理</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#self_deal" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div id="self_deal" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            原因说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="resumeObj.stateDiagnosis.tallyReason"></ps-textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            处理过程说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="resumeObj.stateDiagnosis.tallyCourseReason"></ps-textarea>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--暂不处理-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 1">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">暂不处理</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#not_deal" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div id="not_deal" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            原因说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <div ng-repeat="(ind,item) in tallyCheckboxlists" class="fl">
+                                                <input type="checkbox" class="chx" ng-model="resumeObj.stateDiagnosis.tallyCheckboxlist[ind].id" ng-value="item.label" ng-checked="item.id === resumeObj.stateDiagnosis.tallyCheckboxlist[ind].id "  /><span class="radio-spa">{{item.label}}</span>
+                                            </div>
+                                         <!--   <input type="checkbox" class="chx" ng-model="resumeObj.stateDiagnosis.tallyCheckboxlist" value="没有停机时间" ng-checked="resumeObj.stateDiagnosis.tallyCheckboxlist[0].id == 0" /><span class="radio-spa">没有停机时间</span>
+                                            <input type="checkbox" class="chx" ng-model="resumeObj.stateDiagnosis.tallyCheckboxlist" value="缺少备件" ng-checked="resumeObj.stateDiagnosis.tallyCheckboxlist[1].id == 1"  /><span class="radio-spa">缺少备件</span>
+                                            <input type="checkbox" class="chx" ng-model="resumeObj.stateDiagnosis.tallyCheckboxlist" value="技术不具备" ng-checked="resumeObj.stateDiagnosis.tallyCheckboxlist[2].id == 2" /><span class="radio-spa">技术不具备</span>
+                                            <input type="checkbox" class="chx" ng-model="resumeObj.stateDiagnosis.tallyCheckboxlist" value="其他" ng-checked="resumeObj.stateDiagnosis.tallyCheckboxlist[3].id == 3"  /><span class="radio-spa">其他</span>-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            处理说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="resumeObj.stateDiagnosis.tallyDealExplain"></ps-textarea>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--检修委托-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 3 && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">检修委托</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#check_entrust" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="check_entrust" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            标准项目编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.standardProjectId"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            标准项目名称:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintenanceTask.standardProjectName"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            产线工程师:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.executionerName"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            施工类别:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.constructionType"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            项目类别:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.projectCategory"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            高危等级:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <span ng-bind="$parent.resumeObj.maintenanceTask.highDangerLevel"></span>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            实施依据:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.maintainBasis"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            建议班组名称:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.suggesTeamName"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            作业时长(H):
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.needTime"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            总人数:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.totalPerpsonNum"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            总工时(H):
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.totalUseTime"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            工作内容:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="$parent.resumeObj.maintenanceTask.workContent"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--检修方案-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 3 && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">检修方案</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#check_plan" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="check_plan" class="collapse in">
+                        <!--方案概况-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">方案概况</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#plan_summarise" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="plan_summarise" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        检修方案名称:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.maintainPlanName"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        危险源:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.dangerSource"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        动火等级:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.fireGrade"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        项目实施时间:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-date2 data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.projectImplTime"></ps-date2>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                            </div>
+                                            <div class="col-md-4">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--人员准备-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">人员准备</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#people_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="people_prepare" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.personList"
+                                                       data-filter="filter1"
+                                                       data-sort="sort1"
+                                                       data-page="page1">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>人员类型</th>
+                                                        <th>人员数量</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.personType"></td>
+                                                        <td ng-bind="item.personNum"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--工器具准备-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">工器具准备</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#tool_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="tool_prepare" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.toolList"
+                                                       data-filter="filter2"
+                                                       data-sort="sort2"
+                                                       data-page="page2">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>名称</th>
+                                                        <th>规格</th>
+                                                        <th>数量</th>
+                                                        <th>单位</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.name"></td>
+                                                        <td ng-bind="item.format"></td>
+                                                        <td ng-bind="item.num"></td>
+                                                        <td ng-bind="item.unit"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--常用材料准备-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">常用材料准备</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#material_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="material_prepare" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.materialList"
+                                                       data-filter="filter3"
+                                                       data-sort="sort3"
+                                                       data-page="page3">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>名称</th>
+                                                        <th>规格</th>
+                                                        <th>数量</th>
+                                                        <th>单位</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.name"></td>
+                                                        <td ng-bind="item.format"></td>
+                                                        <td ng-bind="item.num"></td>
+                                                        <td ng-bind="item.unit"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--备件准备-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">备件准备</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#spare_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="spare_prepare" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <!--易耗件-->
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                               <span class="t_title">易耗件</span>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.consumableParts"
+                                                       data-filter="filter4"
+                                                       data-sort="sort4"
+                                                       data-page="page4">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>备件名称</th>
+                                                        <th>备件编码</th>
+                                                        <th>规格型号</th>
+                                                        <th>生产厂家</th>
+                                                        <th>使用数量</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.rollerName"></td>
+                                                        <td ng-bind="item.rollerNo"></td>
+                                                        <td ng-bind="item.format"></td>
+                                                        <td ng-bind="item.manufacturer"></td>
+                                                        <td ng-bind="item.useNum"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                        <!--可修复件-->
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <span class="t_title">可修复件</span>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.repairableParts"
+                                                       data-filter="filter5"
+                                                       data-sort="sort5"
+                                                       data-page="page5">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>备件名称</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--检修实绩-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 3 && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">检修实绩</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#maintaince_performance" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="maintaince_performance" class="collapse in">
+                        <!--挂牌准备-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">挂牌准备</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#list_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="list_prepare" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.listDeviceList"
+                                                       data-filter="filter6"
+                                                       data-sort="sort6"
+                                                       data-page="page6">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>序号</th>
+                                                        <th>安全牌性质</th>
+                                                        <th>挂牌位置</th>
+                                                        <th>挂牌设备</th>
+                                                        <th>挂牌确认</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td>{{key+1}}</td>
+                                                        <td ng-bind="item.safeNature"></td>
+                                                        <td ng-bind="item.listPosition"></td>
+                                                        <td ng-bind="item.deviceName.indexOf('////') != -1 ? item.deviceName.split('////')[0] : item.deviceName"></td>
+                                                        <td ng-bind="item.state == 0 ? '否'
+                                                                     :item.state == 1 ? '是'
+                                                                     : '-'
+                                                        "></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!--施工步骤-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">施工步骤</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#apply_steps" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="apply_steps" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.stepsList"
+                                                       data-filter="filter7"
+                                                       data-sort="sort7"
+                                                       data-page="page7">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>步骤</th>
+                                                        <th>作业内容</th>
+                                                        <th>预计作业时间</th>
+                                                        <th>技术要点</th>
+                                                        <th>安全措施</th>
+                                                        <th>作业确认</th>
+                                                        <th>备注</th>
+                                                        <th>附件</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td>{{key+1}}</td>
+                                                        <td ng-bind="item.content"></td>
+                                                        <td ng-bind="item.planNeedTime"></td>
+                                                        <td ng-bind="item.technicalPoints"></td>
+                                                        <td ng-bind="item.safetyMeasures"></td>
+                                                        <td ng-bind="item.dataType == '定性' ? (item.stepsResult == 1 ? '是' : '否') : item.stepsResult"></td>
+                                                        <td ng-bind="item.remark"></td>
+                                                        <td>
+                                                            <ps-filelinks ng-model="item.resultFiles"></ps-filelinks>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--备件更换-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">备件更换</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#spare_change" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="spare_change" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.repairablePartActionLogs"
+                                                       data-filter="filter8"
+                                                       data-sort="sort8"
+                                                       data-page="page8">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>可修复件</th>
+                                                        <th>在线备件身份ID</th>
+                                                        <th>更换备件身份ID</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.values.rollerType"></td>
+                                                        <td ng-bind="item.fatherRollerName"></td>
+                                                        <td ng-bind="item.rollerName"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--施工总结-->
+                        <div class="row">
+                            <div class="margin-bottom-5">
+                                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                                    <div class="table-title pull-left">施工总结</div>
+                                    <div class="pull-right">
+                                        <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#apply_summarize" aria-haspopup="false" aria-expanded="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 margin-bottom-10">
+                                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                                </div>
+                                <div   id="apply_summarize" class="collapse in">
+                                    <div class="row margin-bottom-5">
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        项目开始时间:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-date2 data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.projectBeginDate"></ps-date2>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        项目结束时间:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-date2 data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.projectEndDate"></ps-date2>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        施工用时(H):
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.realUseTime"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-1"></div>
+                                            <div class="col-md-10">
+                                                <table ps-table-sync
+                                                       data-paginate="pageonly"
+                                                       data-source="resumeObj.maintainPlan.maintainPlanResult.personList"
+                                                       data-filter="filter9"
+                                                       data-sort="sort9"
+                                                       data-page="page9">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>人员类型</th>
+                                                        <th>实际投入人数</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr ng-repeat="(key,item) in items track by key">
+                                                        <td ng-bind="item.personType"></td>
+                                                        <td ng-bind="item.personNum"></td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        总人数:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <span  ng-bind="totalUseNums ? totalUseNums : 0"></span>
+                                                        <!--<ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.totalUseNum"></ps-input>-->
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        总工时(H):
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.totalUseTime"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 margin-bottom-5">
+                                            <div class="col-md-12">
+                                                <div class="tbl">
+                                                    <div class="radio-lbl">
+                                                        <span class="text-red">*</span>
+                                                        异常判断结果处理说明:
+                                                    </div>
+                                                    <div class="tbl-cell">
+                                                        <ps-input data-config="{'disabled': true}" ng-model="resumeObj.maintainPlan.maintainPlanResult.resultDesc"></ps-input>
+                                                    </div>
+                                                    <div class="radio-unit">
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--检修验收-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 3 && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">检修验收</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#check_accept" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="check_accept" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            任务名称:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardProjectName"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            完工时间:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-date2 data-config="{'disabled': true}" ng-model="resumeObj.ticket.finishedTime"></ps-date2>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            验收结果:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <div ng-repeat="(k,item) in evaluations track by $index" class="div_inline">
+                                                <input type="radio" class="radio-inp"   name="evaluations" ng-checked="resumeObj.evaluationInfo.tallyCheck == item.id"/><span class="radio-spa">{{item.label}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="checkbox" class="chx" ng-model="resumeObj.evaluationInfo.isAccord" value="按时完工" ng-checked="resumeObj.evaluationInfo.isAccord == 1" /><span class="radio-spa">按时完工</span>
+                                            <input type="checkbox" class="chx" ng-model="resumeObj.evaluationInfo.isQuality" value="符合质量标准" ng-checked="resumeObj.evaluationInfo.isQuality == 1"  /><span class="radio-spa">符合质量标准</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            验收说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="resumeObj.evaluationInfo.tallyRemark"></ps-textarea>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--状态判断评价 -->
+            <div class="row" ng-if="category === '280' && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">状态判断评价</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#status_evaluate" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="status_evaluate" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            评价等级:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-radiolist ng-model="resumeObj.evaluationInfo.tallyEvaluateCheckboxlist" data-options="evaluateCheckboxlists"></ps-radiolist>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            评价说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.evaluationInfo.tallyEvaluateDealExplain"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--异常处理评价-->
+            <div class="row" ng-if="$parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">异常处理评价</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#exception_evaluate" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="exception_evaluate" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            异常处理等级:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <div ng-repeat="(k,item) in exceptionLevels track by $index" class="div_inline">
+                                                <input type="radio" class="radio-inp"   name="exceptions" ng-checked="resumeObj.evaluationInfo.abnormalEvaluateCheckboxlist == item.id"/><span class="radio-spa">{{item.label}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            评价说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="resumeObj.evaluationInfo.abnormalEvaluateDealExplain"></ps-textarea>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--在线预警评价-->
+            <div class="row" ng-if="category === '280' && $parent.params.showHandler != false">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">在线预警评价</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#alert_evalueate" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div   id="alert_evalueate" class="collapse in">
+                        <div class="row margin-bottom-5" ng-repeat="item in resumeObj.alertEvaluateInfo.alertEvaluateInfoList track by $index">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            报警消息:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="item.alertTitle"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            报警级别:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <span ng-bind="$parent.getStatusGrade(item.severity)"></span>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            报警时间:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-date2 data-config="{'disabled': true}" ng-model="item.arisingTime"></ps-date2>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            评价等级:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-radiolist ng-model="item.evaluateCheckboxlist" data-options="evaluateCheckboxlists2"></ps-radiolist>
+                                           <!-- <div ng-repeat="(k,item) in evaluateCheckboxlists track by $index" class="div_inline">
+                                                <input type="radio" class="radio-inp"   name="evaluations" + uuid() ng-checked="item.evaluateCheckboxlist == item.id"/><span class="radio-spa">{{item.label}}</span>
+                                            </div>-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-12">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            评价说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-textarea data-config="{'disabled': true}" ng-model="item.evaluateDealExplain"></ps-textarea>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import { extend, dateparser } from "ps-ultility";
+export default function(
+  rootScope,
+  timeout,
+  ajax,
+  $state,
+  registerService,
+  cms2,
+  growl,
+  commonMethodService,
+  psLoading
+) {
+  return {
+    link(scope, element, attr) {
+      var target = commonMethodService(),
+        ticketNo = target.getValue("ticketNo");
+      scope.category = target.getValue("category");
+      //获取当前角色
+      var user = target.getCurrentUser(),
+        roleName = "";
+      if (user.usercurrentRoleID == "496878991490170") {
+        //智能检修工程师roleID
+        roleName = "jianxiu";
+      } else if (user.usercurrentRoleID == "496878991490167") {
+        //产线
+        roleName = "chanxian";
+      } else if (user.usercurrentRoleID == "496878991490169") {
+        //诊断
+        roleName = "zhenduan";
+      } else if (user.usercurrentRoleID == "496878991490168") {
+        //决策
+        roleName = "juece";
+      }
+      //2019042314323100001  280  在线告警
+      //2019051620445600001  290  智能决策
+      // 2019051416522200001 330  临时检修委托
+      scope.formatTime = function(d) {
+        return d ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss") : "-";
+      };
+      scope.back = function() {
+        // if(roleName == 'chanxian'){
+        //   cms2.navigateTo([4,3]);
+        // }else if(roleName == 'zhenduan'){
+        //   cms2.navigateTo([4,4]);
+        // }else if (roleName == 'juece'){
+        //   cms2.navigateTo(4);
+        // }
+        history.back();
+      };
+      scope.evaluations = [
+        {
+          id: 0,
+          label: "通过"
+        },
+        {
+          id: 1,
+          label: "不通过"
+        }
+      ];
+      scope.exceptionLevels = [
+        {
+          id: 0,
+          label: "有效"
+        },
+        {
+          id: 1,
+          label: "无效"
+        }
+      ];
+      scope.evaluateCheckboxlists = [
+        {
+          id: 0,
+          label: "正确"
+        },
+        {
+          id: 1,
+          label: "基本正确"
+        },
+        {
+          id: 2,
+          label: "不正确"
+        }
+      ];
+      scope.evaluateCheckboxlists2 = [
+        {
+          id: 0,
+          label: "正确"
+        },
+        {
+          id: 1,
+          label: "基本正确"
+        },
+        {
+          id: 2,
+          label: "不正确"
+        }
+      ];
+      scope.tallyCheckboxlists = [
+        {
+          id: 0,
+          label: "没有停机时间"
+        },
+        {
+          id: 1,
+          label: "缺少备件"
+        },
+        {
+          id: 2,
+          label: "技术不具备"
+        },
+        {
+          id: 3,
+          label: "其他"
+        }
+      ];
+      scope.highDangerLevels = target.getRootScope("myDicts")[
+        "highDangerLevel"
+      ];
+      scope.alertSeveritys = target.getRootScope("myDicts")["alertSeverity"];
+      scope.getStatusGrade = function(val) {
+        return cms2.getExplainerFromDiction("statusGrade")(val);
+      };
+      scope.uuid = function() {
+        var s = [];
+        var hexDigits = "0123456789abcdef";
+        for (var i = 0; i < 36; i++) {
+          s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+        }
+        s[14] = "4";
+        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+        s[8] = s[13] = s[18] = s[23] = "-";
+
+        var uuid = s.join("");
+        return uuid;
+      };
+      ajax
+        .post("baogangTicketService.getDeviceCheckResumeByTicket", [ticketNo])
+        .then(d => {
+          //
+          if (
+            d &&
+            d.maintainPlan &&
+            d.maintainPlan.maintainPlanResult &&
+            d.maintainPlan.maintainPlanResult.length != 0 &&
+            d.maintainPlan.maintainPlanResult.repairableParts &&
+            d.maintainPlan.maintainPlanResult.repairableParts.length == 0
+          ) {
+            d.maintainPlan.maintainPlanResult.repairablePartActionLogs = []; //可修复件为空  日志为空
+          }
+          if (
+            d &&
+            d.maintainPlan &&
+            d.maintainPlan.maintainPlanResult &&
+            d.maintainPlan.maintainPlanResult.length != 0 &&
+            d.maintainPlan.maintainPlanResult.repairablePartActionLogs &&
+            d.maintainPlan.maintainPlanResult.repairablePartActionLogs.length ==
+              0
+          ) {
+            d.maintainPlan.maintainPlanResult.repairableParts = []; //可修复件为空  日志为空
+          }
+          if (
+            d &&
+            d.ticket &&
+            d.ticket.values &&
+            d.ticket.values.basisImage &&
+            d.ticket.values.basisImage.length > 0
+          ) {
+            d.ticket.values.basisImage.forEach(item => {
+              item.name = item.label;
+              item.url = item.value;
+            });
+          }
+          if (
+            d &&
+            d.ticket &&
+            d.ticket.values &&
+            d.ticket.values.attUpload &&
+            d.ticket.values.attUpload.length > 0
+          ) {
+            d.ticket.values.attUpload.forEach(item => {
+              item.name = item.label;
+              item.url = item.value;
+            });
+          }
+          if (
+            d &&
+            d.stateDiagnosis &&
+            d.stateDiagnosis.tallyCheckboxlist &&
+            d.stateDiagnosis.tallyCheckboxlist.length != 0
+          ) {
+            scope.tallyCheckboxlists2 = [];
+            scope.idtotalArr = [0, 1, 2, 3];
+
+            d.stateDiagnosis.tallyCheckboxlist.forEach((v, i) => {
+              scope.tallyCheckboxlists2[v.id] = v;
+            });
+            scope.selctIdArr = scope.tallyCheckboxlists2.map(v => v.id);
+            scope.lackIdArr =
+              new Set(
+                scope.idtotalArr.filter(item => {
+                  return scope.selctIdArr.indexOf(item) == -1;
+                })
+              ) || [];
+            scope.lackIdArr.forEach(val => {
+              let obj = {};
+              obj.id = "false" + val;
+              obj.label = scope.tallyCheckboxlists[val].label;
+              scope.tallyCheckboxlists2[val] = obj;
+            });
+            d.stateDiagnosis.tallyCheckboxlist = scope.tallyCheckboxlists2;
+          }
+          scope.resumeObj = d;
+          if (
+            scope.resumeObj &&
+            scope.resumeObj.maintainPlan &&
+            scope.resumeObj.maintainPlan.maintainPlanResult &&
+            scope.resumeObj.maintainPlan.maintainPlanResult.personList &&
+            scope.resumeObj.maintainPlan.maintainPlanResult.personList.length !=
+              0
+          ) {
+            scope.totalUseNums = 0;
+            scope.resumeObj.maintainPlan.maintainPlanResult.personList.forEach(
+              v => {
+                scope.totalUseNums += v.personNum;
+              }
+            );
+          }
+        });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.buttons {
+  position: fixed;
+  width: 160px;
+  height: 36px;
+  z-index: 99999999;
+  right: 20px;
+  top: 110px;
+}
+.wrap {
+  padding: 5px 10px !important;
+  div {
+    span {
+      color: #fff;
+      font-size: 75%;
+      font-weight: 700;
+    }
+    .arrow {
+      color: #72b3d7 !important;
+      font-size: 26px !important;
+      font-weight: 700 !important;
+    }
+  }
+  .titleHead {
+    border-bottom: 1px solid;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+  }
+  .t_title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+  }
+  .title {
+    line-height: 26px;
+    padding-right: 20px;
+  }
+  .value {
+    line-height: 26px;
+  }
+  .option {
+    width: 160px;
+  }
+  .tbl {
+    width: 100%;
+    display: table;
+  }
+  .tbl-cell {
+    display: table-cell;
+    img.prev {
+      border: 1px solid #666;
+      margin: 5px;
+      height: 150px;
+    }
+    .fl {
+      float: left;
+    }
+  }
+  .radio-lbl {
+    color: #ffff;
+    font-size: 75%;
+    font-weight: 700;
+    display: table-cell;
+    width: 150px;
+    text-align: right;
+    padding-right: 5px;
+  }
+  .radio-inp {
+    vertical-align: -2px;
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+  }
+  .radio-spa {
+    padding: 0 15px 0 2px;
+  }
+  .radio-unit {
+    display: table-cell;
+    padding-left: 2px;
+    width: 40px;
+  }
+  .chx {
+    vertical-align: -2px;
+    /*margin-right: 40px;*/
+  }
+  .div_inline {
+    display: inline-block;
+  }
+}
+</style>

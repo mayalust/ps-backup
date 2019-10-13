@@ -1,0 +1,72 @@
+<config injector="$rootScope,ajax"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">设备</span>
+      </div>
+      <div class="col-md-9">
+        <ps-select ng-model="clone.deviceId" data-options="kpi.id as kpi.label for kpi in devDDD"></ps-select>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">备件</span>
+      </div>
+      <div class="col-md-9">
+        <ps-select ng-model="clone.rollerId" data-options="kpi.id as kpi.rollerName for kpi in roller"></ps-select>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">下机原因</span>
+      </div>
+      <div class="col-md-9">
+        <input type="text"  class="form-control" ng-model="clone.title">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+
+      </div>
+      <div class="col-md-9">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope,ajax){
+    return {
+      link(scope, element, attr) {
+        scope.mode = scope.params.mode;
+        scope.type = scope.params.type;
+        scope.devDDD = rootScope.deviceDicArr;
+        ajax.post("rollerPartUIService.getRollerPartByConditionWithPage",[{"type":2,"state":2},
+            {"start":0,"length":50,"statCount":true}]).then(e => {
+            //  
+            scope.roller = e.data;
+        })
+        scope.clone = extend({}, scope.params.data);
+        scope.submitFn = function(d){
+          scope.submit(d);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

@@ -1,0 +1,197 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService"
+        deps="dialogMaterialList"
+></config>
+<template>
+    <div class="row padding-5">
+        <div class="col-md-12">
+            <div class="block">
+                <div class="wrap">
+                    <div class="table-title">
+                        材料采购记录
+                        <button ng-click="addRecord()"
+                                ng-if="mode != 'resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'"
+                                class="btn btn-primary pull-right">添加记录</button>
+                        <button ng-click="editResume()"
+                                ng-if="currentRoleID == 59846674150228 && mode == 'resume'"
+                                class="btn btn-primary pull-right">编辑</button>
+                    </div>
+                    <table ps-table-sync
+                           data-paginate="pageonly"
+                           data-source="resources"
+                           data-filter="filter"
+                           data-sort="sort"
+                           data-page="page">
+                        <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>材料类型</th>
+                            <th>材料名称</th>
+                            <th>申报日期</th>
+                            <th>需求到货日期</th>
+                            <th>到达日期</th>
+                            <th>备注</th>
+                            <th class="option">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="(key,item) in items track by key">
+                            <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+                            <td ng-bind="item.materialType"></td>
+                            <td ng-bind="item.materialName"></td>
+                            <td ng-bind="item.getDeclarationDate()"></td>
+                            <td ng-bind="item.getRequiredDeliveryDate()"></td>
+                            <td ng-bind="item.getDateOfArrival()"></td>
+                            <td ng-bind="item.descr"></td>
+                            <td>
+                                <div ps-option-group>
+                                    <button class="btn btn-default" ng-click="item.view()">查看</button>
+                                    <button class="btn btn-default" ng-click="item.edit()" ng-if="mode != 'resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">编辑</button>
+                                    <button class="btn btn-default" ng-click="item.remove()" ng-if="mode != 'resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService){
+        let findMaterialPurchasingRecords = "motorRepairUIService.findMaterialPurchasingRecords",
+                saveMaterialPurchasingRecord = "motorRepairUIService.saveMaterialPurchasingRecord",
+                deleteMaterialPurchasingRecord = "motorRepairUIService.deleteMaterialPurchasingRecord";
+        var target = commonMethodService();
+        var params1 = target.getValue("maintainObj");
+        var params0 = params1.implementOrderNo;
+        var param = [];
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+
+        param.push(params0);
+        scope.mode = target.getValue('mode');
+
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getDeclarationDate(){
+                return this.declarationDate
+                        ? dateparser(this.declarationDate).getDateString("yyyy-MM-dd,hh:mm:ss")
+                        : "-";
+            }
+            getRequiredDeliveryDate(){
+                return this.requiredDeliveryDate
+                        ? dateparser(this.requiredDeliveryDate).getDateString("yyyy-MM-dd,hh:mm:ss")
+                        : "-";
+            }
+            getDateOfArrival(){
+                return this.dateOfArrival
+                        ? dateparser(this.dateOfArrival).getDateString("yyyy-MM-dd,hh:mm:ss")
+                        : "-";
+            }
+            view(){
+                cms2.modal({
+                    title : "材料采购记录",
+                    directive : "dialog-material-list",
+                    width : "80%",
+                    params : {
+                        mode : "view",
+                        data : this
+                    }
+                }).then( d => {
+
+                });
+            }
+            edit(){
+                cms2.modal({
+                    title : "材料采购记录",
+                    directive : "dialog-material-list",
+                    width : "80%",
+                    params : {
+                        mode : "edit",
+                        data : this
+                    }
+                }).then( d => {
+                    d.implementOrderNo = params0;
+                    ajax.post(saveMaterialPurchasingRecord, d).then( material => {
+                        growl.success("修改成功");
+                    }).then( d => {
+                    ajax.post(findMaterialPurchasingRecords, param).then( material => {
+                        return cms2.success(
+                                (material || [])
+                        );
+                    }).then( domains => {
+                            scope.resources = domains.map( d => new tableCell(d));
+                    });
+                    });
+                })
+            }
+            remove(){
+                var params = [];
+                params.push(this.implementOrderNo);
+                params.push(this.id);
+                ajax.post(deleteMaterialPurchasingRecord, params).then( material => {
+                        growl.success("删除成功");
+                }).then( domains => {
+                    var params2 = [];
+                    params2.push(this.implementOrderNo);
+                    ajax.post(findMaterialPurchasingRecords, params2).then( material => {
+                        return cms2.success(
+                                (material || [])
+                        );
+                    }).then( domains => {
+                            scope.resources = domains.map( d => new tableCell(d));
+                    });
+                });
+            }
+        }
+        scope.editResume = function (){
+           scope.mode = 'superAdmin';
+        };
+        scope.addRecord = function(){
+            cms2.modal({
+                title : "材料采购记录",
+                directive : "dialog-material-list",
+                width : "80%",
+                params : {
+                    mode : "edit",
+                    data : {}
+                }
+            }).then( d => {
+                d.implementOrderNo = params0;
+
+            ajax.post(saveMaterialPurchasingRecord, d).then( material => {
+                    growl.success("添加成功");
+                }).then( d => {
+                    ajax.post(findMaterialPurchasingRecords, param).then( material => {
+                    return cms2.success(
+                            (material || [])
+                    );
+                    }).then( domains => {
+                            scope.resources = domains.map( d => new tableCell(d));
+                    });
+                })
+            })
+        }
+
+        ajax.post(findMaterialPurchasingRecords, param).then( material => {
+                    return cms2.success(
+                            (material || [])
+                    );
+        }).then( domains => {
+                scope.resources = domains.map( d => new tableCell(d));
+        });
+    }
+</script>
+<style lang="less" scoped>
+    .wrap {
+        padding : 5px 10px !important;
+    .option{
+        width : 160px;
+    }
+    }
+</style>

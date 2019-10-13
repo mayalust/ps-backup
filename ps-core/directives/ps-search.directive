@@ -1,0 +1,233 @@
+<config injector="$q,ajax, psUltility">
+</config>
+<template>
+    <div class="box-body no-padding-left no-pad-bottom">
+        <form role="form" name="alertForm" class="ps-searchbar">
+            <div class="form-group col-sm-2"
+                 ng-repeat="attr in attrs">
+                <label class="control-label" ng-bind="attr.label"></label>
+                <ps-tools option="attr.option"></ps-tools>
+            </div>
+            
+            <div class="form-group col-sm-2 no-pad">
+                <label class="col-sm-12 control-label" style="color: transparent;">操作：</label>
+                <div class="btn-group block" style="padding: 0;border: none;">
+                    <button type="button" class="btn btn-primary btn-sm" ng-click="goSearch()">
+                        <i class="fa fa-search"></i>
+                        <span class="hidden-sm"> 查询</span>
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm" ng-click="goClear()">
+                        <i class="fa fa-close"></i>
+                        <span class="hidden-sm"> 清除</span>
+                    </button>
+                </div>
+            </div>
+        
+        </form>
+    </div>
+</template>
+<script type="text/javascript">
+import {attribute} from 'ps-ultility'
+
+export default function (q, ajax, psUltility) {
+  return {
+    scope: {
+      option: '='
+    },
+    link (scope, element, attr, ngModel) {
+      let isType = (type, obj) => Object.prototype.toString.call(obj) === `[object ${type}]`;
+      let watchKeys = [];
+
+      function flatten (arr = []) {
+        while (arr.some(item => Array.isArray(item))) {
+          arr = [].concat(...arr);
+        }
+        return arr;
+      }
+
+      function findIndex (arr, key) {
+        let ret = 0;
+        for (; ret < arr.length; ret++) {
+          if (key === arr[ret].option.key) {
+            break;
+          }
+        }
+        return ret;
+      }
+
+      function getData (url, parameter) {
+        return ajax.post(url, parameter);
+      }
+
+      scope.attrs = [];
+      scope.goSearch = _ => {
+        let obj = {}, objOptions = {}, key;
+        scope.attrs.forEach(d => {
+            key = d.option[psUltility.keyPattern(d.option['key'])]
+          if (typeof key !== "undefined") {
+            attribute(obj, d.option['key'], d.option[psUltility.keyPattern(d.option['key'])])
+            objOptions[d.option['key'] + 'Options'] = d.option['options'];
+          }
+        });
+        let parameter;
+        if (scope.option.beforeSearch && typeof scope.option.beforeSearch === 'function') {
+          parameter = scope.option.beforeSearch(obj, objOptions);
+        }
+        if (scope.realPage) {
+          scope.$emit('PS_REFRESH_GRID', {
+            realPageParameter: {
+              start: 0
+            },
+            parameter: parameter ? parameter : (Object.keys(obj).length > 0 ? obj : void 0),
+            fromFirstPage: true
+          });
+        } else {
+          scope.$emit('PS_REFRESH_GRID', parameter ? parameter : (Object.keys(obj).length > 0 ? obj : void 0));
+        }
+      }
+      scope.goClear = _ => {
+          let key;
+        scope.attrs.forEach(d => {
+            key = d.option[psUltility.keyPattern(d.option['key'])];
+          if (typeof key !== "undefined") {
+            d.option = {
+              type: d.option['type'],
+              config: d.option['config'],
+              options: d.option['options'],
+              format: d.option['format'],
+              key: d.option['key']
+            }
+          }
+        });
+      };
+      let watch1, watchers;
+      watch1 = scope.$watch(`option`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          s.realPage = !!n.realPage;
+          watchKeys = [];
+          scope.getSearchComponent(n.body, function (attrs) {
+            scope.attrs = attrs;
+          });
+        }
+      });
+      scope.getSearchComponent = function (body, retFunc) {
+        let promises = body.map((d, index) => {
+          let defer = q.defer();
+          let obj = {};
+          obj['label'] = d['label'];
+          obj['watch'] = d['watch'];
+          if (isType('String', d['options'])) {
+            if (!d.upper) {
+              ajax.post(d['options'] + '@getByCondition', d['optionsParam'] || {}).then(function (data) {
+                obj['option'] = {
+                  type: d['searchType'],
+                  config: d['config'] || {},
+                  options: data,
+                  format: d['format'],
+                  key: d['key']
+                }
+                obj['option']['config']['format'] = d['format'];
+                defer.resolve(obj);
+              });
+            } else {
+              watchKeys.push({
+                key: d['key'],
+                attr: d,
+                upper: d.upper
+              });
+              obj['option'] = {
+                type: d['searchType'],
+                config: d['config'] || {},
+                options: [],
+                format: d['format'],
+                key: d['key']
+              }
+              obj['option']['config']['format'] = d['format'];
+              defer.resolve(obj);
+            }
+          } else {
+            obj['option'] = {
+              type: d['searchType'],
+              config: d['config'] || {},
+              options: d['options'],
+              format: d['format'],
+              key: d['key']
+            };
+            obj['option']['config']['format'] = d['format'];
+            defer.resolve(obj);
+          }
+          return defer.promise;
+        });
+        q.all(promises).then(ret => {
+          let attrs = ret;
+          retFunc(attrs);
+          for (var i = 0; i < attrs.length; i++) {
+            let d = attrs[i];
+            if (d.watch != null) {
+              scope.$watch(`attrs[${i}].option.${psUltility.keyPattern(d.option.key)}`, function (n, o, s) {
+                d.watch(n, o, s);
+              });
+            }
+          }
+          let watcherArr = flatten(watchers);
+          watcherArr.forEach(w => {
+            w && w();
+          });
+          watchers = watchKeys.map(w => {
+            let ws = [];
+            w.upper.forEach(u => {
+              //scope.attrs 此处查询所有查询框
+              ws.push(scope.$watch(`attrs[${findIndex(scope.attrs, u.name)}].option.${psUltility.keyPattern(u.name)}`, (n, o, s) => {
+                if (typeof n !== 'undefined') {
+                  let parameter = {};
+
+                  w.attr.upper.forEach(au => {
+                    //scope.attrs 此处查询所有查询框
+                    if (typeof s.attrs[findIndex(scope.attrs, au.name)].option[`${psUltility.keyPattern(au.name)}`] !== 'undefined') {
+                      parameter[au.from || au.name] = s.attrs[findIndex(scope.attrs, au.name)].option[`${psUltility.keyPattern(au.name)}`];
+                    }
+                  });
+                  getData(w.attr.options + '@getByCondition', parameter).then(d => {
+                    let o = {};
+                    o = {
+                      type: w.attr['searchType'],
+                      config: w.attr['config'] || {},
+                      options: d,
+                      format: w.attr['format'],
+                      key: w.attr['key']
+                    };
+                    o['config']['format'] = w.attr['format'];
+                    //scope.attrs 此处查询所有查询框
+                    s.attrs[findIndex(scope.attrs, w.attr['key'])].option = o;
+                  });
+                }
+              }));
+            });
+            return ws;
+          });
+        });
+      }
+
+      scope.$on('$destroy', () => {
+        watch1 && watch1();
+        let watcherArr = flatten(watchers);
+        watcherArr.forEach(w => {
+          w && w();
+        });
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.block {
+    display: block;
+}
+
+.ps-searchbar {
+    [class*=col] {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+}
+</style>

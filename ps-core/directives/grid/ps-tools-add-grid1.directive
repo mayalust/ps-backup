@@ -1,0 +1,223 @@
+<config injector="$q, $compile, psUltility, api, $timeout"
+></config>
+<template>
+  <div style="width: 90%;">
+  </div>
+</template>
+<script type="text/javascript">
+import { isArray, isObject, isFunction } from "ps-ultility";
+
+export default function (q, compile, psUltility, api, $timeout) {
+  return {
+    scope: {
+      column: `=`,
+      row: '='
+    },
+    link (scope, element, attr) {
+      let dom = element[0], on, watcher2, watcher3, watcher4, watcher5, watcher5Arr, watchKey = {};
+      let column = scope.column;
+      let add = column.add || {};
+
+      function getSiblings (node) {
+        let parentNode = node.parentNode;
+        let allSiblings = Array.prototype.slice.call(parentNode.children);
+        return allSiblings.filter((n) => {
+          return n !== node;
+        });
+      }
+
+      function removeAllChildren (node) {
+        let siblings = getSiblings(node);
+        if (siblings.length > 0) {
+          siblings.forEach(s => {
+            for (var i = 0; i < s.children.length; i++) {
+              s.children[i].remove();
+            }
+          });
+        }
+      }
+
+      function init () {
+        removeAllChildren(dom);
+        let psTools1 = document.createElement("ps-tools1");
+        psTools1.setAttribute("data-option", "psToolsOption");
+        dom.appendChild(psTools1);
+        render().then(function (psToolsOption) {
+          scope.psToolsOption = psToolsOption;
+          compile(dom)(scope);
+          if (add.watch && add.watch.key) {
+            watcher5 && watcher5();
+            if (watcher5Arr && watcher5Arr.length > 0) {
+              watcher5Arr.forEach(watcher => {
+                watcher();
+              });
+              watcher5Arr = [];
+            }
+            if (add.watch.key.includes(',')) {
+              watcher5Arr = add.watch.key.split(',').map(splitKey => {
+                watchKey[splitKey] = null;
+                return scope.$watch(`row.${psUltility.keyPattern(splitKey)}`, function (n, o, s) {
+                  if (add.watch.handler && isFunction(add.watch.handler)) {
+                    if (typeof n !== 'undefined') {
+                      let defer = q.defer();
+                      let next = function (d) {
+                        defer.resolve(d);
+                      }
+                      watchKey[splitKey] = n;
+                      let ret = add.watch.handler(watchKey, next);
+                      if (typeof ret !== 'undefined') {
+                        if (isObject(ret) && ret.hasOwnProperty('$value')) {
+                          scope.psToolsOption[psUltility.keyPattern(column.key)] = ret.$value;
+                          ret.$options && isArray(ret.$options) ? scope.psToolsOption[psUltility.keyPattern('options')] = [...ret.$options] : void 0;
+                        } else {
+                          scope.psToolsOption[psUltility.keyPattern(column.key)] = ret;
+                        }
+                      } else {
+                        defer.promise.then(function (d) {
+                          if (isObject(d) && d.hasOwnProperty('$value')) {
+                            scope.psToolsOption[psUltility.keyPattern(column.key)] = d.$value;
+                            d.$options && isArray(d.$options) ? scope.psToolsOption[psUltility.keyPattern('options')] = [...d.$options] : void 0;
+                          } else {
+                            scope.psToolsOption[psUltility.keyPattern(column.key)] = d;
+                          }
+                        });
+                      }
+                    }
+                  }
+                });
+              })
+            } else {
+              watcher5 = scope.$watch(`row.${psUltility.keyPattern(add.watch.key)}`, function (n, o, s) {
+                if (add.watch.handler && isFunction(add.watch.handler)) {
+                  if (typeof n !== 'undefined') {
+                    let defer = q.defer();
+                    let next = function (d) {
+                      defer.resolve(d);
+                    }
+                    let ret = add.watch.handler(n, next);
+                    if (typeof ret !== 'undefined') {
+                      if (isObject(ret) && ret.hasOwnProperty('$value')) {
+                        scope.psToolsOption[psUltility.keyPattern(column.key)] = ret.$value;
+                        ret.$options && isArray(ret.$options) ? scope.psToolsOption[psUltility.keyPattern('options')] = [...ret.$options] : void 0;
+                      } else {
+                        scope.psToolsOption[psUltility.keyPattern(column.key)] = ret;
+                      }
+                    } else {
+                      defer.promise.then(function (d) {
+                        if (isObject(d) && d.hasOwnProperty('$value')) {
+                          scope.psToolsOption[psUltility.keyPattern(column.key)] = d.$value;
+                          d.$options && isArray(d.$options) ? scope.psToolsOption[psUltility.keyPattern('options')] = [...d.$options] : void 0;
+                        } else {
+                          scope.psToolsOption[psUltility.keyPattern(column.key)] = d;
+                        }
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          }
+          $timeout(() => {
+            scope.psToolsOption[psUltility.keyPattern(column.key)] = add.value ? add.value : null;
+          });
+        });
+      }
+
+      function render () {
+        let type = add.type || 'input';
+        let psToolsOption = {
+          type: type,
+          config: add.config || {},
+          key: column.key
+        };
+        let defer = q.defer();
+        psToolsOption[psUltility.keyPattern(column.key)] = null;
+        switch (type) {
+          case 'text':
+            psToolsOption.type = 'label';
+          case 'select':
+            if (isArray(add.options)) {
+              psToolsOption.options = add.options;
+              defer.resolve(psToolsOption);
+            } else
+              if (isObject(add.options)) {
+                api.post(add.options.url, add.options.parameter).then(ret => {
+                  if (isFunction(add.options.after)) {
+                    psToolsOption.options = add.options.after(ret.data);
+                  } else {
+                    psToolsOption.options = ret.data;
+                  }
+                  defer.resolve(psToolsOption);
+                });
+              } else
+                if (isFunction(add.options)) {
+                  let fDefer = q.defer();
+                  let ret = add.options(function (d) {
+                    fDefer.resolve(d);
+                  });
+                  if (typeof ret === 'undefined') {
+                    fDefer.promise.then((options) => {
+                      psToolsOption.options = options;
+                      defer.resolve(psToolsOption);
+                    });
+                  } else {
+                    psToolsOption.options = ret;
+                    defer.resolve(psToolsOption);
+                  }
+                } else {
+                  psToolsOption.options = [];
+                  defer.resolve(psToolsOption);
+                }
+            break;
+          default:
+            defer.resolve(psToolsOption);
+            break;
+        }
+        return defer.promise;
+      }
+
+      function clearAllWathers () {
+        watcher2 && watcher2();
+        watcher3 && watcher3();
+        watcher4 && watcher4();
+        watcher5 && watcher5();
+      }
+
+      function defineUnenumableProperty (obj, key, value) {
+        if (!obj.hasOwnProperty(key)) {
+          Object.defineProperty(obj, key, {
+            enumerable: true,
+            writable: true,
+            value: value
+          });
+        } else {
+          obj[key] = value;
+        }
+      }
+
+      watcher3 = scope.$watch(`psToolsOption`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          watcher2 = scope.$watch(`psToolsOption.${psUltility.keyPattern(s.column.key)}`, n2 => {
+            defineUnenumableProperty(s.row, psUltility.keyPattern(s.column.key), n2);
+          });
+        }
+      });
+
+      watcher4 = scope.$watch(`column`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          init(n);
+        }
+      });
+
+      scope.$on("$destroy", () => {
+        clearAllWathers();
+        dom.remove();
+        dom = null;
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+
+</style>

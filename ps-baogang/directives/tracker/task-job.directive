@@ -1,0 +1,81 @@
+<config injector="$rootScope,$compile"></config>
+<template>
+  <div class="task-job">
+    <div class="icon-wrap bg-aqua">
+      <i class="fa fa-user"></i>
+    </div>
+    <p class="task-job-title">{{title}}</p>
+    <div class="task-job-content">
+      <task-job-normal ng-if="isNormal" process="process"></task-job-normal>
+      <task-job-special ng-if="!isNormal" task="task"></task-job-special>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (rootScope, compile) {
+  return {
+    scope: {
+      task: "="
+    },
+    link (scope, element, attr) {
+      scope.process = {};
+      scope.title = '';
+      scope.isNormal = true;
+      scope.$watch(`task`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          s.process = n.process;
+          s.title = n.ticketTask.taskConfigName;
+          s.isNormal = !n.process.directive;
+        }
+      });
+    }
+  };
+}
+</script>
+<style type="less">
+.task-job {
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0px;
+    bottom: -7px;
+    left: 32px;
+    width: 0;
+    border-left: 3px dotted #50748e;
+  }
+
+  padding-left: 60px;
+  padding-right: 30px;
+  position: relative;
+
+  .icon-wrap {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    line-height: 30px;
+    position: absolute;
+    color: #666;
+    border-radius: 50%;
+    text-align: center;
+    left: 18px;
+  }
+
+  .task-job-title {
+    white-space: nowrap;
+    word-break: break-all;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 16px;
+    background: #0b3751;
+    padding: 10px;
+    line-height: 1.1;
+    font-weight: 600;
+    color: #6daadd;
+  }
+}
+
+</style>

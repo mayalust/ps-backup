@@ -1,0 +1,79 @@
+<config injector="$rootScope,$q,commonMethodService"></config>
+<template>
+  <div></div>
+</template>
+<script type="text/javascript">
+export default function(rootScope, q, cms) {
+  return {
+    scope: {
+      options: "="
+    },
+    link(scope, element, attr) {
+      scope.$watch("options", (n, o, s) => {
+        if (n == null) {
+          return;
+        }
+        let target = cms(undefined, scope);
+        target.setValue("ticketNo", n);
+        target.createSystemPopupByLocalPath = function(path, params, values) {
+          target.createPopupByViewIdPath(9246777620035, path, params, values);
+        };
+        target.render = function render(data) {
+          var ul = $("<ul></ul>").addClass("timeline");
+          var createItem = function(historyData) {
+            var li = $("<li></li>");
+            var iIcon = $("<i></i>");
+            var h3 = $("<h3></h3>").addClass("timeline-header no-border");
+            var span = $("<span></span>").addClass("time");
+            var divTime = $("<div></div>").addClass("timeline-item");
+            var h3Str = document.createDocumentFragment(),
+              h3;
+            if (historyData.time) {
+              span.text(historyData.time);
+            }
+            if (historyData.icon) {
+              iIcon.addClass(historyData.icon);
+            }
+            if (historyData.disList.length > 0) {
+              for (var i in historyData.disList) {
+                var fn = historyData.disList[i].click;
+                h3 = document.createElement("h3");
+                h3.setAttribute("class", "timeline-header no-border");
+                h3.innerHTML = historyData.disList[i].value;
+                h3Str.appendChild(h3);
+                fn ? (h3.onclick = fn) : null;
+              }
+            } else {
+              h3Str = "<h3 class='timeline-header no-border'>处理人:默认</h3>";
+            }
+            divTime.append(span);
+            divTime[0].appendChild(h3Str);
+            li.append(iIcon);
+            li.append(divTime);
+            return li;
+          };
+          if (data.length > 0) {
+            for (var i in data) {
+              ul.append(createItem(data[i]));
+            }
+          }
+          var li = $("<li></li>");
+          li.css("clear", "both");
+          ul.append(li);
+          element.append(ul);
+        };
+        window["require"](
+          ["./toolkit/component/history_tracker"],
+          expression => {
+            expression.on.init({
+              target: target
+            });
+          }
+        );
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+</style>

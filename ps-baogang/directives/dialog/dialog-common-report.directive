@@ -1,0 +1,70 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5" ng-if="type =='queding' ">
+      <div class="col-md-3">
+        <span class="title pull-right"> <span style="color: red">*</span> 异常原因 ：</span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.questionCause" class="form-control"/>
+      </div>
+      <div class="col-md-3">
+        <span class="title pull-right"> <span style="color: red">*</span> 是否存在处罚风险 ：</span>
+      </div>
+      <div class="col-md-9">
+        <ps-select ng-model="clone.riskPunishment" data-options="model.id as model.label for model in models"></ps-select>
+      </div>
+  </div>
+  <div class="row margin-bottom-5" ng-if="type == 'hulue'">
+    <div class="col-md-3">
+      <span class="title pull-right"> <span style="color: red">*</span> 忽略原因 ：</span>
+    </div>
+    <div class="col-md-9">
+      <input ng-model="clone.questionCause" class="form-control"/>
+    </div>
+  </div>
+    <div class="row">
+      <div class="col-md-3">
+
+      </div>
+      <div class="col-md-9">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope){
+    return {
+      link(scope, element, attr) {
+        scope.type = scope.params.type;
+        scope.models = [{
+            id:0 ,
+            label : "是"
+        },{
+            id : 1 ,
+            label : "否"
+        }]
+        scope.clone = extend({}, scope.params.data);
+        scope.submitFn = function(d){
+          scope.submit(d);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

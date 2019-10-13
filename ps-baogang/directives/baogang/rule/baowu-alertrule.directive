@@ -1,0 +1,1237 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl,commonMethodService,$q"></config>
+<template>
+    <div class="wrap">
+        <ps-layout data-option="layout">
+        </ps-layout>
+    </div>
+</template>
+<script type="text/javascript">
+    export default function (ajax, $location, psDialog, $routeParams, growl, commonMethodService, q) {
+        let resource,
+            target = commonMethodService();
+        return {
+            link(scope, element, attr, ngModel) {
+                //条件选项
+                scope.conditionList = [{
+                    id: "compare(value,refValue)>0",
+                    label: "大于"
+                }, {
+                    id: "compare(value,refValue)>=0",
+                    label: "大于等于"
+                }, {
+                    id: "compare(value,refValue)=0",
+                    label: "等于"
+                }, {
+                    id: "compare(value,refValue)<0",
+                    label: "小于"
+                }, {
+                    id: "compare(value,refValue)<=0",
+                    label: "小于等于"
+                    // }, {
+                    //     id: "",
+                    //     label: "表达式"
+                }];
+                //类型选项
+                scope.typeList = [{
+                    id: "num",
+                    label: "数值"
+                    // },{
+                    //     id:"bate",
+                    //     label:"增长率"
+                }];
+                //间隔选项
+                scope.intervalList = [{
+                    id: "1",
+                    label: "1小时"
+                }, {
+                    id: "2",
+                    label: "2小时"
+                }, {
+                    id: "4",
+                    label: "4小时"
+                }, {
+                    id: "8",
+                    label: "8小时"
+                }]
+
+
+                target.on("tree_resourceChange", function (e) {
+                    var kpiCodeList = [],
+                        instanceList = [];
+                    resource = e.resource;
+
+                    if (resource.physicalConfig && resource.physicalConfig.accessConfigs) {
+                        kpiCodeList = resource.physicalConfig.accessConfigs;
+                    }
+                    if (resource.values && resource.values.MeasurePointLocate && resource.values.MeasurePointLocate != null) {
+                        var MeasurePointLocate = eval(resource.values.MeasurePointLocate);
+                        for (var i = 0; i < MeasurePointLocate.length; i++) {
+                            for (var k in MeasurePointLocate[i]) {
+                                for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                    var item = {
+                                        id: MeasurePointLocate[i][k][j].name,
+                                        label: MeasurePointLocate[i][k][j].label
+                                    }
+                                    instanceList.push(item);
+                                }
+                            }
+                        }
+                    }
+
+                    //获取当前设备所在模板的数据项
+                    var kpicodeList2 = [];
+                    //获取当前设备所在模板的测点
+                    var instanceList2 = [];
+                    //设备模板
+                    var modelList = [];
+
+                    //test
+                    // ajax.post("environmentService.getAlertReports", {}).then(d => {
+                    //      
+                    // });
+
+                    ajax.post("resourceUIService.getDataItemsByModelId", resource.modelId).then(d => {
+                        kpicodeList2 = d;
+                        scope.layout = {
+
+                        init: function (next) {
+                            // ajax.post("resourceUIService.getDataItemsByModelId", resource.modelId).then((d) => {
+                            //     kpicodeList2 = d;
+                            // });
+                            ajax.post("resourceUIService.getAttrsByModelId", resource.modelId).then((d) => {
+                                var sourceValue = d ? d.filter(function (ele) {
+                                    return ele.name == "MeasurePointLocate"
+                                }) : undefined;
+                                if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                                    return [];
+                                }
+                                // 查找测点MeasurePointLocateList
+                                var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                                if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                                    return [];
+                                }
+                                var MeasurePointLocateList = [];
+                                for (var i = 0; i < MeasurePointLocate.length; i++) {
+                                    for (var k in MeasurePointLocate[i]) {
+                                        for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                            if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                                var item = {
+                                                    id: MeasurePointLocate[i][k][j].name,
+                                                    label: MeasurePointLocate[i][k][j].label
+                                                }
+                                                MeasurePointLocateList.push(item);
+                                            }
+                                        }
+                                    }
+                                }
+                                instanceList2 = MeasurePointLocateList;
+                            });
+                            ajax.post("resourceUIService.getModelsByCondition", {}).then((d) => {
+                                modelList = d;
+                            });
+                        },
+
+                            label: '报警规则',
+                            children: [{
+                                type: "table",
+                                config: {
+                                    attributes: {
+                                        "title": ["报警规则名称", "text"],
+                                        "alertType": ["规则类别", "text"],
+                                        "deviceCode": ["设备编码", "text"],
+                                        "nodeIds": ["设备名称", "text"],
+                                        "instance": ["测点名称", "text"],
+                                        "kpiCode": ["指标参数", "text"],
+                                        "condition": ["条件", "text"],
+                                        "test1": ["类型", "text"],
+                                        "refValue": ["阈值", "text"],
+                                        "severity": ["报警级别", "dict"],
+                                        "enabled": ["是否启用", "text"],
+                                        "createTime": ["制定时间", "text"]
+                                    },
+                                    search: {
+                                        body: [{
+                                            name: "title",
+                                            label: "报警规则名称",
+                                            searchType: "input"
+                                        }, {
+                                            name: "instance",
+                                            searchType: "select",
+                                            label: "测点名称",
+                                            options: {
+                                                url: "resourceUIService.getAttrsByModelId",
+                                                parameter: resource.modelId,
+                                                after: function (d) {
+                                                    var sourceValue = d ? d.filter(function (ele) {
+                                                        return ele.name == "MeasurePointLocate"
+                                                    }) : undefined;
+                                                    if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                                                        return [];
+                                                    }
+                                                    // 查找测点MeasurePointLocateList
+                                                    var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                                                    if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                                                        return [];
+                                                    }
+                                                    var MeasurePointLocateList = [];
+                                                    for (var i = 0; i < MeasurePointLocate.length; i++) {
+                                                        for (var k in MeasurePointLocate[i]) {
+                                                            for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                                                if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                                                    var item = {
+                                                                        id: MeasurePointLocate[i][k][j].name,
+                                                                        label: MeasurePointLocate[i][k][j].label
+                                                                    }
+                                                                    MeasurePointLocateList.push(item);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    return MeasurePointLocateList;
+                                                }
+                                            }
+                                        }, {
+                                            name: "kpiCode",
+                                            searchType: "select",
+                                            label: "指标参数",
+                                            options: {
+                                                url: "resourceUIService.getDataItemsByModelId",
+                                                param: resource.modelId,
+                                                after: function (d) {
+                                                    return d;
+                                                }
+                                            }
+                                        }, {
+                                            name: "severity",
+                                            searchType: "select",
+                                            label: "报警级别",
+                                            options: function (a) {
+                                                var list = target.getRootScope("myDicts")["alertSeverity"];
+                                                for (var i in list) {
+                                                    list[i].id = Number(list[i].valueCode);
+                                                }
+                                                return list;
+                                            }
+                                        }]
+                                    },
+                                    grid: {
+                                        body: ["title", {
+                                            name: "alertType",
+                                            bind: function (row) {
+                                                if (row.modelId != null && row.modelId != 0 && row.nodeIds == null) {
+                                                    return "全局报警";
+                                                } else {
+                                                    return "局部报警";
+                                                }
+                                            }
+                                        }, {
+                                            name: "deviceCode",
+                                            bind: function (row) {
+                                                if (row.nodeIds != null) {
+                                                    return resource.externalDevId;
+                                                }
+                                                return "";
+                                            }
+                                        }, {
+                                            name: "nodeIds",
+                                            bind: function (row) {
+                                                if (row.nodeIds != null) {
+                                                    return resource.label;
+                                                }
+                                                return "";
+                                            }
+                                        }, {
+                                            name: "instance",
+                                            bind: function (row) {
+                                                return row.instanceName ? row.instanceName : " ";
+                                            }
+                                        }, {
+                                            name: "kpiCode",
+                                            bind: function (row) {
+                                                if (row.nodeIds != null && row.nodeIds != "") {
+                                                    let o = kpiCodeList.find(a => {
+                                                        return a.dataItemId == row.kpiCode;
+                                                    });
+                                                    if (o) {
+                                                        return o.kpiName;
+                                                    } else {
+                                                        return "";
+                                                    }
+                                                } else if (row.modelId != null) {
+                                                    let obj = kpicodeList2.find(a => {
+                                                        return a.id == row.kpiCode;
+                                                    });
+                                                    if (obj) {
+                                                        return obj.label;
+                                                    } else {
+                                                        return "";
+                                                    }
+                                                }
+                                            }
+                                        }, {
+                                            name: "condition",
+                                            bind: function (row) {
+                                                let o = scope.conditionList.find(a => {
+                                                    return a.id == row.condition;
+                                                });
+                                                if (o) {
+                                                    return o.label;
+                                                } else {
+                                                    return "";
+                                                }
+                                            }
+                                        }, "refValue", {
+                                            name: "severity",
+                                            bind: function (row) {
+                                                let o = target.getRootScope("myDicts")["alertSeverity"].find(a => {
+                                                    return a.valueCode == row.severity;
+                                                });
+                                                return o.label;
+                                            }
+                                        }, {
+                                            name: "enabled",
+                                            bind: function (row) {
+                                                if (row.enabled) {
+                                                    return "已启用";
+                                                } else if (!row.enabled) {
+                                                    return "已停用";
+                                                } else {
+                                                    return "";
+                                                }
+                                            }
+                                        }, {
+                                            name: "createTime",
+                                            gridType: "date"
+                                        }],
+                                        buttons: {
+                                            outGrid: [{
+                                                label: " 添加全局告警规则",
+                                                class: "primary",
+                                                icon: "fa fa-plus",
+                                                on: {
+                                                    click: function (e) {
+                                                        if (resource.category == "Device") {
+                                                            e.add({
+                                                                template: {
+                                                                    label: "全局报警规则",
+                                                                    type: "layout",
+                                                                    children: [{
+                                                                        type: "form-dialog",
+                                                                        children: [{
+                                                                            type: "input",
+                                                                            composory: true,
+                                                                            key: "title",
+                                                                            label: "报警规则名称"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "modelId",
+                                                                            composory: true,
+                                                                            label: "设备模板",
+                                                                            options: {
+                                                                                url: "resourceUIService.getModelsByCondition",
+                                                                                parameter: {},
+                                                                                after: function (d) {
+                                                                                    if (resource.category == "Device") {
+                                                                                        let obj = d.find(a => {
+                                                                                            return a.id == resource.modelId;
+                                                                                        });
+                                                                                        var list = [];
+                                                                                        list.push(obj);
+                                                                                        return list;
+                                                                                    }
+                                                                                    return d;
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "instance",
+                                                                            composory: true,
+                                                                            label: "测点名称",
+                                                                            options: {
+                                                                                url: "resourceUIService.getAttrsByModelId",
+                                                                                parameter: resource.modelId,
+                                                                                after: function (d, next, evt) {
+                                                                                    var sourceValue = d ? d.filter(function (ele) {
+                                                                                        return ele.name == "MeasurePointLocate"
+                                                                                    }) : undefined;
+                                                                                    if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                                                                                        return [];
+                                                                                    }
+                                                                                    // 查找测点MeasurePointLocateList
+                                                                                    var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                                                                                    if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                                                                                        return [];
+                                                                                    }
+                                                                                    var MeasurePointLocateList = [];
+                                                                                    for (var i = 0; i < MeasurePointLocate.length; i++) {
+                                                                                        for (var k in MeasurePointLocate[i]) {
+                                                                                            for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                                                                                if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                                                                                    var item = {
+                                                                                                        id: MeasurePointLocate[i][k][j].name,
+                                                                                                        label: MeasurePointLocate[i][k][j].label
+                                                                                                    }
+                                                                                                    MeasurePointLocateList.push(item);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    return MeasurePointLocateList;
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "kpiCode",
+                                                                            composory: true,
+                                                                            label: "指标参数",
+                                                                            options: {
+                                                                                url: "resourceUIService.getDataItemsByModelId",
+                                                                                parameter: resource.modelId,
+                                                                                after: function (d, next, evt) {
+                                                                                    return d;
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "type",
+                                                                            composory: true,
+                                                                            label: "类型",
+                                                                            options: scope.typeList
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "condition",
+                                                                            composory: true,
+                                                                            label: "条件",
+                                                                            options: scope.conditionList
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "interval",
+                                                                            label: "间隔",
+                                                                            options: scope.intervalList
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "refValue",
+                                                                            composory: true,
+                                                                            label: "阈值"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "severity",
+                                                                            options: function (d) {
+                                                                                var list = target.getRootScope("myDicts")["alertSeverity"];
+                                                                                for (var i = 0; i < list.length; i++) {
+                                                                                    if (list[i].label == "正常") {
+                                                                                        list.splice(i, 1);
+                                                                                    }
+                                                                                }
+                                                                                return list;
+                                                                            },
+                                                                            format: {
+                                                                                id: "valueCode",
+                                                                                label: "label"
+                                                                            },
+                                                                            composory: true,
+                                                                            label: "报警级别"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "desc",
+                                                                            label: "规则描述"
+                                                                        }, {
+                                                                            type: "checkbox",
+                                                                            key: "enabled",
+                                                                            label: "是否启用",
+                                                                            format: {
+                                                                                true: 1,
+                                                                                false: 0
+                                                                            }
+                                                                        }]
+                                                                    }]
+                                                                },
+                                                                before: function (d) {
+                                                                    var alert = d;
+                                                                    alert.domain = resource.domainPath;
+                                                                    alert.customerId = resource.customerId;
+                                                                    alert.projectId = resource.projectId;
+                                                                    alert.instanceName = instanceList2.find(a => {
+                                                                        return a.id == d.instance;
+                                                                    }).label;
+                                                                    delete alert.type;
+                                                                    delete alert.interval;
+                                                                    return alert;
+                                                                },
+                                                                url: "resourceUIService.saveKpiThreshold",
+                                                                after: function (d) {
+                                                                    return d;
+                                                                }
+                                                            });
+                                                        } else {
+                                                            growl.warning("请选择设备");
+                                                        }
+                                                    }
+                                                }
+                                            }, {
+                                                label: " 添加局部告警规则",
+                                                class: "primary",
+                                                icon: "fa fa-plus",
+                                                on: {
+                                                    click: function (e) {
+                                                        if (resource.category == "Device") {
+                                                            e.add({
+                                                                template: {
+                                                                    label: "局部报警规则",
+                                                                    type: "layout",
+                                                                    children: [{
+                                                                        type: "form-dialog",
+                                                                        children: [{
+                                                                            type: "label",
+                                                                            key: "nodeIds",
+                                                                            label: "设备名称",
+                                                                            col: 4,
+                                                                            value: resource.label
+                                                                        }, {
+                                                                            type: "label",
+                                                                            key: "deviceCode",
+                                                                            label: "设备编号",
+                                                                            col: 4,
+                                                                            value: resource.externalDevId
+                                                                        }, {
+                                                                            type: "input",
+                                                                            composory: true,
+                                                                            key: "title",
+                                                                            label: "报警规则名称"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "instance",
+                                                                            composory: true,
+                                                                            label: "测点名称",
+                                                                            options: instanceList
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "kpiCode",
+                                                                            composory: true,
+                                                                            label: "指标参数",
+                                                                            options: {
+                                                                                watch: "instance",
+                                                                                handler: function (d) {
+                                                                                    var list = [];
+                                                                                    for (var i = 0; i < kpiCodeList.length; i++) {
+                                                                                        if (kpiCodeList[i].instance == d) {
+                                                                                            list.push(kpiCodeList[i]);
+                                                                                        }
+                                                                                    }
+                                                                                    return list;
+                                                                                }
+                                                                            },
+                                                                            format: {
+                                                                                id: "dataItemId",
+                                                                                label: "kpiName"
+                                                                            }
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "type",
+                                                                            composory: true,
+                                                                            label: "类型",
+                                                                            options: scope.typeList
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "condition",
+                                                                            composory: true,
+                                                                            label: "条件",
+                                                                            options: scope.conditionList,
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "interval",
+                                                                            label: "间隔",
+                                                                            options: scope.intervalList
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "refValue",
+                                                                            composory: true,
+                                                                            label: "阈值"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "severity",
+                                                                            composory: true,
+                                                                            options: function (d) {
+                                                                                var list = target.getRootScope("myDicts")["alertSeverity"];
+                                                                                for (var i = 0; i < list.length; i++) {
+                                                                                    if (list[i].label == "正常") {
+                                                                                        list.splice(i, 1);
+                                                                                    }
+                                                                                }
+                                                                                return list;
+                                                                            },
+                                                                            format: {
+                                                                                id: "valueCode",
+                                                                                label: "label"
+                                                                            },
+                                                                            label: "报警级别"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "desc",
+                                                                            label: "规则描述"
+                                                                        }, {
+                                                                            type: "checkbox",
+                                                                            key: "enabled",
+                                                                            label: "是否启用",
+                                                                            format: {
+                                                                                true: 1,
+                                                                                false: 0
+                                                                            }
+                                                                        }]
+                                                                    }]
+                                                                },
+                                                                before: function (d) {
+                                                                    d.nodeIds = "" + resource.id;
+                                                                    d.modelId = resource.modelId;
+                                                                    d.customerId = resource.customerId;
+                                                                    d.projectId = resource.projectId;
+                                                                    d.domain = resource.domainPath;
+                                                                    d.instanceName = instanceList2.find(a => {
+                                                                        return a.id == d.instance;
+                                                                    }).label;
+                                                                    delete d.deviceCode;
+                                                                    delete d.type;
+                                                                    delete d.interval;
+                                                                    return d;
+                                                                },
+                                                                url: "resourceUIService.saveKpiThreshold",
+                                                                after: function (d) {
+                                                                    return d;
+                                                                }
+                                                            });
+                                                        } else {
+                                                            growl.warning("请选择设备");
+                                                        }
+                                                    }
+                                                }
+                                            }],
+                                            inGrid: [{
+                                                label: "查看",
+                                                class: "btn btn-primary",
+                                                on: {
+                                                    click: function (e) {
+                                                        var rowValue = e.$row;
+                                                        if (e.$row.modelId != null && e.$row.modelId != 0 && e.$row.nodeIds == null) {
+                                                            e.update({
+                                                                template: {
+                                                                    label: "全局报警规则",
+                                                                    type: "layout",
+                                                                    children: [{
+                                                                        type: "form-dialog",
+                                                                        children: [{
+                                                                            type: "input",
+                                                                            composory: true,
+                                                                            key: "title",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            label: "报警规则名称"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "modelId",
+                                                                            composory: true,
+                                                                            label: "设备模板",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "title",
+                                                                                handler: function (e) {
+                                                                                    var obj = modelList.find(a => {
+                                                                                        return rowValue.modelId == a.id;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "instance",
+                                                                            composory: true,
+                                                                            label: "测点名称",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "modelId",
+                                                                                handler: function (e) {
+                                                                                    var obj = instanceList2.find(a => {
+                                                                                        return a.id == rowValue.instance;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "kpiCode",
+                                                                            composory: true,
+                                                                            label: "指标参数",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "modelId",
+                                                                                handler: function (e) {
+                                                                                    var obj = kpicodeList2.find(a => {
+                                                                                        return a.id == rowValue.kpiCode;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "type",
+                                                                            composory: true,
+                                                                            label: "类型",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            value: "数值"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "condition",
+                                                                            composory: true,
+                                                                            label: "条件",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "modelId",
+                                                                                handler: function (e) {
+                                                                                    var obj = scope.conditionList.find(a => {
+                                                                                        return a.id == rowValue.condition;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "interval",
+                                                                            label: "间隔",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            value: "1小时"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "refValue",
+                                                                            composory: true,
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            label: "阈值"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "severity",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "modelId",
+                                                                                handler: function (e) {
+                                                                                    var list = target.getRootScope("myDicts")["alertSeverity"];
+                                                                                    var obj = list.find(a => {
+                                                                                        return Number(a.valueCode) == rowValue.severity;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            },
+                                                                            composory: true,
+                                                                            label: "报警级别"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "desc",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            label: "规则描述"
+                                                                        }, {
+                                                                            type: "checkbox",
+                                                                            key: "enabled",
+                                                                            label: "是否启用",
+                                                                            format: {
+                                                                                true: 1,
+                                                                                false: 0
+                                                                            },
+                                                                            config: {
+                                                                                disabled: true
+                                                                            }
+                                                                        }]
+                                                                    }]
+                                                                },
+                                                                before: function (d) {
+                                                                    return d;
+                                                                }
+                                                            });
+                                                        } else if (e.$row.nodeIds != null) {
+                                                            e.update({
+                                                                template: {
+                                                                    label: "局部报警规则",
+                                                                    type: "layout",
+                                                                    children: [{
+                                                                        type: "form-dialog",
+                                                                        children: [{
+                                                                            type: "label",
+                                                                            key: "nodeIds",
+                                                                            label: "设备名称",
+                                                                            value: resource.label
+                                                                        }, {
+                                                                            type: "label",
+                                                                            key: "deviceCode",
+                                                                            label: "设备编号",
+                                                                            value: resource.externalDevId
+                                                                        }, {
+                                                                            type: "input",
+                                                                            composory: true,
+                                                                            key: "title",
+                                                                            label: "报警规则名称",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "instance",
+                                                                            composory: true,
+                                                                            label: "测点名称",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "title",
+                                                                                handler: function (e) {
+                                                                                    var obj = instanceList2.find(a => {
+                                                                                        return a.id == rowValue.instance;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "kpiCode",
+                                                                            composory: true,
+                                                                            label: "指标参数",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "title",
+                                                                                handler: function (e) {
+                                                                                    var obj = kpicodeList2.find(a => {
+                                                                                        return a.id == rowValue.kpiCode;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "type",
+                                                                            composory: true,
+                                                                            label: "类型",
+                                                                            value: "数值",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "condition",
+                                                                            composory: true,
+                                                                            label: "条件",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "title",
+                                                                                handler: function (e) {
+                                                                                    var obj = scope.conditionList.find(a => {
+                                                                                        return a.id == rowValue.condition;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "interval",
+                                                                            label: "间隔",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            value: "1小时"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "refValue",
+                                                                            composory: true,
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            label: "阈值"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "severity",
+                                                                            composory: true,
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            watch: {
+                                                                                key: "title",
+                                                                                handler: function (e) {
+                                                                                    var list = target.getRootScope("myDicts")["alertSeverity"];
+                                                                                    var obj = list.find(a => {
+                                                                                        return Number(a.valueCode) == rowValue.severity;
+                                                                                    });
+                                                                                    e.update({
+                                                                                        value: obj && obj.label ? obj.label : ""
+                                                                                    });
+                                                                                }
+                                                                            },
+                                                                            label: "报警级别"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "desc",
+                                                                            config: {
+                                                                                disabled: true
+                                                                            },
+                                                                            label: "规则描述"
+                                                                        }, {
+                                                                            type: "checkbox",
+                                                                            key: "enabled",
+                                                                            label: "是否启用",
+                                                                            format: {
+                                                                                true: 1,
+                                                                                false: 0
+                                                                            },
+                                                                            config: {
+                                                                                disabled: "disabled"
+                                                                            }
+                                                                        }]
+                                                                    }]
+                                                                },
+                                                                before: function (d) {
+                                                                    return d;
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                }
+                                            }, {
+                                                label: "编辑",
+                                                class: "btn btn-primary",
+                                                on: {
+                                                    click: function (e) {
+                                                        if (e.$row.modelId != null && e.$row.modelId != 0 && e.$row.nodeIds == null) {
+                                                            e.update({
+                                                                    template: {
+                                                                        label: "全局报警规则",
+                                                                        type: "layout",
+                                                                        children: [{
+                                                                            type: "form-dialog",
+                                                                            children: [{
+                                                                                type: "input",
+                                                                                composory: true,
+                                                                                key: "title",
+                                                                                label: "报警规则名称"
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "modelId",
+                                                                                composory: true,
+                                                                                label: "设备模板",
+                                                                                options: {
+                                                                                    url: "resourceUIService.getModelsByCondition",
+                                                                                    parameter: {},
+                                                                                    after: function (d) {
+                                                                                        if (resource.category == "Device") {
+                                                                                            let obj = d.find(a => {
+                                                                                                return a.id == resource.modelId;
+                                                                                            });
+                                                                                            var list = [];
+                                                                                            list.push(obj);
+                                                                                            return list;
+                                                                                        }
+                                                                                        return d;
+                                                                                    }
+                                                                                }
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "instance",
+                                                                                composory: true,
+                                                                                label: "测点名称",
+                                                                                options: {
+                                                                                    url: "resourceUIService.getAttrsByModelId",
+                                                                                    parameter: resource.modelId,
+                                                                                    after: function (d, next, evt) {
+                                                                                        var sourceValue = d ? d.filter(function (ele) {
+                                                                                            return ele.name == "MeasurePointLocate"
+                                                                                        }) : undefined;
+                                                                                        if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                                                                                            return [];
+                                                                                        }
+                                                                                        // 查找测点MeasurePointLocateList
+                                                                                        var measurePointLocate = eval(sourceValue[0].sourceValue);
+                                                                                        if (measurePointLocate == null || MeasurePointLocate.length == 0) {
+                                                                                            return [];
+                                                                                        }
+                                                                                        var measurePointLocateList = [];
+                                                                                        for (var i = 0; i < measurePointLocate.length; i++) {
+                                                                                            for (var k in MeasurePointLocate[i]) {
+                                                                                                for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                                                                                    var item = {
+                                                                                                        id: parseFloat(MeasurePointLocate[i][k][j].name),
+                                                                                                        label: MeasurePointLocate[i][k][j].label
+                                                                                                    }
+                                                                                                    measurePointLocateList.push(item);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                        return measurePointLocateList;
+                                                                                    }
+                                                                                }
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "kpiCode",
+                                                                                composory: true,
+                                                                                label: "指标参数",
+                                                                                options: {
+                                                                                    url: "resourceUIService.getDataItemsByModelId",
+                                                                                    parameter: resource.modelId,
+                                                                                    after: function (d, next, evt) {
+                                                                                        return d;
+                                                                                    }
+                                                                                }
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "type",
+                                                                                composory: true,
+                                                                                label: "类型",
+                                                                                options: scope.typeList,
+                                                                                value: "num"
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "condition",
+                                                                                composory: true,
+                                                                                label: "条件",
+                                                                                options: scope.conditionList
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "interval",
+                                                                                label: "间隔",
+                                                                                options: scope.intervalList
+                                                                            }, {
+                                                                                type: "input",
+                                                                                key: "refValue",
+                                                                                composory: true,
+                                                                                label: "阈值"
+                                                                            }, {
+                                                                                type: "select",
+                                                                                key: "severity",
+                                                                                options: target.getRootScope("myDicts")["alertSeverity"],
+                                                                                format: {
+                                                                                    id: "valueCode",
+                                                                                    label: "label"
+                                                                                },
+                                                                                composory: true,
+                                                                                label: "报警级别"
+                                                                            }, {
+                                                                                type: "input",
+                                                                                key: "desc",
+                                                                                label: "规则描述"
+                                                                            }, {
+                                                                                type: "checkbox",
+                                                                                key: "enabled",
+                                                                                label: "是否启用",
+                                                                                format: {
+                                                                                    true: 1,
+                                                                                    false: 0
+                                                                                }
+                                                                            }]
+                                                                        }
+                                                                        ]
+                                                                    },
+                                                                    before: function (d) {
+                                                                        d.instanceName = instanceList2.find(a => {
+                                                                            return a.id == d.instance;
+                                                                        }).label;
+                                                                        delete d.type;
+                                                                        delete d.interval;
+                                                                        return d;
+                                                                    }
+                                                                    ,
+                                                                    url: "resourceUIService.saveKpiThreshold"
+                                                                }
+                                                            );
+                                                        } else if (e.$row.nodeIds != null
+                                                        ) {
+                                                            e.update({
+                                                                template: {
+                                                                    label: "局部报警规则",
+                                                                    type: "layout",
+                                                                    children: [{
+                                                                        type: "form-dialog",
+                                                                        children: [{
+                                                                            type: "label",
+                                                                            key: "nodeIds",
+                                                                            label: "设备名称",
+                                                                            value: resource.label,
+                                                                            config: {
+                                                                                disabled: true
+                                                                            }
+                                                                        }, {
+                                                                            type: "label",
+                                                                            key: "deviceCode",
+                                                                            label: "设备编号",
+                                                                            value: resource.externalDevId,
+                                                                            config: {
+                                                                                disabled: true
+                                                                            }
+                                                                        }, {
+                                                                            type: "input",
+                                                                            composory: true,
+                                                                            key: "title",
+                                                                            label: "报警规则名称"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "instance",
+                                                                            composory: true,
+                                                                            label: "测点名称",
+                                                                            options: instanceList
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "kpiCode",
+                                                                            composory: true,
+                                                                            label: "指标参数",
+                                                                            options: {
+                                                                                watch: "instance",
+                                                                                handler: function (d) {
+                                                                                    var list = [];
+                                                                                    for (var i = 0; i < kpiCodeList.length; i++) {
+                                                                                        if (kpiCodeList[i].instance == d) {
+                                                                                            list.push(kpiCodeList[i]);
+                                                                                        }
+                                                                                    }
+                                                                                    return list;
+                                                                                }
+                                                                            },
+                                                                            format: {
+                                                                                id: "dataItemId",
+                                                                                label: "kpiName"
+                                                                            }
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "type",
+                                                                            composory: true,
+                                                                            label: "类型",
+                                                                            options: scope.typeList,
+                                                                            value: "num"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "condition",
+                                                                            composory: true,
+                                                                            label: "条件",
+                                                                            options: scope.conditionList,
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "interval",
+                                                                            label: "间隔",
+                                                                            options: scope.intervalList
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "refValue",
+                                                                            composory: true,
+                                                                            label: "阈值"
+                                                                        }, {
+                                                                            type: "select",
+                                                                            key: "severity",
+                                                                            composory: true,
+                                                                            options: target.getRootScope("myDicts")["alertSeverity"],
+                                                                            format: {
+                                                                                id: "valueCode",
+                                                                                label: "label"
+                                                                            },
+                                                                            label: "报警级别"
+                                                                        }, {
+                                                                            type: "input",
+                                                                            key: "desc",
+                                                                            label: "规则描述"
+                                                                        }, {
+                                                                            type: "checkbox",
+                                                                            key: "enabled",
+                                                                            label: "是否启用",
+                                                                            format: {
+                                                                                true: 1,
+                                                                                false: 0
+                                                                            }
+                                                                        }]
+                                                                    }]
+                                                                },
+                                                                before: function (d) {
+                                                                    d.instanceName = instanceList2.find(a => {
+                                                                        return a.id == d.instance;
+                                                                    }).label;
+                                                                    delete d.deviceCode;
+                                                                    delete d.type;
+                                                                    delete d.interval;
+                                                                    return d;
+                                                                },
+                                                                url: "resourceUIService.saveKpiThreshold"
+                                                            });
+                                                        }
+                                                    }
+                                                }
+                                            }, {
+                                                label: "删除",
+                                                class: "btn btn-default",
+                                                on: {
+                                                    click: function (e) {
+                                                        if (e.$row.enabled) {
+                                                            growl.warning("该告警规则启用中，无法删除！");
+                                                            return;
+                                                        }
+                                                        e.remove({
+                                                            before: function (d) {
+                                                                var id = e.$row.id;
+                                                                var ids = [[id]];
+                                                                return ids;
+                                                            },
+                                                            url: "resourceUIService.deleteKpiThresholds",
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                            ]
+                                        },
+                                        config: {
+                                            url: 'resourceUIService.getKpiThresholdListByConditionWithPage',
+                                            ajax: true,
+                                            parameter: {modelId: resource.modelId, nodeIds: resource.id + ""},
+                                            showIndex: false,
+                                            showSelector: false,
+                                            showPage: true,
+                                            showSearch: false
+                                        },
+                                        options: []
+                                    }
+                                }
+                            }]
+                        }
+                    });
+                });
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+
+</style>

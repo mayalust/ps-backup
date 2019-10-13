@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("alertManageFlexService",["serviceProxy",function(i){var e={},t="alertManageFlexService";return e.sendClaimAction=function(e,n){i.get(t,"sendClaimAction",e,n)},e.sendRecoverAction=function(e,n){i.get(t,"sendRecoverAction",e,n)},e.sendForwardAction=function(e,n,c){i.get(t,"sendForwardAction",[e,n],c)},e}])});
+//# sourceMappingURL=../../map/js/services/alert-manage-flex-service.js.map

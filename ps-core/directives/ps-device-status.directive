@@ -1,0 +1,204 @@
+<config injector="$rootScope,$timeout,$q,ajax,$state,psWebsocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTreeData,commonMethodService2">
+</config>
+<template>
+  <div class="row block art-content">
+    <div class="col-md-12">
+      <div>
+        <table
+          class="table table-hover dataTable no-footer"
+          style="width: 100%;"
+        >
+          <thead>
+            <tr role="row">
+              <th class="sorting_disabled" style="width: 279px;">
+                设备名称
+              </th>
+              <th class="sorting_disabled">
+                状态
+              </th>
+            </tr>
+          </thead>
+          <tbody ng-if="devices && devices.length == 0">
+            <tr>
+              <td
+                colspan="2"
+                class="t-td"
+                style="text-align:center;white-space:normal;"
+              >
+                没有符合条件的记录
+              </td>
+            </tr>
+          </tbody>
+          <tbody>
+            <tr
+              role="row"
+              ng-repeat="device in devices"
+              ng-click="device.click()"
+            >
+              <td>
+                <span ng-bind="device.label"></span>
+              </td>
+              <td>
+                <div class="circle" ng-style="device.getState()"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(
+  rootScope,
+  timeout,
+  q,
+  ajax,
+  $state,
+  psWebsocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTreeData,
+  cms2
+) {
+  return {
+    scope: {},
+    link(scope, element, attr) {
+      let id = $state.params.id,
+        devicelist,
+        valueListMap = {};
+      function bind(target, fn) {
+        return function() {
+          return fn.apply(target, arguments);
+        };
+      }
+      class TableCell {
+        constructor(d) {
+          for (let i in d) {
+            this[i] = d[i];
+          }
+        }
+        click() {
+          cms2.treeNavigateTo(this.id);
+        }
+        getState() {
+          let color,
+            state = valueListMap[this.id];
+          switch (state) {
+            case 4:
+              color = "#e74e53";
+              break;
+            case 3:
+              color = "#ee6b1c";
+              break;
+            case 2:
+              color = "#efd709";
+              break;
+            default:
+              color = "#00bc79";
+              break;
+          }
+          return {
+            backgroundColor: color
+          };
+        }
+      }
+      class DeviceList {
+        constructor() {
+          this.timer = null;
+          this._getKpiValueList = "kpiDataFlexService.getKpiValueList";
+        }
+        init() {
+          this.getChildren(children => {
+            let nodeIds = children.map(d => d.id);
+            scope.devices = children.map(d => new TableCell(d));
+            /** 采用轮训的方法查询数据 */
+            this.loopGetKpiValueList = () => {
+              this.getKpiValueList(nodeIds, [999999], valueList => {
+                valueList.forEach(v => {
+                  valueListMap ? (valueListMap[v.nodeId] = v.value) : null;
+                });
+                this.timer = setTimeout(() => {
+                  this.loopGetKpiValueList && this.loopGetKpiValueList();
+                }, 6000);
+              });
+            };
+            this.loopGetKpiValueList();
+          });
+        }
+        destroy() {
+          valueListMap = null;
+          clearTimeout(this.timer);
+          delete this.timer;
+          delete this.loopGetKpiValueList;
+        }
+        saveApply(fn) {
+          if (rootScope.$$phase == "$apply" || rootScope.$$phase == "$digest") {
+            fn && fn.call(this);
+            return;
+          }
+          scope.$apply(fn);
+        }
+        getKpiValueList(nodeIds, kpiCodes, callback, error) {
+          kpiDataService.getRealTimeKpiData(
+            nodeIds,
+            kpiCodes,
+            e => {
+              if (e.code == 0) {
+                callback(e.data);
+              } else {
+                error(e);
+              }
+            },
+            true,
+            {},
+            error
+          );
+          //return ajax.post(this._getKpiValueList, params);
+        }
+        getChildren(callback) {
+          psTreeData(id)
+            .getState()
+            .then(resource => {
+              this.resource = resource;
+              resource
+                .getChildren((n, i, l) => l < 2)
+                .then(children => {
+                  this.children = children;
+                  callback(children);
+                });
+            });
+        }
+      }
+      devicelist = new DeviceList();
+      devicelist.init();
+      scope.$on("$destroy", () => {
+        devicelist.destroy();
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.circle {
+  width: 20px;
+  margin-right: 5px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+}
+.art-content {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  background-color: rgba(250, 250, 250, 0);
+  max-height: 500px;
+  overflow-y: auto;
+}
+</style>

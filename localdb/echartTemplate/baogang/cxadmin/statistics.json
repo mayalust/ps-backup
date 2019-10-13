@@ -1,0 +1,514 @@
+{
+  "version": "V_2",
+  "groups": [
+    {
+      "id": "0",
+      "label": "导航页",
+      "path": "page0",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "label": "控制板1",
+            "type": "block",
+            "source": "BLOCK",
+            "style": {
+              "padding": "5px 15px",
+              "margin": "0px",
+              "border": "0",
+              "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+              "background-color": "rgba(250,250,250,0)",
+              "height": "calc(100vh - 115px)",
+              "overflow-y": "auto"
+            },
+            "advance": {
+              "expression": "{}"
+            },
+            "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                  {
+                    "label": "控制板1",
+                    "type": "block",
+                    "source": "BLOCK",
+                    "style": {
+                      "padding": "5px",
+                      "margin": "5px"
+                    },
+                    "advance": {
+                      "expression": {}
+                    },
+                    "children": [
+                      {
+                        "type": "column",
+                        "col": 12,
+                        "children": [
+                          {
+                            "label": "控件组",
+                            "type": "ctrlgroup",
+                            "source": "CTRLGROUP",
+                            "advance": {
+                              "expression": "expression = {\n  width: \"auto\",\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var queryObj = {baowuPointCheckState:\"\",userID:\"\"};\n \n    //   点检员\n      var roleList = [],userIdList = [],userID = \"\";\n      var getAllUserInfo = target.getRootScope(\"getAllUserInfo\");\n      getAllUserInfo.forEach(function(ele) {\n        if(ele.roleID) {\n          if(ele.roleID.indexOf(\"127260997560018\") > -1) {\n            roleList.push(ele);\n            userIdList.push(ele.userID);\n            userID += ele.userID +\",\"\n          }\n        }\n      })\n      \n      queryObj.userID = userID;\n      var isFlag = false;\n      var render = function () { \n        target.setValue(\"queryObj\",queryObj);\n        var ctrlGroups = [\n          [{\n              type: \"label\",\n              value: \"点检员\",\n              style: {\n                textAlign: \"center\",\n                width: \"80px\"\n              }\n            }, {\n            type: \"multiSelect\",\n            value:userIdList,\n            on: {\n              change: function (elem) { \n                queryObj.userID = \"\";\n                elem.values.forEach(function(ele){\n                   queryObj.userID +=  ele.userID +\",\"\n                })\n     \n              }\n            },\n            options:roleList,\n            format: {\n              \"id\": \"userID\",\n              \"label\":\"userName\",\n            },\n            style: {\n              width: \"180px\"\n            }\n          },{\n              type: \"label\",\n              value: \"任务状态\",\n              style: {\n                textAlign: \"center\",\n                width: \"80px\"\n              }\n            }, {\n            type: \"select\",\n            value:'',\n            on: {\n              change: function (elem) { \n                queryObj.baowuPointCheckState = elem.value.valueCode;\n              }\n            },\n            options:target.getRootScope(\"myDicts\")[\"baowuPointCheckState\"],\n            format: {\n              \"id\": \"id\",\n              \"label\":\"label\",\n            },\n            style: {\n              width: \"180px\"\n            }\n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render()\n    }\n  }\n}"
+                            },
+                            "style": {
+                              "font-size": "12px",
+                              "text-align": "left",
+                              "line-height": "30px"
+                            },
+                            "help": "../pdf/ctrlgroup.pdf",
+                            "parameters": {
+                              "cgroupstyle": "table"
+                            },
+                            "url": "images/map/map1.png"
+                          },
+                          {
+                            "label": "控件组",
+                            "type": "ctrlgroup",
+                            "source": "CTRLGROUP",
+                            "advance": {
+                              "expression": "expression = {\n  width: \"auto\",\n  on: {\n    init: function(event) {\n      var target = event.target;\n      var global = event.global;\n\n      var timeObj = target.getValue(\"queryObj\");\n\n      var inpStatus = false;\n      var currStatus = \"month\";\n      var now = new Date(); //当前日期 \n\n      var render = function() {\n        var ctrlGroups = [\n          [{\n              type: \"label\",\n              value: \"计划日期\",\n              class: \"col-md-1\",\n              style: {\n                textAlign: \"right\",\n                width: \"100px\"\n              }\n            },\n            {\n              type: \"button\",\n              value: \"当日任务\",\n\n              btnclass: currStatus == \"today\" ? \"btn btn-primary\" : \"btn btn-default\",\n              btnStyle: {\n                \"width\": \"100px\",\n                \"border\": \"#10a4fb solid 1px\"\n              },\n              on: {\n                click: function(elem) {\n                  var today = new Date();\n                  today.setHours(0);\n                  today.setMinutes(0);\n                  today.setSeconds(0);\n                  today.setMilliseconds(0);\n                  timeObj.firstTimeFrom = formatDatebyMomentToUTC(today);\n                  timeObj.firstTimeTo = formatDatebyMomentToUTC(now);\n                  currStatus = \"today\";\n                  render();\n                  target.trigger(\"queryTabelList\", timeObj);\n                }\n              }\n            }, {\n              type: \"button\",\n              value: \"本周任务\",\n              btnclass: currStatus == \"bz\" ? \"btn btn-primary\" : \"btn btn-default\",\n              btnStyle: {\n                \"width\": \"100px\",\n                \"border\": \"#10a4fb solid 1px\"\n              },\n              on: {\n                click: function(elem) {\n\n                  //获得本周的开端日期 \n                  function getWeekStartDate() {\n                    var nowDayOfWeek = now.getDay(); //今天本周的第几天 \n                    var nowDay = now.getDate() + 1; //当前日 \n                    var nowMonth = now.getMonth(); //当前月 \n                    var nowYear = now.getFullYear(); //当前年 \n                    var weekStartDate = new Date(nowYear, nowMonth, nowDay - nowDayOfWeek);\n                    return weekStartDate;\n                  }\n                  //获得本周的开端日期 \n                  function getWeekEndDate() {\n                    var nowDayOfWeek = now.getDay(); //今天本周的第几天 \n                    var nowDay = now.getDate() + 1 + 7 - nowDayOfWeek; //当前日 \n                    var nowMonth = now.getMonth(); //当前月 \n                    var nowYear = now.getFullYear(); //当前年 \n                    var weekStartDate = new Date(nowYear, nowMonth, nowDay);\n                    return weekStartDate;\n                  }\n                  timeObj.firstTimeFrom = formatDatebyMomentToUTC(getWeekStartDate());\n                  timeObj.firstTimeTo = formatDatebyMomentToUTC(getWeekEndDate());\n                  currStatus = \"bz\";\n                  render();\n                  target.trigger(\"queryTabelList\", timeObj);\n                }\n              }\n            }, {\n              type: \"button\",\n              value: \"本月任务\",\n              btnclass: currStatus == \"month\" ? \"btn btn-primary\" : \"btn btn-default\",\n              btnStyle: {\n                \"width\": \"100px\",\n                \"border\": \"#10a4fb solid 1px\"\n              },\n              on: {\n                click: function(elem) {\n\n                  //当前月的第一天\n                  function getCurrentMonthFirst() {\n                    var date = new Date();\n                    var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);\n                    return firstDay;\n                  }\n                  \n                  //当前月的最后一天\n                  function getCurrentMonthEnd() {\n                  \n                      var curDate = new Date();\n                    var curMonth = curDate.getMonth();\n                    curDate.setMonth(curMonth + 1);\n                    curDate.setDate(0);\n                    var days = curDate.getDate();\n                    var endDay = new Date(curDate.getFullYear(), curDate.getMonth(), days);\n                    return endDay;\n                  }\n                  \n\n                  \n\n                  timeObj.firstTimeFrom = formatDatebyMomentToUTC(getCurrentMonthFirst());\n                  timeObj.firstTimeTo = formatDatebyMomentToUTC(getCurrentMonthEnd());\n                  currStatus = \"month\";\n                  render();\n                  target.trigger(\"queryTabelList\", timeObj);\n                }\n              }\n            }, {\n              type: \"dateRangePicker\",\n              value: \"\",\n              class: \"col-md-5\",\n              id: 0,\n              style: {\n                width: \"200px\",\n                textAlign: \"center\"\n              },\n              on: {\n                change: function(elem) {\n                  timeObj.firstTimeFrom = elem.value.start;\n                  timeObj.firstTimeTo = elem.value.end;\n                  if(elem.value.start) {\n                    inpStatus = true;\n                  }\n                }\n              },\n            }, {\n              type: \"button\",\n              btnclass: \"btn btn-primary\",\n              value: \"查 询\",\n              btnStyle: {\n                width: \"100px\",\n              },\n              on: {\n                click: function(elem) {\n\n                  if(inpStatus) {\n                    inpStatus = false;\n                  } else {\n                    timeObj.firstTimeFrom = \"\";\n                    timeObj.firstTimeTo = \"\";\n                    currStatus = false;\n                    render()\n                  }\n                  target.trigger(\"queryTabelList\", timeObj);\n                }\n              }\n            }\n          ]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render()\n    }\n  }\n}"
+                            },
+                            "style": {
+                              "font-size": "12px",
+                              "text-align": "left",
+                              "line-height": "30px"
+                            },
+                            "help": "../pdf/ctrlgroup.pdf",
+                            "parameters": {
+                              "cgroupstyle": "table"
+                            },
+                            "url": "images/map/map1.png"
+                          },
+                          {
+                            "label": "控制板1",
+                            "type": "block",
+                            "source": "BLOCK",
+                            "style": {
+                              "padding": "10px",
+                              "margin": "5px"
+                            },
+                            "advance": {
+                              "expression": {}
+                            },
+                            "children": [
+                              {
+                                "type": "column",
+                                "col": 12,
+                                "children": [
+                                  {
+                                    "label": "文字",
+                                    "type": "text",
+                                    "source": "TEXT",
+                                    "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                                    "data": {
+                                      "applied": false,
+                                      "multipleCi": false,
+                                      "multipleKpi": false,
+                                      "resource": [],
+                                      "modelType": 300,
+                                      "resfilltype": "parameter",
+                                      "series": {
+                                        "manual": "新建文字",
+                                        "bind": "(function (source){\n  var formatter=function(elem){\n    return elem.value\n   }\n  return source.ci.getSeries(formatter);\n})"
+                                      },
+                                      "modelDisable": true
+                                    },
+                                    "style": {
+                                      "margin": "5px",
+                                      "padding": "0",
+                                      "font-size": "16px",
+                                      "font-weight": "bold"
+                                    },
+                                    "advance": {
+                                      "getfunction": "kpiDataService.getValueList",
+                                      "category": "ci",
+                                      "condition": [
+                                        "kpi",
+                                        "{object:kpiQueryModel}"
+                                      ],
+                                      "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"查询结果\");\n        }\n    }\n}"
+                                    },
+                                    "parameters": {},
+                                    "url": "images/map/map1.png"
+                                  },
+                                  {
+                                    "label": "高级列表",
+                                    "type": "dataTableAdvance",
+                                    "source": "DATATABLEADVANCE",
+                                    "parameters": {
+                                      "col": 1,
+                                      "pageSize": 5,
+                                      "listbottom": "standard"
+                                    },
+                                    "advance": {
+                                      "expression": "expression = {\n  \"theme\": \"dark\",\n  \"on\": {\n    \"init\": function(event) {\n      var target = event.target;\n      \n      \n      \n\n      var getAllUserInfo = target.getRootScope(\"getAllUserInfo\");\n      //   点检员\n      var userId = \"\";\n      var getAllUserInfo = target.getRootScope(\"getAllUserInfo\");\n      getAllUserInfo.forEach(function(ele) {\n        if(ele.roleID) {\n          if(ele.roleID.indexOf(\"127260997560018\") > -1) {\n            userId += ele.userID+\",\";\n          }\n        }\n      })\n      \n      \n      \n      \n      //--------------------------自定义输入-----------------------------\n\n      //自定义输入\n      var Dictionary = {\n        userName: \"点检员\",\n        all: \"点检任务总数\",\n        end: \"已完成任务数\",\n        dealing: \"计划中任务数\",\n        dealreadying: \"待点检任务数\",\n        outtimeing: \"逾期任务数\",\n      };\n\n      function getTableData1(e) {\n\n        var params = {\n          \"categorys\": \"100\",\n          \"userIds\": e ? e.userID : userId,\n          \"tickeTaskStatus\": e ? e.baowuPointCheckState : \"\",\n          \"sendBeginTime\": e ? e.firstTimeFrom : moment(moment().startOf('month')).utc().format(),\n          \"sendEndTime\": e ? e.firstTimeTo :  moment(moment().endOf('month')).utc().format(),\n        };\n\n        target.getPointCheckStatis(params, function(tc) {\n     \n          var datas = [];\n          tc.forEach(function(ele) {\n            // 获取对应得人名\n            getAllUserInfo.forEach(function(elem) {\n              if(elem.userID == ele.userId) {\n                ele.userName = elem.userName;\n              }\n            })\n            // 如果结果是-1，展示“-”\n            ele.all = ele.all == \"-1\" ? \"-\" : ele.all;\n            ele.end = ele.end == \"-1\" ? \"-\" : ele.end;\n            ele.dealing = ele.dealing == \"-1\" ? \"-\" : ele.dealing;\n            ele.dealreadying = ele.dealreadying == \"-1\" ? \"-\" : ele.dealreadying;\n            ele.outtimeing = ele.outtimeing == \"-1\" ? \"-\" : ele.outtimeing;\n            datas.push(ele)\n\n          })\n          success(datas)\n        });\n      }\n\n      getTableData1()\n      //--------------------------自定义输入-----------------------------\n      //注意，下面内容别动！！！\n      function success(datas) {\n        // var render = function (advsearch) {\n        var format = [];\n        for(var i in Dictionary) {\n          var item = target.explainDic(i, Dictionary[i]);\n          format.push(item);\n        }\n\n        target.render({\n          data: datas,\n          format: format\n        });\n      };\n\n      target.on(\"queryTabelList\", function(time) {\n        getTableData1(time)\n      });\n    }\n  }\n}"
+                                    },
+                                    "style": {
+                                      "margin": "5px",
+                                      "font-size": "12px"
+                                    },
+                                    "url": "images/map/map1.png",
+                                    "echart": {}
+                                  }
+                                ]
+                              }
+                            ],
+                            "url": "images/map/map1.png"
+                          },
+                          {
+                            "label": "控制板1",
+                            "type": "block",
+                            "source": "BLOCK",
+                            "style": {
+                              "padding": "10px",
+                              "margin": "5px"
+                            },
+                            "advance": {
+                              "expression": {}
+                            },
+                            "children": [
+                              {
+                                "type": "column",
+                                "col": 12,
+                                "children": [
+                                  {
+                                    "label": "文字",
+                                    "type": "text",
+                                    "source": "TEXT",
+                                    "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                                    "data": {
+                                      "applied": false,
+                                      "multipleCi": false,
+                                      "multipleKpi": false,
+                                      "resource": [],
+                                      "modelType": 300,
+                                      "resfilltype": "parameter",
+                                      "series": {
+                                        "manual": "新建文字",
+                                        "bind": "(function (source){\n  var formatter=function(elem){\n    return elem.value\n   }\n  return source.ci.getSeries(formatter);\n})"
+                                      },
+                                      "modelDisable": true
+                                    },
+                                    "style": {
+                                      "margin": "5px",
+                                      "padding": "0",
+                                      "font-size": "16px",
+                                      "font-weight": "bold"
+                                    },
+                                    "advance": {
+                                      "getfunction": "kpiDataService.getValueList",
+                                      "category": "ci",
+                                      "condition": [
+                                        "kpi",
+                                        "{object:kpiQueryModel}"
+                                      ],
+                                      "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"结果详情\");\n        }\n    }\n}"
+                                    },
+                                    "parameters": {},
+                                    "url": "images/map/map1.png"
+                                  },
+                                  {
+                                    "label": "高级列表",
+                                    "type": "dataTableAdvance",
+                                    "source": "DATATABLEADVANCE",
+                                    "parameters": {
+                                      "col": 1,
+                                      "pageSize": 5,
+                                      "listbottom": "standard"
+                                    },
+                                    "advance": {
+                                      "expression": "expression = {\n  \"theme\": \"dark\",\n  \"on\": {\n    \"init\": function(event) {\n      var target = event.target;\n      var navigateTrigger = false;\n      // 获取设备id\n      var getAllUserInfo = target.getRootScope(\"getAllUserInfo\");\n      //   点检员\n      var userId = \"\";\n      var getAllUserInfo = target.getRootScope(\"getAllUserInfo\");\n      getAllUserInfo.forEach(function(ele) {\n        if(ele.roleID) {\n          if(ele.roleID.indexOf(\"127260997560018\") > -1) {\n            userId += ele.userID+\",\";\n          }\n        }\n      })\n\n      //--------------------------自定义输入-----------------------------\n\n      //从结果返回数据中的一组，拷贝过来作为参照，使用完之后删掉\n\n      var Dictionary = {\n        standardNo: \"点检标准编号\",\n        standardName: \"点检项目名称\",\n        customName: \"产线\",\n        deviceName: \"设备信息\",\n        deviceCode: \"设备编码\",\n        // 新增\n        handlerName: \"点检员\",\n        dataType: \"数据类别\",\n        sendTime: \"计划日期\",\n        oldPlanTime: \"原计划日期\",\n        changeReason: \"调整原因\",\n        tickeTaskStatusName: \"任务状态\"\n\n      };\n\n      function getTableData(params,pageRequest,cb) {\n\n     \n\n        target.getTicketTasksByConditionAndPage(params,pageRequest, function(tc) {\n          var datas = [];\n          var tableData = tc.data;\n          tableData.forEach(function(ele) {\n            // 两种状态（告警和任务）\n            ele.standardNo = ele.variables.standardInfo.standardNo;\n            ele.standardName = ele.variables.standardInfo.standardName;\n            ele.deviceName = ele.variables.standardInfo.deviceName;\n            ele.customName = target.getdomainNameHandler(ele.domains, [])[3];\n            ele.deviceCode = ele.variables.deviceCode;\n            ele.sendTime = useMomentFormat(ele.sendTime, \"yyyy-MM-dd\");\n            ele.dataType = ele.variables.standardInfo.pointCheckItemList[0].dataType;\n            ele.oldPlanTime = ele.variables.oldPlanTime ? useMomentFormat(ele.variables.oldPlanTime, \"yyyy-MM-dd\") : \"\";\n            ele.changeReason = ele.variables.changeReason;\n            // 判断下状态\n            if(ele.variables.ticket.values.tickeTaskStatus == \"dealreadying\") {\n              ele.tickeTaskStatusName = \"待点检\"\n            } else if(ele.variables.ticket.values.tickeTaskStatus == \"dealing\") {\n              ele.tickeTaskStatusName = \"计划中\"\n            } else if(ele.variables.ticket.values.tickeTaskStatus == \"outtimeing\") {\n              ele.tickeTaskStatusName = \"逾期\"\n            } else if(ele.variables.ticket.values.tickeTaskStatus == \"end\") {\n              ele.tickeTaskStatusName = \"已完成\"\n            }\n            datas.push(ele);\n          \n          })\n          \n          cb(tc.data,tc.total)\n\n      \n\n        });\n      }\n\n      //--------------------------自定义输入-----------------------------\n      //注意，下面内容别动！！！\n    \n\n        var render = function(datas,e) {\n            \n            \n         var params = {\n          \"categorys\": \"100\",\n          \"userIds\": e ? e.userID : userId,\n          \"sendBeginTime\": e ? e.firstTimeFrom :  moment(moment().startOf('month')).utc().format(),\n          \"sendEndTime\": e ? e.firstTimeTo :  moment(moment().endOf('month')).utc().format(),\n          variables: {\n            \"ticket.values.tickeTaskStatus\": e ? e.baowuPointCheckState : \"\", //点检状\n          }\n        };\n\n          var format = [];\n          for(var i in Dictionary) {\n            var item = target.explainDic(i, Dictionary[i]);\n            format.push(item);\n          }\n          format.push({\n            name: \"操作\",\n            type: \"valueBased\",\n            value: \"tickeTaskStatusName\",\n            options: {\n              // appName是1，2，3，4\n              \"待点检\": {\n                name: \"操作\",\n                type: \"buttonGroup\",\n                content: [{\n                  label: \"实绩登录\",\n                  icon: \"null\",\n                  class: \"btn btn-default btn-sm\",\n                  on: {\n                    click: function(elem) {\n                      if(elem.row.variables.ticketCreatorID == target.getCurrentUser().userID) {\n                        target.createSystemPopupByLocalPath(\"page1\", {\n                          width: \"1300px\",\n                          title: \"点检实绩登录\",\n                        }, elem.row);\n                      } else {\n                        target.growl(\"不具备任务操作权限\", \"warning\")\n                      }\n\n                    }\n                  }\n                }]\n              },\n              \"计划中\": {\n                name: \"操作\",\n                type: \"buttonGroup\",\n                content: [{\n                  label: \"计划详情\",\n                  icon: \"null\",\n                  class: \"btn btn-default btn-sm\",\n                  on: {\n                    click: function(elem) {\n                      target.createSystemPopupByLocalPath(\"page2\", {\n                        width: \"1300px\",\n                        title: \"点检实绩登录\",\n                      }, elem.row);\n                    }\n                  }\n                }]\n              },\n              \"逾期\": {\n                name: \"操作\",\n                type: \"buttonGroup\",\n                content: [{\n                  label: \"计划详情\",\n                  icon: \"null\",\n                  class: \"btn btn-default btn-sm\",\n                  on: {\n                    click: function(elem) {\n                      target.createSystemPopupByLocalPath(\"page2\", {\n                        width: \"1300px\",\n                        title: \"点检实绩登录\",\n                      }, elem.row);\n                    }\n                  }\n                }]\n              },\n              \"已完成\": {\n                name: \"操作\",\n                type: \"buttonGroup\",\n                content: [{\n                  label: \"点检实绩\",\n                  icon: \"null\",\n                  class: \"btn btn-default btn-sm\",\n                  on: {\n                    click: function(elem) {\n                      target.createSystemPopupByLocalPath(\"page2\", {\n                        width: \"1300px\",\n                        title: \"点检实绩登录\",\n                      }, elem.row);\n                    }\n                  }\n                }]\n              },\n\n            }\n          });\n          target.render({\n            params:params,\n            paging: getTableData,\n            data: datas,\n            format: format\n          });\n        };\n        render([]);\n    \n\n      target.on(\"queryTabelList\", function(e) {\n         render([],e);\n      });\n    }\n  }\n}"
+                                    },
+                                    "style": {
+                                      "margin": "5px",
+                                      "font-size": "12px"
+                                    },
+                                    "url": "images/map/map1.png",
+                                    "echart": {}
+                                  }
+                                ]
+                              }
+                            ],
+                            "url": "images/map/map1.png"
+                          }
+                        ]
+                      }
+                    ],
+                    "url": "images/map/map1.png"
+                  }
+                ]
+              }
+            ],
+            "url": "images/map/map1.png"
+          }
+        ],
+        "col": 12
+      },
+      "$$hashKey": "object:4711"
+    },
+    {
+      "label": "点检实绩登录弹出框",
+      "path": "page1",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var resource = target.getPopupData().variables.standardInfo;\n      var render = function () {\n        var ctrlGroups = [\n          [{\n            type: \"label\",\n            value: \"设备名称:\",\n            class: \"col-md-2\",\n            style: {\n              \"paddingLeft\": \"8%\"\n            }\n          }, {\n            type: \"label\",\n            value: resource.deviceName,\n            class: \"col-md-4\"\n          }, {\n            type: \"label\",\n            value: \"设备编号:\",\n            class: \"col-md-2\",\n            style: {\n              \"paddingLeft\": \"8%\"\n            }\n          }, {\n            type: \"label\",\n            value: resource.deviceCode,\n            class: \"col-md-4\"\n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render();\n    }\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "url": "images/map/map1.png",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          },
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var checkObj = target.getPopupData().variables.standardInfo;\n      var recordCheckObj = {};\n      var render = function () {\n        var ctrlGroups = [\n          [{\n            type: \"label\",\n            value: \"点检标准编号\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            disabled:true,\n            value: checkObj.standardNo,\n            on: {\n              change: function (elem) {\n                recordCheckObj.standardName = elem.value;\n              }\n            }\n          }, {\n            type: \"label\",\n            value: \"点检项目名称\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.standardName,\n            on: {\n              change: function (elem) {\n                recordCheckObj.standardName = elem.value;\n              }\n            }\n          }, {\n            type: \"label\",\n            value: \"油脂料号\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            disabled:true,\n            value: checkObj.fatNumber,\n            on: {\n              change: function (elem) {\n                recordCheckObj.standardName = elem.value;\n              }\n            }\n          }], [{\n            type: \"label\",\n            value: \"设备装态\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.deviceState,\n            disabled:true,\n            // class: \"col-md-4\"\n            on: {\n              change: function (elem) {\n                 recordCheckObj.standardName = elem.value;\n              }\n            }\n          }, {\n            type: \"label\",\n            value: \"实施方\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.actionUser,\n            disabled:true,\n            on: {\n              change: function (elem) {\n                recordCheckObj.standardName = elem.value;\n              }\n            }\n          }, {\n            type: \"label\",\n            value: \"安全挂牌\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.safetyPoint,\n            disabled:true,\n            on: {\n              change: function (elem) {\n                recordCheckObj.standardName = elem.value;\n              }\n            }\n          }], [{\n            type: \"label\",\n            value: \"巡检描述\",\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"textarea\",\n            colSpan: 5,\n            value: \"\",\n            on: {\n              change: function (elem) {\n                 target.setValue(\"pollingDescribe\",elem.value);\n              }\n            }\n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render();\n\n\n    }\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "url": "images/map/map1.png",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          },
+          {
+            "label": "控制板1",
+            "type": "block",
+            "source": "BLOCK",
+            "style": {
+              "padding": "5px",
+              "margin": "5px",
+              "background-color": ""
+            },
+            "advance": {
+              "expression": {}
+            },
+            "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                  {
+                    "label": "文字",
+                    "type": "text",
+                    "source": "TEXT",
+                    "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                    "data": {
+                      "applied": false,
+                      "multipleCi": false,
+                      "multipleKpi": false,
+                      "resource": [],
+                      "modelType": 300,
+                      "resfilltype": "parameter",
+                      "series": {
+                        "manual": "新建文字",
+                        "bind": "(function (source){\n  var formatter=function(elem){\n    return elem.value\n   }\n  return source.ci.getSeries(formatter);\n})"
+                      },
+                      "modelDisable": true
+                    },
+                    "style": {
+                      "margin": "5px",
+                      "padding": "0",
+                      "font-size": "16px",
+                      "font-weight": "bold"
+                    },
+                    "advance": {
+                      "getfunction": "kpiDataService.getValueList",
+                      "category": "ci",
+                      "condition": [
+                        "kpi",
+                        "{object:kpiQueryModel}"
+                      ],
+                      "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"点检项次\")\n        }\n    }\n}"
+                    },
+                    "parameters": {}
+                  },
+                  {
+                    "label": "高级列表",
+                    "type": "dataTableAdvance",
+                    "source": "DATATABLEADVANCE",
+                    "parameters": {
+                      "col": 1,
+                      "pageSize": 5,
+                      "listbottom": "standard"
+                    },
+                    "advance": {
+                      "expression": "expression = {\n  \"theme\": \"dark\",\n  \"on\": {\n    \"init\": function(event) {\n      var target = event.target;\n      var navigateTrigger = false;\n      //--------------------------自定义输入-----------------------------\n\n      //从结果返回数据中的一组，拷贝过来作为参照，使用完之后删掉\n      var pointCheckItemList = target.getPopupData().variables.standardInfo.pointCheckItemList;\n      var Dictionary = {\n        itemNumber: \"项次\",\n        itemContent: \"内容\",\n        pointCheckMethod : \"点检方法\",\n        // manageCategory:\"管理控别\",\n        // manageType: \"管理类别\",\n        dataType: \"数据类别\",\n        smoothType: \"润滑方式\",\n        smoothPoint: \"润滑点数\",\n        standard: \"标准\",\n        unit: \"计量单位\",\n        upperLimit: \"上限\",\n        lowerLimit: \"下限\",\n        // checkResult: \"点检结果\",\n        checkResult: {\n          name: \"点检结果\",\n          type: \"input\",\n          value: \"checkResult\",\n          on:{\n              change:function (elem) { \n                   pointCheckItemList.forEach(function(ele,index){\n                     if(ele.itemNumber == elem.row.itemNumber){ \n                        target.getPopupData().variables.standardInfo.pointCheckItemList[index].checkResult=elem.value;\n                     }\n                   })\n              }\n          }\n        },\n        checkState: {\n          name: \"项次判定\",\n          type: \"select\",\n        //   value: \"checkState\", //默认选择正常\n          options:[{\n              id:\"0\",\n              label:\"正常\"\n          },{\n              id:\"1\",\n              label:\"异常\"\n          }],\n          format: {\n               \"id\": \"checkState\",\n               \"label\": \"label\"\n          },\n          on:{\n              change:function (elem) {  \n                pointCheckItemList.forEach(function(ele,index){\n                    if(ele.itemNumber == elem.row.itemNumber){\n                        target.getPopupData().variables.standardInfo.pointCheckItemList[index].checkState=elem.value.id;\n                    }\n                })\n           \n              }\n          }\n        },\n        appName: {\n          name: \"完工时间\",\n          type: \"dateTimePicker\",\n          value: new Date(),\n          on:{\n              change:function (elem) {  \n           \n                pointCheckItemList.forEach(function(ele,index){ \n                    if(ele.itemNumber == elem.row.itemNumber){ \n                        \n                        target.getPopupData().variables.standardInfo.pointCheckItemList[index].finishTime=\n                        elem.value.getUTCDateString;\n                    }\n                })\n           \n              }\n          }\n        },\n        \n        uploadFile: {\n          text: \"上传\",\n          name:\"附件\",\n          type: \"uploadFile2\",\n          \n          on:{\n              submit:function (elem,fileDom, fmt,rowData) {  \n                  \n                  var resultFiles = [];\n              \n                  pointCheckItemList.forEach(function(ele,index){ \n                      if(ele.itemNumber == rowData.itemNumber){ \n                          resultFiles.push({\n                            name:elem[0].label,\n                            path:elem[0].value.qualifiedName,\n                          })\n                          target.getPopupData().variables.standardInfo.pointCheckItemList[index].resultFiles = resultFiles;\n                        }\n                  })\n                    \n              }\n          }\n        }\n      \n      };\n      \n\n      success(pointCheckItemList.map(function(elem){\n          elem.checkState = elem.checkState || 0\n          return elem\n      }));\n      \n \n      //--------------------------自定义输入-----------------------------\n      //注意，下面内容别动！！！\n      function success(datas) {\n        var render = function(advsearch) {\n          var format = [];\n          for(var i in Dictionary) {\n            var item = target.explainDic(i, Dictionary[i]);\n            format.push(item);\n          }\n          \n        //   format.push({\n        //     type: \"customHtml\",\n        //     name: \"操作\",\n        //     content: '<uploader-div/>'\n        //   });\n          \n          target.render({\n            data: datas,\n            on: {\n              rowClick: function(event) {\n                \n              }\n            },\n            format: format\n          });\n        };\n        render();\n      };\n   \n    }\n  }\n}"
+                    },
+                    "style": {
+                      "margin": "5px",
+                      "font-size": "12px"
+                    },
+                    "url": "images/map/map1.png",
+                    "echart": {}
+                  }
+                ]
+              }
+            ],
+            "url": "images/map/map1.png"
+          },
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  width: \"auto\",\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var render = function () {\n        var ctrlGroups = [\n          [{\n            type: \"button\",\n            value: \"提   交\",\n            btnclass: \"btn btn-primary\",\n            style: {\n              width: \"600\",\n              textAlign: \"right\"\n            },\n            btnStyle: {\n              \"width\": \"100px\",\n              \"border\": \"#10a4fb solid 1px\"\n            },\n            on: {\n              click: function (elem) {  \n              \n                  \n                  var params = target.getPopupData();\n                  params.values = {};\n                  params.taskStatus = 200;\n                  params.values.standardInfoResult = params.variables.standardInfo;\n                  params.values.pollingDescribe = target.getValue(\"pollingDescribe\");\n                  delete(params.variables);\n                \n                  event.target.postService(\"ticketTaskService\", \"doTask\",params , function (tc) {\n                        if (tc.code == 0) {\n                          event.target.growl(\"处理成功\", \"success\");\n                          target.trigger(\"queryTabelList1\");\n                          target.trigger(\"queryTabelList2\");\n                          target.cancel();\n                        } else {\n                          event.target.growl(tc.message, \"info\");\n                        }\n                    })\n                        \n                  \n                  \n                  \n\n              }\n            }\n          },\n            {\n              type: \"button\",\n              value: \"取   消\",\n              btnclass: \"btn btn-default\",\n              style: {\n                width: \"400\",\n                textAlign: \"left\"\n              },\n              btnStyle: {\n                \"width\": \"100px\",\n                \"border\": \"#10a4fb solid 1px\"\n              },\n              on: {\n                click: function (elem) {\n\n                  target.cancel();\n\n                }\n              }\n            }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render()\n    },\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "parameters": {
+              "cgroupstyle": "table"
+            },
+            "url": "images/map/map1.png"
+          }
+        ],
+        "col": 12
+      },
+      "id": "1",
+      "$$hashKey": "object:4718"
+    },
+    {
+      "label": "点检详情弹出框",
+      "path": "page2",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var resource = target.getPopupData().variables.standardInfo;\n      var render = function () {\n        var ctrlGroups = [\n          [{\n            type: \"label\",\n            value: \"设备名称:\",\n            class: \"col-md-2\",\n            style: {\n              \"paddingLeft\": \"8%\"\n            }\n          }, {\n            type: \"label\",\n            value: resource.deviceName,\n            class: \"col-md-4\"\n          }, {\n            type: \"label\",\n            value: \"设备编号:\",\n            class: \"col-md-2\",\n            style: {\n              \"paddingLeft\": \"8%\"\n            }\n          }, {\n            type: \"label\",\n            value: resource.deviceCode,\n            class: \"col-md-4\"\n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render();\n    }\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "url": "images/map/map1.png",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          },
+          {
+            "label": "控件组",
+            "type": "ctrlgroup",
+            "source": "CTRLGROUP",
+            "advance": {
+              "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      \n\n\n     \n      var checkObj;\n      if(target.getPopupData().values){\n        checkObj = target.getPopupData().values.standardInfoResult; \n      }else{\n        checkObj = target.getPopupData().variables.standardInfo;   \n      }\n\n      var render = function () {\n        var ctrlGroups = [\n          [{\n            type: \"label\",\n            value: \"点检标准编号\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            disabled:true,\n            value: checkObj.standardNo,\n         \n          }, {\n            type: \"label\",\n            value: \"点检项目名称\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.standardName,\n            disabled:true,\n          }, {\n            type: \"label\",\n            value: \"油脂料号\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            disabled:true,\n            value: checkObj.fatNumber,\n          \n          }], [{\n            type: \"label\",\n            value: \"设备装态\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.deviceState,\n            disabled:true,\n         \n          }, {\n            type: \"label\",\n            value: \"实施方\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.actionUser,\n            disabled:true,\n           \n          }, {\n            type: \"label\",\n            value: \"安全挂牌\",\n            composory: true,\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"input\",\n            value: checkObj.safetyPoint,\n            disabled:true,\n           \n          }], [{\n            type: \"label\",\n            value: \"巡检描述\",\n            style:{\n                \"textAlign\":\"center\"\n            }\n          }, {\n            type: \"textarea\",\n            colSpan: 5,\n            value: target.getPopupData().values?target.getPopupData().values.pollingDescribe:\"\",\n            disabled:true,\n           \n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render();\n\n\n    }\n  }\n}"
+            },
+            "style": {
+              "margin": "5px",
+              "font-size": "12px"
+            },
+            "help": "../pdf/ctrlgroup.pdf",
+            "url": "images/map/map1.png",
+            "parameters": {
+              "cgroupstyle": "table"
+            }
+          },
+          {
+            "label": "控制板1",
+            "type": "block",
+            "source": "BLOCK",
+            "style": {
+              "padding": "5px",
+              "margin": "5px",
+              "background-color": ""
+            },
+            "advance": {
+              "expression": {}
+            },
+            "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                  {
+                    "label": "文字",
+                    "type": "text",
+                    "source": "TEXT",
+                    "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                    "data": {
+                      "applied": false,
+                      "multipleCi": false,
+                      "multipleKpi": false,
+                      "resource": [],
+                      "modelType": 300,
+                      "resfilltype": "parameter",
+                      "series": {
+                        "manual": "新建文字",
+                        "bind": "(function (source){\n  var formatter=function(elem){\n    return elem.value\n   }\n  return source.ci.getSeries(formatter);\n})"
+                      },
+                      "modelDisable": true
+                    },
+                    "style": {
+                      "margin": "5px",
+                      "padding": "0",
+                      "font-size": "16px",
+                      "font-weight": "bold"
+                    },
+                    "advance": {
+                      "getfunction": "kpiDataService.getValueList",
+                      "category": "ci",
+                      "condition": [
+                        "kpi",
+                        "{object:kpiQueryModel}"
+                      ],
+                      "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"点检项次\")\n        }\n    }\n}"
+                    },
+                    "parameters": {}
+                  },
+                  {
+                    "label": "高级列表",
+                    "type": "dataTableAdvance",
+                    "source": "DATATABLEADVANCE",
+                    "parameters": {
+                      "col": 1,
+                      "pageSize": 5,
+                      "listbottom": "standard"
+                    },
+                    "advance": {
+                      "expression": "expression = {\n  \"theme\": \"dark\",\n  \"on\": {\n    \"init\": function(event) {\n      var target = event.target;\n      var navigateTrigger = false;\n      //--------------------------自定义输入-----------------------------\n \n      var pointCheckItemList = target.getPopupData().variables.standardInfo.pointCheckItemList;\n    //   if(target.getPopupData().values){\n    //     pointCheckItemList = target.getPopupData().values.standardInfoResult.pointCheckItemList; \n    //   }else{\n    //     pointCheckItemList = target.getPopupData().variables.standardInfo.pointCheckItemList;   \n    //   }\n\n      //从结果返回数据中的一组，拷贝过来作为参照，使用完之后删掉\n \n\n\n      var Dictionary = {\n        itemNumber: \"点检标准项次\",\n        itemContent: \"内容\",\n        pointCheckMethod : \"点检方法\",\n        // manageCategory:\"管理控别\",\n        // manageType: \"管理类别\",\n        dataType: \"数据类别\",\n        smoothType: \"润滑方式\",\n        smoothPoint: \"润滑点数\",\n        standard: \"标准\",\n        unit: \"计量单位\",\n        upperLimit: \"上限\",\n        lowerLimit: \"下限\",\n        checkResult: \"点检结果\",\n        checkState:\"项次判定\",\n      \n        \n        resultFiles: {\n           type : \"link\",\n           value : \"fileName\",\n           linkage : \"filePath\",\n           name : \"附件\"\n       },\n      \n      };\n      \n      pointCheckItemList.forEach(function(elem){ \n          if(elem.resultFiles&&elem.resultFiles.length>0){ \n          \n                elem.fileName = elem.resultFiles[0].name;\n                elem.filePath = elem.resultFiles[0].path; \n          }\n          \n        \n    \n          if(elem.checkState==1){\n             elem.checkState = \"异常\"\n          }else if(elem.checkState==0){\n             elem.checkState = \"正常\"\n          }else{\n              elem.checkState = \"\" \n          }\n      })\n      \n      \n\n\n      success(pointCheckItemList);\n      \n \n      //--------------------------自定义输入-----------------------------\n      //注意，下面内容别动！！！\n      function success(datas) {\n        var render = function(advsearch) {\n          var format = [];\n          for(var i in Dictionary) {\n            var item = target.explainDic(i, Dictionary[i]);\n            format.push(item);\n          }\n          \n        //   format.push({\n        //     type: \"customHtml\",\n        //     name: \"操作\",\n        //     content: '<uploader-div/>'\n        //   });\n          \n          target.render({\n            data: datas,\n            on: {\n              rowClick: function(event) {\n                \n              }\n            },\n            format: format\n          });\n        };\n        render();\n      };\n \n    }\n  }\n}"
+                    },
+                    "style": {
+                      "margin": "5px",
+                      "font-size": "12px"
+                    },
+                    "url": "images/map/map1.png",
+                    "echart": {}
+                  }
+                ]
+              }
+            ],
+            "url": "images/map/map1.png"
+          }
+        ],
+        "col": 12
+      },
+      "id": "2",
+      "$$hashKey": "object:4724"
+    }
+  ],
+  "setting": "{\n  \"theme\": \"default\"\n}"
+}

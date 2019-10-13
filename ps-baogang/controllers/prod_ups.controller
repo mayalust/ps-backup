@@ -1,0 +1,400 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-20 top">
+          <div class="topo with-border">
+            <ps-topo-common></ps-topo-common>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="block device-height">
+          <div
+            class="tree-loading ng-scope"
+            ng-if="!loaded"
+            data-a-58306b0e=""
+          ></div>
+          <h5>模拟量监测</h5>
+          <div class="row">
+            <div class="col-md-4 item" ng-repeat="kpi in kpiData">
+              <div class="kpi-item">
+                <div class="item-left">
+                  <span ng-bind="kpi.kpiName"></span>
+                </div>
+                <div class="kpi-right">
+                  <span
+                    class="click"
+                    ng-bind="kpi.value"
+                    ng-click="kpi.click()"
+                    ng-style="kpi.getAlertState()"
+                    data-show-time="kpi.arisingTime"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="block device-height">
+          <div
+            class="tree-loading ng-scope"
+            ng-if="!loaded"
+            data-a-58306b0e=""
+          ></div>
+          <h5>设备状态</h5>
+          <div class="row">
+            <div class="col-md-4 item" ng-repeat="kpi in kpiDataDevice">
+              <div class="kpi-item">
+                <div class="item-left">
+                  <span ng-bind="kpi.kpiName"></span>
+                </div>
+                <div class="kpi-right">
+                  <span
+                    class="click"
+                    ng-bind="kpi.getStateName()"
+                    ng-click="kpi.click()"
+                    ng-style="kpi.getAlertState()"
+                    data-show-time="kpi.arisingTime"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="block margin-5 padding-5">
+          <h5>报警通知</h5>
+          <div class="low with-border">
+            <ps-alert-info></ps-alert-info>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="block margin-5 padding-5">
+          <h5>离线诊断</h5>
+          <div class="low with-border">
+            <ps-online-diagnose></ps-online-diagnose>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  let dataMap = new Map(),
+    kpiDic = {},
+    ws = psWebsocket("prod_ups");
+  function toFixed(num, flt) {
+    return Math.floor(num * Math.pow(10, flt)) / Math.pow(10, flt);
+  }
+  class DataItem {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+      this.value = "-";
+      ws.on(state.params.id, this.dataItemId, (d, dt) => {
+        scope.$apply(() => {
+          let { kpiCode, value, arisingTime } = dt;
+          this.value = value + kpiDic[kpiCode];
+          this.arisingTime = arisingTime;
+        });
+      });
+    }
+    getStateName() {
+      return ["正常", "告警", "异常"][this.state] || "正常";
+    }
+    click() {
+      let enddate = this.arisingTime && new Date(this.arisingTime) - 0,
+        startdate = enddate && enddate - 2 * 60 * 60 * 1000;
+      cms2.navigateTo("专业分析", {
+        startdate,
+        enddate,
+        id: state.params.id,
+        sensor: this.instance,
+        dataItems: this.dataItemId
+      });
+    }
+    getAlertState() {
+      let color = ["#efd709", "#ee6b1c", "e74e53"][this.state - 2] || "#00bc79";
+      return {
+        "background-color": color
+      };
+    }
+  }
+  class Robot {
+    constructor(id) {
+      this.id = id;
+    }
+    getUnits() {
+      return ajax.post("unitService.getAllUnits").then(units => {
+        this.unitsMap = units.reduce((a, b) => {
+          a[b.unitCode] = b.unitName;
+          return a;
+        }, {});
+        return cms2.success();
+      });
+    }
+    getKpisByModelId(modelId) {
+      return this.getUnits().then(() => {
+        ajax.post("resourceUIService.getKpisByModelId", modelId).then(kpis => {
+          kpis.forEach(d => {
+            kpiDic[d.id] = this.unitsMap[d.unit] || "";
+          });
+          return cms2.success();
+        });
+      });
+    }
+    getResource(id) {
+      this.resourcePromise =
+        this.resourcePromise ||
+        psTreeData(this.id)
+          .getState()
+          .then(resource => {
+            return this.getKpisByModelId(resource.modelId).then(() => {
+              return cms2.success(resource);
+            });
+          });
+      return this.resourcePromise;
+    }
+    getDataItems() {
+      this.dataItemsPromise =
+        this.dataItemsPromise ||
+        this.getResource().then(resource => {
+          return resource.getMeasureLocate().then(sensors => {
+            this.sensors = sensors;
+            let arr = sensors
+              .map(sensor => {
+                let kpis = sensor.kpis;
+                return kpis.map(fd => {
+                  if (!fd) {
+                    return;
+                  }
+                  fd.instance = sensor.name;
+                  // fd.label = sensor.label;
+                  return new DataItem(fd);
+                });
+              })
+              .filter(d => d);
+            arr.sort(function(a, b) {
+              return a.instance > b.instance ? 1 : -1;
+            });
+            return cms2.success(arr);
+          });
+        });
+      return this.dataItemsPromise;
+    }
+    getKpiValueList() {
+      this.valuelistPromise =
+        this.valuelistPromise ||
+        this.getDataItems().then(d => {
+          let combine = d[0].concat(d[1]);
+          let nodeIds = [state.params.id * 1],
+            kpiCodes = combine.filter(({ dataItemId }) => dataItemId),
+            instances = Array.from(
+              d.reduce((a, b) => {
+                a.add(b.instance);
+                return a;
+              }, new Set())
+            ).join(","),
+            params = [
+              "kpi",
+              {
+                includeInstance: true,
+                isRealTimeData: true,
+                nodeIds: [state.params.id * 1],
+                //queryInstance: this.sensors.map(d => d.name).join(","),
+                kpiCodes: Array.from(
+                  kpiCodes.reduce((a, b) => {
+                    a.add(b.dataItemId);
+                    return a;
+                  }, new Set())
+                ).concat([999999])
+              }
+            ];
+          return ajax.post("kpiDataFlexService.getKpiValueList", params);
+        });
+      return this.valuelistPromise;
+    }
+  }
+
+  let robot = new Robot(state.params.id);
+
+  robot.getDataItems().then(d => {
+    // scope.kpiData = d;
+    setTimeout(() => {
+      let height = 0,
+        sameHeight = $(".device-height");
+      sameHeight.each((index, element) => {
+        let h = element.clientHeight;
+        height = h > height ? h : height;
+      });
+      sameHeight.height(height);
+    });
+    let combine = d[0].concat(d[1]);
+    scope.kpiData = d[1];
+    scope.kpiDataDevice = d[0];
+    scope.kpiValueListMap = combine.reduce((a, b) => {
+      a[b.instance] = a[b.instance] || {};
+      a[b.instance][b.dataItemId] = b;
+      a[b.instance][999999] = b;
+      return a;
+    }, {});
+    ws.send(
+      [state.params.id * 1],
+      combine.map(n => n.dataItemId).concat([999999])
+    );
+  });
+
+  robot.getKpiValueList().then(d => {
+    scope.loaded = true;
+    let map = scope.kpiValueListMap;
+    d.forEach(n => {
+      let instance = n.instance,
+        kpiCode = n.kpiCode;
+      if (map[instance] && map[instance][kpiCode]) {
+        if (kpiCode == 999999) {
+          map[instance][999999].state = n.value;
+        } else {
+          let v = n.value - 0,
+            u = kpiDic[kpiCode] || "";
+          map[instance][kpiCode].value =
+            typeof v != null ? toFixed(v, 2) + u : "-";
+          map[instance][kpiCode].arisingTime = n.arisingTime;
+        }
+      }
+    });
+  });
+}
+</script>
+<style lang="less" scoped>
+.topo {
+  min-height: 360px;
+  position: relative;
+}
+.head {
+  display: table;
+  background-color: rgba(250, 250, 250, 0.2);
+  width: 100%;
+  text-align: center;
+  .appendix {
+    width: 30px;
+    padding: 2px 10px 2px 0px;
+    display: table-cell;
+  }
+}
+.click {
+  cursor: pointer;
+  margin-right: 10px;
+  width: 60px;
+  display: inline-block;
+  border-radius: 8px;
+  background: #00bb7b;
+  text-align: center;
+  color: white;
+  border: 0;
+  &.state-1 {
+    background-color: #00bb7b;
+  }
+
+  &.state-2 {
+    background-color: #efd80b;
+  }
+
+  &.state-3 {
+    background-color: #ff8800;
+  }
+
+  &.state-4 {
+    background-color: #fd0001;
+  }
+}
+.kpi-item {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  .item-left {
+    padding-right: 3px !important;
+    text-align: right;
+  }
+  .kpi-right {
+    padding: 2px 10px 2px 0px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 75px;
+  }
+}
+.t-content {
+  display: table;
+  width: 100%;
+  vertical-align: middle;
+  .appendix {
+    width: 30px;
+    display: table-cell;
+    vertical-align: middle;
+    .circle {
+      margin: 0px auto;
+      width: 15px;
+      height: 15px;
+      border-radius: 10px;
+      background-color: #00bb7b;
+    }
+  }
+}
+.device-height {
+  min-height: 250px;
+}
+.wrap {
+}
+.block {
+  margin: 5px;
+}
+.item {
+  padding: 5px !important;
+}
+.plugin {
+  width: "100%";
+  height: 200px;
+}
+.top {
+  min-height: 300px;
+  position: relative;
+}
+.low {
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.art {
+  height: 483px;
+}
+.wrap {
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

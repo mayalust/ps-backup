@@ -1,0 +1,876 @@
+<config injector="$rootScope,$q,$state,ajax,resourceUIService,kpiDataService,psWebsocket,psConfig"></config>
+<script>
+/** mainCtrlRm" **/
+export default function(
+  rootScope,
+  q,
+  $state,
+  ajax,
+  resourceUIService,
+  kpiDataService,
+  psWebsocket,
+  psConfig
+) {
+  let map,
+    deviceMap,
+    root,
+    timer,
+    observer,
+    time = new Date(),
+    isArray = isType("Array"),
+    userdefer = q.defer(),
+    getId = d => d.id,
+    webSocket,
+    alertStatusPromise,
+    inclosedMap,
+    measureLocationCached = createCached(),
+    alertsMap = createCached(),
+    structrureDone = resourceUIService.deviceLoader().then(devices => {
+      return incloseDeviceLoader().then(inclosed => {
+        inclosedMap = inclosed.reduce((a, b) => {
+          a[b.id] = true;
+          return a;
+        }, {});
+        //
+        return getResByModelIds([300, 301, 302]).then(d => {
+          let remapedDevice = remap(devices),
+            resources = d.reduce(collapse, remapedDevice);
+          map = getMap(resources);
+          deviceMap = getDeviceMap(remapedDevice);
+          root = resources
+            .filter(r => {
+              if (r.modelId < 1000 || inclosedMap[r.id]) {
+                return true;
+              }
+            })
+            .reduce((a, b) => {
+              let fd = findParentDevice(b);
+              fd
+                ? insertNode((fd.children = fd.children || []), b, insertMethod)
+                : a.push(b);
+              return a;
+            }, []);
+          return success(root);
+        });
+      });
+    }),
+    loopGetState,
+    startLoop = () => {
+      let recursive = callback => {
+        loopGetState = () => {
+          getAlerts(keys(map)).then(alerts => {
+            alerts.forEach(alert => {
+              callback && callback.call(this, alert);
+            });
+            timer = setTimeout(() => {
+              loopGetState && loopGetState.call(this);
+            }, 6000);
+          });
+        };
+        loopGetState && loopGetState.call(this);
+      };
+      recursive(({ nodeId, value }) => {
+        observer.emit(nodeId, value);
+      });
+    },
+    endLoop = () => {
+      loopGetState = null;
+      clearTimeout(timer);
+      timer = null;
+    },
+    webSocketStarted = structrureDone.then(root => {
+      let nodeIds = keys(map);
+      webSocket = psWebsocket("treenavigate");
+      webSocket.send(nodeIds, [999999]);
+      return success(webSocket);
+    });
+  function incloseDeviceLoader() {
+    return userdefer.promise.then(user => {
+      let params = {},
+        currentRoleID = user.currentRoleID || 0,
+        roleFunctionCodeMap = user.roleFunctionCodeMap || {},
+        menuitems = roleFunctionCodeMap[currentRoleID] || [],
+        vals = (function(menuitems) {
+          if (menuitems.indexOf("F08_01") !== -1) return {};
+          if (menuitems.indexOf("F08_03") !== -1)
+            return { diagnosticType: "90" };
+          if (menuitems.indexOf("F08_06") !== -1)
+            return { diagnosticType: "280" };
+          if (menuitems.indexOf("F08_02") !== -1)
+            return { diagnosticType: { NOT_IN: ["90", "280"] } };
+        })(menuitems);
+      params.values = vals;
+      return ajax.post(
+        "resourceUIService.getDevicesByCondition?includeFields=id",
+        params
+      );
+    });
+  }
+  function isType(type) {
+    return function(target) {
+      return {}.toString.call(target) === `[object ${type}]`;
+    };
+  }
+  function str2json(str) {
+    let rs = null;
+    try {
+      rs = JSON.parse(str);
+    } catch (e) {
+      console.warn(e);
+      return rs;
+    }
+    return rs;
+  }
+  function success(d) {
+    let defer = q.defer();
+    defer.resolve(d);
+    return defer.promise;
+  }
+  function failure(d) {
+    let defer = q.defer();
+    defer.reject(d);
+    return defer.promise;
+  }
+  function eachProp(d, callback) {
+    for (let i in d) {
+      callback(d[i], i);
+    }
+  }
+  function getAlerts(nids) {
+    let defer = q.defer(),
+      time = new Date(),
+      param = {
+        nodeIds: nids.map(d => d - 0),
+        kpiCodes: [999999]
+      };
+    kpiDataService.getKpiValList(
+      param,
+      d => {
+        if (d.code + "" === "0") {
+          d.data.forEach(({ nodeId, value }) => {
+            alertsMap(nodeId, value);
+          });
+          defer.resolve(d.data);
+        } else {
+          defer.reject(d);
+        }
+      },
+      "includeFields=nodeId,value"
+    );
+    return defer.promise;
+  }
+  function createCached() {
+    let keys = [];
+    let cached = function(key, value) {
+      if (typeof value === "undefined") {
+        return cached["_" + key];
+      } else {
+        keys.push(key);
+        cached["_" + key] = value;
+      }
+    };
+    cached.keys = d => keys;
+    return cached;
+  }
+  function findParentDevice(resource) {
+    if (typeof resource == "undefined" || resource === null) {
+      console.warn("cannot find parent node for null or undefined");
+      return;
+    }
+    let item,
+      extId = resource.extId,
+      parentID = resource.parentID;
+    extId = extId ? extId.split("/") : [];
+    while (extId.pop()) {
+      item = deviceMap["/" + extId.join("/")];
+      if (item && item.parentID == parentID) {
+        return item;
+      }
+    }
+    return map[resource.parentID];
+  }
+  function getResourceByModelId(modelId) {
+    let defer = q.defer(),
+      time = new Date(),
+      query =
+        "includeFields=" +
+        ["parentID", "label", "id", "values.number", "domainPath"].join(",");
+    //
+    resourceUIService.getResourceByModelId(
+      modelId,
+      d => {
+        if (d.code + "" === "0") {
+          //
+          defer.resolve(
+            d.data.map(d => {
+              d.modelId = modelId;
+              return d;
+            }) || []
+          );
+        } else {
+          defer.reject(d);
+        }
+      },
+      query
+    );
+    return defer.promise;
+  }
+  function getAttrsByModelId(modelId, callback) {
+    let defer = q.defer();
+    rootScope.cacheAllData.on("getAllAttrs", () => {
+      resourceUIService.modelLoader().then(models => {
+        let attrs = models[modelId].attrs;
+        defer.resolve(attrs);
+      });
+    });
+    return defer.promise;
+  }
+  function getResourceByIds(ids) {
+    return structrureDone.then(root => {
+      let getMapData = id => map[id] && map[id].getPromise(),
+        cached = ids.filter(getMapData).map(getMapData),
+        restIds = ids.filter(id => !(map[id] && map[id].getPromise())),
+        prms = createPromise(restIds);
+      return Promise.all(
+        cached.concat(
+          restIds.map(id => {
+            map[id]
+              ? map[id].setPromise(
+                  prms.then(ids => {
+                    return success(map[id].getData());
+                  })
+                )
+              : null;
+            return map[id] && map[id].getPromise();
+          })
+        )
+      );
+      function createPromise(ids) {
+        let defer = q.defer();
+        resourceUIService.getResourceByIds(ids, d => {
+          let rs = [];
+          eachProp(d, (elem, attr) => {
+            if (map[attr] == null) {
+              console.warn(`${attr} is not set!!`);
+            } else {
+              map[attr].setData(elem);
+            }
+            rs.push(elem);
+          });
+          defer.resolve(rs);
+        });
+        return defer.promise;
+      }
+    });
+  }
+  function createCacheData(obj) {
+    let data, promise;
+    class cacheData {
+      constructor(obj) {
+        extend(this, obj);
+      }
+      getData() {
+        return data;
+      }
+      setPromise(p) {
+        promise = p;
+      }
+      getPromise() {
+        return promise;
+      }
+      setData(d) {
+        data = d;
+      }
+    }
+    return new cacheData(obj);
+  }
+  function getMap(arr) {
+    let obj = {};
+    arr.forEach(n => {
+      obj[n.id] = n;
+    });
+    return obj;
+  }
+  function getDeviceMap(arr) {
+    let obj = {};
+    arr.forEach(n => {
+      let extId = n.extId;
+      extId ? (obj["/" + extId] = n) : null;
+    });
+    return obj;
+  }
+  function remap(arr) {
+    function toPath(str) {
+      let arr = [str.substring(0, 6)],
+        item;
+      str = str.substring(6);
+      while ((item = str.substring(0, 3))) {
+        arr.push(item);
+        str = str.substring(3);
+      }
+      return arr;
+    }
+    return arr.map(d => {
+      let match = /\/(\d+)\/$/.exec(d.domains),
+        extId = toPath(d.externalDevId),
+        pid = match[1];
+      d.extId = extId.join("/");
+      d.parentID = pid;
+      return createCacheData(d);
+    });
+  }
+  function insertNode(arr, elem, rule) {
+    let item,
+      stacks = [],
+      len = arr.length;
+    while ((item = arr.pop())) {
+      let order = rule(item, elem);
+      if (order > 0) {
+        stacks.unshift(item);
+      } else {
+        arr.push(item);
+        break;
+      }
+    }
+    [].push.apply(arr, [elem, ...stacks]);
+    if (len !== arr.length - 1) {
+      throw new Error("wrong" + len + "," + arr.length);
+    }
+  }
+  function insertMethod(a, b) {
+    let externalDevId1 = a.externalDevId,
+      externalDevId2 = b.externalDevId,
+      num1 = (a.values && a.values.number) + "" - 0,
+      num2 = (b.values && b.values.number) + "" - 0,
+      title1 = format(a.label),
+      title2 = format(b.label);
+    function addZero(num) {
+      let rs = "";
+      for (let i = 0; i < 9 - num.length; i++) {
+        rs += "0";
+      }
+      return rs + num;
+    }
+    function format(str) {
+      let rs = "",
+        match;
+      while ((match = /\d+/.exec(str))) {
+        rs += str.slice(0, match.index) + addZero(match[0]);
+        str = str.slice(match.index + match[0].length);
+      }
+      return rs + str;
+    }
+    if (externalDevId1 && externalDevId2) {
+      return externalDevId1 < externalDevId2 ? -1 : 1;
+    }
+    if (num1 === num1 || num2 === num2) {
+      num1 = num1 === num1 ? num1 : 1 / 0;
+      num2 = num2 === num2 ? num2 : 1 / 0;
+      return num1 < num2 ? -1 : 1;
+    }
+    return title1 < title2 ? -1 : 1;
+  }
+  function loadQueue(queue, callback, rs) {
+    let item;
+    rs = rs || [];
+    if ((item = queue.shift())) {
+      return callback(item).then(d => {
+        rs.push(d);
+        return loadQueue(queue, callback, rs);
+      });
+    } else {
+      return success(rs);
+    }
+  }
+  function recursive(arr, callback) {
+    let createItem = (node, index, level, parent, parentlist) => {
+        return {
+          node,
+          index,
+          level,
+          parent,
+          parentlist
+        };
+      },
+      queue = arr.map((d, i) => {
+        return createItem(d, i, 0, null, arr);
+      }),
+      item;
+    stop = stop || (d => true);
+    while ((item = queue.shift())) {
+      let { node, index, level, parent, parentlist } = item,
+        children = node.children || [],
+        stop = callback(node, index, level, parent, parentlist);
+      if (stop === true) {
+        return;
+      }
+      [].push.apply(
+        queue,
+        children.map((d, i) => {
+          return createItem(d, i, item.level + 1, node, children);
+        })
+      );
+    }
+  }
+  function collapse(a, b) {
+    let item,
+      queue = isArray(b) ? b : [];
+    while ((item = queue.shift())) {
+      if (isArray(item)) {
+        [].push.apply(queue, item);
+      } else {
+        a.push(createCacheData(item));
+      }
+    }
+    return a;
+  }
+  function extend(a, b) {
+    for (let i in b) {
+      a[i] = b[i];
+    }
+    return a;
+  }
+  function keys(obj) {
+    let rs = [];
+    for (let i in obj) {
+      obj.hasOwnProperty(i) ? rs.push(i) : null;
+    }
+    return rs;
+  }
+  function getResByModelIds(modeIds) {
+    return loadQueue(modeIds, function(modelId) {
+      return getResourceByModelId(modelId);
+    });
+  }
+  function getValidId(id, type) {
+    id = id || 0;
+    return structrureDone.then(d => {
+      if (type === "device") {
+        if (map[id].modelId < 1000) {
+          return getFirstDevice(id);
+        }
+      }
+      return getResourceByIds([id]).then(res => {
+        return success(new treeData(res[0]));
+      });
+    });
+  }
+  function getFirstDevice() {
+    return structrureDone.then(d => {
+      let rs = root[0];
+      while (rs.children && rs.children[0]) {
+        rs = rs.children[0];
+      }
+      return getResourceByIds([rs.id]).then(res => {
+        return success(new treeData(res[0]));
+      });
+    });
+  }
+  function getAlertState() {
+    return (
+      alertStatusPromise ||
+      (alertStatusPromise = structrureDone
+        .then(d => {
+          return getAlerts(keys(map));
+        })
+        .then(alerts => {
+          alerts.forEach(({ nodeId, value }) => {
+            let item = map[nodeId],
+              state;
+            item.status = item.state = value;
+            while ((item = findParentDevice(item))) {
+              if (item.modelId < 1000) {
+                return;
+              }
+              state = item.state || item.status || 0;
+              item.status = item.state = state < value ? value : state;
+            }
+          });
+          return success(root.map(n => new treeData(n)));
+        }))
+    );
+  }
+  function treeDataService(id) {
+    return new treeData((map && map[id]) || id);
+  }
+  function getCurrentRes() {
+    let id = $state.params.id;
+    return structrureDone.then(d => {
+      return new treeData(id).getState();
+    });
+  }
+  function getMeasurePointData(queue) {
+    let item,
+      rs = [];
+    queue = isArray(queue) ? queue : [queue];
+    function allObj(obj) {
+      let arr = [],
+        i;
+      for (i in obj) {
+        if (typeof obj[i] !== "object") {
+          return false;
+        }
+        arr.push(obj[i]);
+      }
+      return arr;
+    }
+    while ((item = queue.shift())) {
+      if (isArray(item)) {
+        [].push.apply(queue, item);
+      } else {
+        let arr = allObj(item);
+        if (arr) {
+          [].push.apply(queue, arr);
+        } else {
+          rs.push(item);
+        }
+      }
+    }
+    return rs;
+  }
+  function getMeasureLocate(res) {
+    let kpis = res.physicalConfig && res.physicalConfig.accessConfigs,
+      MeasurePointLocate =
+        str2json(res.values && res.values.MeasurePointLocate) || [];
+    MeasurePointLocate = getMeasurePointData(MeasurePointLocate).map(point => {
+      point.kpis = kpis.filter(({ instance }) => instance == point.name);
+      return point;
+    });
+    measureLocationCached(res.id, MeasurePointLocate);
+    return success(MeasurePointLocate);
+  }
+  function getMeasurePointLocate() {
+    return getCurrentRes().then(res => {
+      if (measureLocationCached(res.id)) {
+        return success(measureLocationCached(res.id));
+      }
+      let kpis = res.physicalConfig && res.physicalConfig.accessConfigs,
+        MeasurePointLocate =
+          str2json(res.values && res.values.MeasurePointLocate) || [];
+      MeasurePointLocate = getMeasurePointData(MeasurePointLocate).map(
+        point => {
+          point.kpis = kpis.filter(
+            ({ instance, dataItemId }) =>
+              instance == point.name &&
+              dataItemId != 212000 &&
+              dataItemId != 213000 &&
+              dataItemId != 214000 &&
+              dataItemId != 211000
+          );
+          return point;
+        }
+      );
+      measureLocationCached(res.id, MeasurePointLocate);
+      return success(MeasurePointLocate);
+    });
+  }
+  function getGeneral() {
+    return getMeasurePointLocate().then(MeasurePointLocate => {
+      return success(MeasurePointLocate.find(({ name }) => name === "00"));
+    });
+  }
+  function getSensors() {
+    return getMeasurePointLocate().then(MeasurePointLocate => {
+      return success(
+        MeasurePointLocate.filter(({ name }) => {
+          if (name == "00") {
+            return false;
+          }
+          if (name - 0 !== name - 0) {
+            return true;
+          }
+          return name < 1000;
+        })
+      );
+    });
+  }
+  function getResourceById(id) {
+    return structrureDone.then(() => {
+      let promise = map[id] && map[id].getPromise();
+      if (!promise) {
+        map[id].setPromise(
+          (function() {
+            let defer = q.defer();
+            resourceUIService.getResourceById(id, e => {
+              e.code == 0 ? defer.resolve(e.data) : defer.reject(e);
+            });
+            return defer.promise;
+          })()
+        );
+      }
+      return map[id].getPromise();
+    });
+  }
+  function getPath(domainPath) {
+    let length = domainPath.split("/").length - 4,
+      dics = ["index", "navigate", "factory", "production", "devicegroup"];
+    return dics[length] || "devicegroup";
+  }
+  function showTree(modelId, domainPath) {
+    if (modelId > 1000) {
+      return 1;
+    }
+    let length = domainPath.split("/").length - 4;
+    return (length > 3) - 0;
+  }
+  class Observer {
+    constructor() {
+      this.events = {};
+    }
+    on(name, callback) {
+      let arr = (this.events[name] = this.events[name] || []);
+      arr.push(callback);
+      return () => {
+        this.events[name] = arr.filter(d => d !== callback);
+      };
+    }
+    emit(name, data) {
+      let fns = this.events[name] || [];
+      fns.forEach(fn => {
+        fn && fn.call(this, data);
+      });
+    }
+  }
+  observer = new Observer();
+  class treeData {
+    constructor(id) {
+      if (typeof id === "object") {
+        extend(this, id);
+      } else {
+        this.id = id;
+      }
+    }
+    showTree() {
+      if (this.modelId > 1000) {
+        return 1;
+      }
+      let length = this.domainPath.split("/").length - 4;
+      return (length > 3) - 0;
+    }
+    find(callback) {
+      let node;
+      recursive([map[this.id]], (n, i, l, p, pl) => {
+        if (callback(n, i, l, p, pl)) {
+          node = n;
+          return true;
+        }
+      });
+      return node ? new treeData(node).getState() : success(null);
+    }
+    getPathLocation() {
+      return this.getPathAndShowTreeLocation().then(
+        ({ showTree, location }) => {
+          return success(location);
+        }
+      );
+    }
+    getMeasureLocate() {
+      return this.getState().then(res => {
+        return getMeasureLocate(res);
+      });
+    }
+    getPathAndShowTreeLocation(mainTab) {
+      const nameDic = {
+          motor: "motor",
+          electric: "electri"
+        },
+        ctrlNameDic = {
+          mainCtrlRm: "mainCtrlRm",
+          convoyer: "convoyer",
+          wind1: "battery",
+          reality: "reality",
+          screen: "electrical_cabinet",
+          rollerGroup: "rollerGroup",
+          steel_dedust: "steel_dedust",
+          wind: "wind",
+          steel_machine: "steel_machine",
+          robot: "robot",
+          UPS: "ups",
+          ups: "ups",
+          zhiliuping: "ups"
+        };
+      return psConfig.getRoleValues().then(configValues => {
+        let tabs = configValues.children,
+          tab = mainTab || tabs[rootScope.main_active_index || 0] || {};
+        return getResourceById(this.id).then(
+          ({ modelId, domainPath, values }) => {
+            return (modelId > 1000
+              ? getAttrsByModelId([modelId]).then(attrs => {
+                  let viewType = attrs.find(({ name }) => name == "viewType");
+                  return success(viewType || {});
+                })
+              : success({})
+            ).then(viewType => {
+              let vt = values["viewType"] || (viewType && viewType.sourceValue);
+              if (tab.viewId == "177280852260000") {
+                let path = ctrlNameDic[vt];
+                if (path) {
+                  return success({
+                    showTree: 1,
+                    controller: path,
+                    defaultNav: false
+                  });
+                }
+
+                path = nameDic[vt];
+                if (modelId > 1000) {
+                  if (path == null) {
+                    return success({
+                      showTree: 1,
+                      controller: "device",
+                      defaultNav: false
+                    });
+                  } else {
+                    return success({
+                      showTree: 1,
+                      location: path,
+                      defaultNav: false
+                    });
+                  }
+                } else {
+                  if (getPath(domainPath) == "devicegroup") {
+                    return success({
+                      showTree: 1,
+                      controller: "devicegroup",
+                      defaultNav: false
+                    });
+                  }
+                  return success({
+                    showTree: showTree(modelId, domainPath),
+                    location: getPath(domainPath),
+                    defaultNav: false
+                  });
+                }
+                /*  */
+              } else {
+                return success({
+                  showTree: showTree(modelId, domainPath),
+                  location: "index",
+                  defaultNav: tab.name == "专业分析" && values.analiticalType
+                });
+              }
+            });
+          }
+        );
+      });
+    }
+    getPath() {
+      let length = this.domainPath.split("/").length - 4,
+        dics = [
+          "index",
+          "navigate",
+          "factory",
+          "production",
+          "devicegroup",
+          "virtual"
+        ];
+      return dics[length] || "devicegroup";
+    }
+    getChildren(callback, showDetail) {
+      return structrureDone.then(d => {
+        let rs = [];
+        recursive([map[this.id]], (n, i, l, p, pl) => {
+          if (callback(n, i, l, p, pl)) {
+            if (this.id !== n.id) {
+              rs.push(new treeData(n));
+            }
+          }
+        });
+        return showDetail
+          ? getResourceByIds(rs.map(getId)).then(d => {
+              return success(d.map(n => new treeData(n)));
+            })
+          : success(rs);
+      });
+    }
+    getParent() {
+      let parent = findParentDevice(map[this.id]);
+      return parent ? new treeData(parent) : undefined;
+    }
+    getBrothers() {
+      return this.getParent()
+        ? this.getParent().getChildren(
+            (n, i, l) => n !== map[this.id] && l < 2,
+            true
+          )
+        : success(root.filter(d => d !== map[this.id]));
+    }
+    getParents(showDetail) {
+      return structrureDone.then(d => {
+        let rs = [],
+          item = this,
+          checks = [];
+        while ((item = item.getParent())) {
+          if (checks.indexOf(item) !== -1) {
+            throw new Error(`circular function`);
+          } else {
+            checks.push(item);
+            rs.push(new treeData(item));
+          }
+        }
+        rs.reverse();
+        return showDetail
+          ? getResourceByIds(rs.map(getId)).then(d => {
+              return success(d.map(n => new treeData(n)));
+            })
+          : success(rs);
+      });
+    }
+    getAlertState() {
+      return alertsMap(this.id);
+    }
+    getState() {
+      return structrureDone.then(root => {
+        return getResourceByIds([this.id]).then(res => {
+          return success(new treeData(res[0]));
+        });
+      });
+    }
+    /** keep consequency with old framework **/
+    getRoot() {
+      return structrureDone.then(root => {
+        recursive(root, (node, i, l, p) => {
+          node.parent = p;
+        });
+        return success(root);
+      });
+    }
+    $on(name, callback) {
+      //return observer.on(this.id, callback);
+      let clear;
+      webSocketStarted.then(websocket => {
+        clear = websocket.on(this.id, 999999, (v, d) => {
+          let { nodeId, value } = d;
+          alertsMap(nodeId, value);
+          callback(v, d);
+        });
+      });
+      return function() {
+        clear && clear();
+      };
+    }
+    $emit(name, data) {
+      this.events[name].forEach(fn => {
+        fn(data);
+      });
+    }
+    /** keep consequency with old framework **/
+  }
+  extend(treeDataService, {
+    getValidId: getValidId,
+    getFirstDevice: getFirstDevice,
+    getAlertState: getAlertState,
+    getSensors: getSensors,
+    getGeneral: getGeneral,
+    startLoop: startLoop,
+    endLoop: endLoop,
+    getCurrentUser(d) {
+      return userdefer.resolve(d);
+    },
+    getRoot() {
+      return structrureDone;
+    }
+  });
+  return treeDataService;
+}
+</script>

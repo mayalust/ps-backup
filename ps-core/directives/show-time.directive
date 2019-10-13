@@ -1,0 +1,51 @@
+<config injector="$rootScope,$q,ajax,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<script type="text/javascript">
+import { dateparser, screenOffset } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  SwSocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTopo
+) {
+  return {
+    restrict: "A",
+    replace: false,
+    scope: {
+      showTime: "="
+    },
+    link(scope, element, attr) {
+      let elm = $(element[0]),
+        { left, top } = screenOffset(element[0]),
+        width = element[0].clientWidth,
+        screenWidth =
+          document.body.clientWidth || document.documentElement.cliendtWidth,
+        _popoverConfig = {
+          placement: screenWidth - width - left > 200 ? "right" : "left",
+          trigger: "manual",
+          title: "上报时间",
+          container: "body",
+          content: function() {
+            return scope.showTime
+              ? dateparser(scope.showTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+              : "-";
+          }
+        },
+        mouseEnter = e => elm.popover("show"),
+        mouseLeave = e => elm.popover("hide");
+      elm
+        .popover(_popoverConfig)
+        .on("mouseenter", mouseEnter)
+        .on("mouseleave", mouseLeave);
+      scope.$on("$destroy", s => {
+        elm.popover("hide");
+        elm.popover("destroy");
+      });
+    }
+  };
+}
+</script>

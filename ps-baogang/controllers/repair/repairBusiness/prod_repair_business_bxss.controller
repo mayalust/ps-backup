@@ -1,0 +1,697 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService,$rootScope,resourceUIService,growl,psLoading"
+        deps="dialogGlobalRule,dialogCommonAlerts,dialogDetailAlert,dialogDetailPerformance,dialogDetailPerformancess,dialogDetailPlan,dialogAddTicket,dialogRepairReport"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-10">
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <h4 class="margin-10">备修任务</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="resources"
+                   data-filter="filter1"
+                   data-sort="sort1"
+                   data-page="page1">
+              <thead>
+              <tr>
+                <th>项目号</th>
+                <th>产线</th>
+                <th>下机设备名称</th>
+                <th>下机设备编码</th>
+                <th>委托原因</th>
+                <th>备件类型</th>
+                <th>辊道名称</th>
+                <th>辊道编码</th>
+                <th>进度位</th>
+                <th>备修委托时间</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="item.ticketNo"></td>
+                <td ng-bind="item.variables.customerName"></td>
+                <td ng-bind="item.variables.devName"></td>
+                <td ng-bind="item.variables.deviceCode"></td>
+                <td ng-bind="item.variables.downReason"></td>
+                <td ng-bind="item.variables.repairPartsStandard.rollerType"></td>
+                <td ng-bind="item.variables.repairPartsStandard.rollerName"></td>
+                <td ng-bind="item.variables.repairPartsStandard.rollerNo"></td>
+                <td ng-bind="item.taskConfigName"></td>
+                <td ng-bind="formatTime(item.sendTime)"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'receiving'" ng-click="item.receiving()">收货</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'deliver'" ng-click="item.deliver()">发货</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'scrap'" ng-click="item.back()">退回</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'disassemblyDetection'" ng-click="item.disassemblyDetection()">解体检测</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'recordResults' || item.variables.ticket.values.tickeTaskStatus == 'return'" ng-click="item.recordResults()">录入实绩</button>
+                    <button class="btn btn-default" ng-if="item.variables.ticket.values.tickeTaskStatus == 'recordResults' || item.variables.ticket.values.tickeTaskStatus == 'return'" ng-click="item.problemFeedback()">问题反馈</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'detailsProblem'" ng-click="item.detailsProblem()">问题详情</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'formulateScheme'" ng-click="item.testResults()">检测实绩</button>
+                    <button class="btn btn-default" ng-if="item.variables.ticket.values.tickeTaskStatus == 'formulateScheme'" ng-click="item.formulateScheme()">制定方案</button>
+                    <button class="btn btn-default" ng-if="item.variables.ticket.values.tickeTaskStatus == 'detailsProblem'" ng-click="item.formulateScheme()">方案补充</button>
+                    <button class="btn btn-default" ng-if="item.variables.ticket.values.tickeTaskStatus == 'formulateScheme' || item.variables.ticket.values.tickeTaskStatus == 'detailsProblem'" ng-click="item.scrap()">报废</button>
+                    <button class="btn btn-default" ng-if="item.variables.ticket.values.tickeTaskStatus == 'goodsToBeReceived'" ng-click="item.goodsToBeReceived()">待收货</button>
+                    <button class="btn btn-primary" ng-if="item.variables.ticket.values.tickeTaskStatus == 'factoryInspection'" ng-click="item.factoryInspection()">出厂检验</button>
+                    <button class="btn btn-primary" ng-click="item.tracker()">过程跟踪</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">辊道编码:</span>
+              <div class="horizontal width-200">
+<!--                <ps-select ng-model="customerId2"-->
+<!--                           data-options="customer as customer.label for customer in customerDic"></ps-select>-->
+                <input type="text" class="form-control" ng-model="rollNo" />
+              </div>
+              <div>
+                <span class="padding-right-10">处理时间:</span>
+                <button class="btn btn-default"
+                        ng-repeat="sel in timeSels"
+                        ng-class="sel.class()"
+                        ng-click="sel.click()"
+                        ng-bind="sel.label">
+                </button>
+                <div class="horizontal width-200">
+                  <ps-date2 ng-model="starttime"></ps-date2>
+                </div>
+                <span class="padding-left-right-10">至</span>
+                <div class="horizontal width-200">
+                  <ps-date2 ng-model="endtime"></ps-date2>
+                </div>
+                <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+              </div>
+            </div>
+            <h4 class="margin-10">备修履历</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="alertOk"
+                   data-filter="filter2"
+                   data-sort="sort2"
+                   data-page="page2">
+              <thead>
+              <tr>
+                <th>项目号</th>
+                <th>产线</th>
+                <th>下机设备名称</th>
+                <th>下机设备编码</th>
+                <th>委托原因</th>
+                <th>备件类型</th>
+                <th>辊道名称</th>
+                <th>辊道编码</th>
+                <th>进度位</th>
+                <th>备修委托时间</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="item.ticketNo"></td>
+                <td ng-bind="item.values.customerName"></td>
+                <td ng-bind="item.values.devName"></td>
+                <td ng-bind="item.values.deviceCode"></td>
+                <td ng-bind="item.values.downReason"></td>
+                <td ng-bind="item.values.repairPartsStandard.rollerType"></td>
+                <td ng-bind="item.values.repairPartsStandard.rollerName"></td>
+                <td ng-bind="item.values.repairPartsStandard.rollerNo"></td>
+                <td ng-bind="dic[item.values.tickeTaskStatus]"></td>
+                <td ng-bind="formatTime(item.commitTime)"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.baogao()">备修报告</button>
+                    <button class="btn btn-primary" ng-click="item.tracker()">过程跟踪</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,cms,rootScope,rcus,growl,psLoading){
+    let target = cms(),
+    currentTime = new Date(),
+    tickeTaskStatus,
+    processedTickeTaskStatus,
+    date = dateparser(currentTime),
+    trimToDate = date.trimmToDate().date,
+    trimToWeek = date.trimmToWeek().date,
+    trimToMonth = date.trimmToMonth().date;
+    scope.dic = {
+      receiving : "收货",
+      deliver : "发货",
+      return : "退回",
+      testResults : "检测实绩",
+      formulateScheme : "制定方案",
+      scrap : "报废",
+      detailsProblem : "方案补充",
+      // detailsProblem : "问题详情",
+      disassemblyDetection : "解体检测",
+      recordResults : "录入实绩",
+      problemFeedback : "问题反馈",
+      factoryInspection : "出厂检验",
+      goodsToBeReceived : "待收货",
+      end : "已结束",
+      reissue : "重新下发"
+    }
+    // rcus.deviceObjLoader().then(d => {
+    //     scope.deviceDic = d;
+    //
+    //     timer();
+    // })
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+          scope.starttime = trimToDate;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToDate == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本周",
+      click(){
+          scope.starttime = trimToWeek;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToWeek == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本月",
+      click(){
+          scope.starttime = trimToMonth;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToMonth == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  }];
+    function initDoud() {
+      scope.resources = createRenderFunction({
+        taskStatus: 10,
+        categorys: "300",
+        tickeTaskStatus: tickeTaskStatus
+      });
+      scope.alertOk = createRenderOkFunction({
+        categorys: "300",
+        validUserFlag: true,
+        dealingFlag: true,
+        processedTickeTaskStatus: processedTickeTaskStatus,
+        finishedBeginTime: trimToMonth,
+        finishedEndTime: currentTime
+      });
+    }
+    function initData(){
+          // if(rootScope.$$childTail.menuitems["A43_01"]){//经营服务人员 = "receiving,deliver,scrap";
+          //     scope.tickeTaskStatus = {
+          //         receiving:true,
+          //         deliver:true,
+          //         scrap:true,
+          //     }
+          //     // processedTickeTaskStatus = "receiving";
+          // }
+          // if(rootScope.$$childTail.menuitems["A43_02"]){//作业实施人员
+          //     scope.tickeTaskStatus = "disassemblyDetection,recordResults,problemFeedback,return";
+          //     // processedTickeTaskStatus = "disassemblyDetection";
+          // }
+          // if(rootScope.$$childTail.menuitems["A43_03"]){//工艺工程师
+          //     scope.tickeTaskStatus = "formulateScheme,scrap,detailsProblem";
+          //     // processedTickeTaskStatus = "formulateScheme";
+          // }
+          // if(rootScope.$$childTail.menuitems["A43_04"]){//质量工程师
+          //     scope.tickeTaskStatus = "factoryInspection";
+          //     // processedTickeTaskStatus = "factoryInspection";
+          // }
+          // scope.resources = createRenderFunction({"taskStatus":10,"categorys":"300","tickeTaskStatus":"receiving,deliver,return,formulateScheme,scrap,detailsProblem,disassemblyDetection,recordResults,problemFeedback,factoryInspection"});
+          // scope.alertOk = createRenderOkFunction({"categorys":"300","validUserFlag":true,"dealingFlag":true,
+          //     "processedTickeTaskStatus": "factoryInspection,disassemblyDetection,recordResults,problemFeedback,return,receiving,deliver,scrap,reissue,formulateScheme,detailsProblem"});
+        tickeTaskStatus = "factoryInspection,disassemblyDetection,recordResults,problemFeedback,return,receiving,deliver,scrap,reissue,formulateScheme,detailsProblem";
+        processedTickeTaskStatus = "factoryInspection,disassemblyDetection,recordResults,problemFeedback,return,receiving,deliver,scrap,reissue,formulateScheme,detailsProblem";
+        scope.resources = createRenderFunction({
+          taskStatus: 10,
+          categorys: "300",
+          tickeTaskStatus: tickeTaskStatus
+        });
+        scope.alertOk = createRenderOkFunction({
+          categorys: "300",
+          validUserFlag: true,
+          dealingFlag: true,
+          processedTickeTaskStatus: processedTickeTaskStatus,
+          finishedBeginTime: trimToMonth,
+          finishedEndTime: currentTime
+        });
+    }
+    scope.formatTime = function (d) {
+        return d
+            ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+            : "-";
+    }
+
+    class tableCell{
+          constructor(data){
+              for(var i in data){
+                  this[i] = data[i];
+              }
+          }
+          tracker() {
+              cms2.refresh("prod_tracker", {
+                  ticketNo: this.ticketNo
+              });
+          }
+          receiving(){
+              ajax.post("baogangTicketService.receipt",[this.ticketNo]).then(e => {
+                  if(e){
+                      growl.success("收货成功");
+                      initDoud();
+                  }
+              })
+          }
+          deliver(){
+              ajax.post("baogangTicketService.doShip",[this.ticketNo]).then(e => {
+                  if(e){
+                      growl.success("发货成功");
+                      initDoud();
+                  }
+              })
+          }
+          back(){
+              cms2.modal({
+                  title : "退回",
+                  directive : "dialog-common-alerts",
+                  width : "50%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      commonKey : "退回原因",
+                      data :this,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      ajax.post("baogangTicketService.retired",[this.ticketNo , d.label]).then(e => {
+                          if(e){
+                              growl.info("退回完成");
+                              initDoud();
+                          }
+                      })
+                      // growl.info("退回完成");
+                  }
+              });
+          }
+          baogao() {
+              cms2
+                  .modal({
+                      title: "备修报告",
+                      directive: "dialog-repair-report",
+                      width: "50%",
+                      params: {
+                          mode: "view",
+                          type: "",
+                          data: this
+                      }
+                  })
+                  .then(d => {
+
+                  });
+          }
+          formulateScheme(){
+              cms2.modal({
+                  title : "制定方案",
+                  directive : "dialog-detail-plan",
+                  width : "85%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      data :this,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      ajax.post("baogangTicketService.formulateScheme",[this.ticketNo,d]).then(e => {
+                          growl.info("录入完成");
+                          initDoud();
+                      })
+
+                  }
+              });
+          }
+          recordResults(){
+              cms2.modal({
+                  title : "录入实绩",
+                  directive : "dialog-detail-performancess",
+                  width : "85%",
+                  params : {
+                      mode : "edit",
+                      luru : true,
+                      hasHead : true,
+                      data :this,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      let files = d.fileList,
+                          newAdd = files.filter( b => b.name );
+                      d.fileList = files.filter( b => b.fileName );
+                      ( newAdd.length > 0 ? uploadFile(newAdd) : cms2.success([])).then( b => {
+                          [].push.apply(d.fileList, b);
+                          // if(d.fileList && d.fileList.length == 0){
+                          //     psLoading.closeLoading();
+                          //     growl.info("附件为空!");
+                          // }else {
+
+                              // d.name = d.fileList[0].name || d.fileList[0].fileName;
+                              let params = [
+                                  this.ticketNo,
+                                  d.spareRepairPlans,
+                                  d.assemblyProcess,
+                                  b
+                              ]
+                              psLoading.showLoading();
+
+                              ajax.post("baogangTicketService.doRepairParts",params).then(function (d) {
+                                  if(d){
+                                      psLoading.closeLoading();
+                                      growl.success("录入完成！");
+                                      initDoud();
+                                  }
+                              });
+                          // }
+                      })
+                  }
+              });
+          }
+          testResults(){
+              cms2.modal({
+                  title : "检修实绩",
+                  directive : "dialog-detail-performance",
+                  width : "85%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      data :this
+                  }
+              }).then( d => {
+                  if(d){
+                      // growl.info("录入完成");
+                  }
+              });
+          }
+          detailsProblem(){
+              cms2.modal({
+                  title : "问题详情",
+                  directive : "dialog-common-alerts",
+                  width : "50%",
+                  params : {
+                      mode : "view",
+                      hasHead : true,
+                      commonKey : "问题详情",
+                      data :this,
+                      problem : "problem"
+                  }
+              }).then( d => {
+                  if(d){
+                      // growl.info("报废完成");
+                  }
+              });
+          }
+          problemFeedback(){
+              cms2.modal({
+                  title : "问题反馈",
+                  directive : "dialog-common-alerts",
+                  width : "50%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      commonKey : "问题反馈",
+                      data :this,
+                      problem : "problem",
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      //
+                      ajax.post("baogangTicketService.feedback",[this.ticketNo , {"content" : d.label,"remarks":d.remarks}]).then(e => {
+                          if(e){
+                              growl.info("问题反馈完成");
+                              initDoud();
+                          }
+                      })
+                  }
+              });
+          }
+          scrap(){
+              cms2.modal({
+                  title : "报废",
+                  directive : "dialog-common-alerts",
+                  width : "50%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      commonKey : "报废原因",
+                      data :this,
+                      baofei:true,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      //
+                      ajax.post("baogangTicketService.scrap",[this.ticketNo , d.label]).then(e => {
+                          if(e){
+                              growl.info("报废完成");
+                              initDoud();
+                          }
+                      })
+
+                  }
+              });
+          }
+          disassemblyDetection(){
+              cms2.modal({
+                  title : "解体检测",
+                  directive : "dialog-detail-performance",
+                  width : "85%",
+                  params : {
+                      mode : "edit",
+                      hasHead : true,
+                      data :this,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+
+                      ajax.post("baogangTicketService.disintegrationCheck",[this.ticketNo,d]).then(e => {
+                          growl.info("录入完成");
+                          initDoud();
+                      })
+
+
+                  }
+              });
+          }
+          factoryInspection(){
+              cms2.modal({
+                  title : "出厂检验",
+                  directive : "dialog-detail-performancess",
+                  width : "85%",
+                  params : {
+                      mode : "edit",
+                      luru : true,
+                      chuchang : true,
+                      hasHead : true,
+                      data :this,
+                      btnShow :true
+                  }
+              }).then( d => {
+                  if(d){
+                      if(d.specialBack == 'back'){
+
+                          let files = d.abnormalList,
+                              newAdd = files.filter( b => b.name );
+                          d.abnormalList = files.filter( b => b.fileName );
+                          ( newAdd.length > 0 ? uploadFile(newAdd) : cms2.success([])).then( b => {
+                              //
+                              [].push.apply(d.abnormalList, b);
+                              // if(d.abnormalList && d.abnormalList.length == 0){
+                              //     psLoading.closeLoading();
+                              //     growl.info("附件为空!");
+                              // }else {
+                                  psLoading.showLoading();
+                                  //
+                                  ajax.post("baogangTicketService.doReturn",[this.ticketNo,b]).then(e => {
+                                      if(e){
+                                          psLoading.closeLoading();
+                                          growl.success("任务退回成功！");
+                                          initDoud();
+                                      }
+                                  })
+                              // }
+                          })
+                      }else {
+
+                          let files = d.abnormalList,
+                              newAdd = files.filter( b => b.name );
+                          d.abnormalList = files.filter( b => b.fileName );
+                          ( newAdd.length > 0 ? uploadFile(newAdd) : cms2.success([])).then( b => {
+                              //
+                              [].push.apply(d.abnormalList, b);
+                              // if(d.abnormalList && d.abnormalList.length == 0){
+                              //     psLoading.closeLoading();
+                              //     growl.info("附件为空!");
+                              // }else {
+                                  psLoading.showLoading();
+                                  //
+                                  ajax.post("baogangTicketService.factoryInspection",[this.ticketNo,b]).then(e => {
+                                      if(e){
+                                          psLoading.closeLoading();
+                                          growl.success("任务通过成功！");
+                                          initDoud();
+                                      }
+                                  })
+                              // }
+                          })
+
+                      }
+                  }
+              });
+          }
+      }
+
+    scope.statusTabs = [{
+          value : "3",
+          color : "rgb(12, 70, 109)",
+          border : "#21a6fb",
+          text : "待处理备修委托数",
+          icon : "ps-bw_01",
+          kpi : 3017
+      },{
+          value : "2",
+          color : "rgb(102, 72, 109)",
+          border : "rgb(224, 162, 239)",
+          text : "完成备修项目数（当年内）",
+          icon : "ps-bw_02",
+          kpi : 3045
+      }]
+
+    function createRenderFunction(states){
+        return function( page, pageSize ){
+            let params = [states,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("ticketTaskService.getTicketTasksByConditionAndPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+    function createRenderOkFunction(states){
+        return function( page, pageSize ){
+            let params = [states,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("ticketTaskService.getDealTicketListByPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+    function uploadFile(newAdd) {
+      let formData = new FormData();
+      formData.append("resourceId", 1);
+      newAdd.forEach((v, i) => {
+        formData.append(`file${i}`, v);
+      });
+      return ajax
+              .upload("resourceFileUIService.uploadResourceFile", formData)
+              .then(function(d) {
+                let rs = [];
+                if (d.code == "0") {
+                  let obj = {};
+                  if (isArray(d.data)) {
+                    d.data.forEach((v, i) => {
+                      obj = {};
+                      obj["fileName"] = newAdd[i].name;
+                      obj["filePath"] = v.qualifiedName;
+                      rs.push(obj);
+                    });
+                  } else {
+                    obj["fileName"] = newAdd[0].name;
+                    obj["filePath"] = d.data.qualifiedName;
+                    rs.push(obj);
+                  }
+                  return cms2.success(rs);
+                }
+              });
+    }
+
+    initData();
+
+    scope.attentions = [{
+        id : "国控",
+        label : "国控"
+    },{
+        id : "市控",
+        label : "市控"
+    }];
+    scope.levels = [{
+        id : 2,
+        label : "注意"
+    },{
+        id : 3,
+        label : "警告"
+    },{
+        id : 4,
+        label : "危险"
+    }];
+
+    scope.searchFn = function() {
+      scope.alertOk = createRenderOkFunction({
+        categorys: "300",
+        validUserFlag: true,
+        dealingFlag: true,
+        values: { "repairPartsStandard.rollerNo": scope.rollNo },
+        processedTickeTaskStatus: processedTickeTaskStatus,
+        // finishedBeginTime: scope.starttime,
+        // finishedEndTime: scope.endtime
+        commitBeginTime : scope.starttime,
+        commitEndTime : scope.endtime
+      });
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

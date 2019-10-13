@@ -1,0 +1,39 @@
+.wrap[data-a-64879b7e]{
+  padding: 5px 10px !important;
+}.wrap .title[data-a-64879b7e]{
+  line-height: 26px;
+  padding-right: 20px;
+}.wrap .value[data-a-64879b7e]{
+  line-height: 26px;
+}.wrap .option[data-a-64879b7e]{
+  width: 160px;
+}.wrap .arrow[data-a-64879b7e]{
+  font-size: 18px;
+}.wrap .tbl[data-a-64879b7e]{
+  width: 100%;
+  display: table;
+}.wrap .tbl-cell[data-a-64879b7e]{
+  display: table-cell;
+}.wrap .radio-lbl[data-a-64879b7e]{
+  display: table-cell;
+  width: 150px;
+  text-align: right;
+  padding-right: 5px;
+}.wrap .radio-inp[data-a-64879b7e]{
+  vertical-align: -2px;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+}.wrap .radio-spa[data-a-64879b7e]{
+  padding: 0 15px 0 2px;
+}.wrap .radio-unit[data-a-64879b7e]{
+  display: table-cell;
+  padding-left: 2px;
+  width: 40px;
+}.wrap .chx[data-a-64879b7e]{
+  vertical-align: -2px;
+  margin-left: 40px;
+}
+
+
+/*# sourceMappingURL=dialog-project-finish-manage.css.map*/

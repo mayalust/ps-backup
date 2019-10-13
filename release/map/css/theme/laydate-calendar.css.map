@@ -1,0 +1,1 @@
+{"version":3,"sources":["css/theme/laydate-calendar.css"],"names":[],"mappings":"AAAA,eACE,mBAAoB,sBACpB,gBAAiB,sBACjB,WAAY","file":"css/theme/laydate-calendar.css","sourceRoot":"/source/","sourcesContent":[".layui-laydate {\n  -webkit-box-sizing: content-box !important;\n  -moz-box-sizing: content-box !important;\n  box-sizing: content-box !important;\n}\n"]}

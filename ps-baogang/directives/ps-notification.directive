@@ -1,0 +1,121 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<template>
+  <div class="wrap">
+    <div class="col-md-12">
+      <div class="title">
+        报警通知
+      </div>
+      <div class="row block" style="margin: 5px; padding: 10px; height: 285px; overflow: hidden auto; border: 0px;">
+        <div class="col-md-12">
+          <div style="width: 100%; overflow: hidden auto;overflow-x: scroll;"><div class="btn-group" style="margin-bottom: 10px; display: none;"></div><div id="DataTables_Table_2_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer"></div>
+            <table class="table table-hover dataTable no-footer" id="DataTables_Table_2" style="width: 100%;">
+              <thead>
+              <tr role="row">
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 83px;">报警来源</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 84px;">报警消息</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 84px;">报警级别</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 121px;">首次报警时间</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 84px;">报警次数</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 122px;">最近报警时间</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 47px;">操作</th></tr>
+              </thead>
+              <tbody>
+              <tr class="odd" ng-if="alerts.length == 0">
+                <td valign="top" colspan="7" class="dataTables_empty"><i class="fa fa-success text-danger"></i>没有符合条件的记录</td>
+              </tr>
+              <tr class="odd" ng-if="alerts.length > 0" ng-repeat="alert in alerts">
+                <td>
+                  <span ng-bind="alert.getAppName()"></span>
+                </td>
+                <td>
+                  <span ng-bind="alert.message"></span>
+                </td>
+                <td>
+                  <span ng-bind="alert.severity"></span>
+                </td>
+                <td>
+                  <span ng-bind="alert.getFirstArisingTime()"></span>
+                </td>
+                <td>
+                  <span ng-bind="alert.count"></span>
+                </td>
+                <td>
+                  <span ng-bind="alert.getArisingTime()"></span>
+                </td>
+                <td>
+                  <button class="btn btn-primary" ng-click="alert.track()">过程跟踪</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { dateparse } from "ps-ultility";
+  export default function(rootScope,q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo){
+    return {
+      scope : {},
+      link(scope, element, attr) {
+        let deviceId = $state.params.id,
+          queryParams = {
+          "domain": "",
+          "nodeType": "",
+          "pageSize": 1000,
+          "severities": "1,2,3,4",
+          "states": "0,5,10,20",
+          "nodeIds": deviceId
+        }, queryParams4Page = {
+          "start": 0,
+          "length": "",
+          "sort": "createTime",
+          "sortType": "desc",
+          "statCount": true,
+          "total": 0
+        }, params = [queryParams, queryParams4Page];
+        class tableCell{
+          constructor( d ){
+            for( let i in d ){
+              this[i] = d[i];
+            }
+          }
+          getFirstArisingTime(){
+            dateparse(this.firstArisingTime).getDateString("yyyy-MM-dd,hh:mm:ss");
+          }
+          getArisingTime(){
+            dateparse(this.arisingTime).getDateString("yyyy-MM-dd,hh:mm:ss");
+          }
+          track(){
+
+          }
+          getAppName(){
+            if (this.appName == 1) {
+              return "在线预警";
+            } else if (this.appName == 2) {
+              return "智能诊断";
+            } else if (this.appName == 3) {
+              return "大数据分析";
+            } else {
+              return "离线诊断";
+            }
+          }
+        }
+        ajax.post("alertQueryFlexService.getAlertByPage", params)
+          .then( alerts => {
+          scope.alerts = alerts.data.filter( alert => {
+            return alert.state == 0 || alert.state == 5 || alert.state == 10;
+          }).map( alert => new tableCell );
+           
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .title{
+    margin: 5px; padding: 0px; font-size: 14px; font-weight: bold; text-align: left; color: rgb(255, 255, 255);
+  }
+</style>

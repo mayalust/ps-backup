@@ -1,0 +1,1243 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,psRouter"
+></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="option"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  q,
+  ajax,
+  psDialog,
+  routeParams,
+  psUltility,
+  location,
+  growl,
+  commonMethodService,
+  psRouter
+) {
+  var target = commonMethodService(),
+    resource,
+    mode = target.getParameter("mode");
+  return {
+    link(scope, element, attr) {
+      let createProjectFlag = target.getValue("createProjectFlag"); //false 为已经计划确认过
+      function showDelete() {
+        return mode != "edit"
+          ? [
+              {
+                label: "删除",
+                class: "btn btn-primary",
+                on: {
+                  click: function(e) {
+                    e.removeInline();
+                  }
+                }
+              }
+            ]
+          : [];
+      }
+
+      function getOutGrid(str) {
+        return [
+          {
+            label: str,
+            symbol: "inline",
+            class: "primary",
+            show: function() {
+              return mode == "edit" ? false : true;
+            }
+          }
+        ];
+      }
+
+      function fillTables(str, refreshGrid, b, allData) {
+        if (str.indexOf("stepsList") != -1) {
+          allData.push(b);
+        } else {
+          allData.unshift(b);
+        }
+        refreshGrid(false);
+      }
+      let maintainPlanList0 = target.getValue("getMaintainPlanListData")[0],
+        repairArr = maintainPlanList0 ? maintainPlanList0.repairableParts : [],
+        consumableArr = maintainPlanList0
+          ? maintainPlanList0.consumableParts
+          : [],
+        allRollerTypes;
+      if (
+        typeof maintainPlanList0 == "undefined" ||
+        maintainPlanList0 == null ||
+        JSON.stringify(maintainPlanList0) == "{}"
+      ) {
+        growl.info("该数据没有检修方案");
+        return;
+      }
+      ajax
+        .post("rollerPartUIService.getRollerPartByConditionWithPage", [
+          {
+            type: 3,
+            "values.deviceIds": maintainPlanList0.deviceId
+          },
+          {}
+        ])
+        .then(d => {
+          if (d && d.length != 0) {
+            return (scope.res = d.data);
+          }
+        })
+        .then(function() {
+          ajax
+            .post("rollerPartUIService.getLinkRepairRollerPart", [
+              maintainPlanList0.deviceId
+            ])
+            .then(d => {
+              if (d && d.length != 0) {
+                d.forEach(function(item) {
+                  item.fatherRollerIdOptions = item.onlinePartList || [];
+                  item.rollerIdOptions = item.storePartList || [];
+                });
+                allRollerTypes = d;
+                let arr = [];
+                maintainPlanList0.repairableParts =
+                  maintainPlanList0.repairableParts || [];
+                for (
+                  var i = 0;
+                  i < maintainPlanList0.repairableParts.length;
+                  i++
+                ) {
+                  for (var j = 0; j < d.length; j++) {
+                    let obj = {};
+                    if (
+                      d[j].rollerType == maintainPlanList0.repairableParts[i]
+                    ) {
+                      obj["rollerType"] = maintainPlanList0.repairableParts[i];
+                      obj["fatherRollerId"] = null;
+                      obj.fatherRollerIdOptions = d[j].onlinePartList || [];
+                      obj["rollerId"] = null;
+                      obj.rollerIdOptions = d[j].storePartList || [];
+                      if (createProjectFlag) {
+                        obj.$$edit = true;
+                      }
+                      arr.push(obj);
+                    }
+                  }
+                }
+                if (createProjectFlag) {
+                  maintainPlanList0.repairablePartsBak = arr;
+                } else {
+                  let arr2 = [],
+                    logs = (maintainPlanList0.repairablePartActionLogs =
+                      maintainPlanList0.repairablePartActionLogs || []);
+                  for (var i = 0; i < logs.length; i++) {
+                    for (var j = 0; j < d.length; j++) {
+                      let objLog = {};
+                      if (
+                        logs[i] &&
+                        logs[i].values != null &&
+                        logs[i].toString() != "{}"
+                      ) {
+                        if (d[j].rollerType == logs[i].values.rollerType) {
+                          objLog["rollerType"] = d[j].rollerType;
+                          objLog["fatherRollerId"] =
+                            logs[i].values.fatherRollerName || "";
+                          objLog["rollerId"] = logs[i].values.rollerName || "";
+                          arr2.push(objLog);
+                        }
+                      }
+                    }
+                  }
+                  maintainPlanList0.repairablePartsBak = arr2;
+                }
+                return d;
+              }
+            })
+            .then(function(result) {
+              let resultArr = [],
+                resultArr2 = [];
+              if (
+                consumableArr &&
+                consumableArr.length != 0 &&
+                scope.res &&
+                scope.res.length != 0
+              ) {
+                for (var i = 0; i < scope.res.length; i++) {
+                  for (var j = 0; j < consumableArr.length; j++) {
+                    if (consumableArr[j].rollerNo == scope.res[i].rollerNo) {
+                      // consumableArr[j].reserveNum = scope.res[i].reserveNum;
+                      //更新
+                      let useNum = consumableArr[j].useNum;
+                      consumableArr[j] = scope.res[i];
+                      consumableArr[j].useNum = useNum;
+                      resultArr2.push(consumableArr[j]);
+                    }
+                  }
+                }
+              }
+              maintainPlanList0.consumableParts = resultArr2;
+              scope.option = {
+                type: "layout",
+                init: function(next) {
+                  var param = {
+                    ticketNo: target.getValue("maintainListData").ticketNo
+                  };
+                  target.postService(
+                    "deviceResumeUIService",
+                    "getDeviceCheckTrustByCondition",
+                    param,
+                    function(tc) {
+                      // 查询当前的委托，重新下发
+                      target.setValue("createTrust", tc.data[0]);
+                      next({
+                        model: tc.data[0],
+                        personList: target.getValue(
+                          "getMaintainPlanListData"
+                        )[0].personList,
+                        toolList: target.getValue("getMaintainPlanListData")[0]
+                          .toolList,
+                        materialList: target.getValue(
+                          "getMaintainPlanListData"
+                        )[0].materialList,
+                        consumableParts: maintainPlanList0.consumableParts,
+                        repairableParts: maintainPlanList0.repairableParts,
+                        repairablePartsBak:
+                          maintainPlanList0.repairablePartsBak,
+                        standard: {
+                          projectImplTime: tc.data[0].projectImplTime, // 默认展示计划实施时间
+                          maintainPlanList: target.getValue(
+                            "getMaintainPlanListData"
+                          )[0].id,
+                          dangerSource: target.getValue(
+                            "getMaintainPlanListData"
+                          )[0].dangerSource,
+                          fireGrade: target.getValue(
+                            "getMaintainPlanListData"
+                          )[0].fireGrade
+                        }
+                      });
+                    }
+                  );
+                },
+                children: [
+                  {
+                    type: "form-inline",
+                    children: [
+                      {
+                        name: "deviceName",
+                        type: "label",
+                        width: 10,
+                        value: "设备名称:"
+                      },
+                      {
+                        type: "label",
+                        width: 10,
+                        value: target.getValue("getMaintainPlanListData")[0]
+                          .deviceName
+                      },
+                      {
+                        name: "deviceCode",
+                        type: "label",
+                        width: 10,
+                        value: "设备编号:"
+                      },
+                      {
+                        type: "label",
+                        width: 10,
+                        value: target.getValue("getMaintainPlanListData")[0]
+                          .deviceCode
+                      }
+                    ]
+                  },
+                  {
+                    //新建状态维护标准
+                    label: "检修委托",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "form-grid",
+                        scope: "model",
+                        children: [
+                          {
+                            type: "input",
+                            label: "标准项目编号",
+                            key: "standardProjectId",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "标准项目名称",
+                            key: "standardProjectName",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "select",
+                            label: "产线工程师",
+                            key: "executioner",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: function() {
+                              var allUsers = target.getRootScope(
+                                  "getAllUserInfo"
+                                ),
+                                smartUsers = [],
+                                roleArr = [];
+                              allUsers.forEach(function(item) {
+                                if (
+                                  item.roleID &&
+                                  item.roleID.indexOf(",") !== -1
+                                ) {
+                                  roleArr = item.roleID.split(",");
+                                  roleArr.some(v => {
+                                    if (v == "496878991490167") {
+                                      smartUsers.push(item);
+                                      return true;
+                                    }
+                                  });
+                                } else {
+                                  if (item.roleID == "496878991490167") {
+                                    //智能产线工程师roleID "496878991490167,496878991490169"
+                                    smartUsers.push(item);
+                                  }
+                                }
+                              });
+                              return smartUsers;
+                            },
+                            format: {
+                              id: "userID",
+                              label: "userName"
+                            }
+                          },
+                          {
+                            type: "select",
+                            label: "施工类别",
+                            key: "constructionType",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getRootScope("myDicts")[
+                              "constructionType"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          {
+                            type: "select",
+                            label: "项目类别",
+                            key: "projectCategory",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getRootScope("myDicts")[
+                              "baowuProjectCategory"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          {
+                            type: "select",
+                            label: "高危等级",
+                            key: "highDangerLevel",
+                            composory: false,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getRootScope("myDicts")[
+                              "highDangerLevel"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "实施依据",
+                            key: "maintainBasis",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "建议班组名称",
+                            key: "suggesTeamName",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "作业时长(H)",
+                            key: "needTime",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "总人数",
+                            key: "totalPerpsonNum",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "总工时(H)",
+                            key: "totalUseTime",
+                            composory: true,
+                            col: 4,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "工作内容",
+                            key: "workContent",
+                            composory: true,
+                            col: 12,
+                            config: {
+                              disabled: "disabled"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    //方案概况
+                    label: "方案概况",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "form-grid",
+                        scope: "standard",
+                        children: [
+                          {
+                            type: "select",
+                            label: "检修方案名称",
+                            col: 4,
+                            key: "maintainPlanList",
+                            composory: true,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getValue("getMaintainPlanListData"),
+                            format: {
+                              id: "id",
+                              label: "maintainPlanName"
+                            }
+                          },
+                          {
+                            type: "auto",
+                            label: "危险源",
+                            col: 4,
+                            key: "dangerSource",
+                            composory: true,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getRootScope("myDicts")[
+                              "dangerSource"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          {
+                            type: "select",
+                            label: "动火等级",
+                            col: 4,
+                            key: "fireGrade",
+                            composory: true,
+                            config: {
+                              disabled: "disabled"
+                            },
+                            options: target.getRootScope("myDicts")[
+                              "fireGrade"
+                            ],
+                            format: {
+                              id: "valueCode",
+                              label: "label"
+                            }
+                          },
+                          {
+                            type: "date2",
+                            label: "项目实施时间",
+                            key: "projectImplTime",
+                            col: 4,
+                            composory: true,
+                            config: {
+                              disabled:
+                                createProjectFlag === false ? true : false,
+                              done: function(date) {
+                                target.setValue("projectImplTime", date);
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    //人员准备
+                    label: "人员准备",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "table-form",
+                        key: "personList",
+                        config: {
+                          attributes: {
+                            personType: ["人员类型", "text"],
+                            personNum: ["人员数量", "text"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "personType"
+                              },
+                              {
+                                name: "personNum"
+                              }
+                            ],
+                            buttons: {
+                              inGrid: [],
+                              outGrid: []
+                            },
+                            config: {
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true
+                            },
+                            options: []
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    //工器具准备
+                    label: "工器具准备",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "table-form",
+                        key: "toolList",
+                        config: {
+                          attributes: {
+                            name: ["名称", "text"],
+                            format: ["规格", "text"],
+                            num: ["数量", "text"],
+                            unit: ["单位", "text"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "name"
+                              },
+                              {
+                                name: "format"
+                              },
+                              {
+                                name: "num"
+                              },
+                              {
+                                name: "unit"
+                              }
+                            ],
+                            buttons: {
+                              inGrid: [],
+                              outGrid: []
+                            },
+                            config: {
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true
+                            },
+                            options: []
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    //常用材料准备
+                    label: "常用材料准备",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "table-form",
+                        key: "materialList",
+                        config: {
+                          attributes: {
+                            name: ["名称", "text"],
+                            format: ["规格", "text"],
+                            num: ["数量", "text"],
+                            unit: ["单位", "text"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "name"
+                              },
+                              {
+                                name: "format"
+                              },
+                              {
+                                name: "num"
+                              },
+                              {
+                                name: "unit"
+                              }
+                            ],
+                            buttons: {
+                              inGrid: [],
+                              outGrid: []
+                            },
+                            config: {
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true
+                            },
+                            options: []
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    //备件准备
+                    label: "备件准备",
+                    type: "panel",
+                    children: [
+                      {
+                        //易耗件
+                        type: "new-grid",
+                        key: "consumableParts",
+                        config: {
+                          inlineAddConfirm: function(row, next) {
+                            if (row["rollerName"]["reserveNum"] === 0) {
+                              growl.info("该库存为空");
+                              return;
+                            } else if (!row["useNum"] && row["useNum"] !== 0) {
+                              growl.info("使用数量不能为空");
+                              return;
+                            } else if (
+                              row["useNum"] - row["rollerName"]["reserveNum"] >
+                              0
+                            ) {
+                              growl.info("使用数量超过了库存");
+                              return;
+                            }
+                            row.rollerName["useNum"] = row["useNum"];
+                            this.addRow(row.rollerName, true);
+                            next();
+                          },
+                          inlineEditConfirm: function(newRow, oldRow, next) {
+                            if (newRow["reserveNum"] === 0) {
+                              growl.info("该库存为空");
+                              return;
+                            } else if (
+                              !newRow["useNum"] &&
+                              newRow["useNum"] !== 0
+                            ) {
+                              growl.info("使用数量不能为空");
+                              return;
+                            } else if (
+                              newRow["useNum"] - newRow["reserveNum"] >
+                              0
+                            ) {
+                              growl.info("使用数量超过了库存");
+                              return;
+                            }
+                            next();
+                          },
+                          outButtons: [
+                            {
+                              label: "新增易耗件",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              },
+                              symbol: "inlineAdd"
+                            }
+                          ],
+                          bodyButtons: [
+                            {
+                              label: "编辑",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              },
+                              symbol: "inlineEdit"
+                            },
+                            {
+                              label: "删除",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              },
+                              on: {
+                                click: function(row) {
+                                  this.deleteRow(row);
+                                }
+                              }
+                            }
+                          ],
+                          columns: [
+                            {
+                              key: "rollerName",
+                              label: "备件名称",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    id: "rollerName",
+                                    label: "rollerName",
+                                    value: "$this",
+                                    compare: function(item, value) {
+                                      if (value) {
+                                        return item.id == value.id;
+                                      }
+                                      return false;
+                                    }
+                                  }
+                                },
+                                options: {
+                                  url:
+                                    "rollerPartUIService.getRollerPartByConditionWithPage",
+                                  parameter: [
+                                    {
+                                      type: 3,
+                                      "values.deviceIds": target.getValue(
+                                        "getMaintainPlanListData"
+                                      )[0].deviceId
+                                    },
+                                    {}
+                                  ],
+                                  after: function(d) {
+                                    return d.data;
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "rollerNo",
+                              label: "物料代码", //之前为备件编码
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.rollerNo : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "format",
+                              label: "规格型号",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.format : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "manufacturer",
+                              label: "生产厂家",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.manufacturer : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "reserveNum",
+                              label: "库存",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d, next) {
+                                    ajax
+                                      .post(
+                                        "rollerPartUIService.getRollerPartByConditionWithPage",
+                                        [
+                                          {
+                                            type: 3,
+                                            "values.deviceIds": target.getValue(
+                                              "getMaintainPlanListData"
+                                            )[0].deviceId
+                                          },
+                                          {}
+                                        ]
+                                      )
+                                      .then(function(res) {
+                                        if (res.data && res.data.length != 0) {
+                                          let findObj = res.data.find(function(
+                                            resItem
+                                          ) {
+                                            if (!d) {
+                                              return false;
+                                            }
+                                            return (
+                                              resItem.rollerNo == d.rollerNo
+                                            );
+                                          });
+                                          next(
+                                            findObj
+                                              ? findObj.reserveNum
+                                              : d
+                                              ? d.reserveNum
+                                              : ""
+                                          );
+                                        }
+                                      });
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "useNum",
+                              label: "使用数量",
+                              type: "text",
+                              edit: {
+                                type: "input"
+                              },
+                              add: {
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    // return d ? d.useNum : '';
+                                    return "";
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        //可修复件
+                        type: "new-grid",
+                        key: "repairablePartsBak",
+                        config: {
+                          inlineEditConfirm: function(newRow, oldRow, next) {
+                            if (!newRow.rollerId) {
+                              growl.info("可更换备件为空");
+                              return;
+                            }
+                            let objParam = {};
+                            objParam["values"] = objParam["values"] || {};
+                            objParam["rollerId"] = newRow["rollerId"];
+                            objParam["fatherRollerId"] =
+                              newRow["fatherRollerId"];
+                            objParam["values"]["rollerName"] = allRollerTypes
+                              .find(r => {
+                                return r.rollerType == newRow["rollerType"];
+                              })
+                              ["rollerIdOptions"].find(d => {
+                                return d.id == newRow["rollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return r.rollerType == newRow["rollerType"];
+                                  })
+                                  ["rollerIdOptions"].find(d => {
+                                    return d.id == newRow["rollerId"];
+                                  })["rollerName"]
+                              : "";
+
+                            objParam["values"][
+                              "fatherRollerName"
+                            ] = allRollerTypes
+                              .find(r => {
+                                return r.rollerType == newRow["rollerType"];
+                              })
+                              ["fatherRollerIdOptions"].find(d => {
+                                return d.id == newRow["fatherRollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return r.rollerType == newRow["rollerType"];
+                                  })
+                                  ["fatherRollerIdOptions"].find(d => {
+                                    return d.id == newRow["fatherRollerId"];
+                                  })["rollerName"]
+                              : "";
+
+                            objParam["values"]["rollerType"] =
+                              newRow["rollerType"];
+                            maintainPlanList0.repairableParts =
+                              maintainPlanList0.repairableParts || [];
+                            maintainPlanList0.repairablePartActionLogs =
+                              maintainPlanList0.repairablePartActionLogs || [];
+                            if (
+                              maintainPlanList0.repairablePartActionLogs
+                                .length == 0
+                            ) {
+                              maintainPlanList0.repairablePartActionLogs.unshift(
+                                objParam
+                              );
+                            } else {
+                              maintainPlanList0.repairablePartActionLogs.forEach(
+                                (v, i) => {
+                                  if (v && v.values && v.values.rollerType) {
+                                    if (
+                                      maintainPlanList0.repairableParts.indexOf(
+                                        v.values.rollerType
+                                      ) != -1
+                                    ) {
+                                      maintainPlanList0.repairablePartActionLogs.unshift(
+                                        objParam
+                                      );
+                                    } else {
+                                      maintainPlanList0.repairableParts.splice(
+                                        i,
+                                        1,
+                                        newRow["rollerType"]
+                                      );
+                                      maintainPlanList0.repairablePartActionLogs.splice(
+                                        i,
+                                        1,
+                                        objParam
+                                      );
+                                    }
+                                  }
+                                }
+                              );
+                            }
+                            next();
+                          },
+                          inlineAddConfirm: function(row, next) {
+                            if (!row.rollerId) {
+                              growl.info("可更换备件为空");
+                              return;
+                            }
+                            let objParam = {};
+                            objParam["values"] = objParam["values"] || {};
+                            objParam["rollerId"] = row["rollerId"];
+                            objParam["fatherRollerId"] = row["fatherRollerId"];
+                            objParam["values"]["rollerName"] = allRollerTypes
+                              .find(r => {
+                                return (
+                                  r.rollerType == row["rollerType"].rollerType
+                                );
+                              })
+                              ["rollerIdOptions"].find(d => {
+                                return d.id == row["rollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return (
+                                      r.rollerType ==
+                                      row["rollerType"].rollerType
+                                    );
+                                  })
+                                  ["rollerIdOptions"].find(d => {
+                                    return d.id == row["rollerId"];
+                                  })["rollerName"]
+                              : "";
+                            objParam["values"][
+                              "fatherRollerName"
+                            ] = allRollerTypes
+                              .find(r => {
+                                return (
+                                  r.rollerType == row["rollerType"].rollerType
+                                );
+                              })
+                              ["fatherRollerIdOptions"].find(d => {
+                                return d.id == row["fatherRollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return (
+                                      r.rollerType ==
+                                      row["rollerType"].rollerType
+                                    );
+                                  })
+                                  ["fatherRollerIdOptions"].find(d => {
+                                    return d.id == row["fatherRollerId"];
+                                  })["rollerName"]
+                              : "";
+                            objParam["values"]["rollerType"] =
+                              row["rollerType"].rollerType;
+                            maintainPlanList0.repairablePartActionLogs =
+                              maintainPlanList0.repairablePartActionLogs || [];
+                            maintainPlanList0.repairablePartActionLogs.unshift(
+                              objParam
+                            );
+                            row.rollerType = row.rollerType.rollerType;
+                            row.rollerIdOptions = allRollerTypes.find(r => {
+                              return r.rollerType == row["rollerType"];
+                            })["rollerIdOptions"];
+                            row.fatherRollerIdOptions = allRollerTypes.find(
+                              r => {
+                                return r.rollerType == row["rollerType"];
+                              }
+                            )["fatherRollerIdOptions"];
+                            this.addRow(row, true);
+                            maintainPlanList0.repairableParts.unshift(
+                              row.rollerType
+                            );
+                            next();
+                          },
+                          outButtons: [
+                            {
+                              label: "新增可修复件",
+                              symbol: "inlineAdd",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              }
+                            }
+                          ],
+                          bodyButtons: [
+                            {
+                              label: "编辑",
+                              class: "btn btn-primary",
+                              symbol: "inlineEdit",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              }
+                            },
+                            {
+                              label: "删除",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return !createProjectFlag;
+                              },
+                              on: {
+                                click: function(row) {
+                                  this.deleteRow(row);
+                                  let ind;
+                                  maintainPlanList0.repairableParts.forEach(
+                                    (r, index) => {
+                                      if (r == row.rollerType) {
+                                        ind = index;
+                                      }
+                                    }
+                                  );
+                                  maintainPlanList0.repairablePartActionLogs.splice(
+                                    ind,
+                                    1
+                                  );
+                                  maintainPlanList0.repairableParts.splice(
+                                    ind,
+                                    1
+                                  );
+                                }
+                              }
+                            }
+                          ],
+                          columns: [
+                            {
+                              key: "rollerType",
+                              label: "类型",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    id: "rollerType",
+                                    label: "rollerType",
+                                    value: "$this"
+                                  }
+                                },
+                                options: allRollerTypes
+                              }
+                            },
+                            {
+                              key: "fatherRollerId",
+                              label: "在线备件身份ID",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                watch: {
+                                  key: "rollerType",
+                                  handler: function(d, next) {
+                                    //type=1 上机
+                                    next({
+                                      $options:
+                                        d && d.onlinePartList
+                                          ? d.onlinePartList.filter(
+                                              v => v.state == 1
+                                            )
+                                          : [],
+                                      $value: null
+                                    });
+                                  }
+                                }
+                              },
+                              edit: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                options: function(row) {
+                                  return row.fatherRollerIdOptions || [];
+                                }
+                              },
+                              bind: function(row, value) {
+                                if (createProjectFlag) {
+                                  return allRollerTypes
+                                    .find(r => {
+                                      return r.rollerType == row["rollerType"];
+                                    })
+                                    ["fatherRollerIdOptions"].find(d => {
+                                      return d.id == value;
+                                    })
+                                    ? allRollerTypes
+                                        .find(r => {
+                                          return (
+                                            r.rollerType == row["rollerType"]
+                                          );
+                                        })
+                                        ["fatherRollerIdOptions"].find(d => {
+                                          return d.id == value;
+                                        })["rollerName"]
+                                    : "";
+                                } else {
+                                  return row["fatherRollerId"];
+                                }
+                              }
+                            },
+                            {
+                              key: "rollerId",
+                              label: "更换备件身份ID",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                watch: {
+                                  key: "rollerType",
+                                  handler: function(d, next) {
+                                    //type=4 库存中
+                                    next({
+                                      $options:
+                                        d && d.storePartList
+                                          ? d.storePartList.filter(
+                                              v => v.state == 4
+                                            )
+                                          : [],
+                                      $value: null
+                                    });
+                                  }
+                                }
+                              },
+                              edit: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                options: function(row) {
+                                  return row.rollerIdOptions || [];
+                                }
+                              },
+                              bind: function(row, value) {
+                                if (createProjectFlag) {
+                                  return allRollerTypes
+                                    .find(r => {
+                                      return r.rollerType == row["rollerType"];
+                                    })
+                                    ["rollerIdOptions"].find(d => {
+                                      return d.id == value;
+                                    })
+                                    ? allRollerTypes
+                                        .find(r => {
+                                          return (
+                                            r.rollerType == row["rollerType"]
+                                          );
+                                        })
+                                        ["rollerIdOptions"].find(d => {
+                                          return d.id == value;
+                                        })["rollerName"]
+                                    : "";
+                                } else {
+                                  return row["rollerId"];
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              };
+            });
+        });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-configure/js/controllers/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,0CAA2C","file":"app-configure/js/controllers/index.js","sourcesContent":["define(['../../js/controllers/configure-ctrl.js'], function () {});"],"sourceRoot":"/source/"}

@@ -1,0 +1,293 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl"></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="layout">
+    </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function(ajax,$location,psDialog,$routeParams,growl){
+    return {
+      link(scope, element, attr, ngModel) {
+          scope.layout = {
+              init:function(next){
+                  let list1;
+                  ajax.post("resourceUIService.findKpiThresholds",{nodeIds: "", modelId: "", domain: "", title: ""}).then((d)=>{
+                       
+                      list1=d;
+                      next({
+                          list:list1
+                      })
+                  });
+              },
+              modals: {
+                  wholeModel: {
+                      label: "维护规则",
+                      type: "layout",
+                      children: [{
+                          type: "form-grid",
+                          children: [{
+                              type: "input",
+                              label: "设备名称",
+                              key: "type"
+                          }, {
+                              type: "input",
+                              label: "设备编号",
+                              key: "sn"
+                          }, {
+                              type: "input",
+                              label: "排故手顺书编号",
+                              key: "analysisProtocol",
+                          }, {
+                              type: "input",
+                              label: "排故手顺名称",
+                              key: "sjfy"
+                          }]
+                      }, {
+                          label: "排故步骤",
+                          type: "table-form",
+                          key: "accessConfigs",
+                          config: {
+                              attributes: {
+                                  "kpiName": ["步骤", "text"],
+                                  "type": ["排故步骤", "text"],
+                                  "readExpression": ["判断方法", "text"],
+                                  "writeExpression": ["判断标准", "text"],
+                                  "test1": ["正常处理", "text"],
+                                  "test2": ["异常处理", "text"],
+                              },
+                              grid: {
+                                  body: ["kpiName", "type", {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "select"
+                                      }
+                                  }, {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "input"
+                                      }
+                                  }, {
+                                      name: "writeExpression",
+                                      gridType: function (e) {
+                                          return "input"
+                                      }
+                                  },"test1","test2"],
+                                  buttons: {
+                                      outGrid: [{
+                                          label: "新增项次",
+                                          class: "primary"
+                                      }],
+                                      inGrid: [{
+                                          label: "删除",
+                                          class: "primary"
+                                      }]
+                                  },
+                                  config: {
+                                      showIndex: false,
+                                      showSelector: false,
+                                      showSearch: false,
+                                      showPage: false
+                                  },
+                                  options: []
+                              }
+                          }
+                      },{
+                          label: "智能检修",
+                          type: "table-form",
+                          key: "accessConfigs",
+                          config: {
+                              attributes: {
+                                  "kpiName": ["序号", "text"],
+                                  "type": ["标准项目名称", "text"],
+                                  "readExpression": ["标准项目编号", "text"]
+                              },
+                              grid: {
+                                  body: ["kpiName", "type", {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "select"
+                                      }
+                                  }, {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "input"
+                                      }
+                                  }],
+                                  buttons: {
+                                      outGrid: [],
+                                      inGrid: []
+                                  },
+                                  config: {
+                                      showIndex: false,
+                                      showSelector: false,
+                                      showSearch: false,
+                                      showPage: false
+                                  },
+                                  options: []
+                              }
+                          }
+                      },{
+                          label: "状态维护",
+                          type: "table-form",
+                          key: "accessConfigs",
+                          config: {
+                              attributes: {
+                                  "kpiName": ["序号", "text"],
+                                  "type": ["状态维护项目名称", "text"],
+                                  "readExpression": ["状态维护标准编号", "text"]
+                              },
+                              grid: {
+                                  body: ["kpiName", "type", {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "select"
+                                      }
+                                  }, {
+                                      name: "readExpression",
+                                      gridType: function (e) {
+                                          return "input"
+                                      }
+                                  }],
+                                  buttons: {
+                                      outGrid: [],
+                                      inGrid: []
+                                  },
+                                  config: {
+                                      showIndex: false,
+                                      showSelector: false,
+                                      showSearch: false,
+                                      showPage: false
+                                  },
+                                  options: []
+                              }
+                          }
+                      }],
+                      buttons: [{
+                          label: "确定",
+                          class: "btn btn-primary",
+                          click: function (e) {
+                               
+                          }
+                      }, {
+                          label: "取消",
+                          click: function () {
+                              this.close();
+                          }
+                      }]
+                  }
+              },
+              label: '排故手顺书',
+              children: [{
+                  type: "table",
+                  config: {
+                      attributes: {
+                          "title": ["产线", "text"],
+                          "sn": ["设备信息", "text"],
+                          "measureType": ["设备编码", "text"],
+                          "period": ["排故手顺编号", "text"],
+                          "measureDate": ["排故手顺名称", "text"],
+                          "measureResult": ["创建人", "text"],
+                          "risingTime": ["创建日期", "text"]
+                      },
+                      search: {
+                          body: [{
+                              name: "title",
+                              label: "排故手顺名称",
+                              searchType: "input"
+                          },{
+                              name: "cdName",
+                              searchType: "input",
+                              label: "排故手顺编号"
+                          }, {
+                              name: "zbName",
+                              searchType: "select",
+                              label: "指标参数"
+                          }]
+                      },
+                      grid: {
+                          body: ["title", "sn", "measureType", "period","measureDate", "measureResult", {
+                              name:"risingTime",
+                              gridType:"date"
+                          }],
+                          buttons: {
+                              outGrid: [{
+                                  label: " 新增故障手顺书",
+                                  class: "primary",
+                                  icon: "fa fa-plus",
+                                  on: {
+                                      click: function (e) {
+                                          e.add({
+                                              template: "wholeModel",
+                                              before: function (d) {
+                                                  return d;
+                                              },
+                                              url: "",
+                                              after: function (d) {
+                                                  return d;
+                                              }
+                                          });
+                                      }
+                                  }
+                              }],
+                              inGrid: [{
+                                  label: "详情",
+                                  class: "btn btn-primary",
+                                  on: {
+                                      click: function (e) {
+                                          e.update({
+                                              template: "wholeModel",
+                                              before: function (d) {
+                                                  return d;
+                                              }
+                                          });
+                                      }
+                                  }
+                              }, {
+                                  label: "编辑",
+                                  class: "btn btn-primary",
+                                  on: {
+                                      click: function (e) {
+                                          e.update({
+                                              template: "wholeModel",
+                                              before: function (d) {
+                                                  return d;
+                                              },
+                                              url: "resourceUIService.saveMeasureCertificate"
+                                          });
+                                      }
+                                  }
+                              }, {
+                                  label: "删除",
+                                  class: "btn btn-default",
+                                  on: {
+                                      click: function (e) {
+                                          e.remove({
+                                              before: function (d) {
+                                                  return e.$row.id;
+                                              },
+                                              url: "resourceUIService.deleteMeasureCertificate"
+                                          });
+                                      }
+                                  }
+                              }]
+                          },
+                          config: {
+                              url: 'resourceUIService.findKpiThresholds',
+                              parameter: {nodeIds: "", modelId: "", domain: "", title: ""},
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false
+                          },
+                          options: []
+                      }
+                  }
+              }]
+          }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

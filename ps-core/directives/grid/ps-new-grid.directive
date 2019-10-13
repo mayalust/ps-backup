@@ -1,0 +1,59 @@
+<config injector="psScope, psUltility, $timeout">
+</config>
+<template>
+    <div>
+        <ps-grid1 data-config="config" ng-model="gridModel"></ps-grid1>
+    </div>
+</template>
+<script type="text/javascript">
+import {attribute, isString, isArray, isUndefined, deepClone} from "ps-ultility";
+
+export default function (psScope, psUltility, $timeout) {
+  return {
+    scope: {
+      option: '='
+    },
+    link (scope) {
+      function getValue (node, attribute) {
+        while (node) {
+          if (node[attribute]) {
+            return node[attribute];
+          }
+          node = node.$parent;
+        }
+        return null;
+      }
+
+      let key = scope.option["key"], _depth, _ori, watch1, watch2;
+      let _key = isString(key) ? psUltility.keyPattern(key) : null;
+      $timeout(() => {
+        scope.config = scope.option.config;
+        scope.$$customRootScope = getValue(scope, "$$customRootScope");
+        scope.gridModel =  attribute(scope.option, _key) || attribute(scope.$$customRootScope, key);
+        watch2 = scope.$$customRootScope.$watch(key, (n, o) => {
+          if (typeof n === 'undefined') {
+            return;
+          }
+          scope.gridModel = n;
+          scope.config = deepClone(scope.config);
+        });
+      });
+      watch1 = scope.$watch(`gridModel`, n => {
+        if (typeof n === 'undefined') {
+          return;
+        }
+        attribute(scope.option, psUltility.keyPattern(key), n);
+      });
+      scope.$on("$destroy", () => {
+        watch1 && watch1();
+        watch2 && watch2();
+      })
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.box {
+    padding: 6px;
+}
+</style>

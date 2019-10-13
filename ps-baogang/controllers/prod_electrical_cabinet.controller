@@ -1,0 +1,673 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="element-row">
+      <div class="topo with-border">
+        <ps-topo-common></ps-topo-common>
+      </div>
+      <div class="value-box with-border">
+        <div class="value-item">
+          <p class="value-item-title">过流1端定值</p>
+          <div class="value-item-kpi" ng-repeat="item in kpiItems1">
+            <div class="label">{{ item.label }}</div>
+            <div class="status-box">
+              <label
+                class="status"
+                ng-click="turnOn(item)"
+                ng-class="'state-' + item.status"
+                ng-bind="item.value"
+                data-show-time="item.arisingTime"
+              ></label>
+            </div>
+          </div>
+        </div>
+        <div class="value-item">
+          <p class="value-item-title">过流2端定值</p>
+          <div class="value-item-kpi" ng-repeat="item in kpiItems2">
+            <div class="label">{{ item.label }}</div>
+            <div class="status-box">
+              <label
+                class="status"
+                ng-click="turnOn(item)"
+                ng-class="'state-' + item.status"
+                ng-bind="item.value"
+                data-show-time="item.arisingTime"
+              ></label>
+            </div>
+          </div>
+        </div>
+        <div class="value-item">
+          <p class="value-item-title">零序过流定值</p>
+          <div class="value-item-kpi" ng-repeat="item in kpiItems3">
+            <div class="label">{{ item.label }}</div>
+            <div class="status-box">
+              <label
+                class="status"
+                ng-click="turnOn(item)"
+                ng-class="'state-' + item.status"
+                ng-bind="item.value"
+                data-show-time="item.arisingTime"
+              ></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="element-row">
+      <div class="kpi with-border">
+        <div class="kpi-item" ng-repeat="item in kpiData">
+          <div class="item-wrap with-border">
+            <p class="title">{{ item.label }}</p>
+            <div class="status-wrap">
+              <label
+                class="status"
+                ng-click="turnOn(item)"
+                ng-class="'state-' + item.status"
+                ng-bind="item.value"
+                data-show-time="item.arisingTime"
+              ></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="element-row">
+      <div class="alarm with-border">
+        <h5 style="margin: 0;">报警通知</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly1"
+          data-source="resources1"
+          data-filter="filter1"
+          data-sort="sort1"
+          data-page="page1"
+        >
+          <thead>
+            <tr>
+              <th>产线</th>
+              <th>设备信息</th>
+              <th>报警来源</th>
+              <th>报警消息</th>
+              <th>报警级别</th>
+              <th>报警时间</th>
+              <th>报警状态</th>
+              <th class="option">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary">过程跟踪</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="diagnosis-report with-border">
+        <h5 style="margin: 0;">离线诊断</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly2"
+          data-source="resources2"
+          data-filter="filter2"
+          data-sort="sort2"
+          data-page="page2"
+        >
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>专业</th>
+              <th>报告编号</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  function parse(str) {
+    var a;
+    try {
+      a = JSON.parse(str);
+    } catch (e) {
+      return;
+    }
+    return a;
+  }
+
+  function isArray(a) {
+    return {}.toString.call(a) === "[object Array]";
+  }
+
+  let dataMap = new Map(),
+    ws = psWebsocket("prod_electrical_cabinet");
+
+  class socektData {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    on() {
+      ws.on(state.params.id, this.kpiCode, (d, { value, arisingTime }) => {
+        scope.$apply(() => {
+          this.value = value;
+          this.arisingTime = arisingTime;
+        });
+      });
+    }
+  }
+
+  scope.kpiItems1 = [
+    {
+      name: "过流1段保护定值_功能",
+      label: "功能",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流1段保护定值_定值",
+      label: "电流定值",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流1段保护定值_返回时间",
+      label: "时间",
+      value: "--",
+      status: 1
+    }
+  ].map(d => new socektData(d));
+
+  scope.kpiItems2 = [
+    {
+      name: "过流3段保护定值_投退",
+      label: "功能",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流3段保护定值_定值",
+      label: "电流定值",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流3段保护定值_延时",
+      label: "时间",
+      value: "--",
+      status: 1
+    }
+  ].map(d => new socektData(d));
+
+  scope.kpiItems3 = [
+    {
+      name: "零序过流保护1段定值_功能",
+      label: "功能",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "零序过流保护1段定值_定值",
+      label: "电流定值",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "零序过流保护1段定值_返回时间",
+      label: "时间",
+      value: "--",
+      status: 1
+    }
+  ].map(d => new socektData(d));
+
+  scope.kpiData = [
+    {
+      name: "A相电流",
+      label: "Ia",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "B相电流",
+      label: "Ib",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "C相电流",
+      label: "Ic",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "AB相电压",
+      label: "Uab",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "BC相电压",
+      label: "Ubc",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "CA相电压",
+      label: "Uca",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "P",
+      label: "P",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "Q",
+      label: "Q",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "F",
+      label: "F",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "COS",
+      label: "COS",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "断路器分合次数",
+      label: "CBSUM",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "断路器合位",
+      label: "开关状态",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "手车工作位置",
+      label: "手车状态",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "弹簧已储能",
+      label: "弹簧储能状态",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流保护1段动作",
+      label: "过流保护1段",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "过流保护2段动作",
+      label: "过流保护2段",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "零序过流1段动作",
+      label: "零序过流",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "重瓦斯",
+      label: "重瓦斯",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "压力释放",
+      label: "压力释放",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "油位异常",
+      label: "油位异常",
+      value: "--",
+      status: 1
+    },
+    {
+      name: "通讯状态点",
+      label: "通讯状态",
+      value: "--",
+      status: 1
+    }
+  ].map(d => new socektData(d));
+
+  scope.turnOn = function(item) {
+    let startdate = item.arisingTime && new Date(item.arisingTime) - 0,
+      enddate = startdate && startdate - 2 * 60 * 60 * 1000;
+    if (item.sensor) {
+      cms2.navigateTo("专业分析", {
+        startdate,
+        enddate,
+        id: state.params.id,
+        sensor: item.sensor,
+        dataItems: item.kpiCode
+      });
+    }
+  };
+
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+  }
+
+  cms().getDomainAreaLineTree_alertStatus(function(find) {
+    if (find.category == "Device" && find.externalDevId) {
+      ajax
+        .post("deviceResumeUIService.getDeviceOfflineReportListByCondition", {
+          devId: find.externalDevId
+        })
+        .then(d => {
+          scope.resources1 = d.map(b => new tableCell(b));
+        });
+    }
+  });
+
+  cms().getDomainAreaLineTree_alertStatus(function(find) {
+    let id = state.params.id;
+    ajax
+      .post("alertQueryFlexService.getAlertByPage", [
+        {
+          domain: "",
+          nodeType: "",
+          pageSize: 1000,
+          severities: "1,2,3,4",
+          states: "0,5,10,20",
+          nodeIds: id
+        },
+        {
+          start: 0,
+          length: "",
+          sort: "createTime",
+          sortType: "desc",
+          statCount: true,
+          total: 0
+        }
+      ])
+      .then(d => {
+        scope.resources2 = d.data.map(b => new tableCell(b));
+      });
+  });
+
+  let kpis1 = [
+    "过流1段保护定值_功能",
+    "过流1段保护定值_定值",
+    "过流1段保护定值_返回时间"
+  ];
+  let kpis2 = [
+    "过流3段保护定值_投退",
+    "过流3段保护定值_定值",
+    "过流3段保护定值_延时"
+  ];
+  let kpis3 = [
+    "零序过流保护1段定值_功能",
+    "零序过流保护1段定值_定值",
+    "零序过流保护1段定值_返回时间"
+  ];
+  let kpis = [
+    "A相电流",
+    "B相电流",
+    "C相电流",
+    "AB相电压",
+    "BC相电压",
+    "CA相电压",
+    "P",
+    "Q",
+    "F",
+    "COS",
+    "断路器分合次数",
+    "断路器合位",
+    "手车工作位置",
+    "弹簧已储能",
+    "过流保护1段动作",
+    "过流保护2段动作",
+    "零序过流1段动作",
+    "重瓦斯",
+    "压力释放",
+    "油位异常",
+    "通讯状态点"
+  ];
+
+  function setKpiCode(obj, kpi) {
+    for (let i = 0; i < obj.length; i++) {
+      if (obj[i].name == kpi.kpiName) {
+        obj[i].sensor = kpi.instance;
+        obj[i].kpiCode = kpi.dataItemId;
+        dataMap.set(`${obj[i].sensor}_${obj[i].kpiCode}`, obj[i]);
+      }
+    }
+  }
+
+  ajax.post("resourceUIService.getResourceById", state.params.id).then(d => {
+    let kpiCodes = [];
+    d.physicalConfig.accessConfigs.forEach(k => {
+      if (kpis1.includes(k.kpiName)) {
+        kpiCodes.push(k.dataItemId);
+        setKpiCode(scope.kpiItems1, k);
+      }
+      if (kpis2.includes(k.kpiName)) {
+        kpiCodes.push(k.dataItemId);
+        setKpiCode(scope.kpiItems2, k);
+      }
+      if (kpis3.includes(k.kpiName)) {
+        kpiCodes.push(k.dataItemId);
+        setKpiCode(scope.kpiItems3, k);
+      }
+      if (kpis.includes(k.kpiName)) {
+        kpiCodes.push(k.dataItemId);
+        setKpiCode(scope.kpiData, k);
+      }
+    });
+    Array.from(dataMap).forEach(d => {
+      d[1].on && d[1].on();
+    });
+    ws.send([state.params.id * 1], kpiCodes);
+    var params = [
+      "kpi",
+      {
+        includeInstance: true,
+        isRealTimeData: true,
+        nodeIds: [state.params.id * 1],
+        kpiCodes: kpiCodes
+      }
+    ];
+
+    var paramsState = [
+      "kpi",
+      {
+        includeInstance: true,
+        isRealTimeData: true,
+        nodeIds: [state.params.id * 1],
+        kpiCodes: [999997]
+      }
+    ];
+    ajax.post("kpiDataFlexService.getKpiValueList", params, function(tc) {
+      tc.forEach(item => {
+        let k1 = scope.kpiItems1.find(item1 => {
+          return item1.kpiCode == item.kpiCode;
+        });
+        let k2 = scope.kpiItems2.find(item1 => {
+          return item1.kpiCode == item.kpiCode;
+        });
+        let k3 = scope.kpiItems3.find(item1 => {
+          return item1.kpiCode == item.kpiCode;
+        });
+        let k4 = scope.kpiData.find(item1 => {
+          return item1.kpiCode == item.kpiCode;
+        });
+        k1 && ((k1.value = item.value), (k1.arisingTime = item.arisingTime));
+        k2 && ((k2.value = item.value), (k2.arisingTime = item.arisingTime));
+        k3 && ((k3.value = item.value), (k3.arisingTime = item.arisingTime));
+        k4 && ((k4.value = item.value), (k4.arisingTime = item.arisingTime));
+      });
+    });
+    ajax.post("kpiDataFlexService.getKpiValueList", paramsState, function(tc) {
+      tc.forEach(item => {
+        let k1 = scope.kpiItems1.find(item1 => {
+          return item1.kpiCode == item.instance.split("_")[0];
+        });
+        let k2 = scope.kpiItems2.find(item1 => {
+          return item1.kpiCode == item.instance.split("_")[0];
+        });
+        let k3 = scope.kpiItems3.find(item1 => {
+          return item1.kpiCode == item.instance.split("_")[0];
+        });
+        let k4 = scope.kpiData.find(item1 => {
+          return item1.kpiCode == item.instance.split("_")[0];
+        });
+        k1 && (k1.status = item.value);
+        k2 && (k2.status = item.value);
+        k3 && (k3.status = item.value);
+        k4 && (k4.status = item.value);
+      });
+    });
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+
+.element-row {
+  display: flex;
+  .topo {
+    flex: 3;
+    margin: 10px;
+    padding: 10px;
+    position: relative;
+  }
+  .value-box,
+  .alarm,
+  .diagnosis-report {
+    flex: 1;
+    margin: 10px;
+  }
+  .kpi {
+    width: 100%;
+    margin: 10px;
+    display: flex;
+    padding: 5px;
+    flex-wrap: wrap;
+    .kpi-item {
+      width: 10%;
+      padding: 10px;
+      .item-wrap {
+        .title {
+          margin: 0;
+          padding: 4px 0;
+          text-align: center;
+          background: #214770;
+        }
+        .status-wrap {
+          text-align: center;
+          padding: 10px 0;
+        }
+      }
+    }
+  }
+  .value-box {
+    padding: 10px;
+    .value-item {
+      &-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      &-kpi {
+        display: flex;
+        padding: 5px 0;
+        .label {
+          color: rgb(170, 170, 170);
+          text-align: right;
+          flex: 1;
+        }
+        .status-box {
+          flex: 2;
+          padding-left: 20px;
+        }
+      }
+    }
+  }
+  .alarm,
+  .diagnosis-report {
+    padding: 10px;
+  }
+}
+
+.status {
+  height: 20px;
+  line-height: 20px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  width: 90px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  &.state-1 {
+    background-color: #00bb7b;
+  }
+  &.state-2 {
+    background-color: #efd80b;
+  }
+  &.state-3 {
+    background-color: #ff8800;
+  }
+  &.state-4 {
+    background-color: #fd0001;
+  }
+}
+
+.with-border {
+  border: 1px solid #25729d;
+}
+</style>

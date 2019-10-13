@@ -1,0 +1,344 @@
+<config injector="$scope,$timeout,$state,$registerService,psTreeData,ajax,commonMethodService2,commonMethodService,growl"
+        params="/:sensor/:startdate/:enddate"
+
+></config>
+<template>
+  <div class="row">
+    <div class="col-md-12 padding5">
+      <div class="row block padding5">
+        <span class="padding-left-right-10">时间:</span>
+        <div class="horizontal width200 vertical-top">
+          <ps-date2 ng-model="startDate"
+          ></ps-date2>
+        </div>
+        <span class="text">至</span>
+        <div class="horizontal width200 vertical-top">
+          <ps-date2 ng-model="endDate"
+          ></ps-date2>
+        </div>
+        <button class="btn btn-primary vertical-top margin-right-5"
+                ng-repeat="button in buttons"
+                ng-bind="button.label"
+                ng-click="button.click( button )">
+        </button>
+      </div>
+    </div>
+    <div class="col-md-10 padding5">
+      <div class="row block">
+        <div class="col-md-12">
+          <ps-echart ng-model="options1"></ps-echart>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 padding5">
+      <div class="row block">
+        <div class="col-md-12">
+          <div class = "title">
+            <span>测点选择</span>
+          </div>
+          <div id = "sensorwrap1" class="sensor">
+            <table class="sensor-table">
+              <tbody>
+              <!--选择测点-->
+              <ps-select style="width: 80%;margin: 0 auto"
+                         ng-model="sensorObj"
+                         data-change= "changeSensor( sensorObj )"
+                         data-options="sensor as sensor.label for sensor in sensors">
+              </ps-select>
+              <div class="kpi-selector">
+                <button ng-click="saveSensors(sensors)"
+                        class="btn-sm btn-primary search">更新默认数据项</button>
+              </div>
+              <div class="checkboxlist" ng-repeat="kpi in sensorObj.kpis">
+                <input type="checkbox" ng-model="kpi.checked" ng-change="changeKpi( sensorObj.kpis )"/>
+                <span ng-bind="kpi.kpiName"></span>
+              </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,$state,registerService,psTreeData,ajax,commonMethodService2,cms,growl){
+        let id = $state.params.id,
+            target = cms(),
+            sensorwrap1 = document.getElementById("sensorwrap1"),
+            param2Number = d => d - 0,
+            startDate = getParam( $state.params.startdate, param2Number ),
+            endDate = getParam( $state.params.enddate, param2Number ),
+            sensorname = getParam( $state.params.sensor ),
+            kpiquery =[],
+            gkpiquery = [],
+            isChecked = d => d.checked;
+
+        /**
+         * 把用户选择的信息暂时储存起来
+         *  resourceUIService.saveDataDictInfo(DataDictInfo
+         *  resourceUIService.getDataDictInfosByConditionWidthPage
+         */
+
+        scope.saveSensors = function (sensors) {
+            var params = {
+                id : scope._id,
+                dataValues:{
+                    userId:target.getCurrentUser().userId,
+                    userName:target.getCurrentUser().userName,
+                    sensorData: sensors,
+                    deviceId:id
+                }
+            }
+            ajax.post("resourceUIService.saveDataDictInfo", params ).then( d => {
+                if(d){
+                    growl.success("数据项保存成功");
+                }
+            });
+        }
+
+        // 用来纪录保存的值、
+        class sensorData{
+            constructor( data ){
+                extend( this, data );
+            }
+        }
+        class kpiData{
+            constructor( data ){
+                extend( this, data );
+            }
+        }
+        function getParam( str, after ){
+            after = after || ( d => d );
+            return str == "null" ? null : after( str );
+        }
+        function extend(a, b){
+            for( let i in b ){
+                a[i] = b[i];
+            }
+            return a;
+        };
+        function makeEchartOption( title, option ){
+            return extend({
+                animation : false,
+                toolbox: {
+                    feature: {
+                        dataZoom: {},
+                        restore: {},
+                        saveAsImage:{
+                            type:"png",
+                            name: title,
+                            backgroundColor:"#0b2232"
+                        }
+                    },
+                    iconStyle:{
+                        normal:{
+                            borderColor:"#fff"
+                        },
+                        emphasis:{
+                            borderColor:"#fff"
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+            }, option );
+        }
+        scope.buttons = [{
+            label : "查询",
+            click : d => {
+                // 更新echart的数据
+                var dateRange = [dateparser(scope.startDate).getUTCDateString(), dateparser(scope.endDate).getUTCDateString()];
+                commonMethodService2.getDataItemValuelist( id, kpiquery.length>0 ? kpiquery : [], dateRange ).then( options => {
+                    scope.options1 = makeEchartOption( "综合趋势-测点图", options );
+                });
+
+
+
+
+            }
+        }];
+        // 时间
+        scope.startDate = startDate === null ? dateparser().addHour( - 2 ).date : dateparser( startDate ).date;
+        scope.endDate = endDate === null ? dateparser().date : dateparser( endDate ).date;
+        // 选择测点
+        scope.changeSensor = function (sensor) {
+            sensorname = sensor.name;
+            kpiquery = sensor.kpis.filter( isChecked ).map( ( d, i) => d );
+            // 更新echart的数据
+            var dateRange = [dateparser(scope.startDate).getUTCDateString(), dateparser(scope.endDate).getUTCDateString()];
+            commonMethodService2.getDataItemValuelist( id, kpiquery.length>0 ? kpiquery : [], dateRange ).then( options => {
+
+                scope.options1 = makeEchartOption( "综合趋势-测点图", options );
+            });
+        }
+        // 更改kpi 渲染echart图
+        scope.changeKpi = function( kpis ){
+            let maxNum = 5;
+            if(!kpis.some( isChecked )){
+                this.kpi.checked = true;
+                growl.warning("不可不选数据项");
+                return;
+            }
+            if(kpis.filter( isChecked ).length > maxNum){
+                this.checked = false;
+                growl.warning(`不可选择超过${ maxNum }个数据项`);
+                return;
+            }
+            // 更新echart的数据
+            kpiquery = kpis.filter( isChecked ).map( ( d, i) => d );
+            var dateRange = [dateparser(scope.startDate).getUTCDateString(), dateparser(scope.endDate).getUTCDateString()];
+            commonMethodService2.getDataItemValuelist( id, kpiquery.length>0 ? kpiquery : [], dateRange ).then( options => {
+                scope.options1 = makeEchartOption( "综合趋势-测点图", options );
+            });
+        }
+
+        psTreeData.getGeneral().then( whole => {
+            scope.whole = new sensorData( whole );
+            scope.whole.kpis = whole.kpis.map( (kpi, i) => {
+                let d = new kpiData( kpi );
+                d.checked = false;
+                if(i==0){
+                    d.checked = true;
+                }
+                return d;
+            });
+            return psTreeData.getSensors();
+        }).then( sensors => {
+            let sen, hasSensor,
+                dateRange = [dateparser(scope.startDate).getUTCDateString(),
+                    dateparser(scope.endDate).getUTCDateString()];
+            /**
+             * 判断此用户、此设备是否在库里面有存储保存的信息
+             * 如果有直接获取保存的数据来展示
+             * 没有的话就是默认用数据项的第一个来展示
+             */
+            var condition = {
+                "dataValues.userId":target.getCurrentUser().userId,
+                "dataValues.deviceId":id,
+            }
+            var pageRequest = {
+                "start":0,
+                "length":1,
+            }
+            ajax.post("resourceUIService.getDataDictInfosByConditionWidthPage",  [condition,pageRequest] ).then( d => {
+                if(d.data.length>0){
+                    scope._id =  d.data[0].id;
+                    scope.sensors = d.data[0].dataValues.sensorData;
+                }else {
+                    // 如果没有选择测点默认取第一个
+                    if( !sensorname ){
+                        commonMethodService2.refresh({
+                            enddate : scope.endDate.getTime(),
+                            startdate : scope.startDate.getTime(),
+                            sensor : sensors ? sensors[0].name:"",
+                            kpiquery : kpiquery,
+                            gkpiquery : gkpiquery
+                        });
+                        return;
+                    }
+
+                    scope.sensors = sensors.map( ( sensor, i ) => {
+                        if( sensor.name == sensorname ){
+                            hasSensor = typeof hasSensor === "undefined" ? i : hasSensor;
+                        }
+                        let senIns = new sensorData( extend({
+                            active : sensor.name == sensorname
+                        }, sensor ));
+                        senIns.kpis = senIns.kpis.map( (kpi, i) => {
+                            let d = new kpiData( kpi )
+                            d.checked = kpiquery.indexOf( i - 0 ) !== -1;
+                            return d;
+                        });
+                        return senIns;
+                    });
+                }
+                // 默认下拉框的选中第一项
+                scope.sensorObj = scope.sensors[0];
+                timeout( d => {
+                    sensorwrap1.scrollTop = hasSensor * 41;
+                });
+                sen = scope.sensors.find( n => n.active );
+                kpiquery = sen.kpis.filter( isChecked );
+                return commonMethodService2
+                    .getDataItemValuelist( id, sen
+                        ? kpiquery
+                        : [], dateRange )
+                    .then( options => {
+                        scope.options1 = makeEchartOption( "综合趋势-测点图", options );
+                        return commonMethodService2
+                            .getDataItemValuelist( id, scope.whole.kpis
+                                ? scope.whole.kpis.filter( isChecked )
+                                : [], dateRange ).then( options => {
+                                return commonMethodService2.success("视图渲染完成");
+                            })
+                    });
+            });
+        })
+    }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px !important;
+    height : ~'calc( 100vh - 200px)';
+    font-size : 0;
+    * {
+      font-size : 12px;
+    }
+    .btn {
+      font-size : 14px;
+    }
+  }
+  table.sensor-table {
+    width: 100%; table-layout: fixed;
+    td {
+      padding : 0;
+    }
+  }
+  .title {
+    color : white;
+    padding: 10px; position: relative;
+  }
+  .kpi-selector{
+    float : left;
+    padding : 5px 20px;
+    width : 100%;
+    border-bottom : 1px solid rgba(250,250,250,.4);
+    background-color: rgba(0,0,0,.2);
+    button.search{
+      margin : 10px 0;
+      padding : 5px !important;
+    }
+  }
+  .sensor{
+    height : 363px;
+    overflow-y : auto;
+  }
+  .text{
+    padding : 5px;
+    line-height: 26px;
+  }
+  .vertical-top{
+    vertical-align: top !important;
+  }
+  .vertical-middle{
+    vertical-align: middle !important;
+  }
+  .width-20 {
+    width : 20px;
+  }
+  .width200 {
+    width : 200px;
+  }
+  .horizontal{
+    display : inline-block;
+  }
+  .margin5 {
+    margin : 5px !important;
+  }
+  .padding5 {
+    padding : 5px !important;
+  }
+</style>

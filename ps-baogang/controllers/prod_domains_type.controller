@@ -1,0 +1,79 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax"
+        deps = "psTreeCol"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <ps-tree-col data-options="item in tree">
+          <span ng-bind="item.label"></span>
+          <span ng-bind="$depth"></span>
+        </ps-tree-col>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  export default function( scope,timeout,$state,registerService,cms2,ajax){
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+      domainsList = null, item,
+      domainsMap = null;
+    function getParentId( d ){
+      let match = /\/(\d+)\/\d+\/$/.exec( d );
+      return match ? match[1] : null;
+    }
+    function makeMap( a, b ){
+      a[ b.id ] = b;
+      return a;
+    }
+    function makeTree( a, b ){
+      let parentId = getParentId( b.domainPath ),
+        fd = domainsMap[parentId];
+      if( typeof fd == "undefined"){
+        a.push( b );
+      } else {
+        fd.children = fd.children || [];
+        fd.children.push( b );
+      }
+      return a;
+    }
+    function getChildren(s){
+      let rs = [], first = s.$$childHead;
+      if(!first){
+        return rs;
+      }
+      do {
+        rs.push(first)
+      }while( first = first.$$nextSibling );
+      return rs;
+    }
+    timeout(()=>{
+      let queue = [scope], children;
+      while( item = queue.shift() ){
+        children = getChildren( item );
+        item.__children = children;
+        if(children.length){
+          [].push.apply(queue, children);
+        }
+      }
+       
+    }, 1000);
+    ajax.post(getResourceByModelId, 300).then(domains =>{
+      return ajax.post(getResourceByModelId, 301).then(customers =>{
+        return ajax.post(getResourceByModelId, 302).then(projects =>{
+          domainsList = domains.concat(customers).concat(projects)
+          domainsMap = domainsList.reduce(makeMap, {});
+          scope.tree = domainsList.reduce(makeTree, []);
+        })
+      })
+    })
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

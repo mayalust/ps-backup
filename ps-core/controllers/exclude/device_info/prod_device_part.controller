@@ -1,0 +1,112 @@
+<config injector="$scope,ajax,$location,$routeParams,psDialog" params="/:id?">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+    export default function (scope, ajax,location,routeParams,psDialog) {
+        scope.layout = {
+            modals : {
+                editModel : {
+                    label : "设备部位",
+                    type : "layout",
+                    children : [{
+                        type : "form-dialog",
+                        data : null,
+                        children : [{
+                            type : "input",
+                            label : "名称",
+                            composory: true,
+                            key : "label",
+                        },{
+                            type : "input",
+                            label : "描述",
+                            composory: false,
+                            key : "desc"
+                        }]
+                    }],
+                    buttons : [{
+                        label : "确定",
+                        class : "btn btn-primary",
+                        click : function(e){
+                            this.submit();
+                        }
+                    },{
+                        label : "取消",
+                        click : function(){
+                            this.close();
+                        }
+                    }]
+                }
+            },
+            label: "设备部位",
+            children: [{
+                label: "部位",
+                type: "panel",
+                children:[{
+                    type : "tree-view2",
+                    options : "resourceUIService.getDevicePartInstanceByDeviceId",
+                    parameter : [routeParams.id],
+                    parentId : "parentId",
+                    buttons: [{
+                        label:"",
+                        class: "glyphicon glyphicon-trash",
+                        icon: "",
+                        tit: "删除",
+                        on: {
+                            click: function (e) {
+                                e.remove({
+                                    url : "resourceUIService.deleteDevicePartInstance"
+                                });
+                            }
+                        }
+                    },{
+                        label:"",
+                        class: "proudsmart ps-edit",
+                        icon: "",
+                        tit: "编辑",
+                        on: {
+                            click: function (e) {
+                                e.update({
+                                    template : "editModel",
+                                    before : function(source){
+                                        return source;
+                                    },
+                                    url : "resourceUIService.saveDevicePartInstance"
+                                });
+                            }
+                        }
+                    },{
+                        label:"",
+                        class: "glyphicon glyphicon-plus",
+                        icon: "",
+                        tit: "添加",
+                        rootShow: true,
+                        on: {
+                            click: function (e) {
+                                e.add({
+                                    template : "editModel",
+                                    before : function(d){
+                                        d.deviceId = routeParams.id;
+                                        d.parentId = e.$row.id;
+                                        return d;
+                                    },
+                                    url : "resourceUIService.saveDevicePartInstance",
+                                    after : function(d){
+                                        return d;
+                                    }
+                                });
+                            }
+                        }
+                    }]
+                }]
+
+            }]
+        }
+
+    };
+</script>
+<style type="less">
+</style>

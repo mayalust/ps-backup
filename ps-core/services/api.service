@@ -1,0 +1,44 @@
+<config injector="$q, $timeout, $http, growl"
+></config>
+<script type="text/javascript">
+export default function (q, timeout, http, growl) {
+  const generatePostUrl = (url, type) => {
+    let baseUrl = window.location.origin;
+    let u = url.replace(/\./, '/');
+    return `${baseUrl}/api/rest/${type ? type : 'post'}/${u}`;
+  };
+
+  const upload = (url, param) => {
+    let u = generatePostUrl(url, 'upload');
+    let defer = q.defer();
+    http.post(u, param, {
+      headers: {
+        'Content-Type': undefined,
+        'Accept': '*/*'
+      }
+    }).then(d => {
+      defer.resolve(d.data);
+    });
+    return defer.promise;
+  }
+
+  const post = (url, data) => {
+    let defer = q.defer();
+    http.post(generatePostUrl(url), data).then(ret => {
+      if (ret.data.code == 0) {
+        defer.resolve(ret.data);
+      } else {
+        growl.error(ret.data.message);
+      }
+    }).catch(ret => {
+      growl.error(ret.data);
+      defer.reject();
+    });
+    return defer.promise;
+  };
+  return {
+    post: post,
+    upload: upload
+  };
+}
+</script>

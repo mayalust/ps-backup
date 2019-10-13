@@ -1,0 +1,96 @@
+<config injector="$q, $timeout, psUltility"
+></config>
+<script type="text/javascript">
+import {extend, isArray, isObject, isFunction, attribute, each} from "ps-ultility";
+export default function (q, timeout, psUltility) {
+  const events = {};
+  function psEvent (event, scope) {
+    const commands = {};
+    let psevent;
+    psEvent.init = function () {
+      for (var i in event) {
+        this[i] = event[i];
+      }
+    };
+
+    function registerCommand (name, fn) {
+      commands[name] = fn;
+    }
+
+    function pipe (key, args) {
+      let defer = q.defer(),
+        promise = defer.promise,
+        fn;
+      if (isArray(key)) {
+        data = key[1];
+        key = key[0];
+        fn = commands[key];
+      } else if (isObject(key)) {
+        args = key.args;
+        key = key.command;
+        fn = commands[key];
+      } else if (isFunction(key)) {
+        fn = key;
+      }
+
+      function next (data) {
+        defer.resolve(data);
+      }
+
+      function freeze (data) {
+        defer.reject(data);
+      }
+
+      args = args || [];
+      typeof this.then === "function"
+        ? this.then((d) => {
+          fn.apply(null, args.concat([d, next, freeze]));
+        })
+        : fn.apply(null, args.concat([null, next, freeze]));
+      promise.pipe = pipe;
+      return promise;
+    }
+
+    function emit(name, data){
+      each(events[name], (fn) =>{
+        typeof fn === "function" && fn(data);
+      });
+    }
+
+    function on(name, handler){
+      events[name] = events[name] || [];
+      if(events[name].indexOf(handler) == -1){
+        events[name].push(handler);
+      }
+    }
+
+    function off(name, handler){
+      if(!isArray(events[name])){
+        return;
+      }
+      let inx = events[name].indexOf(handler);
+      inx !== -1 ? events[name].splice(inx, 1) : null;
+    }
+
+    extend(psEvent.init.prototype, {
+      registerCommand: registerCommand,
+      pipe: pipe,
+      getData: function () {
+        return psUltility.getData(scope);
+      },
+      setData : function(d) {
+        psUltility.setData(scope, d);
+      },
+      on : on,
+      emit : emit,
+      off : off,
+      extend: function (b) {
+        return extend(this, b);
+      }
+    });
+    psevent = new psEvent.init();
+    return psevent;
+  };
+  return psEvent;
+}
+</script>

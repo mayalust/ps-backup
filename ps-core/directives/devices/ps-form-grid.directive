@@ -1,0 +1,69 @@
+<config injector="$timeout, psScope, ajax, $routeParams, psUltility, psAttribute"
+></config>
+<template>
+    <div class="bk-scope">
+        <form class="row" ng-class="formcls(option)">
+            <ps-form-grid-content
+                data-option="op"
+                ng-repeat="op in option.children">
+            </ps-form-grid-content>
+            <div class="clearfloat"></div>
+        </form>
+    </div>
+</template>
+<script type="text/javascript">
+import {each, attribute} from "ps-ultility";
+
+export default function (timeout, psScope, ajax, routeParams, psUltility, psAttribute) {
+  return {
+    restrict: 'E',
+    scope: {
+      option: "="
+    },
+    replace: true,
+    link: function (scope, element) {
+      let url, data;
+      psScope(scope);
+      if (url = scope.option.url) {
+        ajax.post(url, routeParams["id"]).then(function (d) {
+          each(scope.option.children, (n) => {
+            n[psUltility.keyPattern(n["key"])] = attribute(d, n["key"]);
+          });
+        });
+      } else if (data = scope.option.data) {
+        each(scope.option.children, (n) => {
+          n[psUltility.keyPattern(n["key"])] = attribute(data, n["key"]);
+        })
+      }
+      /**
+       each(scope.option.children, (n) => {
+        let dic = "(?:input)|(?:date)|(?:date2)";
+        if (new RegExp(dic, 'g').test(n.type) !== -1) {
+          n.config = n.config || {};
+          n.config.class = "bk-form-input"
+        }
+      })**/
+      scope.formcls = function (option) {
+        return option.class || "";
+      }
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+form {
+}
+
+.form-center {
+    width: 60%;
+    margin: auto;
+}
+
+.clearfloat{
+  height : 1px; width : 100%; clear : both;
+}
+
+.bk-form-input {
+    width: ~'calc(100% - 14px)';
+}
+</style>

@@ -1,0 +1,46 @@
+<config injector="$rootScope,$compile"
+        deps="processMaintaining"
+></config>
+<template>
+  <ul class="timeline"></ul>
+</template>
+<script type="text/javascript">
+export default function(rootScope, compile) {
+  return {
+    scope: {
+      options: "="
+    },
+    link(scope, element, attr) {
+      let clearFn;
+      function createTracker() {
+        if (typeof clearFn == "function") {
+          clearFn.call();
+        }
+        scope.firstTracker = scope.options._firstTracker;
+        scope.normalTrackers = scope.options._normalTrackers;
+        {
+          let li = document.createElement(scope.firstTracker._directive);
+          li.setAttribute("data-tracker", "firstTracker");
+          element.append(li);
+        }
+        scope.normalTrackers.forEach((normalTracker, i) => {
+          let li = document.createElement(normalTracker._directive);
+          li.setAttribute("data-tracker", `normalTrackers[${i}]`);
+          element.append(li);
+        });
+        compile(element)(scope);
+        return function clear() {
+          element.children().remove();
+        };
+      }
+      scope.$watch("options", (n, o, s) => {
+        if (n) {
+          clearFn = createTracker();
+        }
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

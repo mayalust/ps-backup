@@ -1,0 +1,1393 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,psRouter,psLoading"
+></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="option"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  q,
+  ajax,
+  psDialog,
+  routeParams,
+  psUltility,
+  location,
+  growl,
+  commonMethodService,
+  psRouter,
+  psLoading
+) {
+  var target = commonMethodService(),
+    resource,
+    mode = target.getParameter("mode");
+  return {
+    link(scope, element, attr) {
+      let maintainObj = {};
+      let bool = target.getValue("maintainListDataflag");
+      function showDelete() {
+        return mode != "edit"
+          ? [
+              {
+                label: "删除",
+                class: "btn btn-primary",
+                on: {
+                  click: function(e) {
+                    /*if(e.$row.hasOwnProperty("rollerId")){
+                                    maintainObj.repairablePartActionLogs.splice(e.$index,1);
+                                }*/
+                    e.removeInline();
+                  }
+                }
+              }
+            ]
+          : [];
+      }
+      function getOutGrid(str) {
+        return [
+          {
+            label: str,
+            symbol: "inline",
+            class: "primary",
+            show: function() {
+              return mode == "edit" ? false : true;
+            }
+          }
+        ];
+      }
+      function fillTables(str, refreshGrid, b, allData) {
+        if (str.indexOf("stepsList") != -1) {
+          allData.push(b);
+        } else {
+          allData.unshift(b);
+        }
+        refreshGrid(false);
+      }
+      maintainObj = target.getValue("maintainListData");
+      let repairArr = maintainObj.repairableParts,
+        repairLogArr = maintainObj.repairablePartActionLogs,
+        consumableArr = maintainObj.consumableParts,
+        allRollerTypes;
+      ajax
+        .post("rollerPartUIService.getRollerPartByConditionWithPage", [
+          { type: 3, "values.deviceIds": maintainObj.deviceId },
+          {}
+        ])
+        .then(d => {
+          if (d && d.length != 0) {
+            return (scope.res = d.data);
+          }
+        })
+        .then(function() {
+          ajax
+            .post("rollerPartUIService.getLinkRepairRollerPart", [
+              maintainObj.deviceId
+            ])
+            .then(d => {
+              if (d && d.length != 0) {
+                d.forEach(function(item) {
+                  item.fatherRollerIdOptions = item.onlinePartList || [];
+                  item.rollerIdOptions = item.storePartList || [];
+                });
+                allRollerTypes = d;
+                let arr = [];
+                maintainObj.repairablePartActionLogs =
+                  maintainObj.repairablePartActionLogs || [];
+                for (
+                  var i = 0;
+                  i < maintainObj.repairablePartActionLogs.length;
+                  i++
+                ) {
+                  for (var j = 0; j < d.length; j++) {
+                    let obj = {};
+                    if (
+                      d[j].rollerType ==
+                      maintainObj.repairablePartActionLogs[i]["values"][
+                        "rollerType"
+                      ]
+                    ) {
+                      obj["rollerType"] = d[j].rollerType;
+                      // obj["fatherRollerId"] = null;
+                      obj["fatherRollerId"] =
+                        maintainObj.repairablePartActionLogs[i].fatherRollerId;
+                      obj.fatherRollerIdOptions = d[j].onlinePartList || [];
+                      obj["rollerId"] =
+                        maintainObj.repairablePartActionLogs[i].rollerId;
+                      // obj["rollerId"] = null;
+                      obj.rollerIdOptions = d[j].storePartList || [];
+                      /* obj["fatherRollerId"] = d[j].onlinePartList || [];
+                                        obj["rollerId"] = d[j].storePartList || [];*/
+                      arr.push(obj);
+                    }
+                  }
+                }
+                maintainObj.repairablePartsBak = arr;
+                return d;
+              }
+            })
+            .then(function(result) {
+              let resultArr = [],
+                resultArr2 = [];
+              if (
+                consumableArr &&
+                consumableArr.length != 0 &&
+                scope.res &&
+                scope.res.length != 0
+              )
+                for (var i = 0; i < scope.res.length; i++) {
+                  for (var j = 0; j < consumableArr.length; j++) {
+                    if (consumableArr[j].rollerNo == scope.res[i].rollerNo) {
+                     /* consumableArr[j].reserveNum = scope.res[i].reserveNum;
+                      consumableArr[j].format = scope.res[i].format;
+                      consumableArr[j].manufacturer = scope.res[i].manufacturer;
+                      consumableArr[j].useNum = scope.res[i].useNum;
+                      /!*以下字段智能提醒 更新字段*!/
+                      consumableArr[j].reminder = scope.res[i].reminder; //智能提醒
+                      consumableArr[j].materialCode = scope.res[i].materialCode;
+                      consumableArr[j].deviations = scope.res[i].deviations;
+                      consumableArr[j].serviceLife = scope.res[i].serviceLife;*/
+                      let useNum = consumableArr[j].useNum;
+                      consumableArr[j] = scope.res[i];
+                      consumableArr[j].useNum = useNum;
+                      resultArr2.push(consumableArr[j]);
+                    }
+                  }
+                }
+              maintainObj.consumableParts = resultArr2;
+              scope.option = {
+                title: "方案概况录入检修实绩",
+                type: "layout",
+                init: function() {
+                  // maintainObj =  target.getValue("maintainListData");
+                  if (maintainObj && maintainObj.listDeviceList) {
+                    if (bool) {
+                      maintainObj.listDeviceList.forEach(d => {
+                        return (d.state = 0);
+                      });
+                    }
+                  }
+                  if (maintainObj && maintainObj.stepsList) {
+                    maintainObj.stepsList.sort((a, b) => {
+                      return a.stepsNo - 0 - (b.stepsNo - 0);
+                    });
+                  }
+                  return {
+                    maintainObj: maintainObj
+                  };
+                },
+                children: [
+                  {
+                    type: "form-inline",
+                    children: [
+                      {
+                        name: "deviceName",
+                        type: "label",
+                        width: 10,
+                        value: "设备名称:"
+                      },
+                      {
+                        type: "label",
+                        width: 10,
+                        value: target.getValue("maintainListData").deviceName
+                      },
+                      {
+                        name: "deviceCode",
+                        type: "label",
+                        width: 10,
+                        value: "设备编号:"
+                      },
+                      {
+                        type: "label",
+                        width: 10,
+                        value: target.getValue("maintainListData").deviceCode
+                      }
+                    ]
+                  },
+                  {
+                    //挂牌准备
+                    label: "挂牌准备",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "table-form",
+                        key: "maintainObj.listDeviceList",
+                        config: {
+                          attributes: {
+                            safeNature: ["安全牌性质", "text"],
+                            listPosition: ["挂牌位置", "text"],
+                            deviceName: ["挂牌设备", "text"],
+                            state: ["挂牌确认", "dict"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "safeNature"
+                              },
+                              {
+                                name: "listPosition"
+                              },
+                              {
+                                name: "deviceName",
+                                bind: function(row) {
+                                  return row.deviceName.includes("////")
+                                    ? row.deviceName.split("////")[0]
+                                    : row.deviceName;
+                                }
+                              },
+                              {
+                                name: "state",
+                                gridType: "select",
+                                value: 1,
+                                options: [
+                                  {
+                                    id: 0,
+                                    label: "否",
+                                    selected: true
+                                  },
+                                  {
+                                    id: 1,
+                                    label: "是"
+                                  }
+                                ]
+                              }
+                            ],
+                            buttons: {
+                              inGrid: [],
+                              outGrid: []
+                            },
+                            config: {
+                              showIndex: true,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true,
+                              inlineAdd: {
+                                safeNature: {
+                                  type: "input",
+                                  composory: true,
+                                  isNumber: true
+                                },
+                                listPosition: {
+                                  type: "input",
+                                  composory: true
+                                },
+                                number: {
+                                  type: "input",
+                                  composory: true
+                                },
+                                deviceName: {
+                                  type: "input",
+                                  composory: true
+                                  // type: 'select',
+                                  // url: 'resourceUIService.getDevicesByCondition',
+                                  // parameter: {domains: resource.domains},
+                                },
+                                submit: function(a, b, refreshGrid, allData) {
+                                  // var listObj = b["deviceName"];
+                                  // b["deviceName"] = listObj["label"];
+                                  // b["deviceId"] = listObj["id"];
+                                  fillTables(
+                                    "listDeviceList",
+                                    refreshGrid,
+                                    b,
+                                    allData
+                                  );
+                                }
+                              }
+                            },
+                            options: []
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    //施工步骤
+                    label: "施工步骤",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "table-form",
+                        key: "maintainObj.stepsList",
+                        config: {
+                          attributes: {
+                            stepsNo: ["步骤", "text"],
+                            content: ["作业内容", "text"],
+                            planNeedTime: ["预计作业时间", "text"],
+                            dataType: ["数据类别", "dict"],
+                            technicalPoints: ["技术要点", "text"],
+                            safetyMeasures: ["安全措施", "text"],
+                            unit: ["单位", "text"],
+                            upperLimit: ["上限", "dict"],
+                            lowerLimit: ["下限", "dict"],
+                            stepsResult: ["* 作业确认", "dict"],
+                            remark: ["备注", "text"],
+                            resultFiles: ["附件", "dict"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "stepsNo"
+                              },
+                              {
+                                name: "content"
+                              },
+                              {
+                                name: "planNeedTime"
+                              },
+                              {
+                                name: "dataType"
+                              },
+                              {
+                                name: "technicalPoints"
+                              },
+                              {
+                                name: "safetyMeasures"
+                              },
+                              {
+                                name: "unit"
+                              },
+                              {
+                                name: "upperLimit"
+                              },
+                              {
+                                name: "lowerLimit"
+                              },
+                              {
+                                name: "stepsResult",
+                                composory: true,
+                                // gridType: "select",
+                                gridType: function(e) {
+                                  if (e.dataType == "定性") {
+                                    return "select";
+                                  } else {
+                                    return "input";
+                                  }
+                                },
+                                options: function(e) {
+                                  if (e.dataType == "定性") {
+                                    return [
+                                      {
+                                        id: 0,
+                                        label: "否"
+                                      },
+                                      {
+                                        id: 1,
+                                        label: "是"
+                                      }
+                                    ];
+                                  } else {
+                                    return [];
+                                  }
+                                }
+                              },
+                              {
+                                name: "remark",
+                                gridType: "input"
+                              },
+                              {
+                                name: "resultFiles",
+                                gridType: "filelinks"
+                              }
+                            ],
+                            buttons: {
+                              inGrid:
+                                bool == false
+                                  ? []
+                                  : [
+                                      {
+                                        label: "附件",
+                                        class: "primary",
+                                        symbol: "upload",
+                                        param: {
+                                          url:
+                                            "resourceFileUIService.uploadResourceFile",
+                                          before: function(files) {
+                                            let obj = { resourceId: 2 };
+                                            [].slice
+                                              .apply(files)
+                                              .forEach((f, i) => {
+                                                obj[`file${i}`] = f;
+                                              });
+                                            return obj;
+                                          },
+                                          after: function(d) {
+                                            let files = d.files,
+                                              row = d.$row;
+                                            if (d.code == 0) {
+                                              row[
+                                                "resultFiles"
+                                              ] = (angular.isArray(d.data)
+                                                ? d.data
+                                                : [d.data]
+                                              ).map((d, i) => {
+                                                return {
+                                                  src: d.qualifiedName,
+                                                  label: files[i]
+                                                };
+                                              });
+                                              growl.success("上传成功！");
+                                            } else {
+                                              growl.warning(d.message || d);
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ],
+                              outGrid: []
+                            },
+                            config: {
+                              rowclass: function(row) {
+                                // row.dataType == "定量" && (row.stepsResult != null || typeof row.stepsResult != "undefined" || row.stepsResult != "")
+                                if (
+                                  row.stepsResult === null ||
+                                  typeof row.stepsResult === "undefined" ||
+                                  row.stepsResult === "" ||
+                                  row.stepsResult === "-"
+                                ) {
+                                  return "";
+                                } else {
+                                  if (row.dataType == "定量") {
+                                    if (
+                                      (row.upperLimit === null &&
+                                        row.lowerLimit === null) ||
+                                      (row.upperLimit === "" &&
+                                        row.lowerLimit === "")
+                                    ) {
+                                      return "";
+                                    } else if (
+                                      (row.upperLimit === null ||
+                                        row.upperLimit === "") &&
+                                      (row.lowerLimit !== null ||
+                                        row.lowerLimit !== "")
+                                    ) {
+                                      if (
+                                        Number(row.stepsResult) <
+                                          Number(row.lowerLimit) ||
+                                        Number(row.stepsResult) >
+                                          Number.MAX_VALUE
+                                      ) {
+                                        return "red";
+                                      } else {
+                                        return "";
+                                      }
+                                    } else if (
+                                      (row.upperLimit !== null ||
+                                        row.upperLimit !== "") &&
+                                      (row.lowerLimit === null ||
+                                        row.lowerLimit === "")
+                                    ) {
+                                      if (
+                                        Number(row.stepsResult) <
+                                          Number.MIN_VALUE ||
+                                        Number(row.stepsResult) >
+                                          Number(row.upperLimit)
+                                      ) {
+                                        return "red";
+                                      } else {
+                                        return "";
+                                      }
+                                    } else if (
+                                      (row.upperLimit !== null ||
+                                        row.upperLimit !== "") &&
+                                      (row.lowerLimit !== null ||
+                                        row.lowerLimit !== "")
+                                    ) {
+                                      if (
+                                        Number(row.stepsResult) <
+                                          Number(row.lowerLimit) ||
+                                        Number(row.stepsResult) >
+                                          Number(row.upperLimit)
+                                      ) {
+                                        return "red";
+                                      } else {
+                                        return "";
+                                      }
+                                    }
+                                  } else {
+                                    return "";
+                                  }
+                                }
+                              },
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true
+                            },
+                            options: []
+                          }
+                        }
+                      }
+                    ]
+                  }, {
+                    //备件更换
+                    label: "备件更换",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "new-grid",
+                        key: "maintainObj.consumableParts",
+                        config: {
+                          inlineAddConfirm: function(row, next) {
+                            if(row["rollerName"]["reserveNum"] === 0){
+                              growl.info("该库存为空");
+                              return;
+                            }else if(!row["useNum"] && row['useNum'] !== 0){
+                              growl.info("使用数量不能为空");
+                              return;
+                            }else if(row["useNum"] - row['rollerName']['reserveNum'] > 0){
+                              growl.info('使用数量超过了库存');
+                              return;
+                            }
+                            row.rollerName["useNum"] = row["useNum"];
+                            this.addRow(row.rollerName, true);
+                            next();
+                          },
+                          inlineEditConfirm: function(newRow, oldRow, next) {
+                            if(newRow["reserveNum"] === 0){
+                              growl.info("该库存为空");
+                              return;
+                            }else if(!newRow["useNum"] && newRow['useNum'] !== 0){
+                              growl.info("使用数量不能为空");
+                              return;
+                            }else if(newRow["useNum"] - newRow['reserveNum'] > 0){
+                              growl.info('使用数量超过了库存');
+                              return;
+                            }
+                            next();
+                          },
+                          outButtons: [
+                            {
+                              label: "新增易耗件",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              },
+                              symbol: "inlineAdd"
+                            }
+                          ],
+                          bodyButtons: [
+                            {
+                              label: "编辑",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              },
+                              symbol: "inlineEdit"
+                            },
+                            {
+                              label: "删除",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              },
+                              on: {
+                                click: function(row) {
+                                  this.deleteRow(row);
+                                }
+                              }
+                            }
+                          ],
+                          columns: [
+                            {
+                              key: "rollerName",
+                              label: "备件名称",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    id: "rollerName",
+                                    label: "rollerName",
+                                    value: "$this",
+                                    compare: function(item, value) {
+                                      if (value) {
+                                        return item.id == value.id;
+                                      }
+                                      return false;
+                                    }
+                                  }
+                                },
+                                options: {
+                                  url:
+                                    "rollerPartUIService.getRollerPartByConditionWithPage",
+                                  parameter: [
+                                    {
+                                      type: 3,
+                                      "values.deviceIds": maintainObj.deviceId
+                                    },
+                                    {}
+                                  ],
+                                  after: function(d) {
+                                    return d.data;
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "rollerNo", //materialCode
+                              label: "物料代码", //备件编码
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.rollerNo : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "format",
+                              label: "规格型号",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.format : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "manufacturer",
+                              label: "生产厂家",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return d ? d.manufacturer : "";
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "reserveNum",
+                              label: "库存",
+                              type: "text",
+                              add: {
+                                config: {
+                                  disabled: true
+                                },
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d, next) {
+                                    ajax
+                                      .post(
+                                        "rollerPartUIService.getRollerPartByConditionWithPage",
+                                        [
+                                          {
+                                            type: 3,
+                                            "values.deviceIds":
+                                              maintainObj.deviceId
+                                          },
+                                          {}
+                                        ]
+                                      )
+                                      .then(function(res) {
+                                        if (res.data && res.data.length != 0) {
+                                          let findObj = res.data.find(function(
+                                            resItem
+                                          ) {
+                                            if (!d) {
+                                              return false;
+                                            }
+                                            return (
+                                              resItem.rollerNo == d.rollerNo
+                                            );
+                                          });
+                                          next(
+                                            findObj
+                                              ? findObj.reserveNum
+                                              : d
+                                              ? d.reserveNum
+                                              : ""
+                                          );
+                                        }
+                                      });
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              key: "useNum",
+                              label: "使用数量",
+                              type: "text",
+                              edit: {
+                                type: "input"
+                              },
+                              add: {
+                                watch: {
+                                  key: "rollerName",
+                                  handler: function(d) {
+                                    return "";
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        type: "new-grid",
+                        key: "maintainObj.repairablePartsBak",
+                        config: {
+                          inlineEditConfirm: function(newRow, oldRow, next) {
+                            if(!newRow.rollerId){
+                              growl.info("可更换备件为空");
+                              return;
+                            }
+                            let objParam = {};
+                            objParam["values"] = objParam["values"] || {};
+                            objParam["rollerId"] = newRow["rollerId"];
+                            objParam["fatherRollerId"] =
+                              newRow["fatherRollerId"];
+                            objParam["values"]["rollerName"] = allRollerTypes
+                              .find(r => {
+                                return r.rollerType == newRow["rollerType"];
+                              })
+                              ["rollerIdOptions"].find(d => {
+                                return d.id == newRow["rollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return r.rollerType == newRow["rollerType"];
+                                  })
+                                  ["rollerIdOptions"].find(d => {
+                                    return d.id == newRow["rollerId"];
+                                  })["rollerName"]
+                              : "";
+
+                            objParam["values"][
+                              "fatherRollerName"
+                            ] = allRollerTypes
+                              .find(r => {
+                                return r.rollerType == newRow["rollerType"];
+                              })
+                              ["fatherRollerIdOptions"].find(d => {
+                                return d.id == newRow["fatherRollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return r.rollerType == newRow["rollerType"];
+                                  })
+                                  ["fatherRollerIdOptions"].find(d => {
+                                    return d.id == newRow["fatherRollerId"];
+                                  })["rollerName"]
+                              : "";
+
+                            objParam["values"]["rollerType"] =
+                              newRow["rollerType"];
+                            maintainObj.repairablePartActionLogs =
+                              maintainObj.repairablePartActionLogs || [];
+                            let ind;
+                            maintainObj.repairablePartActionLogs.forEach(
+                              (r, index) => {
+                                if (r && r.values) {
+                                  if (
+                                    r.values.rollerType == newRow.rollerType
+                                  ) {
+                                    ind = index;
+                                  }
+                                }
+                              }
+                            );
+                            maintainObj.repairableParts.splice(ind, 1, newRow["rollerType"]);
+                            maintainObj.repairablePartActionLogs.splice(ind, 1, objParam);
+                            next();
+                          },
+                          inlineAddConfirm: function(row, next) {
+                            if(!row.rollerId){
+                              growl.info("可更换备件为空");
+                              return;
+                            }
+                            let objParam = {};
+                            objParam["values"] = objParam["values"] || {};
+                            objParam["rollerId"] = row["rollerId"];
+                            objParam["fatherRollerId"] = row["fatherRollerId"];
+                            objParam["values"]["rollerName"] = allRollerTypes
+                              .find(r => {
+                                return (
+                                  r.rollerType == row["rollerType"].rollerType
+                                );
+                              })
+                              ["rollerIdOptions"].find(d => {
+                                return d.id == row["rollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return (
+                                      r.rollerType ==
+                                      row["rollerType"].rollerType
+                                    );
+                                  })
+                                  ["rollerIdOptions"].find(d => {
+                                    return d.id == row["rollerId"];
+                                  })["rollerName"]
+                              : "";
+                            objParam["values"][
+                              "fatherRollerName"
+                            ] = allRollerTypes
+                              .find(r => {
+                                return (
+                                  r.rollerType == row["rollerType"].rollerType
+                                );
+                              })
+                              ["fatherRollerIdOptions"].find(d => {
+                                return d.id == row["fatherRollerId"];
+                              })
+                              ? allRollerTypes
+                                  .find(r => {
+                                    return (
+                                      r.rollerType ==
+                                      row["rollerType"].rollerType
+                                    );
+                                  })
+                                  ["fatherRollerIdOptions"].find(d => {
+                                    return d.id == row["fatherRollerId"];
+                                  })["rollerName"]
+                              : "";
+                            objParam["values"]["rollerType"] =
+                              row["rollerType"].rollerType;
+                            maintainObj.repairablePartActionLogs =
+                              maintainObj.repairablePartActionLogs || [];
+                            maintainObj.repairablePartActionLogs.unshift(
+                              objParam
+                            );
+                            row.rollerType = row.rollerType.rollerType;
+                            row.rollerIdOptions = allRollerTypes.find(r => {
+                              return r.rollerType == row["rollerType"];
+                            })["rollerIdOptions"];
+                            row.fatherRollerIdOptions = allRollerTypes.find(
+                              r => {
+                                return r.rollerType == row["rollerType"];
+                              }
+                            )["fatherRollerIdOptions"];
+                            this.addRow(row, true);
+                            maintainObj.repairableParts.unshift(row.rollerType);
+                            next();
+                          },
+                          outButtons: [
+                            {
+                              label: "新增可修复件",
+                              symbol: "inlineAdd",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              }
+                            }
+                          ],
+                          bodyButtons: [
+                            {
+                              label: "编辑",
+                              class: "btn btn-primary",
+                              symbol: "inlineEdit",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              }
+                            },
+                            {
+                              label: "删除",
+                              class: "btn btn-primary",
+                              disabled: function() {
+                                return bool == false ? true : false;
+                              },
+                              on: {
+                                click: function(row) {
+                                  this.deleteRow(row);
+                                  let ind;
+                                  maintainObj.repairableParts.forEach(
+                                    (r, index) => {
+                                      if (r == row.rollerType) {
+                                        ind = index;
+                                      }
+                                    }
+                                  );
+                                  maintainObj.repairablePartActionLogs.splice(ind, 1);
+                                  maintainObj.repairableParts.splice(ind, 1);
+                                }
+                              }
+                            }
+                          ],
+                          columns: [
+                            {
+                              key: "rollerType",
+                              label: "类型",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    id: "rollerType",
+                                    label: "rollerType",
+                                    value: "$this"
+                                  }
+                                },
+                                options: allRollerTypes
+                              },
+                              bind: function(row, value) {
+                                return row.values
+                                  ? row.values.rollerType
+                                  : row.rollerType;
+                              }
+                            },
+                            {
+                              key: "fatherRollerId",
+                              label: "在线备件身份ID",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                watch: {
+                                  key: "rollerType",
+                                  handler: function(d, next) {
+                                    next({
+                                      $options:
+                                        d && d.onlinePartList
+                                          ? d.onlinePartList.filter(v => v.state == 1)
+                                          : [],
+                                      $value: null
+                                    });
+                                  }
+                                }
+                              },
+                              edit: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                options: function(row) {
+                                  return row.fatherRollerIdOptions || [];
+                                }
+                              },
+                              bind: function(row, value) {
+                                let type = row.rollerType ? row.rollerType : "",
+                                  fatherRollerName;
+                                maintainObj.repairablePartActionLogs.find(v => {
+                                  if (v.values.rollerType == type) {
+                                    fatherRollerName =
+                                      v.values.fatherRollerName;
+                                    return true;
+                                  }
+                                });
+                                return row.values
+                                  ? row.values.fatherRollerName
+                                  : allRollerTypes
+                                      .find(r => {
+                                        return (
+                                          r.rollerType == row["rollerType"]
+                                        );
+                                      })
+                                      ["fatherRollerIdOptions"].find(d => {
+                                        return d.id == value;
+                                      })
+                                  ? allRollerTypes
+                                      .find(r => {
+                                        return (
+                                          r.rollerType == row["rollerType"]
+                                        );
+                                      })
+                                      ["fatherRollerIdOptions"].find(d => {
+                                        return d.id == value;
+                                      })["rollerName"]
+                                  : fatherRollerName
+                                  ? fatherRollerName
+                                  : "";
+                              }
+                            },
+                            {
+                              key: "rollerId",
+                              label: "更换备件身份ID",
+                              type: "text",
+                              add: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                watch: {
+                                  key: "rollerType",
+                                  handler: function(d, next) {
+                                    next({
+                                      $options:
+                                        d && d.storePartList
+                                          ? d.storePartList.filter(v => v.state == 4)
+                                          : [],
+                                      $value: null
+                                    });
+                                  }
+                                }
+                              },
+                              edit: {
+                                type: "select",
+                                config: {
+                                  format: {
+                                    label: "rollerName"
+                                  }
+                                },
+                                options: function(row) {
+                                  return row.rollerIdOptions || [];
+                                }
+                              },
+                              bind: function(row, value) {
+                                let type = row.rollerType ? row.rollerType : "",
+                                  rollerName;
+                                maintainObj.repairablePartActionLogs.find(v => {
+                                  if (v.values.rollerType == type) {
+                                    rollerName = v.values.rollerName;
+                                    return true;
+                                  }
+                                });
+                                return row.values
+                                  ? row.values.rollerName
+                                  : allRollerTypes
+                                      .find(r => {
+                                        return (
+                                          r.rollerType == row["rollerType"]
+                                        );
+                                      })
+                                      ["rollerIdOptions"].find(d => {
+                                        return d.id == value;
+                                      })
+                                  ? allRollerTypes
+                                      .find(r => {
+                                        return (
+                                          r.rollerType == row["rollerType"]
+                                        );
+                                      })
+                                      ["rollerIdOptions"].find(d => {
+                                        return d.id == value;
+                                      })["rollerName"]
+                                  : rollerName
+                                  ? rollerName
+                                  : "";
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    //施工总结
+                    label: "施工总结",
+                    type: "panel",
+                    children: [
+                      {
+                        type: "form-grid",
+                        children: [
+                          {
+                            type: "date2",
+                            label: "项目开始时间：",
+                            key: "maintainObj.projectBeginDate",
+                            composory: true,
+                            col: 4
+                          },
+                          {
+                            type: "date2",
+                            label: "项目结束时间：",
+                            key: "maintainObj.projectEndDate",
+                            composory: true,
+                            col: 4
+                          },
+                          {
+                            type: "input",
+                            label: "施工用时(H)",
+                            key: "maintainObj.realUseTime",
+                            watch: {
+                              key: [
+                                "maintainObj.projectEndDate",
+                                "maintainObj.projectBeginDate"
+                              ],
+                              handler: function(e) {
+                                let dtE = new Date(e.$value[0]).getTime(),
+                                  dtS = new Date(e.$value[1]).getTime(),
+                                  ds = dtE - dtS;
+                                if (dtE && dtS && ds > 0) {
+                                  e.update({
+                                    value: (ds = (ds / 1000 / 3600).toFixed(2))
+                                  });
+                                } else if (!dtS || !dtE) {
+                                  e.update({
+                                    value: 0
+                                  });
+                                } else {
+                                  e.update({
+                                    value: 0
+                                  });
+                                  growl.info("请正确输入开始结束时间");
+                                }
+                              }
+                            },
+                            composory: true,
+                            config: {
+                              disabled: "disabled",
+                              type: "number"
+                            },
+                            col: 4
+                          }
+                        ]
+                      },
+                      {
+                        type: "table-form",
+                        key: "maintainObj.personList",
+                        config: {
+                          attributes: {
+                            personType: ["人员类型", "text"],
+                            personNum: ["实际投入人数", "text"]
+                          },
+                          grid: {
+                            body: [
+                              {
+                                name: "personType"
+                              },
+                              {
+                                name: "personNum",
+                                gridType: "input"
+                              }
+                            ],
+                            buttons: {
+                              inGrid: [],
+                              outGrid: []
+                            },
+                            config: {
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true
+                            },
+                            options: []
+                          }
+                        }
+                      },
+                      {
+                        type: "form-grid",
+                        children: [
+                          {
+                            type: "input",
+                            label: "总人数：",
+                            key: "maintainObj.totalUseNum",
+                            composory: true,
+                            watch: {
+                              key: "maintainObj.personList",
+                              deep: true,
+                              handler: function(e) {
+                                //求和
+                                let rs =
+                                  e.$value &&
+                                  e.$value.reduce((a, b) => {
+                                    return a - 0 + (b.personNum - 0);
+                                  }, 0);
+                                e.update({
+                                  value: rs
+                                });
+                              }
+                            },
+                            config: {
+                              disabled: "disabled",
+                              type: "number"
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "总工时(H)：",
+                            key: "maintainObj.totalUseTime",
+                            composory: true,
+                            config: {
+                              type: "number",
+                              min: 0
+                            }
+                          },
+                          {
+                            type: "input",
+                            label: "异常判断结果处理说明：",
+                            key: "maintainObj.resultDesc",
+                            composory: true,
+                            config: {},
+                            col: 12
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    type: "form-inline",
+                    children: [
+                      {
+                        type: "button",
+                        width: 10,
+                        config: {
+                          class: "btn-primary btn-100",
+                          validCheck: true,
+                          label: "确 定",
+                          show: bool == false ? false : true,
+                          // validCheck: ["maintainObj.resultDesc"],
+                          on: {
+                            click: function(e) {
+                              let bool = false;
+                              psLoading.showLoading();
+                              var maintainPlan = angular.extend(
+                                target.getValue("maintainListData"),
+                                e.getData().maintainObj
+                              );
+                              var params = {
+                                ticketNo: target.getValue("ticketNo"),
+                                maintainPlan: maintainPlan,
+                                actionLog: null
+                              };
+                              var stepListArr = maintainPlan.stepsList;
+                              if (stepListArr && stepListArr.length) {
+                                let flag = stepListArr.some((v, i) => {
+                                  if (
+                                    v.stepsResult === null ||
+                                    v.stepsResult === ""
+                                  ) {
+                                    return true;
+                                  }
+                                  return false;
+                                });
+                                if (flag) {
+                                  psLoading.closeLoading();
+                                  growl.info("作业确认不能为空！");
+                                } else {
+                                  if (!maintainPlan.projectBeginDate) {
+                                    psLoading.closeLoading();
+                                    growl.info("请输入项目开始时间");
+                                  } else if (!maintainPlan.projectEndDate) {
+                                    psLoading.closeLoading();
+                                    growl.info("请输入项目结束时间");
+                                  } else if (
+                                    maintainPlan.resultDesc == null ||
+                                    maintainPlan.resultDesc == ""
+                                  ) {
+                                    psLoading.closeLoading();
+                                    growl.info("请输入异常判断结果处理说明");
+                                  } else {
+                                    if (params && params.maintainPlan) {
+                                      if (
+                                        params.maintainPlan.hasOwnProperty(
+                                          "repairablePartsBak"
+                                        )
+                                      ) {
+                                        scope.repairablePartsBakParams = params.maintainPlan.repairablePartsBak || [];
+                                        delete params.maintainPlan
+                                          .repairablePartsBak;
+                                      }
+                                    }
+                                    if (params && params.maintainPlan && params.maintainPlan.repairablePartActionLogs && params.maintainPlan.repairablePartActionLogs.length != 0) {
+                                       params.maintainPlan.repairablePartActionLogs.find(v => {
+                                        if(!v.rollerId){
+                                          bool = true;
+                                        }
+                                      })
+                                    }
+                                    if(bool){
+                                      psLoading.closeLoading();
+                                      growl.info("更换备件不可为空");
+                                      return ;
+                                    }
+                                    // 调用接口
+                                    ajax
+                                      .post(
+                                        "baogangTicketService.doMaintainTask",
+                                        params
+                                      )
+                                      .then(d => {
+                                        let paramsRepair = [];
+                                        scope.repairablePartsBakParams.map((v,i) => {
+                                          console.log(v);
+                                           if(v.fatherRollerId && v.fatherRollerIdOptions && v.fatherRollerIdOptions.length > 0){
+                                             let obj = {deviceId: maintainObj.deviceId};
+                                             obj["rollerId"] = v.fatherRollerId;
+                                             obj["rollerName"] = v.fatherRollerIdOptions.find(k => k.id == v.fatherRollerId).rollerName;
+                                             obj["values"] = {
+                                               "source" : {
+                                                 "ticketNo" : params.ticketNo,
+                                                 "standardName": params.maintainPlan.standardName,
+                                                 "standardProjectNo": params.maintainPlan.standardProjectNo
+                                               }
+                                             }
+                                             paramsRepair.push(obj);
+                                           }
+                                        });
+                                        // console.log(paramsRepair);
+                                        if(paramsRepair && paramsRepair.length > 0){
+                                          ajax.post("baogangTicketService.addRepairPartsTrustTickets",[paramsRepair]).then(d=> {
+                                            psLoading.closeLoading();
+                                            if(d && d.code == 0){
+                                              growl.info(d.message);
+                                            }
+                                            // growl.info(d.message+'2');
+                                            growl.info("录入实绩成功");
+                                            target.trigger("queryTable2");
+                                            target.trigger("queryTable3");
+                                            target.trigger("queryTabelList2");
+                                            target.trigger("queryTable1");
+                                            target.close();
+                                            // console.log(d);
+                                            // growl.info("录入实绩成功");
+                                          }).catch(function() {
+                                            psLoading.closeLoading();
+                                          });
+                                        }else{
+                                          psLoading.closeLoading();
+                                          growl.info("录入实绩成功");
+                                          target.trigger("queryTable2");
+                                          target.trigger("queryTable3");
+                                          target.trigger("queryTabelList2");
+                                          target.trigger("queryTable1");
+                                          target.close();
+                                        }
+
+                                      })
+                                      .catch(function() {
+                                        psLoading.closeLoading();
+                                      });
+
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        key: "save"
+                      },
+                      {
+                        type: "button",
+                        width: 10,
+                        config: {
+                          label: "取 消",
+                          class: "btn btn-default btn-100",
+                          show: bool == false ? false : true,
+                          click: function() {
+                            target.close();
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              };
+            });
+        });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

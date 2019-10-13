@@ -1,0 +1,73 @@
+<config injector="$timeout, psScope, psUi"
+></config>
+<template>
+    <div style="width : 100%;overflow:hidden;text-overflow : ellipsis;">
+        <span></span>
+    </div>
+</template>
+<script type="text/javascript">
+import {hasParent} from "ps-ultility";
+
+export default function (timeout, psScope, psUi) {
+  return {
+    scope: {},
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let div = element[0], span = element[0].children[0], ins;
+
+      function mouseOverHandler (e) {
+        let currentTarget = e.currentTarget, fromElement = e.fromElement;
+        if (!hasParent(fromElement, currentTarget)) {
+          ins = psUi.createTooltip(div, span.innerText);
+          div.removeEventListener('mouseover', mouseOverHandler);
+        }
+      }
+
+      function mouseOutHandler (e) {
+        if (!hasParent(e.toElement, e.currentTarget)) {
+          ins.destroy();
+          div.removeEventListener("mouseout", div.__MouseOutHandler);
+          div.addEventListener('mouseover', mouseOverHandler);
+        }
+      }
+
+      div.addEventListener('mouseout', mouseOutHandler);
+
+      div.addEventListener('mouseover', mouseOverHandler);
+
+      Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+        if (!n) {
+          return;
+        }
+        return n;
+      });
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        let text = '';
+        if (typeof n !== 'undefined') {
+          text = n;
+        }
+        span.innerText = text;
+        return n;
+      });
+
+      scope.$on("$destroy", () => {
+        ins && ins.destroy();
+      })
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+span {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently*/
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 20px;
+    font-size: 14px;
+}
+</style>

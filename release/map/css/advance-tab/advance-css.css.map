@@ -1,0 +1,1 @@
+{"version":3,"sources":["css/advance-tab/advance-css.css"],"names":[],"mappings":"AAAA,sBACI,MAAO,IACP,OAAQ,IAAI,KACZ,OAAQ,IAAI,MAAM,KAClB,OAAQ","file":"css/advance-tab/advance-css.css","sourceRoot":"/source/","sourcesContent":[".advance-tab .content{\n    width: 99%;\n    margin: 5px auto;\n    border: 1px solid #000000;\n    height: 300px;\n}"]}

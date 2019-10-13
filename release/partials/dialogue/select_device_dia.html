@@ -1,0 +1,83 @@
+<div class="modal bootstrap-dialog type-primary fade size-normal in" style="display : block;">
+    <div class="modal-dialog" style="width: 680px">
+        <div class="modal-content">
+            <div class="modal-header bg-f2">
+                <a role="button" ng-click="closeDialog();" class="close">×</a>
+                <h4 class="modal-title info-box-number">设备选择</h4>
+            </div>
+            <div class="modal-body clearfix row ">
+                <!--左右联动-->
+
+                <div class="col-md-5">
+                    <p>设备清单</p>
+                    <table class="table table-bordered">
+                        <thead style="display:block">
+                        <tr>
+                            <td>
+                                <input type="checkbox" ng-model="select_all" ng-change="selectAll(select_all)">
+                            </td>
+                            <td style="width: 100%;">
+                                设备 <input type="input" ng-model="deviceName">
+                                <button ng-click="queryDeviceName(deviceName)">查询</button>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody style="display:block;overflow: auto;height: 140px">
+                        <tr ng-repeat="device in deviceList">
+                            <td>
+                                <input type="checkbox" ng-model="device.checked">
+                            </td>
+                            <td style="width: 100%;">
+                                {{device.label}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="col-md-1" style="padding-top: 14%;">
+                    <button ng-click="moveSelectedDeviceList()">→</button>
+                    <button ng-click="moveOriginalDeviceList()">←</button>
+                </div>
+
+                <div class="col-md-5">
+                    <p>已选设备</p>
+                    <table class="table table-bordered">
+                        <thead style="display:block">
+                        <tr>
+                            <td>
+                                <input type="checkbox" ng-model="select_all2" ng-change="selectAll2(select_all2)">
+                            </td>
+                            <td style="width: 100%;">
+                                已选设备
+                                <!--<input type="input" ng-model="deviceName">-->
+                                <!--<button ng-click="queryDeviceName(deviceName)">查询</button>-->
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody style="display:block;overflow: auto;height: 140px">
+                        <tr ng-repeat="device in checked">
+                            <td>
+                                <input type="checkbox" ng-model="device.checked">
+                            </td>
+                            <td style="width: 100%;">
+                                {{device.label}}
+                            </td>
+                        </tr>
+                        </tbody>
+
+
+                    </table>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" ng-click="saveSelectDevice()">
+                    确定
+                </button>
+                <button class="btn btn-default" ng-click="closeDialog();">取消</button>
+            </div>
+        </div>
+    </div>
+</div>

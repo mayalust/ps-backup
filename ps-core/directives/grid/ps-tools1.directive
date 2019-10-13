@@ -1,0 +1,130 @@
+<config injector="$q,$timeout,$compile,ajax,psUltility,psEvent"
+></config>
+<template>
+    <div>
+    </div>
+</template>
+<script type="text/javascript">
+import {isString, isArray, isObject} from "ps-ultility";
+import ToolsOption from './tools-option';
+
+export default function (q, timeout, compile, ajax, psUltility, psEvent) {
+  return {
+    scope: {
+      option: `=`,
+    },
+    link (scope, element, attr) {
+      let dom, init = false,
+        getFormatId = getFormat("id"),
+        getFormatLabel = getFormat("label");
+
+      function getFormat (_val) {
+        return function (str) {
+          if (!str) {
+            return `item.${_val}`;
+          }
+          if (/\$this/g.test(str)) {
+            return str.replace("$this", "item")
+          } else {
+            return "item." + str;
+          }
+        }
+      }
+
+      const format = function (t) {
+        switch (t) {
+          case "select" :
+          case "tree":
+          case "multi-select":
+            return ['ng-model', 'data-config', 'data-options'];
+            break;
+          case "date2":
+          case "date":
+            return ['ng-model', 'data-config'];
+            break;
+          case "status":
+          case "address":
+            return ['ng-model', 'data-config', 'data-options'];
+            break;
+          case "auto" :
+            return ['ng-model', 'data-config', {
+              name: 'data-options',
+              formatter: function (str, option) {
+                let obj = option[str];
+                if (!isArray(obj) && !isObject(obj)) {
+                  obj = [];
+                }
+                if (isArray(obj)) {
+                  if (isArray(obj[0])) {
+                    return `item[0] as item[1] for item in option.${str}`
+                  } else {
+                    let idFmt = getFormatId(option.format && option.format.id),
+                      labelFmt = getFormatLabel(option.format && option.format.label);
+                    return `${idFmt} as ${labelFmt} for item in option.${str}`
+                  }
+                } else if (isObject(obj)) {
+                  let fmt = obj.format;
+                  return `item.${fmt[0]} as item.${fmt[1]} for item in option['${str}']['value']`
+                }
+              }
+            }];
+            break;
+          default :
+            return ['ng-model', 'data-config'];
+            break;
+        }
+      };
+
+      function extend (a, b) {
+        for (var i in b) {
+          a[i] = b[i];
+        }
+        return a;
+      }
+
+      function $append (target, dom) {
+        target[0].appendChild(dom);
+        compile(target[0])(scope);
+      }
+
+      function render (renderObj, option) {
+        let dom = document.createElement(`ps-${renderObj['type']}1`),
+          fmt = format(renderObj['type']);
+        element[0].innerHTML = "";
+        for (let i = 0; i < fmt.length; i++) {
+          if (typeof fmt[i] == "object") {
+            dom.setAttribute(`${fmt[i].name}`, fmt[i].formatter(renderObj[fmt[i].name], option));
+          } else {
+            dom.setAttribute(`${fmt[i]}`, `option.${renderObj[fmt[i]]}`);
+          }
+        }
+        $append(element, dom);
+      }
+
+      function createTool (n) {
+        let renderObj = {};
+        renderObj['type'] = n['type'];
+        renderObj['ng-model'] = (n['key'] ? psUltility.keyPattern(n["key"]) : n['key']) || psUltility.keyPattern(n['type']);
+        renderObj['data-config'] = 'config';
+        renderObj['data-options'] = psUltility.keyPattern("options");
+        render(renderObj, n);
+      }
+
+      scope.$on(`$destroy`, () => {
+         
+      });
+      scope.$watch(`option`, (n, o, s) => {
+        if (typeof n !== 'undefined' && n !== null) {
+          if (n.options) {
+            n[psUltility.keyPattern("options")] = n.options;
+          }
+          createTool(n);
+        }
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+
+</style>

@@ -1,0 +1,390 @@
+<config
+    injector="$scope,ajax,commonMethodService2,$location,psDialog,$routeParams,growl,commonMethodService,psRouter,$filter"
+    deps="rulemaintainDialog"></config>
+<template>
+  <div class="wrap">
+    <div class="bk-scope">
+      <p class="device-info">
+        <span class="device-info-item">设备名称:</span>
+        <span class="device-info-item">{{resource.label}}</span>
+        <span class="device-info-item">设备编码:</span>
+        <span class="device-info-item">{{resource.externalDevId}}</span>
+      </p>
+    </div>
+
+    <div>
+      <dl class="bk-group">
+        <dt class="bk-group-title"></dt>
+        <dd class="bk-group-detail">
+          <div class="row">
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>状态维护标准编号</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.standardNo" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>状态维护项目名称</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.standardName" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>实施依据</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.maintainBasis" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>设备状态</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.deviceState" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>实施方</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.actionUser" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>安全挂牌</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.safetyPoint" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>维护人</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.executionerName" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>岗位号</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.jobNo" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>周期单位</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.executionCycleName" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>周期间隔</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.cycleNum" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>开始时间</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.firstExecutionTimeStr" config="inputConfig"></ps-input>
+              </div>
+            </div>
+            <div class="col-md-4 margin-bottom-5">
+              <div class="key-value-key">
+                <span>作业时长(H)</span>
+              </div>
+              <div class="key-value-value">
+                <ps-input ng-model="routerParameter.needTime" config="inputConfig"></ps-input>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+    </div>
+
+    <div>
+      <dl class="bk-group">
+        <dt class="bk-group-title">
+          <span>工器具准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="row">
+            <ps-grid1 ng-model="gridModel1" config="config1"></ps-grid1>
+          </div>
+        </dd>
+      </dl>
+    </div>
+
+    <div>
+      <dl class="bk-group">
+        <dt class="bk-group-title">
+          <span>挂牌准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="row">
+            <ps-grid1 ng-model="gridModel2" config="config2"></ps-grid1>
+          </div>
+        </dd>
+      </dl>
+    </div>
+
+    <div>
+      <dl class="bk-group">
+        <dt class="bk-group-title">
+          <span>施工步骤</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="row">
+            <ps-grid1 ng-model="gridModel3" config="config3"></ps-grid1>
+          </div>
+        </dd>
+      </dl>
+    </div>
+
+    <div>
+      <dl class="bk-group">
+        <dt class="bk-group-title">
+          <span>回复初始设置条件</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="row">
+            <ps-grid1 ng-model="gridModel4" config="config4"></ps-grid1>
+          </div>
+        </dd>
+      </dl>
+    </div>
+
+    <div style="text-align: center;" ng-show="!bool">
+      <button class="btn btn-sm btn-primary" ng-click="submitFn()">
+        <span>确定</span>
+      </button>
+
+      <button class="btn btn-sm btn-default" ng-click="cancelFn()">
+        <span>取消</span>
+      </button>
+    </div>
+
+
+  </div>
+</template>
+<script type="text/javascript">
+export default function (scope, ajax, cms2, location, psDialog, $routeParams, growl, commonMethodService, psRouter, $filter) {
+  const target = commonMethodService();
+  const getExecutionCycle = (executionCycle) => {
+    let list = target.getRootScope("myDicts")["executionCycle"];
+    let obj = list.find(a => {
+      return a.valueCode == executionCycle;
+    });
+    return obj.label;
+  };
+  const init = e => {
+    const resource = e.resource;
+    const routerParameter = psRouter.params("obj");
+    const bool = psRouter.params("showSubmit");
+    scope.bool = bool;
+    scope.resource = resource;
+    scope.routerParameter = routerParameter;
+    scope.routerParameter.executionCycleName = getExecutionCycle(routerParameter.executionCycle);
+    scope.routerParameter.firstExecutionTimeStr = $filter('date')(routerParameter.firstExecutionTime, 'yyyy-MM-dd HH:mm:ss');
+    scope.inputConfig = {
+      disabled: true
+    };
+
+    scope.gridModel1 = routerParameter.toolList;
+    scope.config1 = {
+      columns: [{
+        key: "name",
+        label: "名称",
+        type: "text"
+      }, {
+        key: "format",
+        label: "规格",
+        type: "text"
+      }, {
+        key: "num",
+        label: "数量",
+        type: "text"
+      }, {
+        key: "unit",
+        label: "单位",
+        type: "text"
+      }]
+    };
+
+    scope.gridModel2 = routerParameter.listDeviceList;
+    scope.config2 = {
+      columns: [{
+        key: "safeNature",
+        label: "安全牌性质",
+        type: "text"
+      }, {
+        key: "listPosition",
+        label: "挂牌位置",
+        type: "text"
+      }, {
+        key: "deviceName",
+        label: "挂牌设备",
+        type: "text",
+        bind (row, value) {
+          return value.includes("////") ? value.split("////")[0] : value;
+        }
+      }]
+    };
+
+    scope.gridModel3 = routerParameter.stepsList.map(step => {
+      step.$$edit = true;
+      step.$$showEditBodyButton = true;
+      return step;
+    });
+    scope.config3 = {
+      bodyButtons: bool != false ? [{
+        label: "规则编辑",
+        on: {
+          click: function (row) {
+            let dataType = row.FREEBOARD_____VALUE_____dataType;
+            if (dataType == "定性") {
+              cms2.modal({
+                title: "维护规则",
+                directive: "rulemaintain-dialog",
+                width: 1200,
+                //scope: scope,
+                params: {type: "dx", data: row}
+              }).then(ret => {
+                if (ret !== '_CLOSE_MODAL') {
+                  row.dataType = dataType;
+                  row.ruleList = ret;
+                }
+              });
+            } else if (dataType == "定量") {
+              cms2.modal({
+                title: "维护规则",
+                directive: "rulemaintain-dialog",
+                width: 1200,
+                //scope: scope,
+                params: {type: "dl", data: row}
+              }).then(ret => {
+                if (ret !== '_CLOSE_MODAL') {
+                  row.dataType = dataType;
+                  row.ruleList = ret;
+                }
+              });
+            } else {
+              growl.warning("请选择数据类别!");
+            }
+          }
+        }
+      }
+      ] : [],
+      columns: [{
+        key: "stepsNo",
+        label: "步骤",
+        type: "text"
+      }, {
+        key: "content",
+        label: "作业步骤",
+        type: "text"
+      }, {
+        key: "dataType",
+        label: "数据类别",
+        type: "select",
+        edit: {
+          options: [{
+            id: '定性',
+            label: '定性'
+          }, {
+            id: '定量',
+            label: '定量'
+          }]
+        }
+      }]
+    };
+
+    scope.gridModel4 = routerParameter.resetCondtionList;
+    scope.config4 = {
+      columns: [{
+        key: "standardProjectName",
+        label: "标准项目名称",
+        type: "text"
+      }, {
+        key: "standardProjectId",
+        label: "标准项目编号",
+        type: "text"
+      }],
+      showIndex: true
+    };
+
+    scope.submitFn = function () {
+
+      routerParameter.stepsList = scope.gridModel3;
+
+      ajax.post("maintenanceTaskUIService.addStateMaintinStandardUpdate", routerParameter).then(d => {
+        growl.info("编辑维护状态标准成功");
+        target.navigateTo(
+          "index", {main: 7, sub: 0},
+          "self"
+        );
+      });
+    };
+
+    scope.cancelFn = function () {
+      target.navigateTo(
+        "index", {
+          main: 7,
+          sub: 0
+        },
+        "self"
+      );
+    };
+  };
+
+  target.on("tree_resourceChange", function (e) {
+    init(e);
+  });
+
+}
+</script>
+<style type="less" scoped="true">
+.device-info {
+  margin: 0;
+  text-align: center;
+
+  .device-info-item {
+    padding: 5px;
+    white-space: normal;
+    line-height: 20px;
+    font-size: 14px;
+  }
+}
+
+.key-value-key {
+  line-height: 34px;
+  text-align: right;
+  color: #fff;
+  font-weight: 700;
+  float: left;
+  width: 160px;
+}
+
+.key-value-value {
+  padding: 0 10px;
+  width: calc(100% - 160px);
+  line-height: 34px;
+  float: left;
+}
+</style>

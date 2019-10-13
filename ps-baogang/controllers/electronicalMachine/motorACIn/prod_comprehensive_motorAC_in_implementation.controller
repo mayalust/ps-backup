@@ -1,0 +1,1818 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading"
+></config>
+<template>
+    <div>
+        <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+            <!--大电机内场交流引线-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">引线</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#down_lead_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="down_lead_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            电机引出线:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.motorOutletWire" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.motorOutletWire" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            接线柱:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminal" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminal" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrLead" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListLead"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--大电机内场交流绕组处理-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">绕组处理</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#wind_deal_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="wind_deal_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            定子绕组清洗:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.statorWindingCleaning" value="带电清洗剂" /><span class="radio-spa">带电清洗剂</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.statorWindingCleaning" value="水清洗" /><span class="radio-spa">水清洗</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            干燥时间:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.dryingTimeStator" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>h</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            绝缘电阻:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.insulationStator" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>MΩ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            转子绕组清洗:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.rotorWindingCleaning" value="带电清洗剂" /><span class="radio-spa">带电清洗剂</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.rotorWindingCleaning" value="水清洗" /><span class="radio-spa">水清洗</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            干燥时间:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.dryingTimeRotor" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>h</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            绝缘电阻:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.insulationRotor" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>MΩ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.rotorMeasuringToolNumber" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrRotor" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListRotor"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--大电机内场交流轴承处理-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">轴承处理</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#bearing_deal_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="bearing_deal_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴承清洗:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.bearingCleaning" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            负荷侧轴承间隙值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.loadSideBearingClearance" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            非负荷侧轴承间隙值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.nonLoadSideBearingClearance" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴承加油脂牌号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.greaseBrand" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴承更换:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.bearingReplacement" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            负荷侧轴承更换型号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.loadSideBearingType" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            非负荷侧轴承更换型号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.nonLoadSideBearingType" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingType" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListbearingType"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--大电机内场交流轴瓦处理-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">轴瓦处理</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#bearing_brush_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="bearing_brush_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦处理:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.bearingBushProcessing" value="修刮" /><span class="radio-spa">修刮</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.bearingBushProcessing" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦处理前后数据:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.loadSideMeasuredValueAfterRepair" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--瓦盖顶间隙-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            瓦盖顶间隙:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+
+                                </div>
+                                <div class="col-md-4">
+                                    <img src="../../../../images/electronicalmachine/roofclearance.png" alt="" style="width: 50%"/>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-8">
+                                    <table class="table table-bordered2">
+                                        <thead>
+                                        <tr>
+                                            <th rowspan="2" style="line-height:400%">测量点</th>
+                                            <th colspan="2">负荷侧</th>
+                                            <th colspan="2">非荷侧</th>
+                                        </tr>
+                                        <tr>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>A</th>
+                                            <th>B</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td style="line-height:200%">原始值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="line-height:200%">调整值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--轴瓦顶间隙-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦顶间隙:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+
+                                </div>
+                                <div class="col-md-4">
+                                    <img src="../../../../images/electronicalmachine/roofclearance_top.png" alt="" style="width: 50%"/>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-8">
+                                    <table class="table table-bordered2">
+                                        <thead>
+                                        <tr>
+                                            <th rowspan="2" style="line-height:400%">测量点</th>
+                                            <th colspan="2">负荷侧</th>
+                                            <th colspan="2">非荷侧</th>
+                                        </tr>
+                                        <tr>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>A</th>
+                                            <th>B</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td style="line-height:200%">原始值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="line-height:200%">调整值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--轴瓦轴向窜动间隙-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦轴向窜动间隙:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+
+                                </div>
+                                <div class="col-md-4">
+                                    <img src="../../../../images/electronicalmachine/roofclearance_axis.png" alt="" style="width: 50%"/>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-8">
+                                    <table class="table table-bordered2">
+                                        <thead>
+                                        <tr>
+                                            <th rowspan="2" style="line-height:400%">测量点</th>
+                                            <th colspan="2">负荷侧</th>
+                                            <th colspan="2">非荷侧</th>
+                                        </tr>
+                                        <tr>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>A</th>
+                                            <th>B</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td style="line-height:200%">原始值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="line-height:200%">调整值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--轴瓦侧间隙-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦侧间隙:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+
+                                </div>
+                                <div class="col-md-4">
+                                    <img src="../../../../images/electronicalmachine/roofclearance_side.png" alt="" style="width: 50%"/>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-8">
+                                    <table class="table table-bordered2">
+                                        <thead>
+                                        <tr>
+                                            <th rowspan="2" style="line-height:400%">测量点</th>
+                                            <th colspan="4">负荷侧</th>
+                                            <th colspan="4">非荷侧</th>
+                                        </tr>
+                                        <tr>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>C</th>
+                                            <th>D</th>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>C</th>
+                                            <th>D</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td style="line-height:200%">原始值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="line-height:200%">调整值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--轴瓦接触面间隙-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴瓦接触面间隙:
+                                        </div>
+                                        <div class="tbl-cell"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+
+                                </div>
+                                <div class="col-md-4">
+                                    <img src="../../../../images/electronicalmachine/roofclearance_touch.png" alt="" style="width: 50%"/>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-8">
+                                    <table class="table table-bordered2">
+                                        <thead>
+                                        <tr>
+                                            <th rowspan="2" style="line-height:400%">测量点</th>
+                                            <th colspan="3">负荷侧</th>
+                                            <th colspan="3">非荷侧</th>
+                                        </tr>
+                                        <tr>
+                                            <th>D</th>
+                                            <th>B</th>
+                                            <th>L</th>
+                                            <th>D</th>
+                                            <th>B</th>
+                                            <th>L</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td style="line-height:200%">原始值</td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="line-height:200%">调整值</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td><input type="text" ng-model="insulationCoilOnePairToGround" class="form-control" style="width:100%"></td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流轴承室-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">轴承室</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#bearing_room_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="bearing_room_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴承室修复:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.repairOfBearingChamber" value="电刷镀" /><span class="radio-spa">电刷镀</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.repairOfBearingChamber" value="喷涂" /><span class="radio-spa">喷涂</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.repairOfBearingChamber" value="镶套" /><span class="radio-spa">镶套</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.repairOfBearingChamber" value="堆焊" /><span class="radio-spa">堆焊</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            负荷侧修复后测量值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.loadSideMeasuredValueAfterRepair" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            非负荷侧修复后测量值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.nonLoadSideMeasuredValueAfterRepair" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.measuringToolNumber" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrBearingChamber" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListBearingChamber"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流轴承档及轴头-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">轴承档及轴头</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#bearing_stop_head_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="bearing_stop_head_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴承档修复:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.bearingFileRepair" value="堆焊车削" /><span class="radio-spa">堆焊车削</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.bearingFileRepair" value="激光堆焊" /><span class="radio-spa">激光堆焊</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            负荷侧修复后测量值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.loadSideBearingFile" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            非负荷侧修复后测量值:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.nonLoadSideBearingFile" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.measuringToolNumberBearingFile" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            轴头堆焊车削:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.shaftHeadSurfacingTurning" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            处理后数据:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.dataAfterProcessingShaftHead" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.measuringToolNumberShaftHead" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrbearingFile" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListbearingFile"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流动平衡-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">动平衡</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#dynamic_balance_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="dynamic_balance_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        转子动平衡记录:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.rotorDynamicBalanceRecord" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        风叶动平衡记录:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.windBladeDynamicBalanceRecord" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrDynamicBalance" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListDynamicBalance"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流附件-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">附件</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#attachment_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="attachment_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            配油嘴:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.nozzle" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            配油管:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.tubing" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            接线盒:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBlockPart" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBlockPart" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            风叶:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.windLeaf" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.windLeaf" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            风罩:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.windShield" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.windShield" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            刹车片:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.brakePad" value="调整" /><span class="radio-spa">调整</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.brakePad" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            密封件更换:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.replaceTheSeal" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            端子板:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBoard" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBoard" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            冷却器处理:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.coolerProcessing" value="">
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            更换油封:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.replaceTheOilSeal" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            油封牌号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.oilSealNumber" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            齿轮箱:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.gearBox" value="保养" /><span class="radio-spa">保养</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.gearBox" value="更换" /><span class="radio-spa">更换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            测速机对中检查:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.speedMachineAlignmentCheck" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            整流桥更换:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.replacementOfRectifierBridge" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            测温元件更换:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.replacementOfTemperatureMeasuringElement" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            测温元件型号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.modelOfTemperatureMeasuringElement" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            其他零件:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.otherPartOne" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            其他零件处理方式:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.handlingOfOtherPartOne" value="修理" /><span class="radio-spa">修理</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.handlingOfOtherPartOne" value="重新加工" /><span class="radio-spa">重新加工</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.handlingOfOtherPartOne" value="改造" /><span class="radio-spa">改造</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            其他零件:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.otherPartTwo" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            其他零件加装、去除、改造:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input class="chx" type="checkbox" ng-model="maintainObj.replacementOfTemperatureMeasuringElement" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            处理说明:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.processingInstructions" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrPart" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListPart"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流成品送试前检查-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">成品送试前检查</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#finish_product_check_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="finish_product_check_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            电枢绝缘:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.statorInsulationFinishedProduct" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>MΩ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            励磁绝缘:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.rotorInsulationFinishedProduct" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span>MΩ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            量具编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.measuringToolNumberFinishedProduct" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrFinishedProduct" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListFinishedProduct"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--大电机内场交流出厂前检查-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">出厂前检查</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#leave_factory_check_AC_in" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="leave_factory_check_AC_in" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            接手:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.catcherExFactory" value="有" /><span class="radio-spa">有</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.catcherExFactory" value="无" /><span class="radio-spa">无</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            接手位置:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="text" ng-model="maintainObj.catcherThePosition" class="form-control"/>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            接线盒:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBlock" value="有" /><span class="radio-spa">有</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.terminalBlock" value="无" /><span class="radio-spa">无</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            接线盒盖:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.junctionBoxCover" value="有" /><span class="radio-spa">有</span>
+                                            <input type="radio" class="radio-inp" ng-model="maintainObj.junctionBoxCover" value="无" /><span class="radio-spa">无</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        备注:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.descrExFactory" class="form-control"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentListExFactory"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--提交 取消-->
+            <div class="row margin-top-10">
+                <div class="col-md-5">
+
+                </div>
+                <div class="col-md-7">
+                    <button class="btn btn-primary btn-100" ng-click="submitFn()" ng-if="mode !='resume'">提交</button>
+                    <button class="btn btn-default btn-100" ng-click="close()" ng-if="mode !='resume'">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psLoading){
+        var target = commonMethodService();
+        scope.mode = target.getValue("mode");
+        if(scope.mode == "resume"){
+            scope.maintainObj = target.getValue("resumeObj");
+        }else {
+            scope.maintainObj = target.getValue("maintainObj");
+        }
+        if(scope.maintainObj.status == 200){
+            scope.mode = "resume";
+        }
+        scope.maintainObj = target.getValue("maintainObj");
+        scope.submitFn = function(){
+            let promise = cms2.validate({
+                "maintainObj.statorInsulationFinishedProduct" : "定子绝缘不可为空",
+                "maintainObj.rotorInsulationFinishedProduct" : "转子绝缘不可为空",
+                "maintainObj.measuringToolNumberFinishedProduct" : "成品送试前量具编号不可为空",
+                "maintainObj.catcherExFactory" : "出厂接手不可为空",
+                "maintainObj.terminalBlock" : "出厂接线盒不可为空",
+                "maintainObj.junctionBoxCover" : "出厂接线盒盖不可为空",
+            }, scope);
+            promise.then(() => {
+                if( typeof (scope && scope.maintainObj) != "undefined"){
+                    function getFiles(data) {
+                        let keys = Object.keys(data);
+                        let values = Object.values(data);
+                        let temp = [];
+                        let ret = [];
+                        keys.forEach((key, index) => {
+                            let obj = {};
+                            obj.key = key;
+                            obj.files = values[index];
+                            temp.push(obj);
+                        });
+
+                        let index = 0;
+                        temp.forEach(item => {
+                            if (item.files.length > 0) {
+                                item.files.forEach(file => {
+                                    ret.push({
+                                        name: file.name,
+                                        key: item.key,
+                                        file: file,
+                                        index: index
+                                    });
+                                    index ++ ;
+                                });
+                            }
+                        });
+
+                        return ret;
+                    }
+                    function setValueEmpty(data) {
+                        for(let key in data) {
+                            scope.maintainObj[key] = [];
+                        }
+                    }
+                    let formData = new FormData();
+                    let obj = {
+                        'attachmentListLead':  scope.maintainObj.attachmentListLead || [],
+                        'attachmentListRotor':  scope.maintainObj.attachmentListRotor || [],
+                        'attachmentListRotorCore':  scope.maintainObj.attachmentListRotorCore || [],
+                        'attachmentListBrushHolder':  scope.maintainObj.attachmentListBrushHolder || [],
+                        'attachmentListbearingType':  scope.maintainObj.attachmentListbearingType || [],
+                        'attachmentListBearingChamber':  scope.maintainObj.attachmentListBearingChamber || [],
+                        'attachmentListbearingFile':  scope.maintainObj.attachmentListbearingFile || [],
+                        'attachmentListEndcover':  scope.maintainObj.attachmentListEndcover || [],
+                        'attachmentListDynamicBalance':  scope.maintainObj.attachmentListDynamicBalance || [],
+                        'attachmentListPart':  scope.maintainObj.attachmentListPart || [],
+                        'attachmentListFinishedProduct':  scope.maintainObj.attachmentListFinishedProduct || [],
+                        'attachmentListExFactory':  scope.maintainObj.attachmentListExFactory || [],
+
+                    };
+                    let files = getFiles(obj);
+                    setValueEmpty(obj);
+                    formData.append("resourceId",2);
+                    if(files.length >0){
+                        files.forEach((v,i) => {
+                            formData.append(`file${v.index}`,v.file);
+                        })
+                    }
+                    if(files.length !== 0){
+                        psLoading.showLoadingTip();
+                        ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                            if(s.code == "0"){
+                                psLoading.closeLoading();
+                                let obj = {};
+                                if(isArray(s.data)){
+                                    s.data.forEach((v,i)=>{
+                                        obj = {};
+                                        obj["fileName"] = files[i].name;
+                                        obj["filePath"] = v.qualifiedName;
+                                        scope.maintainObj[files[i].key].push(obj);
+                                    })
+                                }else {
+                                    obj["fileName"] = files[0].name;
+                                    obj["filePath"] = s.data.qualifiedName;
+                                    scope.maintainObj[files[0].key].push(obj);
+                                }
+                                return cms2.success( scope);
+                            }
+                        }).then(function (scope) {
+                            psLoading.showLoading();
+                            ajax.post("motorRepairUIService.saveMaintenanceImplementationAC",scope.maintainObj).then( d => {
+                                if(d != null){
+                                    psLoading.closeLoading();
+                                    growl.info("设备检修实施成功！");
+                                    // cms2.navigateTo(3,0);
+                                }
+                            })
+                        })
+                    }else {
+                        psLoading.showLoading();
+                        ajax.post("motorRepairUIService.saveMaintenanceImplementationAC",scope.maintainObj).then( d => {
+                            if(d != null){
+                                psLoading.closeLoading();
+                                growl.info("设备检修实施成功！");
+                                // cms2.navigateTo(3,0);
+                            }
+                        })
+                    }
+                }
+
+            }).catch(e => {
+                growl.error( e );
+            })
+        }
+        scope.close = function(){
+            cms2.navigateTo(3,0);
+        }
+        scope.sub = function () {
+            psLoading.showLoading();
+            ajax.post("motorRepairUIService.synthesizeProcess",[scope.maintainObj.implementOrderNo]).then(d => {
+                if(d != null){
+                    psLoading.closeLoading();
+                    growl.info("综合处理成功");
+                    cms2.navigateTo(3);
+                }
+            })
+        }
+        scope.back = function () {
+            cms2.navigateTo(3);
+        }
+    }
+</script>
+<style lang="less" scoped>
+  .buttons {
+      position: fixed;
+      width: 160px;
+      height: 26px;
+      z-index: 99999999;
+      right: 20px;
+      top: 110px;
+    }
+  .wrap {
+    padding : 5px 10px !important;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+    .option{
+      width : 160px;
+    }
+    .arrow {
+      font-size: 18px;
+    }
+    .photo {
+       width: 50%;
+    }
+   .tbl {
+       width: 100%;
+       display: table;
+    }
+   .tbl-cell {
+       display: table-cell;
+    }
+    .radio-lbl {
+       display: table-cell;
+       width: 150px;
+       text-align:right;
+       padding-right: 5px;
+    }
+    .radio-inp {
+      vertical-align:-2px;
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+    }
+    .radio-spa {
+      padding: 0 15px 0 2px;
+    }
+    .radio-unit {
+        display: table-cell;
+        padding-left: 2px;
+        width: 40px;
+   }
+  .chx {
+      vertical-align: -2px;
+      margin-left: 40px;
+   }
+  .table-bordered2 {
+          tr,td,th {
+              text-align: center;
+              border: 1px solid #bdbdbd !important;/* 整体表格边框 */
+          }
+      }
+  }
+</style>

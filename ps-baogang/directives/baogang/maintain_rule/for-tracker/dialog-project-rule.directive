@@ -1,0 +1,169 @@
+<config injector="api, commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <div class="title">
+      <p class="title-item">作业内容:</p>
+      <p class="title-item">{{ step.content }}</p>
+      <p class="title-item">数据类别:</p>
+      <p class="title-item">{{ step.dataType }}</p>
+    </div>
+    <div class="form-rule">
+      <div class="margin-bottom-10 label-value fully-width">
+        <ps-grid1
+            ng-model="girdModel"
+            config="girdModelConfig"
+        ></ps-grid1>
+      </div>
+    </div>
+    <div class="form-rule-footer">
+      <button
+          class="btn btn-default"
+          ng-click="close()">
+        关闭
+      </button>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (api, cms) {
+  return {
+    link: function (scope, element, attr) {
+      const target = cms();
+      let executionCycleList = target.getRootScope("myDicts")["executionCycle"];
+      const init = (step, deviceList) => {
+        let dataType = step.dataType;
+        scope.step = step;
+        scope.girdModel = step.ruleList;
+
+        let columns = [{
+          key: 'effectDeviceId',
+          type: 'text',
+          label: '作用设备',
+          bind: function (row, value) {
+            let findDevice = deviceList.find(device => {
+              return device.id == value;
+            });
+            return findDevice && findDevice.label;
+          }
+        }, {
+          key: 'stateStandardName', type: 'text',
+          label: '维护标准名称'
+        }, {
+          key: 'executionCycle',
+          type: 'text',
+          label: '维护周期单位',
+          bind: function (row, value) {
+            let findCycle = executionCycleList.find(item => {
+              return item.valueCode == value;
+            });
+            return findCycle && findCycle.label;
+          }
+        }, {
+          key: 'cycleNum', type: 'text',
+          label: '维护周期间隔'
+        }, {
+          key: 'maintainStandardName', type: 'text',
+          label: '检修标准名称'
+        }, {
+          key: 'maintainLimitDay', type: 'text',
+          label: '检修完成期限（天）'
+        }];
+
+        if (dataType === '定量') {
+          columns = [{
+            key: 'index',
+            label: '序号',
+            type: 'text',
+            bind: function (row, value) {
+              return value - 0 + 1;
+            }
+          }, {
+            key: 'unit',
+            type: 'text',
+            label: '计量单位'
+          }, {
+            key: 'upperLimit',
+            type: 'text',
+            label: '上限'
+          }, {
+            key: 'lowerLimit',
+            type: 'text',
+            label: '下限'
+          }, ...columns];
+        } else {
+          columns = [{
+            key: 'index',
+            label: '序号',
+            type: 'text',
+            bind: function (row, value) {
+              return value - 0 + 1;
+            }
+          }, {
+            key: 'result',
+            type: 'text',
+            label: '结果'
+          }, ...columns]
+        }
+
+        scope.girdModelConfig = {
+          columns: columns
+        };
+      };
+
+      let step = scope.params.data;
+      api.post('resourceUIService.getResourceByIds', [step.ruleList.map(item => item.effectDeviceId)]).then(ret => {
+        init(step, ret.data);
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+}
+
+.form-rule {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form-rule-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.label-value {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+
+  &.half-width {
+    width: 50%;
+  }
+
+  &.fully-width {
+    width: 100%;
+  }
+
+  .label {
+    flex-basis: 120px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .value {
+    flex: 1;
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+
+  .title-item {
+    padding: 5px;
+    min-width: 10px;
+    margin: 0;
+  }
+}
+</style>

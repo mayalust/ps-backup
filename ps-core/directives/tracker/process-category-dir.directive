@@ -1,0 +1,347 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList track by $index">
+    <!-- process-category-dir -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item">
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border">
+        <a>{{ item.title }}</a>
+      </h3>
+      <process-common-dir
+        class="timeline-header no-border"
+        data-process="elem"
+        ng-repeat="elem in item.data track by $index"
+      >
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(rootScope, psTracker) {
+  return {
+    scope: {
+      tracker: "="
+    },
+    link(scope, element, attr) {
+      let {
+        _ticketNo,
+        _appName,
+        _severity,
+        _category,
+        _sendTime,
+        _alertArisingTime,
+        senderName,
+        createAttr,
+        createTitle,
+        createButton
+      } = scope.tracker;
+      let { alertItemList } = scope.tracker._ticketTaskVariables;
+      let alertList_no_empty = alertItemList && alertItemList.length == 1;
+      class Handler {
+        c50_alerts_noempty() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "报警产生",
+              data: [
+                createAttr("报警类型"),
+                createAttr("报警描述"),
+                {
+                  type: "button",
+                  cls: "btn btn-primary btn-sm",
+                  label: "合并告警",
+                  click: function() {
+                     
+                  }
+                }
+              ]
+            }
+          ];
+        }
+        c50_alerts_empty() {
+          return [
+            psTracker.renderGenerateAlert(scope.tracker),
+            {
+              time: _sendTime,
+              icon: "fa fa-user bg-aqua",
+              title: "报警处理",
+              data: [
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createButton.call(scope.tracker, "详情", "checking")
+              ]
+            }
+          ];
+        }
+        c90_alerts_noempty() {
+          return [
+            psTracker.renderGenerateAlert(scope.tracker),
+            {
+              time: _sendTime,
+              icon: "fa fa-user bg-aqua",
+              title: "综合诊断",
+              data: [
+                createAttr("处理人"),
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr("处理方案建议"),
+                createTitle("状态处理"),
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createAttr("检修标准编号"),
+                createButton.call(scope.tracker, "方案履历", "planHistory")
+              ]
+            }
+          ];
+        }
+        c90_alerts_empty() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "报警产生",
+              data: [
+                createAttr("报警描述"),
+                createButton.call(createButton, "合并告警", "alertItemList")
+              ]
+            },
+            {
+              time: _sendTime,
+              icon: "fa fa-user bg-aqua",
+              title: "综合诊断",
+              data: [
+                {
+                  key: "处理人",
+                  value: senderName
+                },
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr("处理方案建议"),
+                createTitle("状态处理"),
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createAttr("检修标准编号"),
+                createButton.call(scope.tracker, "合并告警", "alertItemList")
+              ]
+            }
+          ];
+        }
+        default_alerts_noempty() {
+          return [
+            psTracker.renderGenerateAlert(scope.tracker),
+            {
+              time: _sendTime,
+              icon: "fa fa-user bg-aqua",
+              title: "综合诊断",
+              data: [
+                createAttr("处理人"),
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr("处理方案建议"),
+                createTitle("状态处理"),
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createAttr("检修标准编号"),
+                createButton.call(scope.tracker, "方案履历", "dealing90")
+              ]
+            }
+          ];
+        }
+        default_alerts_empty() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "报警产生",
+              data: [
+                createAttr("报警描述"),
+                createButton.call(scope.tracker, "合并告警", "alertItemList")
+              ]
+            },
+            {
+              time: _sendTime,
+              icon: "fa fa-user bg-aqua",
+              title: "综合诊断",
+              data: [
+                {
+                  key: "处理人",
+                  value: senderName
+                },
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr("处理方案建议"),
+                createTitle("状态处理"),
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createAttr("检修标准编号"),
+                createButton.call(scope.tracker, "合并告警", "alertItemList")
+              ]
+            }
+          ];
+        }
+        c130_handler() {
+          return [
+            {
+              time: _sendTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "点检计划",
+              data: [
+                createAttr("委托人"),
+                createAttr(["处理方式", "录入实绩"]),
+                createButton.call(scope.tracker, "任务详情", "alertItemList")
+              ]
+            },
+            {
+              time: _sendTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "点检异常",
+              data: [createAttr("处理人"), createAttr("异常描述")]
+            }
+          ];
+        }
+        c210_handler() {
+          return [
+            {
+              time: _sendTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "临时委托",
+              data: [
+                createAttr("委托人"),
+                createAttr("标准项目编号"),
+                createAttr("工程项目名称"),
+                createAttr(["处理方式", "临时委托"]),
+                createButton.call(scope.tracker, "检修委托详情", "detail")
+              ]
+            }
+          ];
+        }
+        c260_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "报警产生",
+              data: [
+                createAttr("报警类型"),
+                createAttr("报警级别"),
+                createAttr("报警描述"),
+                createAttr("报警来源")
+              ]
+            }
+          ];
+        }
+        c290_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "报警产生",
+              data: alertItemList
+                .map(({ specialtyName, alertTitle }) => {
+                  return [
+                    createAttr(["报警类型", specialtyName]),
+                    createAttr(["报警级别", _severity]),
+                    createAttr(["报警来源", _appName]),
+                    createAttr(["报警描述", alertTitle])
+                  ];
+                })
+                .reduce((a, b) => {
+                  return a.concat(b);
+                }, [])
+            },
+            {
+              time: _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title: "智能决策",
+              data: [
+                createAttr("实施依据"),
+                createAttr("标准项目编号"),
+                createAttr("工程项目名称"),
+                createAttr("质量层级"),
+                createAttr("高危等级"),
+                createButton.call(scope.tracker, "规则详情", "ruleDetail")
+              ]
+            }
+          ];
+        }
+        c310_handler() {
+          return [];
+        }
+        c320_handler() {
+          return [];
+        }
+        c330_handler() {
+          return [];
+        }
+        c340_handler() {
+          return [];
+        }
+      }
+
+      function createRenderList() {
+        let handler = new Handler();
+        if (_category == 50) {
+          if (alertList_no_empty) {
+            return handler.c50_alerts_noempty();
+          } else {
+            return handler.c50_alerts_empty();
+          }
+        }
+        if (_category == 90) {
+          if (alertList_no_empty) {
+            return handler.c90_alerts_noempty();
+          } else {
+            return handler.c90_alerts_empty();
+          }
+        }
+        if (_category == 130) {
+          return handler.c130_handler();
+        }
+        if (_category == 260) {
+          return handler.c260_handler();
+        }
+        if (_category == 210) {
+          return handler.c210_handler();
+        }
+        if (_category == 280) {
+          return handler.c290_handler();
+        }
+        if (_category == 290) {
+          return handler.c290_handler();
+        }
+        if (_category == 310) {
+          return handler.c310_handler();
+        }
+        if (_category == 320) {
+          return handler.c320_handler();
+        }
+        if (_category == 330) {
+          return handler.c330_handler();
+        }
+        if (_category == 340) {
+          return handler.c340_handler();
+        }
+
+        /** default condition if _category is not assigned **/
+
+        if (alertList_no_empty) {
+          return handler.default_alerts_noempty();
+        } else {
+          return handler.default_alerts_empty();
+        }
+      }
+      scope.tracker.__dicsloaded__.then(() => {
+        scope.renderList = createRenderList();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+span.normal {
+  background-color: rgba(0, 0, 0, 0) !important;
+}
+</style>

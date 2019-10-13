@@ -1,0 +1,115 @@
+{
+  "version": "V_2",
+  "groups": [
+    {
+      "id": 0,
+      "label": "导航页",
+      "path": "index",
+      "layout": {
+        "type": "column",
+        "children": [
+          {
+            "label": "控制板1",
+            "type": "block",
+            "source": "BLOCK",
+            "style": {
+              "padding": "5px",
+              "margin": "5% 10%"
+            },
+            "advance": {
+              "expression": {}
+            },
+            "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                  {
+                    "label": "控件组",
+                    "type": "ctrlgroup",
+                    "source": "CTRLGROUP",
+                    "advance": {
+                      "expression": "expression = {\n  width: \"auto\",\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var scope = target.getRootScope();\n\n  \n      var queryObj = {};\n\n\n    //   var timeObj = {\"firstTimeFrom\": \"\", \"firstTimeTo\": \"\"};\n      var inpStatus = false;\n      var currStatus = \"\";\n    \n\n      var render = function () {\n        var ctrlGroups = [\n          [{\n              type: \"label\",\n              value: \"时间\",\n              style: {\n                textAlign: \"center\",\n                width: \"100px\"\n              }\n            }, {\n            type: \"dateRangePicker\",\n            value: \"\",\n            class: \"col-md-5\",\n            id:0,\n            style: {\n              width: \"200px\",\n              textAlign: \"center\"\n            },\n            on: {\n              change: function (elem) {\n                queryObj.firstTimeFrom = elem.value.start;\n                queryObj.firstTimeTo = elem.value.end;\n                if (elem.value.start) {\n                  inpStatus = true;\n                }\n              }\n            },\n          }, {\n            type: \"button\",\n            btnclass: \"btn btn-primary\",\n            value: \"查 询\",\n            btnStyle: {\n              width: \"100px\",\n            },\n            on: {\n              click: function (elem) {\n\n           \n                target.trigger(\"queryTabelList1\", queryObj)\n\n\n              }\n            }\n          }]\n        ];\n        event.target.render(ctrlGroups);\n      }\n      render()\n    }\n  }\n}"
+                    },
+                    "style": {
+                      "font-size": "12px",
+                      "text-align": "left",
+                      "line-height": "30px"
+                    },
+                    "help": "../pdf/ctrlgroup.pdf",
+                    "parameters": {
+                      "cgroupstyle": "table"
+                    },
+                    "url": "images/map/map1.png"
+                  },
+                  {
+                    "label": "文字",
+                    "type": "text",
+                    "source": "TEXT",
+                    "help": "http://localhost/app-free-style/index.html#/help/index%7Ctext/%5B%220%22,%7B%7D%5D",
+                    "data": {
+                      "applied": false,
+                      "multipleCi": false,
+                      "multipleKpi": false,
+                      "resource": [],
+                      "modelType": 300,
+                      "resfilltype": "parameter",
+                      "series": {
+                        "manual": "新建文字",
+                        "bind": "(function (source){\n  var formatter=function(elem){\n    return elem.value\n   }\n  return source.ci.getSeries(formatter);\n})"
+                      },
+                      "modelDisable": true
+                    },
+                    "style": {
+                      "margin": "auto",
+                      "padding": "0",
+                      "font-size": "16px",
+                      "font-weight": "bold",
+                      "text-align": "left"
+                    },
+                    "advance": {
+                      "getfunction": "kpiDataService.getValueList",
+                      "category": "ci",
+                      "condition": [
+                        "kpi",
+                        "{object:kpiQueryModel}"
+                      ],
+                      "expression": "expression = {\n    on : {\n        init : function(event){\n            var target = event.target;\n            target.setText(\"日报下载\")\n        }\n    }\n}"
+                    },
+                    "parameters": {},
+                    "echart": {},
+                    "url": "images/map/map1.png"
+                  },
+                  {
+                    "label": "高级列表",
+                    "type": "dataTableAdvance",
+                    "source": "DATATABLEADVANCE",
+                    "parameters": {
+                      "col": 1,
+                      "pageSize": 5,
+                      "listbottom": "standard"
+                    },
+                    "advance": {
+                      "expression": "expression = {\n  \"theme\": \"dark\",\n  \"on\": {\n    \"init\": function(event) {\n      var target = event.target;\n\n      //--------------------------自定义输入-----------------------------\n      //从结果返回数据中的一组，拷贝过来作为参照，使用完之后删掉\n      var Dictionary = {\n\n        index: \"序号\",\n        \"report.fileName\": \"名称\",\n        dateTimeStr: \"时间\",\n      };\n\n\n\n      function getTableData(params, pageRequest, cb) {\n          \n          pageRequest.sort = \"createDate\";\n             pageRequest.sortType = \"DESC\";\n      \n\n        target.getDailyReportByCondtionAndPage(params, pageRequest, function(tc) { \n          var datas = [];\n          tc.data.forEach(function(ele,inx) { \n              \n              ele.index = inx+1;\n       \n\n  \n\n          }) ;\n\n          cb(tc.data, tc.total)\n        });\n      }\n\n\n\n      //--------------------------自定义输入-----------------------------\n      //注意，下面内容别动！！！\n      var render = function(datas, param) {\n        var format = [];\n        for (var i in Dictionary) {\n          var item = target.explainDic(i, Dictionary[i]);\n          format.push(item);\n        }\n        format.push({\n          name: \"操作\",\n          type: \"buttonGroup\",\n          content: [{\n            label: \"下载\",\n            icon: \"null\",\n            class: \"btn btn-default btn-sm\",\n            on: {\n              click: function(elem) { \n                  \n             \n                  window.location.href = elem.row.report.filePath;\n                        \n              }\n            }\n          }]\n        });\n\n        var params = {\n       \n          createDate: param ? [param.firstTimeFrom,param.firstTimeTo]: [null,null],\n        \n        };\n\n        target.render({\n          data: datas,\n          params: params,\n          paging: getTableData,\n          format: format\n        });\n      };\n      render([]);\n\n      target.off(\"queryTabelList1\");\n      target.on(\"queryTabelList1\", function(e) {\n        render([], e);\n      });\n    }\n  }\n}"
+                    },
+                    "style": {
+                      "margin": "5px",
+                      "font-size": "12px"
+                    },
+                    "url": "images/map/map1.png",
+                    "echart": {}
+                  }
+                ]
+              }
+            ],
+            "url": "images/map/map1.png",
+            "parameters": {}
+          }
+        ],
+        "col": 12
+      },
+      "$$hashKey": "object:4726"
+    }
+  ],
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

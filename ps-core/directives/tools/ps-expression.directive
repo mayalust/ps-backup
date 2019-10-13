@@ -1,0 +1,68 @@
+<config injector="$rootScope,$compile,$q" deps = "processCommonDir"></config>
+<template></template>
+<script type="text/javascript">
+  export default function(rootScope, compile,q){
+    return {
+      restrict : "EA",
+      replace : false,
+      scope : {},
+      require : '?ngModel',
+      link(scope, element, attr, ngModel) {
+        function modal({title, directive, scope, top, width, params}) {
+          let defer = q.defer();
+          top = typeof top === "number" ? top + "px" : top;
+          top = typeof top === "string" ? top : null;
+          width = typeof width === "number" ? width + "px" : width;
+          width = typeof width === "string" ? width : null;
+          let element = document.createElement("div"),
+            sc = ( scope || rootScope ).$new(), root;
+          element.innerHTML = `<ps-modal>
+            <ps-code></ps-code>
+          </ps-modal>`;
+          function destroy() {
+            element.remove();
+            element = null;
+            sc.$destroy();
+          }
+          sc.style = function () {
+            return {
+              top: top || "40px",
+              width: width || "80%"
+            }
+          }
+          sc.title = title;
+          sc.params = params;
+          sc.close = function () {
+            destroy();
+          }
+          sc.submit = function (data) {
+            defer.resolve( data );
+            destroy();
+          }
+          document.body.appendChild(element);
+          compile(element)(sc);
+          return defer.promise;
+        }
+        element.on("click", e => {
+          scope.$apply(() => {
+            modal({
+              title : "表达式编辑器",
+              params : {
+                value : ngModel.$viewValue
+              }
+            }).then( d => {
+              ngModel.$setViewValue( d );
+              ngModel.$render();
+            })
+          })
+        })
+        ngModel.$render = function (e) {
+          element.val( ngModel.$viewValue || '' );
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

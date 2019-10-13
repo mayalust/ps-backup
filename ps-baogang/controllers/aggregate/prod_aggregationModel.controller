@@ -1,0 +1,187 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,$filter,commonMethodService ">
+</config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+    import {list2Tree} from "ps-ultility";
+
+    export default function (scope, ajax, location, psDialog, routeParams, $filter,cms) {
+        var target   = new cms();
+        var aggregateFuncList =  [].slice.call(target.getRootScope("myDicts")["AggregateFunc"]);
+        let rules = [{
+            id: "2",
+            label: "平均值"
+        }, {
+            id: "7",
+            label: "极差"
+        }];
+        scope.layout = {
+            modals: {
+                editModel: {
+                    label: "聚合模型",
+                    type: "layout",
+                    children: [{
+                        type: "form-dialog",
+                        children: [{
+                            type: "select",
+                            label: "设备类型",
+                            composory: true,
+                            key: "deviceTypeId",
+                            options: {
+                                url: "resourceUIService.getModelsByCondition",
+                                param: {}
+                            }
+                        }, {
+                            type: "select",
+                            label: "聚合类型",
+                            key: "aggregateFunc",
+                            options: aggregateFuncList,
+                            value: '1',
+                            format:{
+                                "id":"valueCode",
+                            }
+                        }, {
+                            type: "select",
+                            label: "计算规则",
+                            key: "calcRule",
+                            options: rules,
+                            show: {
+                                watch: "aggregateFunc",
+                                handler: function (a) {
+                                    return a === '4';
+                                }
+                            }
+                        }, {
+                            type: "multi-select",
+                            label: "聚合周期",
+                            key: "aggregatePeriods",
+                            options: {
+                                url: "dictionaryService.getDictValues",
+                                param: "AggregatePeriod"
+                            },
+                            format:{
+                                "id":"valueCode",
+                            }
+                        }]
+                    }],
+                    buttons: [{
+                        label: "确定",
+                        class: "btn btn-primary",
+                        click: function () {
+                            this.submit();
+                        }
+                    }, {
+                        label: "取消",
+                        click: function () {
+                            this.close();
+                        }
+                    }]
+                }
+            },
+            label: '聚合模型',
+            children: [{
+                label: '聚合模型',
+                type: "panel",
+                children: [{
+                    type: "table",
+                    config: {
+                        attributes: {
+                            "deviceType": ["设备类型", "dict", {
+                                name: "modelDefinition",
+                                from: "deviceTypeId",
+                                label: "label"
+                            }],
+                            "aggregateFunc": ["聚合函数", "dict"],
+                            "aggregatePeriods": ["聚合周期", "dict", {
+                                name : "dictValue",
+                                to: "valueCode"
+                            }],
+                            "enabled" : ["启用","dict"],
+                        },
+                        grid: {
+                            body: ["deviceType", {
+                                name: "aggregateFunc",
+                                bind: function (row) {
+                                    return aggregateFuncList.find(dt => {
+                                        return dt.valueCode == row.aggregateFunc;
+                                    })['label'];
+                                }
+                            }, "aggregatePeriods",{
+                                name :"enabled",
+                                gridType:"checkbox",
+                                // bind:function (row) {
+                                //     url: "aggregateTaskService.enabledAggrTask",
+                                //     param : [row.id,row.enabled]
+                                // }
+                                // on:{
+                                //     select:function(e){
+                                //          
+                                //     }
+                                // }
+                            }],
+                            buttons: {
+                                outGrid: [{
+                                    label: " 添加聚合模型",
+                                    class: "primary",
+                                    icon: "fa fa-plus",
+                                    on: {
+                                        click: function (e) {
+                                            e.add({
+                                                template: "editModel",
+                                                before: function (d) {
+                                                    return d;
+                                                },
+                                                url: "aggregateTaskService.saveAggr",
+                                            });
+                                        }
+                                    }
+                                }],
+                                inGrid: [{
+                                    label: "编辑",
+                                    class: "btn btn-primary",
+                                    on: {
+                                        click: function (e) {
+                                            e.update({
+                                                template : "editModel",
+                                                before : function(d){
+                                                    return d;
+                                                },
+                                                url : "aggregateTaskService.saveAggr"
+                                            });
+                                        }
+                                    }
+                                },{
+                                    label: "删除",
+                                    class: "btn btn-default",
+                                    on: {
+                                        click: function (e) {
+                                            e.remove({
+                                                before : function(d){
+                                                    return e.$row.id;
+                                                },
+                                                url : "aggregateTaskService.deleteAggr"
+                                            });
+                                        }
+                                    }
+                                }]
+                            },
+                            config: {
+                                url: 'aggregateTaskService.getAggrUIByCondition',
+                                parameter: {},
+                                showIndex: false,
+                                showSelector: false,
+                                showSearch: false
+                            },
+                            options: []
+                        }
+                    }
+                }]
+            }]
+        }
+    };
+</script>
+<style type="less">
+</style>

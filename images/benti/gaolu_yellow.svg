@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="87px" viewBox="0 0 32 87" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.3 (67297) - http://www.bohemiancoding.com/sketch -->
+    <title>gaolu_</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="100%" y1="50%" x2="2.4047146%" y2="50%" id="linearGradient-1">
+            <stop stop-color="#797979" offset="0%"></stop>
+            <stop stop-color="#FFFFFF" offset="50.8015715%"></stop>
+            <stop stop-color="#797979" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="96.9148889%" y1="50%" x2="4.03541617%" y2="50%" id="linearGradient-2">
+            <stop stop-color="#CC9800" offset="0%"></stop>
+            <stop stop-color="#FFEA43" offset="48.4758851%"></stop>
+            <stop stop-color="#CC9800" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="送风支管" transform="translate(-772.000000, -220.000000)">
+            <g id="送风" transform="translate(543.000000, 220.000000)">
+                <g id="Group-2">
+                    <g id="风口">
+                        <g id="01" transform="translate(229.000000, 0.000000)">
+                            <g id="gaolu_">
+                                <rect id="Rectangle" fill="url(#linearGradient-1)" x="9" y="23" width="14" height="64"></rect>
+                                <rect id="Rectangle" fill="url(#linearGradient-2)" x="9" y="23" width="14" height="32"></rect>
+                                <circle id="Oval" fill="url(#linearGradient-2)" cx="16" cy="16" r="16"></circle>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

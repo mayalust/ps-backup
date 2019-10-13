@@ -1,0 +1,309 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,$rootScope,commonMethodService"
+        deps="dialogGlobalRule"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <div class="wrap">
+          <div class="table-title">
+            待处理日报
+          </div>
+          <table ps-table-sync
+                 data-paginate="all"
+                 data-source="resources1"
+                 data-filter="filter1"
+                 data-sort="sort1"
+                 data-page="page1">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>名称</th>
+              <th>时间</th>
+              <th>类型</th>
+              <th>状态</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<10 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="item.dailyReportName"></td>
+              <td ng-bind="item.getModifyTime()"></td>
+              <td ng-bind="item.dailyReportType == 'water' ? '废水' : '废气' "></td>
+              <td ng-bind="item.state == -1 ? '待处理'
+                  : item.state == 0 ? '待审核' : '-' "></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-if="item.state == -1" ng-click="item.arrange()" ng-disabled="!zhengliCode">日报整理</button>
+                  <button class="btn btn-default" ng-if="item.state == 0" ng-click="item.audit()" ng-disabled="!shenheCode">日报审核</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block margin-bottom-5 padding-10">
+        <div>
+          <span class="padding-left-right-10">类型:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="modelId" data-options="model.id as model.label for model in models"></ps-select>
+          </div>
+          <span class="padding-right-10">处理时间:</span>
+          <button class="btn btn-default"
+                  ng-repeat="sel in timeSels"
+                  ng-class="sel.class()"
+                  ng-click="sel.click()"
+                  ng-bind="sel.label">
+          </button>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="starttime"></ps-date2>
+          </div>
+          <span class="padding-left-right-10">至</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="endtime"></ps-date2>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            已完成日报
+          </div>
+          <table ps-table-sync
+                 data-paginate="all"
+                 data-source="resources"
+                 data-filter="filter2"
+                 data-sort="sort2"
+                 data-page="page2">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>名称</th>
+              <th>时间</th>
+              <th>类型</th>
+              <th>状态</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<10 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="item.dailyReportName"></td>
+              <td ng-bind="item.getModifyTime()"></td>
+              <td ng-bind="item.dailyReportType == 'water' ? '废水' : '废气' "></td>
+              <td ng-bind="item.state == 1 ? '已完成': '-' "></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.download()">下载日报</button>
+                  <button class="btn btn-default" ng-click="item.detail()">详情</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,rootScope,cms){
+    let target = cms();
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToDate = date.trimmToDate().date,
+      trimToWeek = date.trimmToWeek().date,
+      trimToMonth = date.trimmToMonth().date;
+    // ajax.post("userLoginUIService.getCurrentUser",null).then(e => {
+    //      
+    // })
+      scope.feishuiCode = false;
+      scope.feiqiCode = false;
+      scope.zhengliCode = false;
+      scope.shenheCode = false;
+      //  
+      if(rootScope.$$childTail.menuitems["A42_02"]){
+          scope.feishuiCode = true;
+      }
+      if(rootScope.$$childTail.menuitems["A42_01"]){
+          scope.feiqiCode = true;
+      }
+      if(rootScope.$$childTail.menuitems["A42_04"]){
+          scope.zhengliCode = true;
+      }
+      if(rootScope.$$childTail.menuitems["A42_03"]){
+          scope.shenheCode = true;
+      }
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.dailyReportTime
+          ? dateparser(this.dailyReportTime).getDateString("yyyy-MM-dd hh:mm:ss")
+          : "-";
+      }
+      download(){
+           
+          var format = "titles=序号,厂区,检测点位,设备编码,检测因子,排放标准(mg/m3)," +
+              "监测值（mg/m3）,标记位,异常小时均值时间,异常原因,异常修约凭证提交状态,是否存在处罚风险,处理人,审核人"+
+              "&fields=customerName,nodeName,sn,factor,refValue,value,flag,arisingTimeFormat,recordCause,statusStr,riskPunishmentStr,ownerName,reviewerName"
+          var params = {alertDailyReportId : this.id-0}
+          var pageRequest =
+              {
+                  "start":0,"length":100,"sort":"createTime","sortType":"desc","statCount":true
+              }
+          var url = window.location.protocol + "//" + window.location.host;
+          target.exportBGExcel("environmentService","getAlertReportsByPage",
+              format,params,pageRequest, function (data) {
+                  if (data.code == 0) {
+                      window.open(url + data.data,"_blank");
+                  } else {
+                      target.growl("warning", "请检查网络...")
+                  }
+              })
+      }
+      arrange(){
+          cms2.refresh("prod_enviroment_daily_management",{alertDailyReportId:this.id,type :this.dailyReportType});
+      }
+      audit(){
+          cms2.refresh("prod_enviroment_daily_managements",{alertDailyReportId:this.id});
+      }
+      detail(){
+        cms2.refresh("prod_enviroment_daily_detail",{alertDailyReportId:this.id});
+      }
+    }
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+        scope.starttime = trimToDate;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToDate == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本周",
+      click(){
+        scope.starttime = trimToWeek;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToWeek == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本月",
+      click(){
+        scope.starttime = trimToMonth;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToMonth == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    }];
+    ajax.post("environmentService.getAlertDailyReports",{states : "-1,0,1"}).then( d => {
+        // scope.feishuiCode = false;
+        // scope.feiqiCode = false;
+        if(scope.feishuiCode && scope.feiqiCode){
+            scope.resources1 = d.filter(e => {
+                return e.state == -1 || e.state == 0;
+            }).map(b => new tableCell(b));
+            scope.resources = d.filter(e => {
+                return e.state == 1;
+            }).map(b => new tableCell(b));
+        }else if(scope.feishuiCode && !scope.feiqiCode){
+            scope.resources1 = d.filter(e => {
+                return e.state == -1 || e.state == 0;
+            }).filter(e => {
+                return e.dailyReportType == "water"
+            }).map(b => new tableCell(b));
+            scope.resources = d.filter(e => {
+                return e.state == 1;
+            }).filter(e => {
+                return e.dailyReportType == "water"
+            }).map(b => new tableCell(b));
+        }else if(!scope.feishuiCode && scope.feiqiCode){
+            scope.resources1 = d.filter(e => {
+                return e.state == -1 || e.state == 0;
+            }).filter(e => {
+                return e.dailyReportType == "gas"
+            }).map(b => new tableCell(b));
+            scope.resources = d.filter(e => {
+                return e.state == 1;
+            }).filter(e => {
+                return e.dailyReportType == "gas"
+            }).map(b => new tableCell(b));
+        }
+
+    }).catch(function(e){
+        growl.error( e.message );
+    })
+    scope.models = [{
+        id : 0,
+        label : "全部"
+    },{
+        id : "water",
+        label : "废水"
+    },{
+        id : "gas",
+        label : "废气"
+    }];
+    scope.clearFn = function(){
+      scope.filter2 = ( d => true );
+    }
+
+    scope.searchFn = function(){
+      scope.filter2 = ({ dailyReportType, dailyReportTime }) => {
+        if( scope.modelId && dailyReportType !== scope.modelId){
+          return false;
+        }
+        let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+          et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+          mt = new Date( dailyReportTime );
+        if( mt - st < 0 || mt - et > 0 ){
+          return false;
+        }
+        return true;
+      }
+    };
+    function createRenderFunction(states){
+        return function( page, pageSize ){
+            let params = [{"state":states},{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("environmentService.getAlertDailyReportsWithPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+  }
+</script>
+<style lang="less" scoped>
+  .row{
+    overflow-y: auto;
+    height: ~'calc( 100vh - 110px)';
+    .wrap {
+      padding : 5px 10px !important;
+      .option{
+        width : 160px;
+      }
+    }
+  }
+</style>

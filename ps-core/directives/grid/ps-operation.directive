@@ -1,0 +1,176 @@
+<config injector="$q, ajax, $timeout, growl">
+</config>
+<template>
+    <div class="angular-dataTable-header"
+         style="margin : 0px auto 5px auto">
+        <a href="" download="export.xlsx" id="_exportFile"></a>
+        <input type="file" id="_uploadFile" style="display:none;">
+        <button ng-repeat="button in operationInstance.buttons"
+                ng-disabled="buttonDisabled(button)"
+                class="btn btn-sm"
+                ng-click="buttonClick(button)"
+                ng-class="button.class ? 'btn-' + button.class : 'btn-default'"
+                type="button" style="margin-right: 5px;">
+            <i ng-class="button.icon"></i>
+            <span ng-bind="button.label"></span>
+        </button>
+        <div ng-if="operationInstance.search.type==='simple'" class="combined-query pull-right search-box">
+            <div class="btn-group" ng-class="isOpen"
+                 style="display:block; float:left; margin-top : 0;">
+                <button type="button" class="btn btn-default btn-sm dropdown-toggle"
+                        ng-click="searchTypeClick()">
+                    <span ng-bind="getLabel()"></span>
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a role="button" ng-click="conditionClick(attr);"
+                           ng-repeat="attr in operationInstance.search.displayAttributes"
+                           ng-bind="attr.label">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="input-box">
+                <ps-tools1 option="currentSearchConditionOption"></ps-tools1>
+            </div>
+            <button class="btn btn-primary btn-sm search-btn"
+                    ng-click="goSearch()" type="button">
+                <i class="fa fa-search"></i>
+                <span class="hidden-sm">查询</span>
+            </button>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+export default function (q, ajax, timeout, growl) {
+  return {
+    scope: {
+      config: '='
+    },
+    link (scope, element, attr) {
+      scope.operationInstance = [];
+      scope.currentSearchConditionOption = null;
+      scope.currentSearchCondition = null;
+      scope.getLabel = function () {
+        return scope.currentSearchCondition ? scope.currentSearchCondition.label : '查询条件';
+      };
+      scope.buttonDisabled = function (button) {
+        if (button.disabled && typeof button.disabled === 'function') {
+          return button.disabled.call(scope.operationInstance.$$gridInstance, scope.operationInstance.$$gridInstance);
+        }
+        return false;
+      };
+      scope.buttonClick = function (button) {
+        if (button.symbol === 'inlineAdd') {
+          let flag1 = scope.operationInstance.$$gridInstance.data.some(d => {
+            return d.$$edit;
+          });
+          let flag2 = scope.operationInstance.$$gridInstance.inlineAdd;
+          if (flag1) {
+            growl.warning('当前有正在编辑的数据，请先保存。');
+            return;
+          }
+          if (flag2) {
+            growl.warning('当前有正在添加的数据，请先保存。');
+            return;
+          }
+          if (scope.operationInstance.$$gridInstance.inlineOperation.hasOwnProperty('_inlineRow')) {
+            scope.operationInstance.$$gridInstance.inlineOperation._inlineRow = {};
+          } else {
+            Object.defineProperty(scope.operationInstance.$$gridInstance.inlineOperation, '_inlineRow', {
+              enumerable: false,
+              writable: true,
+              value: {}
+            });
+          }
+          scope.operationInstance.$$gridInstance.inlineAdd = true;
+          return;
+        }
+        if (button.symbol === 'import') {
+          let uploadFile = document.getElementById('_uploadFile');
+          uploadFile.addEventListener('change', function changeHandler (e) {
+            uploadFile._CHANGE_HANDLER = changeHandler;
+            var _this = this;
+            if (this.value) {
+              let formData = new FormData();
+              let before = button.param.before(this.files[0]);
+              for (let key in before) {
+                if (before[key] instanceof File) {
+                  formData.append(key, before[key]);
+                } else {
+                  formData.append(key, encodeURIComponent(before[key]));
+                }
+              }
+              ajax[button.symbol](button.param.url, formData).then(d => {
+                uploadFile.removeEventListener('change', uploadFile._CHANGE_HANDLER);
+                _this.value = null;
+                button.param.after && typeof button.param.after === 'function' && button.param.after(d);
+              });
+            }
+          });
+          uploadFile.click();
+          return;
+        }
+        if (button.on && button.on.click && typeof button.on.click === 'function') {
+          button.on.click.call(scope.operationInstance.$$gridInstance, scope.operationInstance.$$gridInstance);
+        }
+      };
+      scope.conditionClick = function (attr) {
+        scope.currentSearchCondition = attr;
+        scope.currentSearchConditionOption = attr.option;
+      };
+
+      function searchTypeClickFn () {
+        timeout(function () {
+          scope.searchTypeClick = undefined;
+          scope.isOpen = 'open';
+          $("body").on("click.windClick", windClickFn);
+        });
+      }
+
+      function windClickFn () {
+        $("body").off("click.windClick");
+        timeout(function () {
+          scope.isOpen = '';
+          scope.searchTypeClick = searchTypeClickFn;
+        });
+      };
+
+      scope.searchTypeClick = searchTypeClickFn;
+
+      let attrPromiseWatch;
+      let configWatch = scope.$watch('config', (n, o, s) => {
+        if (typeof n !== 'undefined') {
+           
+          scope.operationInstance = n;
+          attrPromiseWatch = scope.$watch('operationInstance.search.displayAttrPromise', (np, op, sp) => {
+             
+            if (typeof np !== 'undefined' && np !== null) {
+              np.then(function () {
+                timeout(function () {
+                  n.search.displayAttributes.forEach((da, index) => {
+                    if (da.option.type) {
+                      n.search.displayAttributes[index].option.config = n.search.displayAttributes[index].option.config || {};
+                      n.search.displayAttributes[index].option.config.width = '200px';
+                    }
+                  });
+                  scope.currentSearchConditionOption = n.search && n.search.displayAttributes && n.search.displayAttributes[0] && n.search.displayAttributes[0].option;
+                });
+              });
+            }
+          });
+        }
+      });
+
+      scope.$on('$desctroy', () => {
+        configWatch && configWatch();
+        attrPromiseWatch && attrPromiseWatch();
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+
+</style>

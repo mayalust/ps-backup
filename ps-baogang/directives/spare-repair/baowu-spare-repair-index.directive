@@ -1,0 +1,113 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,$filter,growl,commonMethodService,commonMethodService2, psRouter"
+></config>
+<template>
+  <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+    <ps-table config="config"></ps-table>
+  </div>
+</template>
+<script type="text/javascript">
+    export default function ( q, ajax, psDialog,routeParams,psUltility,location,filter,growl,commonMethodService,cms2, psRouter){
+        var target = commonMethodService(),
+            mode = target.getValue("mode") || "";
+        return {
+          link(scope, element, attr) {
+            scope.config = {
+              attributes: {
+                "standardProjectId": ["备修标准项目编号", "text"],
+                "standardProjectName": {
+                  label:"备修标准项目名称",
+                  type:"dict",
+                },
+                "rollerType":  {
+                  label:"备件类型",
+                  type:"dict",
+                },
+                "createTime": ["制定时间", "date"],
+                "createUserName": ["制定人", "text"],
+              },
+              search: {
+                body: [{
+                  name: "standardProjectName",
+                  searchType: "input",
+                  label: "备修标准项目名称"
+                },{
+                  name: "createTime",
+                  searchType: "date",
+                  label: "制定时间"
+                },],
+              },
+              grid: {
+                body: ["standardProjectId","standardProjectName", "rollerType", { name : "createTime",
+                  bind: function (row) {
+                    if(!row.createTime) {
+                      return "-"
+                    }else {
+                      return filter('date')(row.createTime,'yyyy-MM-dd HH:mm:ss');
+                    }
+                  }
+                }, {
+                  name :"createUserName",
+                  bind: function (row) {
+                    return row.createUserName ? row.createUserName : "-";
+                  }
+
+                }],
+                buttons: {
+                  outGrid: [{
+                    label: "新增备修标准",
+                    class: "primary",
+                    on: {
+                      click: function () {
+                        target.setValue("obj", {});
+                        target.setValue("mode", "add");
+                        cms2.refresh("dashboard",{
+                          viewId:"baowu-spare-repaire-standard",
+                        });
+                      }
+                    }
+                  }],
+                  inGrid: [["详情",
+                    function (e) {
+                      target.setValue("obj", e.$row);
+                      target.setValue("mode", "detail");
+                      cms2.refresh("dashboard",{
+                        viewId:"baowu-spare-repaire-standard",
+                      });
+                    }], ["编辑",
+                    function (e) {
+                      target.setValue("obj", e.$row);
+                      target.setValue("mode", "edit");
+                      cms2.refresh("dashboard",{
+                        viewId:"baowu-spare-repaire-standard",
+                      });
+                    }], ["删除",
+                    function (e) {
+                      e.remove({
+                        message:"是否删除此项",
+                        url:"maintenanceTaskUIService.deleteRepairPartsStandard",
+                        before:function(){
+                          return e.$row.id;
+                        }
+                      });
+                    }]]
+
+                },
+                config: {
+                  url: "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                  parameter: {"ticketCategory" : "300"},
+                  showIndex: false,
+                  showSelector: false,
+                  showSearch: false,
+                  showPage: true,
+                },
+                options: []
+              }
+            };
+
+          }
+        }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

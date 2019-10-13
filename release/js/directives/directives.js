@@ -1,0 +1,2 @@
+define(["angular"],function(e){"use strict";var c=e.module("directives",[]);return c.config(["$compileProvider",function(e){c.registerDirective=e.directive}]),c.registerDirective=function(e,i){var r=i.$inject||[];r.push(i),c.directive(e,r)},c.initDirective=function(e,i){var r=[],t=null;t=jQuery.isArray(i)?(r=i.slice(0,i.length-1),i[i.length-1]):i,c.registerDirective?c.registerDirective(e,t):c.directive(e,t),0<r.length&&(t.$inject=r)},c});
+//# sourceMappingURL=../../map/js/directives/directives.js.map

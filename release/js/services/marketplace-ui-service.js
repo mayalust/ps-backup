@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(t){"use strict";t.factory("marketplaceUIService",["serviceProxy",function(a){var c="marketplaceUIService",t={getAllAppDatas:function(t){a.get(c,"getAllAppDatas",[],t)},publish:function(t,e){a.get(c,"publish",t,e)},buy:function(t,e){a.get(c,"buy",t,e)},getActivedStandardAppDatas:function(t){a.get(c,"getActivedStandardAppDatas",[],t)},getMyAppDatas:function(t){a.get(c,"getMyAppDatas",[],t)}};return t}])});
+//# sourceMappingURL=../../map/js/services/marketplace-ui-service.js.map

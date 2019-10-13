@@ -1,0 +1,244 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,$rootScope"
+        deps="dialogAddKpilist"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5 padding-10">
+        <div class="margin-bottom-5">
+          <span class="padding-left-right-10">时间:</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="starttime"></ps-date2>
+          </div>
+          <span class="padding-left-right-10">至</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="endtime"></ps-date2>
+          </div>
+          <button class="btn btn-primary margin-10" ng-click="searchFn()">查询</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-10">
+      <div class="right pull-right">
+        <!--<button class="btn btn-primary" ng-click="set()">标记线设置</button>-->
+      </div>
+      <div class="block margin-bottom-5 padding-10">
+        <ps-echart ng-model="echartOption"></ps-echart>
+        <div ng-if="!echartOption">
+          暂无数据
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="box">
+        <div class="box-header">
+          <span class="pull-left">分析指标列表</span>
+          <!--<span class="add pull-right">+</span>-->
+          <button class="btn btn-primary pull-right" ng-click="addKpiList()">+</button>
+        </div>
+        <div class="box-content">
+          <div class="listKpi" ng-repeat="kpi in kpiList track by $index">
+            <div>
+              <span class="pull-left" ng-bind="kpi.instance.label"></span>
+              <span class="pull-left">-</span>
+              <span class="pull-left" ng-bind="kpi.kpiCode.label"></span>
+              <!--<span class="add pull-right">X</span>-->
+              <button class="btn btn-primary pull-right" ng-click="deleteX($index)">X</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,rootScope){
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToDate = date.trimmToDate().date;
+      scope.kpiList = [];
+      scope.starttime = trimToDate;
+      scope.endtime = currentTime;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+    }
+    rootScope.MeasurePointLocateList = [{id: "05", label: "5分钟"},
+        {id: "11", label: "1小时"},
+        {id: "21", label: "1天"}]
+    scope.echartOptions = makeOption();
+
+    function makeOption(){
+      return {
+        xAxis: {
+          type: 'category',
+          data: []
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [{
+          data: [],
+          type: 'line',
+          markLine:{
+            data:[
+              // {name: '标线1起点', value: "Tue", yAxis: 800},      // 当xAxis为类目轴时，数值1会被理解为类目轴的index，通过xAxis:-1|MAXNUMBER可以让线到达grid边缘
+              // {name: '标线1终点', xAxis: 'Sat', yAxis: 400},             // 当xAxis为类目轴时，字符串'周三'会被理解为与类目轴的文本进行匹配
+            ]
+          }
+        }]
+      }
+    }
+    function echartOptinsChange(STime,ETime){
+        scope.kpiCodeNeedArr = scope.kpiList.map(e => e.kpiCode.id);
+        let parms = ["kpi",
+            {
+                "nodeIds":[$state.params.id],
+                // "queryInstances":Dtype,
+                "includeInstance":true,
+                "isRealTimeData": false,
+                "kpiCodes":scope.kpiCodeNeedArr,"startTime":STime,"endTime":ETime}]
+        ajax.post("kpiDataFlexService.getKpiValueList",parms).then(kpiData => {
+            //  
+            var obj = {};
+            scope.kpiList.forEach(b => {
+                var arrs = kpiData.filter(d => {
+                    return d["kpiCode"] == b["kpiCode"]["id"] && d["instance"] == b["instance"]["id"];
+                })
+                obj[b["instance"]["label"] + b["kpiCode"]["label"]] = arrs;
+            })
+            //  
+            let seriesData = [],
+                legendData = [];
+
+            for(var i in obj){
+                var aaa = [];
+                for(var j=0;j<obj[i].length;j++){
+                    aaa.push([obj[i][j].arisingTime,obj[i][j].value])
+                }
+                seriesData.push({
+                    data: aaa,
+                    name : i,
+                    type: 'line'
+                })
+                legendData.push(i);
+            }
+            scope.echartOption = {
+                legend: {
+                    data:legendData
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: seriesData
+            }
+        })
+    }
+    scope.set = function(){
+        timeout(()=>{
+            let yAxis = 1000;
+             
+            let ec = makeOption();
+            ec.series[0].markLine.data[0].yAxis = yAxis;
+            scope.echartOption = ec;
+        })
+    }
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+        let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+            et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime;
+        echartOptinsChange(scope.starttime,scope.endtime);
+    };
+    scope.deleteX = function(index){
+        scope.kpiList.splice(index,1);
+        echartOptinsChange(scope.starttime,scope.endtime);
+    }
+    scope.addKpiList = function(){
+        cms2.modal({
+            title : "添加对比指标",
+            directive : "dialog-add-kpilist",
+            width : "50%",
+            params : {
+                data : rootScope.deviceDic[$state.params.id],
+                list : scope.kpiList
+            }
+        }).then(d => {
+            if(d){
+                //  
+                scope.kpiList = d;
+                echartOptinsChange(scope.starttime,scope.endtime);
+            }else {
+                 
+            }
+        })
+    }
+    scope.kpiListTest = [{
+        label :"kpi1",
+        id : "1"
+    },{
+        label :"kpi2",
+        id : "2"
+    },{
+        label :"kpi3",
+        id : "3"
+    },{
+        label :"kpi4",
+        id : "4"
+    },{
+        label :"kpi5",
+        id : "5"
+    },{
+        label :"kpi6",
+        id : "6"
+    }]
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+    .box{
+      margin: 0 5px;
+      .box-header{
+        color: #ffffff;
+        span {
+          display: inline-block;
+          line-height: 26px;
+        }
+      }
+      .box-content{
+        height: 376px;
+        border: #21a6fb solid 1px;
+        padding: 10px;
+        .listKpi{
+          height: 30px;
+          font-size: 14px;
+          color: white;
+          line-height: 30px;
+          /*border: #797979 solid 1px;*/
+          /*background: #F2F2F2;*/
+        }
+      }
+    }
+  }
+</style>

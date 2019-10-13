@@ -1,0 +1,76 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<template>
+  <div class="wrap"></div>
+</template>
+<script type="text/javascript">
+import { dateparse } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  SwSocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTopo
+) {
+  return {
+    scope: {
+      index: "=",
+      url: "="
+    },
+    link(scope, element, attr) {
+      if (scope.index) {
+        let videoPlugin = element[0],
+          id = "videoPlugin_" + scope.index;
+        videoPlugin.setAttribute("id", id);
+        let szIP = "192.168.1.122:2000" + scope.index,
+          szPort = "80",
+          szUserName = "admin",
+          szPassword = "admin12345";
+        window["require"](["webVideoCtrl"], function(webVideoCtrl) {
+          webVideoCtrl.I_InitPlugin(videoPlugin.clientWidth - 2, 500, {
+            bWndFull: true,
+            iPackageType: 2,
+            bNoPlugin: true,
+            cbInitPluginComplete: function() {
+              WebVideoCtrl.I_InsertOBJECTPlugin(id);
+              if (-1 == WebVideoCtrl.I_CheckPluginVersion()) {
+                glow.error(
+                  "检测到新的插件版本，双击开发包目录里的WebComponentsKit.exe升级！"
+                );
+                return;
+              }
+              let szDeviceIdentify = szIP + "_" + szPort;
+              WebVideoCtrl.I_Login(szIP, 1, szPort, szUserName, szPassword, {
+                success: function() {
+                  console.info("WebVideoCtrl success!");
+                  WebVideoCtrl.I_StartRealPlay(szDeviceIdentify);
+                },
+                error: function() {
+                  //失败的回调函数
+                  console.error("WebVideoCtrl fail!");
+                }
+              });
+            }
+          });
+        });
+      } else {
+        let width = element.width(),
+          video = $(`<video src="${scope.url}"
+            width="100%"
+            height="${(width * 9) / 16}"
+            autoplay="true"
+            muted="true"></video>`);
+        element.append(video);
+      }
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+}
+</style>

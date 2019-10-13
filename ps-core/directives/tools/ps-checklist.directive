@@ -1,0 +1,83 @@
+<config injector="$q"></config>
+<template>
+    <div>
+    </div>
+</template>
+<script type="text/javascript">
+  export default function ($q) {
+    return {
+      scope: {
+        config: '=?',
+        options: '=?',
+        /*
+        * [{
+        *   label: '',
+        *   checked: true
+        * }, {
+        *   label: '',
+        *   checked: true
+        * }]
+        */
+        ngModel: '=?'
+      },
+      replace: true,
+      require: '?ngModel',
+      link(scope, element, attr, ngModel) {
+        let wrapper = element[0];
+        let initDomDefer = $q.defer();
+        wrapper.addEventListener('change', function (e) {
+          // [true, false, true]
+          // [{}, {}, {}]
+          if (e.target.tagName === 'INPUT') {
+            scope.options[e.target.attributes.index.value].value = e.target.checked;
+          }
+          ngModel.$setViewValue([...scope.options.map(op => {
+            return op.value;
+          })]);
+        });
+        function createCheckListDom(options) {
+          return options.map((op, index) => {
+            return `
+            <label style="padding: 7px">
+                <input type="checkbox" ng-checked="op.value" index="${index}" style="display: inline-block;width: 16px;height: 16px;">
+                <span style="vertical-align: 4px">${op.label}</span>
+            </label>
+            `;
+          }).join('');
+        }
+
+        function initDom(options) {
+          wrapper.innerHTML = createCheckListDom(options);
+          initDomDefer.resolve();
+        }
+
+        //initDom();
+        scope.$watch(`options`, n => {
+          if (typeof n === 'undefined') {
+            return;
+          }
+          initDom(n);
+        });
+
+        Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+          let model = n;
+          if (!Array.isArray(n)) {
+            model = [!!n];
+          }
+          initDomDefer.promise.then(function () {
+            let checkboxList = Array.prototype.slice.call(wrapper.querySelectorAll('input[type=checkbox]'));
+            model.forEach((m, index) => {
+              checkboxList[index].checked = m;
+            });
+          });
+          return n;
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+   /* input[type="checkbox"] {
+        margin-top: 9px !important;
+    }*/
+</style>

@@ -1,0 +1,44 @@
+<config injector="$q,$rootScope"></config>
+<template>
+  <div
+    id="free-board"
+    class="modal bootstrap-dialog type-primary fade size-normal in block"
+  >
+    <div class="modal-dialog steel" ng-style="style()">
+      <div class="modal-content">
+        <div class="modal-header bg-f2 padding-bottom-20">
+          <div class="bootstrap-dialog-header">
+            <a role="button" class="close" ng-click="close()">×</a>
+            <h4 class="modal-title info-box-number" ng-bind="title"></h4>
+          </div>
+        </div>
+        <div class="modal-body no-pad-top" ng-transclude></div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(q, rootScope) {
+  return {
+    scope: false,
+    transclude: true,
+    link(scope, element, attr, ngModel) {
+      if (scope.$$phase != "$apply" && scope.$$phase != "$digest") {
+        scope.$apply(() => {});
+      }
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+#free-board {
+  &.modal {
+    //100003  会遮挡提示信息growl
+    display: table-cell;
+    z-index: 9999;
+    opacity: 1;
+    position: absolute;
+    overflow-y: auto;
+  }
+}
+</style>

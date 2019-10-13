@@ -1,0 +1,62 @@
+<config injector="$rootScope,$timeout,$compile,$location" type="factory"
+></config>
+<script type="text/javascript">
+import { screenOffset, extend } from "ps-ultility";
+export default function(rootScope, timeout, compile, location) {
+  let obj = {};
+  //中间弹出层，未加载完毕，禁止操作
+  function showLoading() {
+    var iWidth = document.documentElement.clientWidth;
+    var iHeight = document.documentElement.clientHeight;
+    var bgObj = document.createElement("div");
+    bgObj.setAttribute("id", "divBgObj1");
+    bgObj.style.cssText =
+      "position:fixed;left:0px;top:0px;width:" +
+      iWidth +
+      "px;height:" +
+      Math.max(document.body.clientHeight, iHeight) +
+      "px;background-color:rgba(12, 16, 23,0.8);z-index:999999;text-align:center; vertical-align:middle;";
+    var bgImg = document.createElement("img");
+    bgImg.setAttribute("src", "../../images/baogang/images/loading.svg");
+    bgImg.style.cssText =
+      "position:absolute;left:50%;top:50%;width:200px;height:200px;margin-left:-100px;margin-top:-100px;animation: loading-animation 1s linear infinite;";
+    bgObj.appendChild(bgImg);
+    document.body.appendChild(bgObj);
+  }
+  //右上角的提示，不影响其他操作
+  function showLoadingTip() {
+    var bgObj = document.createElement("div");
+    bgObj.setAttribute("id", "divBgObj2");
+    bgObj.style.cssText =
+      "position:fixed;right:0px;top:0px;width: 310px;height:50px;background-color:rgba(12, 16, 23,0.8);z-index:9999;text-align:center; vertical-align:middle;border:2px solid rgb(107, 122, 129)";
+    var bgImg = document.createElement("img");
+    bgImg.setAttribute("src", "../../images/baogang/images/loading.svg");
+    bgImg.style.cssText =
+      "position:absolute;left:25px;top:50%;width:32px;height:32px;margin-top: -16px;animation: loading-animation 1s linear infinite;";
+    bgObj.appendChild(bgImg);
+    var spa = document.createElement("span");
+    spa.innerText = "数据正在传输";
+    spa.style.cssText =
+      "line-height: 50px;color:#fff;font-size:16px;margin-left: -66px;z-index:99999";
+    bgObj.appendChild(spa);
+    document.body.appendChild(bgObj);
+  }
+  //关闭弹出层
+  function closeLoading() {
+    var bgObj1 = document.getElementById("divBgObj1");
+    var bgObj2 = document.getElementById("divBgObj2");
+    if (bgObj1 != null) {
+      document.body.removeChild(bgObj1);
+    }
+    if (bgObj2 != null) {
+      document.body.removeChild(bgObj2);
+    }
+  }
+
+  return (obj = {
+    showLoading: showLoading,
+    showLoadingTip: showLoadingTip,
+    closeLoading: closeLoading
+  });
+}
+</script>

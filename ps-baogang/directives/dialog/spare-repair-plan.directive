@@ -1,0 +1,217 @@
+<config injector="$q,$rootScope,growl,commonMethodService,commonMethodService2"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>工装代码:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.fCode"
+                     class="form-control" ng-disabled="mode == 'detail'"/>
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>分类:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.fCategory"
+                data-options="item.valueCode as item.label for item in fCategorys"
+
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>工装设备名称:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.fName"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>尺寸型规:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.fSize"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>单重(Kg):</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.fWeight"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>存放地点:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.fAdress"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>创始人:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.originator"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>管理单位:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.manageUnit"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>适用范围:</span>
+          </td>
+          <td>
+            <div>
+              <input ng-model="params.scope"
+                     ng-disabled="mode == 'detail'"
+                     class="form-control" />
+            </div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">实物照片/图纸:</span>
+          </td>
+          <td>
+            <ps-file2 ng-model="params.imagePath"></ps-file2>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">功能说明书:</span>
+          </td>
+          <td>
+            <ps-file2 ng-model="params.specificationPath"></ps-file2>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">安全操作使用与维护规程:</span>
+          </td>
+          <td>
+            <ps-file2 ng-model="params.safetyManualPath"></ps-file2>
+          </td>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()" ng-if="mode !== 'detail'">提交</button>
+        <button class="btn btn-default" ng-click="close()" ng-if="mode !== 'detail'">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(q,rootScope,growl,commonMethodService,cms2){
+    return {
+      link(scope, element, attr) {
+        scope.mode = scope.params.mode;
+        scope.params = extend({}, scope.params.data);
+        scope.submitFn = function(){
+          let promise = cms2.validate({
+            "params.fCode" : "工装代码不可为空",
+            "params.fCategory" : "分类不可为空",
+            "params.fName" : "工装设备名称不可为空",
+            "params.fSize" : "尺寸型规不可为空",
+            "params.fWeight" : "单重(Kg)不可为空",
+            "params.fName" : "存放地点不可为空",
+            "params.fSize" : "创始人不可为空",
+            "params.fWeight" : "管理单位不可为空",
+            "params.fWeight" : "适用范围不可为空"
+          }, scope);
+          promise.then(() => {
+            scope.submit(scope.params);
+          }).catch(e => {
+            growl.error( e );
+          })
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  table.item{
+    width : 100%;
+    td.title{
+      width : 130px;
+    }
+  }
+  .wrap{
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 5px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

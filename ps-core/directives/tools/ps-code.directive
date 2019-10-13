@@ -1,0 +1,288 @@
+<config injector="$rootScope,$compile" deps = "processCommonDir"></config>
+<template>
+  <div class="wrap">
+    <div class="code"></div>
+    <button class="btn btn-primary" ng-click="submitFn()">确定</button>
+    <button class="btn btn-default" ng-click="beautify()">美化代码</button>
+    <label>选择模版：</label>
+    <div class="btn-group">
+      <button
+        class="btn btn-default"
+        ng-repeat="template in templates"
+        ng-bind="template.label"
+        ng-click="template.click()"
+      ></button>
+    </div>
+  </div>
+</template>
+<script>
+import { js } from "js-beautify";
+export default function(rootScope, compile) {
+  return {
+    scope: {
+      tracker: "="
+    },
+    link(scope, element, attr) {
+      const fun = {
+        0: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 节点模版 **/
+          return [
+            {
+              title: "节点名称",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [findAttr(["工单号", "ticketNo"])]
+            }
+          ];
+        },
+        1: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 报警评价 **/
+          return [
+            {
+              title: "报警评价",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["处理人", "handlerName"]),
+                createTitle("在线预警"),
+                createDicAttr(["报警级别", "alertSeverity", "severity"]),
+                createDicAttr(["报警来源", "appName", "appName"]),
+                findAttr(["报警描述", "alertTitle"]),
+                findAttr(["报警时间", "sendTime"]),
+                findAttr(["评价等级", "statusGrade"]),
+                findAttr(["评价说明", "cessingScheme"])
+              ]
+            }
+          ];
+        },
+        2: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 智能检修 **/
+          return [
+            {
+              title: "智能检修",
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                findAttr(["任务分类", "taskCategory"]),
+                findAttr(["任务来源", "appName"]),
+                findAttr(["处理人", "handlerName"]),
+                createButton(["检修方案", "fixingPlan"]),
+                createButton(["检修实绩", "fixingResult"])
+              ]
+            }
+          ];
+        },
+        3: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 节点模版 **/
+          var base = [
+            {
+              title: "状态维护",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                findAttr(["任务分类", "message"]),
+                findAttr(["任务来源", "appName"]),
+                findAttr(["维护项目编号", "standardNo"]),
+                findAttr(["维护项目名称", "standardName"]),
+                findAttr(["实施依据", "maintainBasis"]),
+                findAttr(["处理人", "ticket.handlerName"]),
+                createButton(["维护实绩", "keepResult"])
+              ]
+            },
+            {
+              title: "智能决策",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [findAttr(["异常名称", "maintainBasis"])]
+            },
+            {
+              title: "智能方案",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["解决方案", "maintainBasis"]),
+                findAttr(["维护项目编号", "standardNo"]),
+                findAttr(["维护项目名称", "standardName"]),
+                createButton(["规则详情", "keepResult"])
+              ]
+            }
+          ];
+          return base;
+        },
+        4: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 评价验收 **/
+          return [
+            {
+              title: "评价验收",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["处理人", "handlerName"]),
+                createTitle("检修验收"),
+                findAttr(["验收结果", "tallyCheck"]),
+                findAttr(["验收说明", "tallyRemark"]),
+                createTitle("状态诊断评价"),
+                findAttr(["评价等级", "tallyEvaluateCheckboxlist"]),
+                findAttr(["评价说明", "tallyEvaluateDealExplain"]),
+                createTitle("异常处理评价"),
+                findAttr(["评价等级", "abnormalEvaluateCheckboxlist"]),
+                findAttr(["备注", "abnormalEvaluateDealExplain"])
+              ]
+            }
+          ];
+        },
+        5: function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue,
+          createText,
+          createDic,
+          createDicAttr
+        ) {
+          /** 退回处理 **/
+          return [
+            {
+              title: "退回",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                createText(["任务分类", this.getTaskJob()]),
+                createText(["任务来源", this.getAppSource()]),
+                findAttr(["处理人", "theCreateUserName"]),
+                findAttr(["退回说明", "recallExplain"])
+              ]
+            },
+            {
+              title: "退回处理",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                createText(["任务分类", this.getTaskJob()]),
+                createText(["任务来源", "状态维护标准"]),
+                findAttr(["处理人", "handlerName"]),
+                findAttr(["处理方式", "changeReason"]),
+                findAttr(["调整原因", "changeReason"])
+              ]
+            }
+          ];
+        }
+      };
+      window["require"](["ace"], () => {
+        scope.$apply(() => {
+          let editor = ace.edit(element.find(".code")[0]);
+          function beautify(code) {
+            return js(code, {
+              indent_size: 2,
+              space_in_empty_paren: true,
+              end_with_newline: true,
+              wrap_line_length: 200
+            });
+          }
+          function update(code) {
+            editor.session.setValue("");
+            editor.insert(beautify(code));
+          }
+          editor.session.setMode("ace/mode/html");
+          editor.setTheme("ace/theme/tomorrow");
+          editor.session.setMode("ace/mode/javascript");
+          editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true
+          });
+          update(scope.$parent.$parent.params.value || "");
+          scope.beautify = function() {
+            update(editor.getValue());
+          };
+          scope.submitFn = function() {
+            scope.$parent.$parent.submit(beautify(editor.getValue()));
+          };
+          class BtnCls {
+            constructor(d) {
+              for (let i in d) {
+                this[i] = d[i];
+              }
+            }
+            click() {
+              update(this.content);
+            }
+          }
+          scope.templates = scope.templates = [
+            "默认节点",
+            "报警评价",
+            "智能检修",
+            "状态维护",
+            "评价验收",
+            "退回处理"
+          ].map(
+            (d, i) =>
+              new BtnCls({
+                label: d,
+                content: beautify(fun[i].toString())
+              })
+          );
+        });
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  padding: 5px;
+  .code {
+    height: ~"calc(100vh - 300px)";
+  }
+}
+</style>

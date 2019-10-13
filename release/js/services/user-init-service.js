@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("userInitService",["serviceProxy",function(o){var r="userRoleUIService",e={deleteInitUser:function(e,t){o.get(r,"deleteInitUser",e,t)},deleteGroup:function(e,t){o.get(r,"deleteGroup",e,t)},addRoleRes:function(e,t,i,n){o.get(r,"addRoleRes",[e,t,i],n)},applySolution:function(e,t,i){o.get("applySolutionUIService","applySolution",[t],i)}};return e}])});
+//# sourceMappingURL=../../map/js/services/user-init-service.js.map

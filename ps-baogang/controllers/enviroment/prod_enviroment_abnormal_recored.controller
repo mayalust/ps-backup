@@ -1,0 +1,328 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,$rootScope"
+        deps="dialogGlobalRule,dialogDetailAlert"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <div class="margin-bottom-5">
+          <span class="padding-right-10">报警级别:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="level" data-options="model.id as model.label for model in levels"></ps-select>
+          </div>
+          <span class="padding-left-right-10">处理人:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="owner" data-options="model.id as model.label for model in owners"></ps-select>
+          </div>
+          <span class="padding-left-right-10">处理方式:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="state" data-options="model.id as model.label for model in states"></ps-select>
+          </div>
+        </div>
+        <div>
+          <span class="padding-right-10">处理时间:</span>
+          <button class="btn btn-default"
+                  ng-repeat="sel in timeSels"
+                  ng-class="sel.class()"
+                  ng-click="sel.click()"
+                  ng-bind="sel.label">
+          </button>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="starttime"></ps-date2>
+          </div>
+          <span class="padding-left-right-10">至</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="endtime"></ps-date2>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            报警记录
+          </div>
+          <table ps-table-sync = "false"
+                 data-paginate="all"
+                 data-source="alertOk"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>类别</th>
+              <th>厂区</th>
+              <th>设备名称</th>
+              <th>设备编码</th>
+              <th>关注程度</th>
+              <th>报警信息</th>
+              <th>报警级别</th>
+              <!--<th>首次报警时间</th>-->
+              <!--<th>报警次数</th>-->
+              <th>处理时间</th>
+              <th>处理方式</th>
+              <th>处理人</th>
+              <!--<th>状态</th>-->
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic1[item.nodeId].customerLabel"></td>
+              <td ng-bind="deviceDic1[item.nodeId].projectLabel"></td>
+              <td ng-bind="deviceDic1[item.nodeId].label"></td>
+              <td ng-bind="deviceDic1[item.nodeId].sn"></td>
+              <td ng-bind="devParents['values'].Focus == 'country_control' ? '国控':'市控'"></td>
+              <td ng-bind="item.message"></td>
+              <td ng-bind="item.severity ==2 ? '注意'
+              : item.severity ==3 ? '警告'
+              : item.severity ==4 ? '危险'
+              : '-'"></td>
+              <!--<td ng-bind="item.firstArisingTime"></td>-->
+              <!--<td ng-bind="item.count"></td>-->
+              <td ng-bind="formatTime(item.arisingTime)"></td>
+              <td ng-bind="item.state == 5 ? '已确认'
+                : item.state == 20 ? '已解决'
+                : item.state == 30 ? '已忽略'
+                : '-'"></td>
+              <td ng-bind="item.owner"></td>
+              <!--<td ng-bind="item.state"></td>-->
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.detail()">详情</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,rootScope){
+      scope.deviceDic1 = rootScope.deviceDic;
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToDate = date.trimmToDate().date,
+      trimToWeek = date.trimmToWeek().date,
+      trimToMonth = date.trimmToMonth().date;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      getDevSn(){
+        if(this.nodeId && scope.deviceDic){
+          var d = scope.deviceDic.filter((e)=>{
+            return e.id == this.nodeId;
+          })
+          return d[0] && d[0].sn;
+        }else {
+          return "-"
+        }
+      }
+      getCustomer(){
+        if(this.nodeId && scope.deviceDic){
+          var d = scope.deviceDic.filter((e)=>{
+            return e.id == this.nodeId;
+          })
+          this.deviceObj =  d[0];
+          if(this.deviceObj && this.deviceObj.customerId && scope.customerDic){
+            var d = scope.customerDic.filter((e)=>{
+              return e.id == this.deviceObj.customerId;
+            })
+            return d[0] && d[0].customerName;
+          }else {
+            return "-"
+          }
+        } else {
+          return "-"
+        }
+      }
+      getProject(){
+        if(this.nodeId && scope.deviceDic){
+          var d = scope.deviceDic.filter((e)=>{
+            return e.id == this.nodeId;
+          })
+          this.deviceObj =  d[0];
+          if(this.deviceObj && this.deviceObj.projectId && scope.projectDic){
+            var d = scope.projectDic.filter((e)=>{
+              return e.id == this.deviceObj.projectId;
+            })
+            return d[0] && d[0].projectName;
+          }else{
+            return "-"
+          }
+        }else {
+          return "-"
+        }
+      }
+      detail(){
+        cms2.modal({
+          title : "详情",
+          directive : "dialog-detail-alert",
+          width : "50%",
+          params : {
+            mode : "view",
+            type : "",
+            data :this
+          }
+        }).then( d => {
+           
+           
+        });
+      }
+    }
+    scope.levels = [{
+        id : 2,
+        label : "注意"
+    },{
+        id : 3,
+        label : "警告"
+    },{
+        id : 4,
+        label : "危险"
+    }];
+    scope.states = [{
+        id : 5,
+        label : "已确定"
+    },{
+        id : 20,
+        label : "已解决"
+    },{
+        id : 30,
+        label : "已忽略"
+    }];
+    scope.owners = [{
+        id : "环保管理",
+        label : "环保管理"
+    },{
+        id : "废水",
+        label : "废水"
+    },{
+        id : "废气",
+        label : "废气"
+    }];
+    scope.formatTime = function (d) {
+        return d
+            ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+            : "-";
+    }
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+        scope.starttime = trimToDate;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToDate == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本周",
+      click(){
+        scope.starttime = trimToWeek;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToWeek == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本月",
+      click(){
+        scope.starttime = trimToMonth;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToMonth == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    }];
+    cms2.getCurrentParents().then( parents => {
+        scope.devParents = parents[parents.length-1];
+         
+        scope.$root.treeStr = parents.map( d => d.label ).join(" > ");
+    }).catch(e => {
+      growl.error( e.message );
+    });
+    scope.models = [{
+      id : 300,
+      label : "管理域"
+    },{
+      id : 301,
+      label : "客户"
+    },{
+      id : 302,
+      label : "项目"
+    }];
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+      // scope.filter = ({ modelId, label, modifyTime }) => {
+      //   if( typeof scope.modelId !=="undefined" && modelId !== scope.modelId){
+      //     return false;
+      //   }
+      //   if( typeof scope.label !=="undefined" && label.indexOf( scope.label ) == -1 ){
+      //     return false;
+      //   }
+      //   let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+      //     et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+      //     mt = new Date( modifyTime );
+      //   if( mt - st < 0 || mt - et > 0 ){
+      //     return false;
+      //   }
+      //   return true;
+      // }
+        scope.alertOk = createRenderFunction({"severities":scope.level?scope.level :"1,2,3,4","states":scope.state?scope.state :"5,20,30",
+            "nodeIds" : $state.params.id-0,"onwer":scope.onwer?scope.onwer :"",
+        });
+    };
+    function createRenderFunction(states){
+      return function( page, pageSize ){
+        let params = [states,{
+          "start":page * pageSize,
+          "length":pageSize,
+          "statCount":true
+        }];
+        return ajax.post("alertQueryFlexService.getAlertByPage", params).then( dt => {
+          dt.data = dt.data.map( d => new tableCell(d))
+          return cms2.success( dt );
+        });
+      }
+    }
+    ajax.post("resourceUIService.getDevicesByCondition", [{}]).then( dt => {
+      scope.deviceDic = dt;
+      return ajax.post("customerUIService.findCustomersByCondition",{}).then(customer => {
+        scope.customerDic = customer;
+        return ajax.post("projectUIService.findProjectsByCondition",{}).then(project => {
+          scope.projectDic = project;
+          scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30","nodeIds" : $state.params.id-0});
+        })
+      })
+    });
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 80px;
+    }
+  }
+</style>

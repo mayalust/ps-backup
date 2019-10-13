@@ -1,0 +1,96 @@
+<!--添加属性模态框-->
+<div class="modal bootstrap-dialog type-primary fade size-normal in" style="display : block;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-f2">
+        <a role="button" ng-click="closeDialog();" class="close">×</a>
+        <h4 class="modal-title info-box-number">批量设置属性</h4>
+      </div>
+      <div class="modal-body clearfix row ">
+        <form role="form" class="form-horizontal" name="attrForm">
+          <div class="form-group">
+            <label class="col-sm-2 dialog-control-label no-padding-right dialog-control-h">
+              <span class="ng-binding">属性名称：</span>
+            </label>
+            <div class="col-sm-9 padding-left-5">
+              <select select2 class="form-control col-sm-12 no-padding-left" ng-model="dialogSelQueryAttr.attr"
+                      ng-options="value.uid as value.label for value in dialogQueryAttrList"
+                      ng-change="attrDialogChang();"
+                      selectdata="dialogQueryAttrList">
+                <option value="">请选择</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" ng-repeat=" q in dialogQueryKeyValue">
+
+            <label class="col-sm-2 dialog-control-label no-padding-right dialog-control-h">
+              <span class="ng-binding">{{q.label}}：</span>
+            </label>
+            <div class="col-sm-8 padding-left-5">
+              <!-- datetime or date -->
+              <div class="col-sm-11 no-pad" ng-if="q.dataType == 'datetime'">
+                <input type="text" class="form-control " readonly timepicker="true" ng-model="q.value"
+                       drops="down" date-time-picker>
+              </div>
+              <div class="col-sm-11 no-pad" ng-if="q.dataType == 'date'">
+                <input type="text" class="form-control " readonly ng-model="q.value" drops="down"
+                       date-time-picker>
+              </div>
+              <!-- datetime or date -->
+              <!-- numberic -->
+              <div class="col-sm-11 no-pad" ng-if="q.dataType == 'numberic'">
+                <input type="number" autocomplete="off" ng-model="q.value"
+                       class="form-control no-padding-right">
+              </div>
+              <!-- numberic -->
+              <!-- string String icon standardAddress default -->
+              <div class="col-sm-11 no-pad"
+                   ng-if="q.dataType == 'string' ||q.dataType == 'String' || q.dataType == 'icon'|| q.dataType == 'default'">
+                <input type="text"
+                       autocomplete="off" ng-model="q.value" class="form-control">
+              </div>
+              <!-- string String icon standardAddress default -->
+              <div class="col-sm-11 no-pad"
+                   ng-if="q.dataType == 'standardAddress'">
+                <select class="col-sm-3 input-sm margin-right-5 no-padding input-sm"
+                        ng-options="value.id as value.label for value in provinces" ng-model="q.province">
+                  <option value="">请选择...</option>
+                </select>
+                <select class="col-sm-3 input-sm margin-right-5 no-padding input-sm"
+                        ng-options="value.id as value.label for value in cityDics[q.province]"
+                        ng-model="q.city">
+                  <option value="">请选择...</option>
+                </select>
+                <select class="col-sm-3 input-sm margin-right-5 no-padding input-sm"
+                        ng-options="value.id as value.label for value in districtDics[q.city]"
+                        ng-model="q.value">
+                  <option value="">请选择...</option>
+                </select>
+              </div>
+              <!-- dict -->
+              <div class="col-sm-11 no-pad" ng-if="q.dataType == 'dict'">
+                <select ng-if="q.dataType == 'dict'" class="form-control" ng-model="q.value" ng-init="dictInit(q)"
+                        ng-options="v.value as v.value for v in attrDist[q.name]">
+                  <option value="">请选择</option>
+                </select>
+              </div>
+              <!-- dict -->
+            </div>
+            <div class="col-sm-1 padding-left-5">
+              <button class="btn btn-box-tool" ng-click="removeDialogAttr(q.id);"><i class="fa fa-minus"></i></button>
+            </div>
+
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="setAttr()">
+          确定
+        </button>
+        <button class="btn btn-default" ng-click="closeDialog();">取消</button>
+      </div>
+    </div>
+  </div>
+</div>

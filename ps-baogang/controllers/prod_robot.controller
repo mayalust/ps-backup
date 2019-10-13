@@ -1,0 +1,341 @@
+<config injector="$scope, $rootScope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket, psDialog, psPolling"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="topo with-border">
+            <button
+              class="btn btn-primary"
+              ng-click="showVoiceWave()"
+              type="button"
+              style="position: absolute;right: 2%;z-index: 1;"
+            >
+              音浪图
+            </button>
+            <ps-topo-common></ps-topo-common>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="block">
+          <h5>声音强度</h5>
+          <div class="row">
+            <div class="col-md-3 item" ng-repeat="kpi in kpiData">
+              <div class="kpi-item">
+                <div class="item-left">
+                  <span ng-bind="kpi.label"></span>
+                </div>
+                <div class="kpi-right">
+                  <span
+                    class="click"
+                    ng-bind="kpi.getValue()"
+                    ng-click="kpi.click()"
+                    ng-style="kpi.getAlertStateColor()"
+                    data-show-time="kpi.getArisingTime()"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="block">
+          <h5>告警状态</h5>
+          <div class="row">
+            <div class="col-md-3 item" ng-repeat="kpi in kpiData">
+              <div class="kpi-item">
+                <div class="item-left">
+                  <span ng-bind="kpi.label"></span>
+                </div>
+                <div class="kpi-right">
+                  <span
+                    class="click"
+                    ng-bind="kpi.getStateName()"
+                    ng-click="kpi.click()"
+                    ng-style="kpi.getAlertStateColor()"
+                    data-show-time="kpi.getArisingTimeAlert()"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  rootScope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket,
+  psDialog,
+  psPolling
+) {
+  let kpiValueMap = {};
+  function parse(str) {
+    let a;
+    try {
+      a = JSON.parse(str);
+    } catch (e) {
+      return;
+    }
+    return a;
+  }
+
+  function isArray(a) {
+    return {}.toString.call(a) === "[object Array]";
+  }
+
+  class DataItem {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    getStateName() {
+      let state = this.getAlertState();
+      return ["正常", "正常", "注意", "警告", "危险"][state] || "正常";
+    }
+    click() {
+      let arisingTime = this.getArisingTime(),
+        enddate = arisingTime && new Date(arisingTime) - 0,
+        startdate = enddate && enddate - 2 * 60 * 60 * 1000;
+      cms2.navigateTo("专业分析", {
+        startdate,
+        enddate,
+        id: state.params.id,
+        sensor: this.instance,
+        kpiId: this.dataItemId
+      });
+    }
+    getValue() {
+      let value =
+        kpiValueMap[this.instance] &&
+        kpiValueMap[this.instance][this.dataItemId] &&
+        kpiValueMap[this.instance][this.dataItemId]["value"];
+      return value ? value.value : "-";
+    }
+    getArisingTime() {
+      let value =
+        kpiValueMap[this.instance] &&
+        kpiValueMap[this.instance][this.dataItemId] &&
+        kpiValueMap[this.instance][this.dataItemId]["value"];
+      return value ? value.arisingTime : undefined;
+    }
+    getArisingTimeAlert() {
+      let state =
+        kpiValueMap[this.instance] &&
+        kpiValueMap[this.instance][this.dataItemId] &&
+        kpiValueMap[this.instance][this.dataItemId]["state"];
+      return state ? state.arisingTime : undefined;
+    }
+    getAlertState() {
+      let state =
+        (kpiValueMap[this.instance] &&
+          kpiValueMap[this.instance][this.dataItemId] &&
+          kpiValueMap[this.instance][this.dataItemId]["state"]) ||
+        {};
+      return state.value;
+    }
+    getAlertStateColor() {
+      let state = this.getAlertState(),
+        color =
+          ["#00bc79", "#00bc79", "#efd709", "#ee6b1c", "e74e53"][state] ||
+          "#00bc79";
+      return {
+        "background-color": color
+      };
+    }
+  }
+  class Robot {
+    constructor(id, time, isWebSocket, isDebug) {
+      this.id = id;
+      this.isWebSocket = isWebSocket;
+      this.time = time;
+      this.polling = psPolling(time, this.isWebSocket, isDebug);
+    }
+    init() {
+      this.getDataItems().then(sensors => {
+        let nodeIds = [this.id - 0],
+          kpiCodes = Array.from(
+            this.sensors.reduce((a, b) => {
+              a.add(b.dataItemId);
+              return a;
+            }, new Set())
+          ),
+          instances = this.getInstances();
+        this.polling.getData(nodeIds, kpiCodes, instances, valueList => {
+          valueList.forEach(value => {
+            this.handleValueList(value);
+          });
+        });
+      });
+    }
+    getInstances() {
+      return Array.from(
+        this.sensors.reduce((a, b) => {
+          a.add(b["instance"]);
+          a.add(`${b["dataItemId"]}_${b["instance"]}`);
+          return a;
+        }, new Set())
+      );
+    }
+    getResource(id) {
+      return psTreeData(this.id).getState();
+    }
+    getDataItems() {
+      return this.getResource().then(resource => {
+        return resource.getMeasureLocate().then(sensors => {
+          let arr = sensors
+            .map(sensor => {
+              let kpis = sensor.kpis,
+                fd = kpis.find(d => d.kpiName == "声音频率");
+              if (!fd) {
+                return;
+              }
+              fd.label = sensor.label;
+              return new DataItem(fd);
+            })
+            .filter(d => d);
+          arr.sort(function(a, b) {
+            return a.instance > b.instance ? 1 : -1;
+          });
+          scope.kpiData = this.sensors = arr;
+          return cms2.success(arr);
+        });
+      });
+    }
+    destroy() {
+      this.polling.destroy();
+    }
+    handleValueList(n) {
+      let mode = "value",
+        { kpiCode, nodeId, instance } = n;
+      if (kpiCode == 999997) {
+        mode = "state";
+        instance = instance.split("_");
+        kpiCode = instance[0];
+        instance = instance[1];
+      }
+      kpiValueMap[instance] = kpiValueMap[instance] || {};
+      kpiValueMap[instance][kpiCode] = kpiValueMap[instance][kpiCode] || {};
+      kpiValueMap[instance][kpiCode][mode] = n;
+    }
+  }
+
+  let robot = new Robot(state.params.id, 6000, true);
+  robot.init();
+  scope.showVoiceWave = function() {
+    psDialog.voiceWave(
+      //`<iframe src="/toolkit/voice-wave/index.html" frameborder="0" width="100%" height="430px"></iframe>`
+      `<iframe src="http://10.3.150.47:8007" frameborder="0" width="100%" height="815px"></iframe>`
+    );
+  };
+  scope.$on("$destroy", () => {
+    robot.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+.topo {
+  min-height: 560px;
+  position: relative;
+}
+.head {
+  display: table;
+  background-color: rgba(250, 250, 250, 0.2);
+  width: 100%;
+  text-align: center;
+  .appendix {
+    width: 30px;
+    padding: 2px 10px 2px 0px;
+    display: table-cell;
+  }
+}
+.click {
+  cursor: pointer;
+  margin-right: 10px;
+  width: 60px;
+  display: inline-block;
+  border-radius: 8px;
+  background: #00bb7b;
+  text-align: center;
+  color: white;
+  border: 0;
+  &.state-1 {
+    background-color: #00bb7b;
+  }
+
+  &.state-2 {
+    background-color: #efd80b;
+  }
+
+  &.state-3 {
+    background-color: #ff8800;
+  }
+
+  &.state-4 {
+    background-color: #fd0001;
+  }
+}
+.kpi-item {
+  display: table;
+  width: 100%;
+  .kpi-left {
+    display: table-cell;
+    vertical-align: middle;
+    line-height: 21px;
+  }
+  .kpi-right {
+    width: 100px;
+    padding: 2px 10px 2px 0px;
+    display: table-cell;
+    vertical-align: middle;
+  }
+}
+.t-content {
+  display: table;
+  width: 100%;
+  vertical-align: middle;
+  .appendix {
+    width: 30px;
+    padding: 2px 10px 2px 0px;
+    display: table-cell;
+    vertical-align: middle;
+    .circle {
+      margin: 0px auto;
+      width: 15px;
+      height: 15px;
+      border-radius: 10px;
+      background-color: #00bb7b;
+    }
+  }
+}
+.wrap {
+}
+.block {
+  margin: 5px;
+}
+.item {
+  padding: 5px !important;
+}
+.plugin {
+  width: "100%";
+  height: 200px;
+}
+video {
+  background-color: #555;
+  border: 1px solid yellow;
+}
+</style>

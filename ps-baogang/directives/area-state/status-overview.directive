@@ -1,0 +1,148 @@
+<config injector="api"></config>
+<template>
+  <div class="status-overview-wrapper">
+
+    <div class="status-overview-summary">
+      <p class="title">{{selfConfig.title}}</p>
+      <div ng-repeat="titleKpiValue in selfConfig.titleKpiValue">
+        <p class="kpi-name">{{titleKpiValue.name}}</p>
+        <p class="kpi-value">{{titleKpiValue.value}}</p>
+      </div>
+    </div>
+    <div class="status-overview-content">
+      <div class="left">
+        <div class="left-item" ng-repeat="leftItem in selfConfig.leftKpiValue">
+          <div class="space"></div>
+          <div class="kpi-box">
+            <div class="kpi-name">{{leftItem.name}}</div>
+            <div class="kpi-value">{{leftItem.value}}</div>
+          </div>
+          <div class="kpi-status" ng-show="leftItem.status.show"
+               ng-style="getStatusBackground(leftItem.status.color)"></div>
+        </div>
+      </div>
+      <div class="right">
+        <ps-svg-chart option="selfConfig.rightOption"></ps-svg-chart>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function (api) {
+  return {
+    scope: {
+      config: '='
+    },
+    link ($scope, $element, $attr) {
+      let colorObj = {
+        notice: '#ece418',
+        warning: '#ee6b1c',
+        normal: '#00bc79'
+      };
+      $scope.getStatusBackground = function (color) {
+        if (color === 'notice' || color === 'normal' || color === 'warning') {
+          return {
+            background: colorObj[color]
+          };
+        } else if (!color) {
+          return {
+            background: 'transparent'
+          };
+        }
+        return {
+          background: color
+        };
+      };
+      $scope.selfConfig = {};
+      let watcher1 = $scope.$watch(`config`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          $scope.selfConfig = n;
+        }
+      });
+      $scope.$on('$destroy', () => {
+        watcher1 && watcher1();
+      });
+    }
+  }
+}
+</script>
+<style scoped lang="less">
+.status-overview-wrapper {
+
+  .status-overview-summary {
+    border: 1px solid rgba(250, 250, 250, 0.3);
+    background-color: rgba(0, 100, 250, 0.1);
+    padding: 5px;
+
+    .title {
+      font-size: 12px;
+      color: #fff;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+
+    .kpi-name {
+      color: rgb(170, 170, 170);
+      font-size: 10px;
+      margin-bottom: 0;
+    }
+
+    .kpi-value {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 0;
+      color: #fff;
+    }
+  }
+
+  .status-overview-content {
+    display: flex;
+
+    .left {
+      flex: 0 0 50%;
+
+      .left-item {
+        display: flex;
+        padding-bottom: 5px;
+
+        &:first-child {
+          padding-top: 5px;
+        }
+
+        .space {
+          flex: 0 0 20%;
+        }
+
+        .kpi-box {
+          width: 50%;
+          flex: 0 0 50%;
+
+          .kpi-name {
+            color: rgb(160, 160, 160);
+            font-size: 12px;
+          }
+
+          .kpi-value {
+            color: rgb(255, 255, 255);
+            font-size: 12px;
+            font-weight: bold;
+            width: 100%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+        }
+
+        .kpi-status {
+          width: 10px;
+          background: transparent;
+        }
+      }
+    }
+
+    .right {
+      width: 50%;
+      flex: 0 0 50%;
+    }
+  }
+}
+</style>

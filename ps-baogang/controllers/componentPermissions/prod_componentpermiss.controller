@@ -1,0 +1,517 @@
+<config injector="$scope,ajax,$stateParams,psDialog,psRouter,growl,psUltility,psLoading,$registerService"
+        params="/:roleID?">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+  import { extend, clone, tree } from "ps-ultility";
+  export default function (scope, ajax,stateParams,psDialog,psRouter,growl,psUltility,psLoading,registerService) {
+    let paramObj = {
+      roleID: stateParams.roleID
+    }, resultObj, arr=[],routerArr = [], clipboard;
+
+    function parse( str ){
+      let obj = null;
+      try{
+        obj = JSON.parse( str );
+      } catch (e) {
+        console.error(e);
+        return obj;
+      }
+      return obj;
+    }
+
+    ajax.post("userEnterpriseService.queryEnterpriseRole").then(function (data) {
+      data.forEach(v => {
+        if(v.roleID == stateParams.roleID){
+          paramObj.roleName = v.roleName;
+          resultObj = JSON.parse(v.values) || {
+            "index": 0,
+            "id": 0,
+            "children":[],
+            "label": "视图配置",
+            "_isRoot": true
+          };
+          scope.layout = {
+            init:{},
+            modals : {
+              editModel : {
+                label : "设备类型",
+                type : "layout",
+                children : [{
+                  type : "form-dialog",
+                  data : null,
+                  children : [{
+                    type : "input",
+                    label : "序号",
+                    composory: true,
+                    key : "index",
+                  },{
+                    type : "select",
+                    label : "视图名称",
+                    composory: true,
+                    key : "viewId",
+                    options: {
+                      url: "viewFlexService.getAllMyViews",
+                      params: [],
+                      after: function(d){
+                        scope.arr = [];
+                        arr = d.filter(f => f.viewType == "dashboard").map((v) => {
+                          v["id"] = v["viewId"];
+                          v["label"] = v["viewTitle"];
+                          return v;
+                        });
+                        //路由controller的名字加入视图下拉中
+                         routerArr =  registerService.getRouters().map(v => {
+                             v["id"] = v["ctrlname"];
+                             v["label"] = v["ctrlname"];
+                             return v;
+                         });
+                         arr = arr.concat(routerArr);
+                        return scope.arr = arr;
+                      },
+                    },
+                    config: {
+                      // disabled: "disabled"
+                      on: {
+                        select: function (event) {
+
+                          // psUltility.setData(scope.addObj, {
+                          //     name: event.$select.viewTitle,
+                          // })
+
+
+                        }
+                      }
+                    }
+                  },{
+                    type : "input",
+                    label : "页签名称",
+                    composory: true,
+                    key : "name"
+                  },{
+                    type : "input",
+                    label : "别名",
+                    composory: false,
+                    key : "alias"
+                  },{
+                    type : "checkbox",
+                    label : "显示树",
+                    composory: false,
+                    key : "showTree",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "checkbox",
+                    label : "本节点视图优先",
+                    composory: false,
+                    key : "viewPriority",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "checkbox",
+                    label : "隐藏菜单",
+                    composory: false,
+                    key : "hideNavi",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "checkbox",
+                    label : "只包含设备",
+                    composory: false,
+                    key : "deviceOnly",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "checkbox",
+                    label : "子标题显示为下拉菜单",
+                    composory: false,
+                    key : "subDrop",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "checkbox",
+                    label : "特殊链接",
+                    composory: false,
+                    key : "specialLink",
+                    config: {
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  },{
+                    type : "input",
+                    label : "链接地址",
+                    composory: false,
+                    key : "link"
+                  },{
+                    label : "操作",
+                    type : "button",
+                    config : {
+                      label : "复制到其他角色同名节点",
+                      on :{
+                        click : function( e ){
+                          let data = e.$scope.getData(), item;
+                          ajax.post("userEnterpriseService.queryEnterpriseRole")
+                            .then( roles => {
+                              function recursive(roles){
+                                let role = roles.shift(), edit = false, values;
+                                if( role ){
+                                  role = JSON.parse(JSON.stringify( role ));
+                                  values = role.values;
+                                  if( values ){
+                                    values = parse( values )
+                                    tree("children").forEach( values, node => {
+                                      if( node.name == data.name ){
+                                        node.viewId = data.viewId;
+                                        node.showTree = data.showTree;
+                                        node.deviceOnly = data.deviceOnly;
+                                        node.children = data.children;
+                                        edit = true;
+                                        tree("children").forEach( node.children, child => {
+                                          child.parentModelId = node.id;
+                                        });
+                                      }
+                                    });
+                                    if( edit ){
+                                      role.values = JSON.stringify( values );
+                                      ajax.post("userRoleUIService.modifyRole", role).then( d => {
+                                         
+                                        recursive(roles);
+                                      }).catch( e => {
+                                        console.warn("[" + role.roleName + "]修改发生错误，跳到下一个");
+                                        recursive(roles);
+                                      });
+                                    } else {
+                                      console.warn("[" + role.roleName + "]角色没有修改节点，跳到下一个");
+                                      recursive(roles);
+                                    }
+                                  } else {
+                                    console.warn("[" + role.roleName + "]角色没有values属性，跳到下一个");
+                                    recursive(roles);
+                                  }
+                                } else {
+                                   
+                                  growl.success("已经复制同名节点到其他角色");
+                                }
+                              }
+                              recursive(roles.slice());
+                            })
+                        }
+                      }
+                    }
+                  }]
+                }],
+                buttons : [{
+                  label : "保存",
+                  class : "btn btn-primary",
+                  click : function(e){
+                    this.submit();
+                  }
+                },{
+                  label : "取消",
+                  click : function(){
+                    this.close();
+                  }
+                }]
+              }
+            },
+            label: "组件权限",
+            children:[{
+              type: "form-inline",
+              children: [{
+                type: "label",
+                value: "标题名称",
+                config: {
+                  class: '.ver-mid',
+                }
+              },{
+                type : "input",
+                label : "标题名称",
+                key: "searchKey",
+                config : {
+                  updateOn : "submitted"
+                }
+              },{
+                type: "button",
+                config: {
+                  label: "查询",
+                  class: "btn btn-sm btn-primary",
+                  click: function (e) {
+                    e.emit("submitted")
+                  }
+                }
+              },{
+                type: "button",
+                config: {
+                  label: "重置",
+                  class: "btn btn-sm btn-default",
+                  click: function (e) {
+                    e.setData({
+                      searchKey : ""
+                    })
+                  }
+                }
+              }]
+            },{
+              type : "tree-view2",
+              options : [resultObj],
+              parentId: "parentModelId",
+              config : {
+                search : "searchKey",
+                format: {
+                  id: "viewId",
+                  label: "viewTitle"
+                }
+              },
+              buttons: [{
+                label:"",
+                class: "glyphicon glyphicon-trash",
+                tit: "刪除",
+                icon: "",
+                on: {
+                  click: function (e) {
+                    let obj;
+                    e.remove({
+                      before : function(source){
+                        let rs = clone(resultObj);
+                        obj = source;
+                        function deleteRecursion(item) {
+                          //删除一级
+                          if (e.$row.parentModelId == 0) {
+                            item.children =  item.children.filter(v => {
+                              if(v.id !== e.$row.id){
+                                return v;
+                              }
+                            });
+                            item.children.sort( (a,b) => {
+                              return a.index - 0 - b.index;
+                            });
+                          } else {
+                            for (var i = 0; i < item.children.length; i++) {
+                              var isFlag = false;
+                              if (item.children[i].id == e.$row.id) {
+                                isFlag = true;
+                                item.children =  item.children.filter(v => {
+                                  if(v.id !== e.$row.id){
+                                    return v;
+                                  }
+                                });
+                                item.children.sort( (a,b) => {
+                                  return a.index - 0 - b.index;
+                                })
+                              }
+                              if(!isFlag){
+                                deleteRecursion(item.children[i]);
+                              }
+                            }
+                          }
+                        }
+                        deleteRecursion(rs);
+                        paramObj["values"] = JSON.stringify(rs);
+                        return paramObj;
+                      },
+                      after: function (d) {
+                        return obj;
+                      },
+                      url : "userRoleUIService.modifyRole",
+                    });
+                  }
+                }
+              },{
+                label:"",
+                class: "glyphicon glyphicon-file",
+                tit: "粘贴",
+                icon: "",
+                rootShow: true,
+                on: {
+                  click: function (e) {
+                    if( typeof clipboard === "undefined" ){
+                      return
+                    }
+                    let dt = e.$row;
+                    dt.children = dt.children || [];
+                    dt.children.push( clipboard );
+                    paramObj["values"] = JSON.stringify(resultObj);
+                    ajax.post("userRoleUIService.modifyRole", paramObj).then(() => {
+                      growl.success("粘贴成功");
+                    })
+                  }
+                }
+              },{
+                label:"",
+                class: "glyphicon glyphicon-scissors",
+                tit: "剪切",
+                icon: "",
+                rootShow: true,
+                on: {
+                  click: function (e) {
+                    let dt = e.$row;
+                    tree().forEach( resultObj, ( item, i, p ) => {
+                      let parent = p[p.length - 1];
+                      if( dt.id == item.id ){
+                        parent.children.splice( i, 1 );
+                        clipboard = dt;
+                      }
+                    });
+                    paramObj["values"] = JSON.stringify(resultObj);
+                    ajax.post("userRoleUIService.modifyRole", paramObj).then(() => {
+                      growl.success("剪切成功")
+                    })
+                  }
+                }
+              },{
+                label:"",
+                class: "proudsmart ps-edit",
+                tit: "编辑",
+                icon: "",
+                on: {
+                  click: function (e) {
+                    let obj;
+                    e.update({
+                      template : "editModel",
+                      before : function(source){
+                        psLoading.showLoadingTip();
+                        let rs = clone(resultObj);
+                        obj = source;
+                        function editRecursion(item) {
+                          if (e.$row.parentModelId == 0) {
+                            item.children.some((ele,index) => {
+                              if(ele.id == e.$row.id){
+                                source["label"] = source.name;
+                                ele = angular.extend(ele,source);
+                              }
+                            });
+                            item.children.sort( (a,b) => {
+                              return a.index - 0 - b.index;
+                            })
+                          } else {
+                            for (var i = 0; i < item.children.length; i++) {
+                              var isFlag = false;
+                              if (item.children[i].id == e.$row.id) {
+                                isFlag = true;
+                                item.children.some((ele,index) => {
+                                  if(ele.id == e.$row.id){
+                                    source["label"] = source.name;
+                                    ele = angular.extend(ele,source);
+                                  }
+                                });
+                                item.children.sort( (a,b) => {
+                                  return a.index - 0 - b.index;
+                                })
+                              }
+                              if(!isFlag){
+                                editRecursion(item.children[i]);
+                              }
+                            }
+                          }
+                        }
+                        editRecursion(rs);
+                        // 编辑一级标题
+
+                        paramObj["values"] = JSON.stringify(rs);
+                        return paramObj;
+                      },
+                      after: function (d) {
+                        psLoading.closeLoading();
+                        return obj;
+                      },
+                      url : "userRoleUIService.modifyRole",
+                    });
+                  }
+                }
+              },{
+                label:"",
+                class: "glyphicon glyphicon-plus",
+                tit: "添加",
+                icon: "",
+                rootShow: true,
+                on: {
+                  click: function (e) {
+                    // 弹框的方法
+                    let obj;
+                    e.add({
+                      template : "editModel",
+                      before: function (s){
+                        psLoading.showLoading();
+                        let rs = clone(resultObj);
+                        s["id"] = Math.uuid();
+                        s["label"] = s.name;
+                        s["children"] = [];
+                        s["showTree"] = s.showTree || 0;
+                        s["deviceOnly"] = s.deviceOnly || 0;
+                        s["specialLink"] = s.specialLink || 0;
+                        s["parentModelId"] = e.$row.id;
+                        obj = s;
+                        function addRecursion(item) {
+                          if (e.$row.id == 0) {
+                            item.children.push(s);
+                            item.children.sort( (a,b) => {
+                              return a.index - 0 - b.index;
+                            })
+                          } else {
+                            for (var i = 0; i < item.children.length; i++) {
+                              var isFlag = false;
+                              if (item.children[i].id == e.$row.id) {
+                                isFlag = true;
+                                item.children[i].children.push(s);
+                                item.children[i].children.sort( (a,b) => {
+                                  return a.index - 0 - b.index;
+                                });
+                              }
+                              if(!isFlag){
+                                addRecursion(item.children[i]);
+                              }
+                            }
+                          }
+                        }
+                        addRecursion(rs);
+                        paramObj["values"] = JSON.stringify(rs);
+                        return paramObj;
+                      },
+                      after : function( d ){
+                        psLoading.closeLoading();
+                        return obj;
+                      },
+                      url : "userRoleUIService.modifyRole",
+                    });
+                  }
+                }
+              }]
+            }]
+          }
+
+        }
+      })
+    });
+  };
+</script>
+<style type="less" scoped>
+  .ver-mid {
+    vertical-align: -9px!important;
+  }
+</style>

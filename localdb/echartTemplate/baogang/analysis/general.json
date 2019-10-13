@@ -1,0 +1,192 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "label": "控制板1",
+        "type": "block",
+        "source": "BLOCK",
+        "style": {
+          "padding": "5px",
+          "margin": "5px"
+        },
+        "advance": {
+          "expression": {}
+        },
+        "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+              {
+                "label": "控件组",
+                "type": "ctrlgroup",
+                "source": "CTRLGROUP",
+                "advance": {
+                  "expression": "expression = {\n  width : \"auto\",\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var endDate = target.dateHandler();\n      var startDate = endDate.clone();\n      startDate.addHour(-12);\n      var dates = [startDate, endDate];\n      var ctrlGroups = [\n        [{\n          value : startDate,\n          type: \"dateTimePicker\",\n          style : {\n              width : \"200px\"\n          },\n          on: {\n            change: function (elem) {\n                startDate = elem.value;\n              target.trigger(\"drawDiagnoseFeatureEchart\",dates);\n            }\n          },\n        }, {\n          type: \"label\",\n          value: \"至\",\n          style: {\n            textAlign: \"center\",\n             width : \"30px\"\n          }\n        },{\n          value : endDate,\n          type: \"dateTimePicker\",\n          style : {\n              width : \"200px\"\n          },\n          on: {\n            change: function (elem) {\n                endDate = elem.value;\n              target.trigger(\"drawDiagnoseFeatureEchart\",dates);\n            }\n          },\n        }, {\n          type: \"button\",\n          btnclass: \"btn btn-primary\",\n          value: \"设备信息\",\n          btnStyle: {\n            width: \"100px\",\n          }\n        }\n          /*{\n           type: \"button\",\n           class: \"col-md-1 col-md-offset-1\",\n           btnclass: \"btn btn-primary\",\n           value: \"求助\",\n           btnStyle: {\n           width: \"100px\",\n           }\n           }*/\n        ]\n      ];\n      target.render(ctrlGroups);\n    }\n  }\n}"
+                },
+                "style": {
+                  "margin": "5px",
+                  "font-size": "12px"
+                },
+                "help": "../pdf/ctrlgroup.pdf",
+                "url": "images/map/map1.png",
+                "parameters": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "source": "ROW",
+        "parameters": {
+          "alignment": "bootstrap"
+        },
+        "style": {},
+        "children": [
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "高级视图",
+                "type": "advanceEchart",
+                "source": "ADVANCEECHART",
+                "advance": {
+                  "expression": "express = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var color = \"#ffe400\";\n      var LENGTH = 50;\n      var resource = target.getValue(\"global/resource\");\n      var kpiDes = target.getValue(\"global/kpi\");\n      var endDate = target.dateHandler();\n      var startDate = endDate.clone();\n      startDate.addHour(-12);\n      var endTime = endDate.getUTCDateString();\n      var startTime = startDate.getUTCDateString();\n      var renderEchart = function renderEchartFn() {\n          renderEchart = function(){\n                 }\n};"
+                },
+                "style": {
+                  "margin": "5px 0",
+                  "width": "100%",
+                  "height": "400px"
+                },
+                "parameters": {
+                  "theme": "auto"
+                },
+                "url": "images/map/map1.png"
+              }
+            ],
+            "col": 9
+          },
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "控制板1",
+                "type": "block",
+                "source": "BLOCK",
+                "style": {
+                  "padding": "5px",
+                  "margin": "5px"
+                },
+                "advance": {
+                  "expression": {}
+                },
+                "children": [
+                  {
+                    "type": "column",
+                    "col": 12,
+                    "children": [
+                      {
+                        "label": "控件组",
+                        "type": "ctrlgroup",
+                        "source": "CTRLGROUP",
+                        "advance": {
+                          "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var dItem, kpi;\n      var duration = null;\n      var resource = target.getValue(\"global/resource\");\n      var multiSelectValues = [];\n      var success = function (resource) {\n         multiSelectValues = [];\n        var ci = [resource.id]; // 设备 526443915616079\n        var modelId = [resource.modelId] // 获取modelId\n        var accessConfigValues = resource.physicalConfig.accessConfigs;\n        target.getAttrsByModelId(modelId, function (attrs) {\n          var MeasurePointLocate = attrs.find(function (elem) {\n              return elem.name == \"MeasurePointLocate\";\n            }) || {};\n          var sourceValue = eval(MeasurePointLocate.sourceValue)|| \"\";\n          var sourceValueArr = [];\n          for (var i in sourceValue) {\n            for (var j in sourceValue[i]) {\n              for(var k in sourceValue[i][j]){\n                  var ins = sourceValue[i][j][k];\n                  ins.configValues = accessConfigValues.filter(function(accessConfigValue){\n                      return ins.name == accessConfigValue.instance;\n                  })\n                sourceValueArr.push(ins);\n              }\n            }\n          };\n          sourceValueArr = sourceValueArr.filter(function(elem){\n              return elem.label != '整体';\n          })\n           
+                        },
+                        "style": {
+                          "margin": "5px",
+                          "font-size": "12px"
+                        },
+                        "help": "../pdf/ctrlgroup.pdf",
+                        "parameters": {}
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "col": 3
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "source": "ROW",
+        "parameters": {
+          "alignment": "bootstrap"
+        },
+        "style": {},
+        "children": [
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "高级视图",
+                "type": "advanceEchart",
+                "source": "ADVANCEECHART",
+                "advance": {
+                  "expression": "express = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var color = \"#ffe400\";\n      var LENGTH = 50;\n      var resource = target.getValue(\"global/resource\");\n      var kpiDes = target.getValue(\"global/kpi\");\n      var endDate = target.dateHandler();\n      var startDate = endDate.clone();\n      startDate.addHour(-12);\n      var endTime = endDate.getUTCDateString();\n      var startTime = startDate.getUTCDateString();\n      var renderEchart = function renderEchartFn() {\n        // 
+                },
+                "style": {
+                  "margin": "5px 0",
+                  "width": "100%",
+                  "height": "400px"
+                },
+                "parameters": {
+                  "theme": "auto"
+                },
+                "url": "images/map/map1.png"
+              }
+            ],
+            "col": 9
+          },
+          {
+            "type": "column",
+            "children": [
+              {
+                "label": "控制板1",
+                "type": "block",
+                "source": "BLOCK",
+                "style": {
+                  "padding": "5px",
+                  "margin": "5px",
+                  "max-height": "300px",
+                  "overflow-y": "auto"
+                },
+                "advance": {
+                  "expression": {}
+                },
+                "children": [
+                  {
+                    "type": "column",
+                    "col": 12,
+                    "children": [
+                      {
+                        "label": "控件组",
+                        "type": "ctrlgroup",
+                        "source": "CTRLGROUP",
+                        "advance": {
+                          "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var dItem, kpi;\n      var duration = null;\n      var resource = target.getValue(\"global/resource\");\n      var multiSelectValues = [];\n      var success = function (resource) {\n         multiSelectValues = [];\n        var ci = [resource.id]; // 设备 526443915616079\n        var modelId = [resource.modelId] // 获取modelId\n        var accessConfigValues = resource.physicalConfig.accessConfigs;\n        target.getAttrsByModelId(modelId, function (attrs) {\n          var MeasurePointLocate = attrs.find(function (elem) {\n              return elem.name == \"MeasurePointLocate\";\n            }) || {};\n          var sourceValue = eval(MeasurePointLocate.sourceValue)|| \"\";\n          var sourceValueArr = [];\n          for (var i in sourceValue) {\n            for (var j in sourceValue[i]) {\n              for(var k in sourceValue[i][j]){\n                  var ins = sourceValue[i][j][k];\n                  ins.configValues = accessConfigValues.find(function(accessConfigValue){\n                      return ins.name == accessConfigValue.instance;\n                  })\n                sourceValueArr.push(ins);\n                //multiSelectValues.push(ins);\n              }\n            }\n          };\n          var whole = sourceValueArr.find(function(elem){\n              return elem.label == \"整体\"\n          });\n          var options = accessConfigValues.filter(function(elem){\n              return elem.instance == whole.name;\n          });\n          multiSelectValues = [];\n          if(options.length > 0){\n             multiSelectValues.push(options[0]);\n          }\n          var render = function () {\n              target.trigger(\"multiSelectValues2\", multiSelectValues);\n            var ctrlGroups = [\n              [{\n                  type : \"label\",\n                  value : \"工艺类数据项\"\n              }],[{\n                type: \"checkboxlist\",\n                value: multiSelectValues.map(function(source){\n                    return source.kpiId;\n                }),\n                on: {\n                  change: function (elem) {\n                    var elemValues = elem.value;\n                    multiSelectValues = elem.value;\n                    render();\n                  }\n                },\n                options: options,\n                format: {\n                  \"id\": \"kpiId\",\n                  \"label\": \"kpiName\"\n                }\n              }]\n            ];\n            target.render(ctrlGroups);\n          };\n          render();\n        })\n      };\n      if(resource){\n        success(resource);\n      }\n      target.off(\"tree_resourceChange.multiSelect2\");\n      target.on(\"tree_resourceChange.multiSelect2\", function (node) {\n          debugger;\n        success(node.resource);\n      })\n    }\n  }\n}"
+                        },
+                        "style": {
+                          "margin": "5px",
+                          "font-size": "12px"
+                        },
+                        "help": "../pdf/ctrlgroup.pdf",
+                        "parameters": {}
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "col": 3
+          }
+        ]
+      }
+    ],
+    "col": 12
+  },
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

@@ -1,0 +1,40 @@
+<config injector="$rootScope"></config>
+<template>
+  <span>
+    <span class="glyphicon glyphicon-chevron-down" ng-if="subDrop && children.length > 0"></span>
+  </span>
+</template>
+<script type="text/javascript">
+import { extend } from "ps-ultility";
+
+export default function (rootScope) {
+  return {
+    scope: {
+      item: "=",
+      index: '='
+    },
+    link (scope, element, attr) {
+      scope.children = scope.item.children;
+      scope.subDrop = scope.item.subDrop == 1;
+
+      function clickFn (e) {
+        e.stopPropagation();
+        scope.$emit('PS_MENU_BUTTON_CLICKED', {
+          children: scope.item.children,
+          index: scope.index
+        });
+      }
+
+      element[0].addEventListener("click", clickFn);
+      scope.$on("$destroy", () => {
+        element[0].removeEventListener("click", clickFn);
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.menu-btn {
+  font-size: 5px;
+}
+</style>

@@ -1,0 +1,222 @@
+<config injector="$rootScope,$q,ajax,$state,commonMethodService2,commonMethodService,growl,psTreeData"></config>
+<template>
+  <div>
+    <table class="table table-hover dataTable no-footer">
+      <thead>
+        <tr>
+          <th>报警来源</th>
+          <th>报警消息</th>
+          <th>报警级别</th>
+          <th>首次报警时间</th>
+          <th>报警次数</th>
+          <th>最近报警时间</th>
+          <th class="option">操作</th>
+        </tr>
+      </thead>
+      <tbody ng-if="!alerts || alerts.length == 0">
+        <tr>
+          <td colspan="7" class="center">
+            没有符合条件的记录
+          </td>
+        </tr>
+      </tbody>
+      <tbody ng-if="alerts.length > 0">
+        <tr ng-repeat="item in alerts">
+          <td ng-bind="item.getAppName()"></td>
+          <td ng-bind="item.message" style="white-space:normal"></td>
+          <td>
+            <span
+              class="label"
+              ng-class="item.getClass()"
+              ng-bind="item.getSeverity()"
+            ></span>
+          </td>
+          <td ng-bind="item.getFirstArisingTime()"></td>
+          <td ng-bind="item.count"></td>
+          <td ng-bind="item.getArisingTime()"></td>
+          <td>
+            <button
+              class="btn btn-default"
+              ng-disabled="!item.ticketTask"
+              ng-click="item.tracker()"
+              ng-bind="{true:'过程跟踪',false:'无匹配工单'}[!!item.ticketTask]"
+            ></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  cms2,
+  cms,
+  growl,
+  psTreeData
+) {
+  return {
+    scope: {},
+    link(scope, element, attr) {
+      let id = $state.params.id,
+        alertInfo,
+        target = cms(null, scope),
+        kpisMap = {},
+        valueListMap = {};
+      psTreeData($state.params.id)
+        .getState()
+        .then(resource => {
+          //console.log(e);//
+          alertInfo.init(resource);
+        });
+      scope.getAlertByPage = function() {};
+      class TableCell {
+        constructor(d) {
+          for (let i in d) {
+            this[i] = d[i];
+          }
+        }
+        getClass() {
+          return (
+            [
+              "alerts-normal",
+              "alerts-normal",
+              "alerts-minor",
+              "alerts-critical",
+              "alerts-black"
+            ][this.severity] || "alerts-normal"
+          );
+        }
+        getSeverity() {
+          return cms2.getAlertWord(this.severity);
+        }
+        getAppName() {
+          return (
+            ["离线诊断", "在线预警", "智能诊断", "大数据分析"][this.appName] ||
+            "离线诊断"
+          );
+        }
+        getFirstArisingTime() {
+          return this.getTime(this.firstArisingTime);
+        }
+        getArisingTime() {
+          return this.getTime(this.arisingTime);
+        }
+        getTime(time) {
+          return dateparser(time).getDateString("yy/MM/dd hh:mm:ss");
+        }
+        tracker() {
+          cms2.refresh("prod_tracker", {
+            ticketNo: this.ticketTask.ticketNo
+          });
+        }
+      }
+      class AlertInfo {
+        constructor() {
+          this.ticketTaskMap = new Map();
+          this._getAlertByPage = "alertQueryFlexService.getAlertByPage";
+        }
+        init(resource) {
+          this.resource = resource;
+          this.getAlertByPage().then(d => {
+            this.getAllTicket(
+              d.data.reduce((a, b) => {
+                a.add(b.alertId - 0);
+                return a;
+              }, new Set()),
+              ticketTasks => {
+                let alerts = d.data.filter(
+                  alert =>
+                    alert.state == 0 || alert.state == 5 || alert.state == 10
+                );
+                ticketTasks.forEach(ticketTask => {
+                  let origIds = ticketTask.origId || [];
+                  origIds.forEach(origId => {
+                    this.ticketTaskMap.set(origId, ticketTask);
+                  });
+                });
+                scope.alerts = alerts.map(d => {
+                  d.ticketTask = this.ticketTaskMap.get(d.alertId);
+                  return new TableCell(d);
+                });
+                target.setValue(
+                  "device/alerts",
+                  alerts.map(alert => {
+                    alert.label = alert.devName + "(" + alert.message + ")";
+                    alert.valueStr = target.getAlertWord(alert.severity);
+                    alert.status = alert.severity;
+                    return alert;
+                  })
+                );
+              }
+            );
+          });
+        }
+        getAllTicket(alertIds, callback) {
+          if (alertIds.size == 0) {
+            callback([]);
+          }
+          let param = [
+            {
+              attrs: {
+                origId: Array.from(alertIds)
+              },
+              nodeIds: id + "",
+              categorys: "50,90,260,280,290"
+            },
+            {
+              start: 0,
+              length: 100000
+            }
+          ];
+          ajax
+            .post("ticketTaskService.getDealTicketListByPage", param)
+            .then(({ data }) => {
+              callback(data);
+            });
+        }
+        destroy() {}
+        getAlertByPage() {
+          let params = [
+            {
+              nodeType: "",
+              pageSize: 1000,
+              severities: "1,2,3,4",
+              states: "0,5,10,20"
+            },
+            {
+              start: 0,
+              length: "",
+              sort: "createTime",
+              sortType: "desc",
+              statCount: true,
+              total: 0
+            }
+          ];
+          this.resource.modelId < 1000
+            ? (params[0].domain = this.resource.domains)
+            : null;
+          this.resource.modelId > 1000
+            ? (params[0].nodeIds = this.resource.id)
+            : null;
+          return ajax.post(this._getAlertByPage, params);
+        }
+      }
+      alertInfo = new AlertInfo();
+
+      scope.$on("$destroy", () => {
+        alertInfo.destroy();
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.center {
+  text-align: center;
+}
+</style>

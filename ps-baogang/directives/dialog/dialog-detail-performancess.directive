@@ -1,0 +1,329 @@
+<config injector="$rootScope"
+></config>
+<template>
+  <div class="wrap">
+    <div class="titleHead">
+      <div class="col-md-6">
+        辊道名称: <span ng-bind="rollerNameBack"></span>
+      </div>
+      <div class="col-md-6">
+        辊道编号: <span ng-bind="rollerNoBack"></span>
+      </div>
+    </div>
+    <hr>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"><span style="color: red">*</span> 备修标准项目编号：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="repairPartsStandard.standardProjectId" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.standardProjectId" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 备修标准项目名称：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="repairPartsStandard.standardProjectName" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.standardProjectName" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 备件类型：</span>
+      </div>
+      <div class="col-md-8">
+        <!--<ps-select ng-model="repairPartsStandard.rollerType" data-options="model.id as model.label for model in clone.types"></ps-select>-->
+        <input ng-model="repairPartsStandard.rollerType" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.rollerType" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+    <div ng-repeat="plan in spareRepairPlans track by $index">
+      <div class="row">
+        <div class="margin-bottom-5">
+          <div class="col-md-12 margin-bottom-5 margin-top-15">
+            <div class="table-title pull-left">修复检测方案</div>
+            <div class="pull-right">
+              <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="{{'#rotor_check_' + $index}}" aria-haspopup="false" aria-expanded="true"></span>
+            </div>
+          </div>
+          <div class="col-md-12 margin-bottom-10">
+            <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+          </div>
+
+          <div  id="{{'rotor_check_' + $index }}" class="collapse in">
+            <div class="row margin-bottom-5 pull-left col-md-4">
+              <div class="col-md-4">
+                <span class="title pull-right"><span style="color: red">*</span> 零件名称：</span>
+              </div>
+              <div class="col-md-8">
+                <input ng-model="plan.spareComponent.componentName" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+                <span ng-bind="plan.spareComponent.componentName" ng-if="mode=='view'" class="title"></span>
+              </div>
+            </div>
+            <div class="row margin-bottom-5 pull-left col-md-4">
+              <div class="col-md-4">
+                <span class="title pull-right"> <span style="color: red">*</span> 零件图号：</span>
+              </div>
+              <div class="col-md-8">
+                <input ng-model="plan.spareComponent.drawingNo" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+                <span ng-bind="plan.spareComponent.drawingNo" ng-if="mode=='view'" class="title"></span>
+              </div>
+            </div>
+            <div class="row margin-bottom-5 pull-left col-md-4">
+              <div class="col-md-4">
+                <span class="title pull-right"> <span style="color: red">*</span> 零件编号：</span>
+              </div>
+              <div class="col-md-8">
+                <!--<ps-select ng-model="plan.spareComponent.componentNo" data-options="model.id as model.label for model in clone.types"></ps-select>-->
+                <input ng-model="plan.spareComponent.componentNo" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+                <span ng-bind="plan.spareComponent.componentNo" ng-if="mode=='view'" class="title"></span>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5 margin-top-15">
+              <div class="table-title pull-left">检查项目</div>
+              <div class="pull-right">
+                <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="{{'#rotor_check_' + $index + $index}}" aria-haspopup="false" aria-expanded="true"></span>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-10">
+              <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+            </div>
+            <div class="row margin-bottom-5" id="{{'rotor_check_' + $index + $index }}" class="collapse in">
+              <div class="col-md-12">
+                <table ps-table-sync
+                       data-paginate="all"
+                       data-source="plan.planCheckitems"
+                       data-filter="filter1"
+                       data-sort="sort1"
+                       data-page="page1">
+                  <thead>
+                  <tr>
+                    <th rowspan="2" style="line-height: 400%;text-align: center">
+                      序号
+                    </th>
+                    <th rowspan="2" style="line-height: 400%;text-align: center">检查项目</th>
+                    <th colspan="3" style="text-align: center">修复前记录</th>
+                    <th colspan="3" style="text-align: center">修复后记录</th>
+                  </tr>
+                  <tr>
+                    <th style="text-align: center">尺寸误差</th>
+                    <th style="text-align: center">行位误差</th>
+                    <th style="text-align: center">表面质量</th>
+                    <th style="text-align: center">尺寸误差</th>
+                    <th style="text-align: center">行位误差</th>
+                    <th style="text-align: center">表面质量</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr ng-repeat="(key,item) in items track by key">
+                    <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                    <td ng-bind="item.itemName"></td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.before.sizeError" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.before.lineError" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.before.surfaceQuality" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.after.sizeError" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.after.lineError" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control"  ng-model="item.after.surfaceQuality" />
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row" ng-if="luru">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">装配过程记录</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#zhuangpei" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="zhuangpei" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12">
+              <table ps-table-sync
+                     data-paginate="all"
+                     data-source="assemblyProcess"
+                     data-filter="filter1"
+                     data-sort="sort1"
+                     data-page="page1">
+                <thead>
+                <tr>
+                  <th>序号</th>
+                  <th>检查内容</th>
+                  <th>图纸数据/过程自检</th>
+                  <th>检查工具</th>
+                  <th>数据类别</th>
+                  <th>检测结果</th>
+                  <th>检测人员</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(key,item) in items track by key">
+                  <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                  <td ng-bind="item.checkContent"></td>
+                  <td ng-bind="item.drawingProcess"></td>
+                  <td ng-bind="item.checkTools"></td>
+                  <td ng-bind="item.category"></td>
+                  <td>
+                    <ps-select ng-if="item.category == '定性'" ng-model="item.checkResult" data-options="model.id as model.label for model in dingxing"></ps-select>
+                    <input ng-if="item.category == '定量'" type="text" ng-model="item.checkResult" class="form-control">
+                  </td>
+                  <td>
+                    <input type="text" ng-model="item.inspector" class="form-control">
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" ng-if="luru">
+      <div class="col-md-12 margin-bottom-5 margin-top-15">
+        <div class="table-title pull-left">附件</div>
+        <div class="pull-right">
+          <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#zhuangpei" aria-haspopup="false" aria-expanded="true"></span>
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-10">
+        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          附件：
+        </div>
+        <!--<div class="col-md-4">-->
+          <!--<div ng-repeat="item in fileList">-->
+            <!--<span ng-bind="item.fileName"></span>-->
+            <!--<span class="pull-right">X</span>-->
+          <!--</div>-->
+        <!--</div>-->
+        <div class="col-md-4">
+          <ps-file2 ng-model="$parent.fileList"></ps-file2>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" ng-if="chuchang">
+      <div class="col-md-12 margin-bottom-5 margin-top-15">
+        <div class="table-title pull-left">异常联络单</div>
+        <div class="pull-right">
+          <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#zhuangpei" aria-haspopup="false" aria-expanded="true"></span>
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-10">
+        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          异常联络单：
+        </div>
+        <!--<div class="col-md-4">-->
+          <!--<div ng-repeat="item in abnormalList">-->
+            <!--<span ng-bind="item.label"></span>-->
+            <!--<span class="pull-right">X</span>-->
+          <!--</div>-->
+        <!--</div>-->
+        <div class="col-md-4">
+          <!--<input type="file" value="上传" class="btn-primary">-->
+          <ps-file2 ng-model="$parent.abnormalList"></ps-file2>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+
+      </div>
+      <div class="col-md-8" ng-if="!chuchang && btnShow">
+        <button class="btn btn-primary" ng-click="submitFn()">确定</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+        <div class="col-md-8" ng-if="chuchang && btnShow">
+            <button class="btn btn-primary" ng-click="submitFn()">通过</button>
+            <button class="btn btn-default" ng-click="submitFn('back')">退回</button>
+        </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+    import { extend } from "ps-ultility";
+    export default function(rootScope){
+        return {
+            link(scope, element, attr) {
+                scope.deviceDic = rootScope.deviceDic;
+                scope.mode = scope.params.mode;
+                scope.luru = scope.params.luru;
+                scope.chuchang = scope.params.chuchang;
+                scope.btnShow = scope.params.btnShow;
+                scope.clone = extend({}, scope.params.data);
+                scope.cos = false;
+                scope.repairPartsStandard = extend({}, scope.clone.variables.ticket.values.repairPartsStandard);
+                scope.rollerNameBack = scope.clone.variables.ticket.values.repairPartsStandard.rollerName;
+                scope.rollerNoBack = scope.clone.variables.ticket.values.repairPartsStandard.rollerNo;
+                scope.spareRepairPlans = scope.repairPartsStandard.spareRepairPlans;
+                scope.assemblyProcess = scope.repairPartsStandard.assemblyProcess;
+                scope.fileList = scope.repairPartsStandard.fileList;
+                scope.abnormalList = scope.repairPartsStandard.abnormalList;
+                scope.resources = [].map(b =>new tableCell(b))
+                scope.dingxing = [
+                    {id:"完成",label:"完成"},
+                    {id:"未完成",label:"未完成"},
+                ]
+                scope.submitFn = function(d){
+                    //  
+                    scope.repairPartsStandard.fileList = scope.fileList || [] ;
+                    scope.repairPartsStandard.abnormalList = scope.abnormalList || [] ;
+                    scope.repairPartsStandard.specialBack = 'true';
+                    if(d == "back"){
+                        scope.repairPartsStandard.specialBack = 'back';
+                    }
+                    scope.submit(scope.repairPartsStandard);
+
+                }
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .titleHead{
+      border-bottom: 1px solid;
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

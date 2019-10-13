@@ -1,0 +1,173 @@
+<config
+    injector="$scope,commonMethodService,ajax,psDialog,growl,$filter,psRouter,commonMethodService2"></config>
+<template>
+
+  <div class="box" style="background-color: transparent;">
+    <div class="box-body">
+      <form role="form" class="search-area">
+        <div class="form-group col-sm-2">
+          <label class="control-label">状态维护项目名称</label>
+          <ps-input ng-model="standardName"></ps-input>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">维护时间</label>
+          <ps-date ng-model="maintainDate"></ps-date>
+        </div>
+        <div class="form-group col-sm-2 no-pad">
+          <label class="col-sm-12 control-label" style="color: transparent;">操作：</label>
+          <div class="btn-group block" style="padding: 0;border: none;">
+            <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                ng-click="goSearch()">
+              <i class="fa fa-search"></i>
+              <span class="hidden-sm"> 查询</span>
+            </button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="goClear()">
+              <i class="fa fa-close"></i>
+              <span class="hidden-sm"> 清除</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="box-footer">
+      <ps-grid1 ng-model="gridModel" config="config"></ps-grid1>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (scope, commonMethodService, ajax, psDialog, growl, $filter, psRouter, commonMethodService2) {
+  const target = commonMethodService();
+  const initPage = e => {
+    const resource = e.resource;
+
+    scope.gridModel = [];
+    scope.config = {
+      url: "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+      parameter: {
+        deviceId: resource.id,
+        ticketCategory: "310"
+      },
+      outButtons: [
+        {
+          label: "添加规则",
+          on: {
+            click: function () {
+              if (resource.category !== "Device") {
+                growl.warning("请选择一个设备");
+                return;
+              }
+              cms2.modal({
+                title: "在线判定结果维护规则",
+                directive: "dialog-online-maintainrule",
+                width: "70%",
+                scope: scope,
+                params: {
+                  mode: "add",
+                  resource: resource
+                }
+              });
+            }
+          }
+        }
+      ],
+      bodyButtons: [{
+        label: "规则维护",
+        on: {
+          click: function (row) {
+            psRouter.set({
+              obj: row
+            });
+            commonMethodService2.refresh("prod_rule_maintain");
+          }
+        }
+      }],
+      columns: [{
+        key: "customerName",
+        label: "产线",
+        type: "text"
+      }, {
+        key: "deviceName",
+        label: "设备名称",
+        type: "text"
+      }, {
+        key: "deviceCode",
+        label: "设备编码",
+        type: "text"
+      }, {
+        key: "standardNo",
+        label: "状态维护标准编号",
+        type: "text"
+      }, {
+        key: "standardName",
+        label: "状态维护标准名称",
+        type: "text"
+      }, {
+        key: "maintainDate",
+        label: "维护时间",
+        type: "text",
+        bind: function (row, value) {
+          return $filter("date")(new Date(value), "yyyy-MM-dd HH:mm:ss");
+        }
+      }, {
+        key: 'taskStatus',
+        label: '是否启用',
+        type: 'text',
+        bind (row, value) {
+          if (value == 0) {
+            return "已启用";
+          } else if (value == 1) {
+            return "已停用";
+          }
+        }
+      }, {
+        key: "maintainUserName",
+        label: "维护人",
+        type: "text"
+      }]
+    };
+
+    scope.goClear = function () {
+      scope.standardName = "";
+      scope.maintainDate = null;
+    };
+
+    scope.goSearch = function () {
+      let gridScope = scope.$$childHead;
+      while (!gridScope.gridInstance) {
+        gridScope = gridScope.$$nextSibling;
+      }
+      let parameter = {};
+      if (scope.standardName) {
+        parameter.standardName = scope.standardName;
+      }
+      if (scope.maintainDate) {
+        parameter.maintainDate = scope.maintainDate;
+      }
+      if (Object.keys(parameter).length > 0) {
+        gridScope.gridInstance.goSearch(parameter);
+      } else {
+        gridScope.gridInstance.goSearch();
+      }
+    };
+  };
+
+  target.on("tree_resourceChange", function (e) {
+    initPage(e);
+  });
+
+}
+</script>
+<style type="less" scoped="true">
+.search-area {
+  [class*="col"] {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+.block {
+  display: block;
+}
+</style>

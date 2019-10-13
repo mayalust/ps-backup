@@ -1,0 +1,1554 @@
+<config injector="$rootScope,psTreeData,$state,$q,commonMethodService,commonMethodService2,ajax,growl,psRouter,psDialog"
+        deps="troubleshootDialog"></config>
+<script>
+/** mock **/
+import { isObject } from "ps-ultility";
+
+export default function (
+  rootScope,
+  psTreeData,
+  $state,
+  q,
+  cms,
+  cms2,
+  ajax,
+  growl,
+  psRouter,
+  psDialog
+) {
+  let target = cms(undefined, rootScope);
+
+  function findValue (data, attr) {
+    class LoopItem {
+      constructor (data, parents, path) {
+        this.data = data;
+        this.parents = parents || [];
+        this.path = path || [];
+      }
+
+      hasParent (parent) {
+        return this.parents.some(p => p == parent);
+      }
+    }
+
+    let queue = [new LoopItem(data)],
+      item;
+    while ((item = queue.shift())) {
+      let {data, parents, path} = item;
+      if (data.hasOwnProperty(attr)) {
+        return {
+          value: data[attr],
+          path: path.concat([attr]).join("/")
+        };
+      }
+      for (let i in data) {
+        if (
+          data.hasOwnProperty(i) &&
+          isObject(data[i]) &&
+          !item.hasParent(data[i])
+        ) {
+          queue.push(
+            new LoopItem(data[i], parents.concat([data]), path.concat([i]))
+          );
+        }
+      }
+    }
+    return {
+      value: undefined
+    };
+  }
+
+  function planDetail (bool, title) {
+    /** 方案详情 **/
+    let category = this.findValue("category"),
+      ticketNo = this.findValue("ticketNo"),
+      ticketTask = this.findValue("ticketTask");
+    target.setValue("ticketNo", ticketNo);
+    target.setValue("category", category);
+    cms2.modal({
+      title: title || `方案详情`,
+      directive: "ps-alert-exception-resume-plan",
+      width: "80%",
+      params: {
+        ticketNo: ticketNo,
+        category: category,
+        showHandler: bool == null ? true : bool
+      }
+    });
+  }
+
+  class BtnClick {
+    constructor () {
+    }
+
+    checking (text) {
+      target.createPopupByViewIdPath(
+        9246777620035,
+        "page3",
+        {
+          width: "800px",
+          title: text
+        },
+        this.mergetValues()
+      );
+    }
+
+    bcd () {
+      console.log(this);
+      console.log("bcd");
+    }
+
+    retreat () {
+      let ticketNo = this.findValue("ticketNo");
+
+      ajax.post("ticketTaskService.getTicket", [ticketNo + ""]).then(d => {
+        target.setValue("maintainListData", d);
+        var params = {
+          standardProjectNo: d.values.standardProjectId
+        };
+
+        target.postService(
+          "deviceResumeUIService",
+          "getMaintainPlanListByCondition",
+          [params],
+          tc => {
+            if (tc.data) {
+              var createProject = tc.data;
+              var createProjectFlag = true;
+              // 标准项目编号 历史维修方案
+              var standardProject = [],
+                historyProject = [];
+              for (var i = 0; i < createProject.length; i++) {
+                if (createProject[i].type == "0") {
+                  standardProject.push(createProject[i]);
+                } else if (
+                  createProject[i].type == "1" &&
+                  createProject[i].ticketNo == d.ticketNo
+                ) {
+                  // 展示下标准的历史选中纪录
+                  standardProject = [createProject[i]];
+                  //判断当前的工单是否提交了历史记录
+                  if (createProject[i].ticketNo == d.ticketNo) {
+                    createProjectFlag = false;
+                    // standardProject = createProject[i];
+                    // standardProject.ticketNo = elem.row.ticketNo;
+                  }
+                }
+              }
+              target.setValue("createProjectFlag", createProjectFlag);
+              target.setValue("MaintainPlan", standardProject[0]);
+              target.setValue("getMaintainPlanListData", standardProject);
+              target.createSystemPopupByViewId(
+                "494624133620012",
+                {
+                  width: "70%",
+                  title: "退回处理"
+                },
+                d
+              );
+            }
+          }
+        );
+      });
+    }
+
+    dealing260 () {
+      target.setValue("global/resource", this._ticketTask);
+      target.createSystemPopupByViewId(
+        "475059852490000",
+        {
+          width: "80%",
+          title: "处理方案编制"
+        },
+        "onlyRead"
+      );
+    }
+
+    dealing90 () {
+      target.setValue("global/resource", this._ticketTask);
+      target.createSystemPopupByViewId(
+        "475059852490000",
+        {
+          width: "80%",
+          title: "处理方案编制"
+        },
+        "onlyRead"
+      );
+    }
+
+    trusting () {
+      target.createPopupByViewIdPath(
+        9246777620035,
+        "page4",
+        {
+          width: "800px",
+          title: text
+        },
+        this.mergetValues()
+      );
+    }
+
+    probSolvingHistory () {
+      /** 排故履历 **/
+      let {
+        _data: {ticketTask}
+      } = this;
+      ticketTask.values.deviceExcavationTask =
+        ticketTask.variables.deviceExcavationTask;
+      target.setValue("rowData", ticketTask);
+      target.createPopupByViewIdPath(494624133620017, "page4", {
+        width: "1200px",
+        title: "排故履历"
+      });
+    }
+
+    probSolvingSummary () {
+      /** 故障总结 **/
+      let {
+        _data: {ticketTask}
+      } = this;
+      ticketTask.values = ticketTask.values || {};
+      ticketTask.values.deviceExcavationTask =
+        ticketTask.variables.deviceExcavationTask;
+      target.setValue("rowData", ticketTask);
+      target.setValue("showSubmit", false);
+      target.createPopupByViewIdPath(494624133620017, "page3", {
+        width: "1200px",
+        title: "故障总结"
+      });
+    }
+
+    alertEvaluate () {
+      /* 报警评价弹出窗; */
+      let ticket = this.findValue("ticketTask");
+      ticket.values.alertItemList = ticket.values.alertEvaluateInfoList;
+      //target.setValue("$POPUPDATA", ticket);
+      ticket.showSubmit = false;
+      target.createPopupByViewIdPath(
+        494624133620034,
+        "page2",
+        {
+          width: "1200px",
+          title: "报警评价"
+        },
+        ticket
+      );
+    }
+
+    planDetail () {
+      planDetail.call(this, true);
+    }
+
+    planDetailAfter (name, title) {
+      planDetail.call(this, true, title);
+      /* let deviceId = this.findValue("deviceId"),
+        ticketTask = this.findValue("ticketTask");
+      ticketTask.deviceId = deviceId;
+      target.setValue("global/rowObj", ticketTask);
+      target.createPopupByViewIdPath(517719987480000, "index", {
+        width: "1200px",
+        title: "综合处理"
+      }); */
+    }
+
+    planDetailBefore (name, title) {
+      planDetail.call(this, false, title);
+    }
+
+    fixingPlan () {
+      /** 检修方案, 方案详情 **/
+      let ticketNo = this["_ticketNo"] || this.findValue("ticketNo");
+      //target.refresh("prod_tracker", { ticketNo: ticketNo });
+      let standardProjectId = this.findValue("standardProjectId"),
+        _ticketNo = this["_ticketNo"] || this["ticketNo"],
+        params = {
+          standardProjectNo: standardProjectId
+        };
+      target.setValue("maintainListData", this);
+      ajax
+        .post("deviceResumeUIService.getMaintainPlanListByCondition", [params])
+        .then(data => {
+          if (data) {
+            let createProject = data;
+            let createProjectFlag = true;
+            let standardProject = [],
+              historyProject = [];
+
+            for (let i = 0; i < createProject.length; i++) {
+              if (createProject[i].type == "0") {
+                standardProject.push(createProject[i]);
+              } else if (
+                createProject[i].type == "1" &&
+                createProject[i].ticketNo == _ticketNo
+              ) {
+                standardProject = [createProject[i]];
+                if (createProject[i].ticketNo == _ticketNo) {
+                  createProjectFlag = false;
+                }
+              }
+            }
+            target.setValue("createProjectFlag", false);
+            target.setValue("MaintainPlan", standardProject[0]);
+            target.setValue("getMaintainPlanListData", standardProject);
+            target.createSystemPopupByCtrlView("baowu-plan-confirm2", {
+              title: "检修方案",
+              width: "90%"
+            });
+          }
+        });
+    }
+
+    fixingResult () {
+      /** 检修实绩 **/
+
+      let _ticketNo = this["_ticketNo"] || this["ticketNo"];
+
+      target.setValue("ticketNo", _ticketNo);
+      let ticketNo = {
+        ticketNo: _ticketNo
+      };
+      target.postService(
+        "deviceResumeUIService",
+        "getMaintainPlanListByCondition",
+        ticketNo,
+        function (tc) {
+          if (tc.data.length > 0) {
+            target.setValue("maintainListDataflag", false);
+            target.setValue("maintainListData", tc.data[0]);
+            target.createSystemPopupByCtrlView("baowu-write", {
+              title: "检修实绩",
+              width: "90%"
+            });
+          } else {
+            target.growl("请先确认检修计划", "warning");
+          }
+        }
+      );
+    }
+
+    keepResult () {
+      /** 维护实绩 **/
+      let standardInfo = findValue(this._data, "stateMaintainResult");
+      standardInfo = standardInfo ? standardInfo.value : null;
+      target.setValue("maintainListDataflag", true);
+      target.setValue("maintainListData", standardInfo);
+      target.createSystemPopupByCtrlView("baowu-write2", {
+        title: "维护实绩",
+        width: "80%"
+      });
+    }
+
+    checkOnlineRule () {
+      /** 规则详情 —— 在线告警规则 */
+      let onlineRuleId = this.findValue("onlineRuleId");
+      ajax
+        .post(
+          "maintenanceTaskUIService.getOnlineJudgeRuleListByConditionWithPage",
+          [
+            {
+              id: onlineRuleId
+            },
+            {start: 0, length: 50000, statCount: true}
+          ]
+        )
+        .then(({data}) => {
+          let rule = data[0],
+            deviceId = rule.selectedDevId || rule.deviceId;
+          ajax
+            .post("resourceUIService.getResourceById", deviceId)
+            .then(resource => {
+              let params = {
+                mode: "view",
+                resource: resource,
+                rule: rule
+              };
+              cms2.modal({
+                title: `规则详情`,
+                directive: "dialog-project-maintain",
+                width: "70%",
+                scope: rootScope,
+                params: params
+              });
+            });
+        });
+    }
+
+    ruleDetail () {
+      /** 规则详情 **/
+      /* let standardInfo = findValue(this._data, "standardInfo"),
+        deviceId = findValue(this._data, "deviceId");
+      $state.params.id = deviceId ? deviceId.value : undefined;
+      psRouter.set({
+        obj: standardInfo ? standardInfo.value : null,
+        showSubmit: false
+      });
+      target.createSystemPopupByCtrlView("baowu-rule-maintain", {
+        title: "规则详情",
+        width: "1000px"
+      }); */
+      let deviceId = findValue(this._data, "deviceId");
+      let ticketTask = findValue(this._data, "ticketTask");
+      deviceId = deviceId ? deviceId.value : undefined;
+      ticketTask = ticketTask ? ticketTask.value : undefined;
+      ajax
+        .post("resourceUIService.getResourceById", deviceId)
+        .then(resource => {
+          return ajax
+            .post(
+              "maintenanceTaskUIService.getPersonJudgeRuleListByConditionWithPage",
+              [
+                {deviceId: resource.id},
+                {start: 0, length: 10, statCount: true}
+              ]
+            )
+            .then(ruleCondition => {
+              return cms2.success({
+                ruleCondition: ruleCondition.data,
+                resource
+              });
+            });
+        })
+        .then(({resource, ruleCondition}) => {
+          let obj = {
+            label: "人工检查结果维护规则",
+            type: "layout",
+            children: [
+              {
+                type: "form-grid",
+                children: [
+                  {
+                    type: "label",
+                    label: "设备名称",
+                    key: "deviceName",
+                    value: resource.label
+                  },
+                  {
+                    type: "label",
+                    label: "设备编号",
+                    key: "deviceCode",
+                    value: resource.externalDevId
+                  },
+                  {
+                    type: "input",
+                    label: "规则模型名称",
+                    key: "ruleName",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "checkbox",
+                    key: "state",
+                    label: "是否启用",
+                    format: {
+                      true: 1,
+                      false: 0
+                    },
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "上机服役时间(天)",
+                    key: "createBoardDays",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "过钢量(万吨)",
+                    key: "createSteelNumber",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  }
+                ]
+              },
+              {
+                label: "状态规则",
+                type: "table-form",
+                key: "itemList",
+                config: {
+                  attributes: {
+                    stateMantainStandardId: ["维护项目", "text"],
+                    stepsIndex: ["项次", "text"],
+                    resultIndex: ["判断规则", "text"],
+                    needState: ["是否必须", "text"]
+                  },
+                  grid: {
+                    body: [
+                      {
+                        name: "stateMantainStandardId",
+                        bind: function (row) {
+                          return row.stateMaintinStandard.standardName;
+                        }
+                      },
+                      {
+                        name: "stepsIndex",
+                        bind: function (row) {
+                          var stepList = row.stateMaintinStandard.stepsList;
+                          var obj = stepList.find(a => {
+                            return a.index == row.stepsIndex;
+                          });
+                          var label = "";
+                          if (obj.content) {
+                            label = obj.content;
+                          }
+                          return label;
+                        }
+                      },
+                      {
+                        name: "resultIndex",
+                        bind: function (row) {
+                          var stepList = row.stateMaintinStandard.stepsList;
+                          var objStep = stepList.find(a => {
+                            return a.index == row.stepsIndex;
+                          });
+                          var ruleList = objStep.ruleList;
+                          var objRule = ruleList.find(a => {
+                            return a.index == row.resultIndex;
+                          });
+                          var label = "";
+                          if (objStep.dataType && objStep.dataType != null) {
+                            if (objStep.dataType == "定量") {
+                              var unit = objRule.unit ? objRule.unit : "";
+                              var upperLimit = objRule.upperLimit
+                                ? objRule.upperLimit
+                                : "";
+                              var lowerLimit = objRule.lowerLimit
+                                ? objRule.lowerLimit
+                                : "";
+                              if (
+                                (upperLimit != null &&
+                                  upperLimit != "" &&
+                                  lowerLimit == null) ||
+                                lowerLimit == ""
+                              ) {
+                                label = " X < " + upperLimit + "(" + unit + ")";
+                              } else if (
+                                (upperLimit == null &&
+                                  lowerLimit != null &&
+                                  lowerLimit != "") ||
+                                upperLimit == ""
+                              ) {
+                                label =
+                                  " X >= " + lowerLimit + "(" + unit + ")";
+                              } else if (
+                                upperLimit != null &&
+                                lowerLimit != null &&
+                                upperLimit != "" &&
+                                lowerLimit != ""
+                              ) {
+                                label =
+                                  lowerLimit +
+                                  " <= X < " +
+                                  upperLimit +
+                                  "(" +
+                                  unit +
+                                  ")";
+                              }
+                            } else if (objStep.dataType == "定性") {
+                              label = objRule.result;
+                            }
+                          }
+                          return label;
+                        }
+                      },
+                      {
+                        name: "needState",
+                        bind: function (row) {
+                          if (row.needState == 0) {
+                            return "非必须";
+                          } else if (row.needState == 1) {
+                            return "必须";
+                          }
+                        }
+                      }
+                    ],
+                    buttons: {},
+                    config: {
+                      showIndex: false,
+                      showSelector: false,
+                      showSearch: false,
+                      showPage: false,
+                      inlineAdd: {
+                        stateMantainStandardId: {
+                          type: "select",
+                          url:
+                            "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                          parameter: [
+                            {
+                              deviceId: resource.id,
+                              ticketCategory: "310"
+                            },
+                            {
+                              start: 0,
+                              length: 1000,
+                              statCount: true
+                            }
+                          ],
+                          after: function (d) {
+                            d.data.push({
+                              id: 0,
+                              standardName: "无"
+                            });
+                            return d.data;
+                          },
+                          format: {
+                            id: "id",
+                            label: "standardName"
+                          }
+                        },
+                        stepsIndex: {
+                          type: "select",
+                          watch: {
+                            key: "stateMantainStandardId",
+                            handler: function (newValue, next) {
+                              stepsList = newValue.stepsList
+                                ? newValue.stepsList
+                                : [];
+                              next(stepsList);
+                            }
+                          },
+                          format: {
+                            id: "index",
+                            label: "content"
+                          }
+                        },
+                        resultIndex: {
+                          type: "select",
+                          watch: {
+                            key: "stepsIndex",
+                            handler: function (newValue, next) {
+                              var ruleList = [];
+                              var dataType = newValue.dataType
+                                ? newValue.dataType
+                                : false;
+                              if (dataType && dataType != null) {
+                                ruleList = newValue.ruleList;
+                                if (dataType == "定性") {
+                                  for (var i = 0; i < ruleList.length; i++) {
+                                    ruleList[i].label = ruleList[i].result;
+                                  }
+                                } else if (dataType == "定量") {
+                                  var unit = ruleList[i].label.unit;
+                                  var upperLimit = ruleList[i].label.upperLimit;
+                                  var lowerLimit = ruleList[i].label.lowerLimit;
+                                  if (
+                                    upperLimit != null &&
+                                    lowerLimit == null
+                                  ) {
+                                    ruleList[i].label =
+                                      " X < " + upperLimit + unit;
+                                  } else if (
+                                    upperLimit == null &&
+                                    lowerLimit != null
+                                  ) {
+                                    ruleList[i].label =
+                                      " X >= " + lowerLimit + unit;
+                                  } else if (
+                                    upperLimit != null &&
+                                    lowerLimit != null
+                                  ) {
+                                    ruleList[i].label =
+                                      lowerLimit +
+                                      " <= X < " +
+                                      upperLimit +
+                                      unit;
+                                  }
+                                }
+                              }
+                              next(ruleList);
+                            }
+                          },
+                          format: {
+                            id: "index",
+                            label: "label"
+                          }
+                        },
+                        needState: {
+                          type: "select",
+                          options: [
+                            {id: 1, label: "必须"},
+                            {id: 0, label: "非必须"}
+                          ]
+                        },
+                        submit: function (a, b, refreshGrid, allData) {
+                          var item = {};
+                          item.stateMantainStandardId =
+                            b.stateMantainStandardId &&
+                            b.stateMantainStandardId.id
+                              ? b.stateMantainStandardId.id
+                              : 0;
+                          item.stepsIndex =
+                            b.stepsIndex && b.stepsIndex.index
+                              ? b.stepsIndex.index
+                              : 0;
+                          item.resultIndex =
+                            b.resultIndex && b.resultIndex.index
+                              ? b.resultIndex.index
+                              : 0;
+                          item.needState =
+                            b.needState && b.needState.id ? b.needState.id : 0;
+                          item.stateMaintinStandard = b.stateMantainStandardId
+                            ? b.stateMantainStandardId
+                            : null;
+                          refreshGrid(false);
+                          allData.push(item);
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                type: "form-grid",
+                children: [
+                  {
+                    type: "input",
+                    label: "作用设备名称",
+                    composory: true,
+                    key: "deviceName",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "作用设备编码",
+                    composory: true,
+                    key: "deviceCode",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "异常名称",
+                    composory: true,
+                    key: "abnormalName",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "维护标准名称",
+                    key: "stateStandardName",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "label",
+                    label: "维护标准编号",
+                    key: "stateStandardNo"
+                  },
+                  {
+                    type: "input",
+                    label: "维护周期单位",
+                    key: "executionCycle",
+                    watch: {
+                      key: "stateStandardNo",
+                      handler: function (e) {
+                        var list = target.getRootScope("myDicts")[
+                          "executionCycle"
+                          ];
+                        var obj = list.find(a => {
+                          return a.valueCode == rowValue.executionCycle;
+                        });
+                        e.update({
+                          value: obj && obj.label ? obj.label : ""
+                        });
+                      }
+                    },
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "维护周期间隔",
+                    key: "cycleNum",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "input",
+                    label: "检修标准名称",
+                    key: "maintainStandardName",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  },
+                  {
+                    type: "label",
+                    label: "检修标准编号",
+                    key: "maintainStandardNo"
+                  },
+                  {
+                    type: "input",
+                    label: "检修完成期限(天)",
+                    key: "maintainLimitDay",
+                    config: {
+                      disabled: "disabled"
+                    }
+                  }
+                ]
+              }
+            ]
+          };
+          psDialog.modal(obj, ruleCondition[0]);
+        });
+    }
+
+    showTroubleShootDialog () {
+      let deviceExcavationBook = this.findValue("deviceExcavationBook");
+      cms2.modal({
+        title: "排故手顺书详情",
+        directive: "troubleshoot-dialog",
+        width: "70%",
+        params: {type: "view", data: deviceExcavationBook}
+      });
+    }
+
+    showMaintainRuleDialog () {
+      let stepsNo = this.findValue("stepsNo");
+      let stepsList = this.prev.node.findValue("stepsList");
+      let findStep = stepsList.find(item => {
+        return item.stepsNo == stepsNo;
+      });
+      if (stepsNo && stepsNo != 0) {
+        cms2.modal({
+          title: "维护规则",
+          directive: "dialog-project-rule",
+          width: "70%",
+          params: {
+            data: findStep
+          }
+        });
+      } else {
+        let deviceId = this.prev.node.findValue("deviceId");
+        let ruleId = this.findValue("targetRuleId");
+        //let deviceId = findValue(this._data, "deviceId");
+        let ticketTask = findValue(this._data, "ticketTask");
+        //deviceId = deviceId ? deviceId.value : undefined;
+        ticketTask = ticketTask ? ticketTask.value : undefined;
+        ajax
+          .post("resourceUIService.getResourceById", deviceId)
+          .then(resource => {
+            return ajax
+              .post(
+                "maintenanceTaskUIService.getPersonJudgeRuleListByConditionWithPage",
+                [{id: ruleId}, {start: 0, length: 10, statCount: true}]
+              )
+              .then(ruleCondition => {
+                return cms2.success({
+                  ruleCondition: ruleCondition.data,
+                  resource
+                });
+              });
+          })
+          .then(({resource, ruleCondition}) => {
+            let obj = {
+              label: "人工检查结果维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "设备名称",
+                      key: "deviceName",
+                      value: resource.label
+                    },
+                    {
+                      type: "label",
+                      label: "设备编号",
+                      key: "deviceCode",
+                      value: resource.externalDevId
+                    },
+                    {
+                      type: "input",
+                      label: "规则模型名称",
+                      key: "ruleName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "checkbox",
+                      key: "state",
+                      label: "是否启用",
+                      format: {
+                        true: 1,
+                        false: 0
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "上机服役时间(天)",
+                      key: "createBoardDays",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "过钢量(万吨)",
+                      key: "createSteelNumber",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "状态规则",
+                  type: "table-form",
+                  key: "itemList",
+                  config: {
+                    attributes: {
+                      stateMantainStandardId: ["维护项目", "text"],
+                      stepsIndex: ["项次", "text"],
+                      resultIndex: ["判断规则", "text"],
+                      needState: ["是否必须", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "stateMantainStandardId",
+                          bind: function (row) {
+                            return row.stateMaintinStandard.standardName;
+                          }
+                        },
+                        {
+                          name: "stepsIndex",
+                          bind: function (row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var obj = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var label = "";
+                            if (obj.content) {
+                              label = obj.content;
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "resultIndex",
+                          bind: function (row) {
+                            var stepList = row.stateMaintinStandard.stepsList;
+                            var objStep = stepList.find(a => {
+                              return a.index == row.stepsIndex;
+                            });
+                            var ruleList = objStep.ruleList;
+                            var objRule = ruleList.find(a => {
+                              return a.index == row.resultIndex;
+                            });
+                            var label = "";
+                            if (objStep.dataType && objStep.dataType != null) {
+                              if (objStep.dataType == "定量") {
+                                var unit = objRule.unit ? objRule.unit : "";
+                                var upperLimit = objRule.upperLimit
+                                  ? objRule.upperLimit
+                                  : "";
+                                var lowerLimit = objRule.lowerLimit
+                                  ? objRule.lowerLimit
+                                  : "";
+                                if (
+                                  (upperLimit != null &&
+                                    upperLimit != "" &&
+                                    lowerLimit == null) ||
+                                  lowerLimit == ""
+                                ) {
+                                  label =
+                                    " X < " + upperLimit + "(" + unit + ")";
+                                } else if (
+                                  (upperLimit == null &&
+                                    lowerLimit != null &&
+                                    lowerLimit != "") ||
+                                  upperLimit == ""
+                                ) {
+                                  label =
+                                    " X >= " + lowerLimit + "(" + unit + ")";
+                                } else if (
+                                  upperLimit != null &&
+                                  lowerLimit != null &&
+                                  upperLimit != "" &&
+                                  lowerLimit != ""
+                                ) {
+                                  label =
+                                    lowerLimit +
+                                    " <= X < " +
+                                    upperLimit +
+                                    "(" +
+                                    unit +
+                                    ")";
+                                }
+                              } else if (objStep.dataType == "定性") {
+                                label = objRule.result;
+                              }
+                            }
+                            return label;
+                          }
+                        },
+                        {
+                          name: "needState",
+                          bind: function (row) {
+                            if (row.needState == 0) {
+                              return "非必须";
+                            } else if (row.needState == 1) {
+                              return "必须";
+                            }
+                          }
+                        }
+                      ],
+                      buttons: {},
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        showPage: false,
+                        inlineAdd: {
+                          stateMantainStandardId: {
+                            type: "select",
+                            url:
+                              "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                            parameter: [
+                              {
+                                deviceId: resource.id,
+                                ticketCategory: "310"
+                              },
+                              {
+                                start: 0,
+                                length: 1000,
+                                statCount: true
+                              }
+                            ],
+                            after: function (d) {
+                              d.data.push({
+                                id: 0,
+                                standardName: "无"
+                              });
+                              return d.data;
+                            },
+                            format: {
+                              id: "id",
+                              label: "standardName"
+                            }
+                          },
+                          stepsIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stateMantainStandardId",
+                              handler: function (newValue, next) {
+                                stepsList = newValue.stepsList
+                                  ? newValue.stepsList
+                                  : [];
+                                next(stepsList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "content"
+                            }
+                          },
+                          resultIndex: {
+                            type: "select",
+                            watch: {
+                              key: "stepsIndex",
+                              handler: function (newValue, next) {
+                                var ruleList = [];
+                                var dataType = newValue.dataType
+                                  ? newValue.dataType
+                                  : false;
+                                if (dataType && dataType != null) {
+                                  ruleList = newValue.ruleList;
+                                  if (dataType == "定性") {
+                                    for (var i = 0; i < ruleList.length; i++) {
+                                      ruleList[i].label = ruleList[i].result;
+                                    }
+                                  } else if (dataType == "定量") {
+                                    var unit = ruleList[i].label.unit;
+                                    var upperLimit =
+                                      ruleList[i].label.upperLimit;
+                                    var lowerLimit =
+                                      ruleList[i].label.lowerLimit;
+                                    if (
+                                      upperLimit != null &&
+                                      lowerLimit == null
+                                    ) {
+                                      ruleList[i].label =
+                                        " X < " + upperLimit + unit;
+                                    } else if (
+                                      upperLimit == null &&
+                                      lowerLimit != null
+                                    ) {
+                                      ruleList[i].label =
+                                        " X >= " + lowerLimit + unit;
+                                    } else if (
+                                      upperLimit != null &&
+                                      lowerLimit != null
+                                    ) {
+                                      ruleList[i].label =
+                                        lowerLimit +
+                                        " <= X < " +
+                                        upperLimit +
+                                        unit;
+                                    }
+                                  }
+                                }
+                                next(ruleList);
+                              }
+                            },
+                            format: {
+                              id: "index",
+                              label: "label"
+                            }
+                          },
+                          needState: {
+                            type: "select",
+                            options: [
+                              {id: 1, label: "必须"},
+                              {id: 0, label: "非必须"}
+                            ]
+                          },
+                          submit: function (a, b, refreshGrid, allData) {
+                            var item = {};
+                            item.stateMantainStandardId =
+                              b.stateMantainStandardId &&
+                              b.stateMantainStandardId.id
+                                ? b.stateMantainStandardId.id
+                                : 0;
+                            item.stepsIndex =
+                              b.stepsIndex && b.stepsIndex.index
+                                ? b.stepsIndex.index
+                                : 0;
+                            item.resultIndex =
+                              b.resultIndex && b.resultIndex.index
+                                ? b.resultIndex.index
+                                : 0;
+                            item.needState =
+                              b.needState && b.needState.id
+                                ? b.needState.id
+                                : 0;
+                            item.stateMaintinStandard = b.stateMantainStandardId
+                              ? b.stateMantainStandardId
+                              : null;
+                            refreshGrid(false);
+                            allData.push(item);
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "input",
+                      label: "作用设备名称",
+                      composory: true,
+                      key: "deviceName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "作用设备编码",
+                      composory: true,
+                      key: "deviceCode",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "异常名称",
+                      composory: true,
+                      key: "abnormalName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护标准名称",
+                      key: "stateStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "维护标准编号",
+                      key: "stateStandardNo"
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期单位",
+                      key: "executionCycle",
+                      watch: {
+                        key: "stateStandardNo",
+                        handler: function (e) {
+                          var list = target.getRootScope("myDicts")[
+                            "executionCycle"
+                            ];
+                          var obj = list.find(a => {
+                            return a.valueCode == rowValue.executionCycle;
+                          });
+                          e.update({
+                            value: obj && obj.label ? obj.label : ""
+                          });
+                        }
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期间隔",
+                      key: "cycleNum",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修标准名称",
+                      key: "maintainStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "检修标准编号",
+                      key: "maintainStandardNo"
+                    },
+                    {
+                      type: "input",
+                      label: "检修完成期限(天)",
+                      key: "maintainLimitDay",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                }
+              ]
+            };
+            psDialog.modal(obj, ruleCondition[0]);
+          });
+      }
+    }
+
+    maintainingProject (text) {
+      let ticketNo = {
+        ticketNo: this._ticketNo
+      };
+      ajax
+        .post(
+          "deviceResumeUIService.getMaintainStandardListByCondition",
+          ticketNo
+        )
+        .then(tc => {
+          if (tc && tc.length > 0) {
+            target.createPopupByViewIdPath(
+              9246777620035,
+              "page5",
+              {
+                width: "800px",
+                title: text
+              },
+              this.mergetValues()
+            );
+          } else {
+            growl.warning("请先制定维修方案");
+          }
+        });
+    }
+
+    repairProject (text) {
+      target.createPopupByViewIdPath(
+        9246777620035,
+        "page6",
+        {
+          width: "800px",
+          top: "13%",
+          title: text
+        },
+        JSON.stringify(this._ticketTaskValues)
+      );
+    }
+
+    alertItemList () {
+      let alertItemList =
+        attr(this._data, "ticketTask/variables/alertItemList") || [],
+        deviceName = attr(this._data, "ticketTask/variables/devName");
+      alertItemList.forEach(function (ele) {
+        ele.deviceName = deviceName;
+      });
+      target.createSystemPopupByViewId(
+        "357383633040000",
+        {
+          title: "报警详情",
+          top: "10%",
+          width: "80%"
+        },
+        ["alertItemList", alertItemList]
+      );
+    }
+
+    alertEvaluateInfoList () {
+      let alertEvaluateInfoList = attr(
+        this._data,
+        "ticketTask/variables/alertItemList"
+      );
+      target.setValue("alertEvaluateInfoList", alertEvaluateInfoList);
+      target.createPopupByViewIdPath(9246777620035, "page7", {
+        width: "800px",
+        top: "13%",
+        title: "报警评价"
+      });
+    }
+
+    taskEvaluate () {
+      let ticketTask = attr(this._data, "ticketTask");
+      let alertEvaluateInfoList = attr(
+        this._data,
+        "ticketTask/values/alertEvaluateInfoList"
+      );
+      if (alertEvaluateInfoList && alertEvaluateInfoList.length > 0) {
+        target.setValue("global/resource", ticketTask);
+        target.createPopupByViewIdPath(
+          9246777620035,
+          "page8",
+          {
+            width: "800px",
+            title: "验收评价"
+          },
+          "onlyRead"
+        );
+      } else {
+        target.setValue("global/resource", ticketTask);
+        target.createPopupByViewIdPath(
+          9246777620035,
+          "page11",
+          {
+            width: "800px",
+            title: "验收"
+          },
+          "onlyRead"
+        );
+      }
+    }
+
+    assessingAgain () {
+      let ticketTask = attr(this._data, "ticketTask");
+      target.setValue("global/resource", ticketTask);
+      target.createSystemPopupByLocalPath(
+        "page10",
+        {
+          width: "800px",
+          title: "验收评价"
+        },
+        "onlyRead"
+      );
+    }
+
+    dianjianyichang () {
+      let pointTicketNo = attr(
+        this._data,
+        "ticketTask/variables/pointTicketNo"
+      );
+      target.postService(
+        "ticketLogService",
+        "getByTicketNo",
+        [pointTicketNo],
+        function (dt) {
+          target.createPopupByViewIdPath(
+            9246777620035,
+            "page9",
+            {
+              width: "90%",
+              title: "点检实绩登录"
+            },
+            dt.data[1].ticketTask
+          );
+        }
+      );
+    }
+
+    dangridianjian () {
+      let ticketTask = attr(this._data, "ticketTask");
+      target.createPopupByViewIdPath(
+        9246777620035,
+        "page9",
+        {
+          width: "90%",
+          title: "点检实绩登录"
+        },
+        ticketTask
+      );
+    }
+
+    baogao () {
+      cms2
+        .modal({
+          title: "详情",
+          directive: "dialog-detail-alert",
+          width: "50%",
+          params: {
+            mode: "view",
+            type: "",
+            data: this.ticketTask
+          }
+        })
+        .then(d => {
+        });
+    }
+
+    formulateScheme () {
+      cms2
+        .modal({
+          title: "制定方案",
+          directive: "dialog-detail-plan",
+          width: "85%",
+          params: {
+            mode: "view",
+            hasHead: true,
+            data: this.next ? this.next.node.ticketTask : this.ticketTask
+          }
+        })
+        .then(d => {
+          if (d) {
+            ajax
+              .post("baogangTicketService.formulateScheme", [this.ticketNo, d])
+              .then(e => {
+                growl.info("录入完成");
+                initDoud();
+              });
+          }
+        });
+    }
+
+    disassemblyDetection () {
+      cms2
+        .modal({
+          title: "解体检测",
+          directive: "dialog-detail-performance",
+          width: "85%",
+          params: {
+            mode: "view",
+            hasHead: true,
+            data: this.next ? this.next.node.ticketTask : this.ticketTask
+          }
+        })
+        .then(d => {
+          if (d) {
+            ajax
+              .post("baogangTicketService.disintegrationCheck", [
+                this.ticketNo,
+                d
+              ])
+              .then(e => {
+                growl.info("录入完成");
+                initDoud();
+              });
+          }
+        });
+    }
+
+    recordResults () {
+      cms2.modal({
+        title: "录入实绩",
+        directive: "dialog-detail-performancess",
+        width: "85%",
+        params: {
+          mode: "view",
+          luru: true,
+          hasHead: true,
+          data: this.next ? this.next.node.ticketTask : this.ticketTask
+        }
+      });
+    }
+
+    factoryInspection () {
+      cms2.modal({
+        title: "出厂检验",
+        directive: "dialog-detail-performancess",
+        width: "85%",
+        params: {
+          mode: "view",
+          luru: true,
+          chuchang: true,
+          hasHead: true,
+          data: this.next ? this.next.node.ticketTask : this.ticketTask
+        }
+      });
+    }
+
+    detailsProblem () {
+      cms2
+        .modal({
+          title: "问题详情",
+          directive: "dialog-common-alerts",
+          width: "50%",
+          params: {
+            mode: "view",
+            hasHead: true,
+            commonKey: "问题详情",
+            data: this.next ? this.next.node.ticketTask : this.ticketTask,
+            problem: "problem"
+          }
+        })
+        .then(d => {
+          if (d) {
+            // growl.info("报废完成");
+          }
+        });
+    }
+
+    scrap () {
+      cms2
+        .modal({
+          title: "报废详情",
+          directive: "dialog-common-alerts",
+          width: "50%",
+          params: {
+            mode: "edit",
+            hasHead: true,
+            commonKey: "报废原因",
+            data: this.next ? this.next.node.ticketTask : this.ticketTask
+          }
+        })
+        .then(d => {
+          if (d) {
+          }
+        });
+    }
+
+    downReport () {
+      let downloadDom = document.createElement('a');
+      downloadDom.setAttribute('target', '_blank');
+      downloadDom.setAttribute('href', `/api/rest/download/deviceResumeUIService/getReportBytes/${this.ticketNo}.pdf/${this.ticketNo}`);
+      downloadDom.click();
+    }
+  }
+
+  return new BtnClick();
+}
+</script>

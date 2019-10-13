@@ -1,0 +1,438 @@
+<config injector="$rootScope,$q,ajax,$state,psTreeData,$registerService,psConfig"></config>
+<script>
+import { tree, extend } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  psTreeData,
+  registerService,
+  psConfig
+) {
+  const getResourceById = "resourceUIService.getResourceById",
+    getAttrsByModelId = "resourceUIService.getAttrsByModelId";
+  let analiticalType = createAnaliticalType();
+  function factory(params) {
+    let paramsArr;
+    return psConfig.getRoleValues().then(values => {
+      let parents,
+        node = tree().find(values, (n, i, p) => {
+          if (n.id === params.id) {
+            parents = p.slice(1);
+            return true;
+          }
+        }),
+        children = getEachFirstChild(node);
+      if (node.viewPriority) {
+        paramsArr = [...parents, node];
+      } else {
+        paramsArr = [...parents, node, ...children];
+      }
+      return createParams(paramsArr);
+    });
+  }
+  function createParams(paramsArr, url, ext = {}) {
+    url = url || "index";
+    let complete = createPromise(),
+      obj,
+      dics = {
+        1: {
+          name: "prod_dashboard",
+          handler: function(arr) {
+            let main = arr.pop(),
+              name = this.name,
+              id = ext.id || $state.params.id,
+              viewId = main.viewId;
+            (function(viewId, callback) {
+              (id
+                ? success(id)
+                : psTreeData.getRoot().then(root => {
+                    return success(root[0].id);
+                  })
+              ).then(id => {
+                viewId == "177280852260000"
+                  ? psTreeData(id)
+                      .getPathAndShowTreeLocation(main)
+                      .then(({ location, showTree, controller }) => {
+                        callback(location, showTree, controller);
+                      })
+                  : callback(url, main.showTree);
+              });
+            })(viewId, (location, showTree, controller) => {
+              let routers = registerService.getRouters(),
+                extra = {},
+                router = routers.find(router => router.ctrlname === viewId),
+                ctrlname = controller
+                  ? `prod_${controller}`
+                  : router && router.ctrlname,
+                baseParam = {
+                  count: ($state.params.count || 0) - 0 + 1,
+                  id: $state.params.id || 0,
+                  deviceOnly: !!main.deviceOnly - 0,
+                  showTree: !!showTree - 0,
+                  main_active_index: main.index
+                },
+                extParams = router
+                  ? createParamByRouter(router)
+                  : {
+                      viewId: main.viewId,
+                      index: location
+                    },
+                cname = ctrlname ? `prod_controller.${ctrlname}` : name;
+              delete $state.params.sub_active_index;
+              delete $state.params.minor_active_index;
+              ext = ext || {};
+              extra.main_active_hide = main.hideNavi;
+              ext["#"] = JSON.stringify(extra);
+              if (main.deviceOnly) {
+                psTreeData.getValidId($state.params.id, "device").then(res => {
+                  baseParam.id = res.id;
+                  complete([cname, extend(baseParam, extParams, ext)]);
+                });
+              } else {
+                complete([cname, extend(baseParam, extParams, ext)]);
+              }
+            });
+          }
+        },
+        2: {
+          name: "prod_sub_dashboard",
+          handler: function(arr) {
+            let sub = arr.pop(),
+              basename = this.name,
+              main = arr.pop(),
+              viewId = sub.viewId,
+              extra = {},
+              routers = registerService.getRouters(),
+              router = routers.find(router => router.ctrlname === viewId),
+              baseParam = {
+                count: ($state.params.count || 0) - 0 + 1,
+                id: $state.params.id,
+                deviceOnly: !!main.deviceOnly - 0,
+                showTree: sub.showTree,
+                main_active_index: main.index,
+                sub_active_index: sub.index,
+                dataItems: ext ? ext.dataItems : null
+              },
+              extName = router ? ".sub_" + router.ctrlname : ".subview",
+              name = this.name + extName,
+              extParams = router
+                ? createParamByRouter(router)
+                : {
+                    viewId: sub.viewId,
+                    index: url
+                  };
+            delete $state.params.minor_active_index;
+            ext = ext || {};
+            extra.main_active_hide = main.hideNavi;
+            extra.sub_active_hide = sub.hideNavi;
+            ext["#"] = JSON.stringify(extra);
+            if (main.deviceOnly) {
+              psTreeData.getValidId($state.params.id, "device").then(res => {
+                baseParam.id = res.id;
+                complete([name, extend(baseParam, extParams, ext)]);
+              });
+            } else {
+              complete([name, extend(baseParam, extParams, ext)]);
+            }
+          }
+        },
+        3: {
+          name: "prod_sub_dashboard.minor_dashboard",
+          handler: function(arr) {
+            let minor = arr.pop(),
+              sub = arr.pop(),
+              main = arr.pop(),
+              extra = {},
+              basename = this.name,
+              viewId = minor.viewId,
+              routers = registerService.getRouters(),
+              router = routers.find(router => router.ctrlname === viewId),
+              baseParam = {
+                count: ($state.params.count || 0) - 0 + 1,
+                id: $state.params.id,
+                showTree: main.showTree,
+                deviceOnly: !!main.deviceOnly - 0,
+                main_active_index: main.index,
+                sub_active_index: sub.index,
+                minor_active_index: minor.index
+              },
+              extName = router ? ".minor_" + router.ctrlname : ".minor_view",
+              name = basename + extName,
+              extParams = router
+                ? createParamByRouter(router)
+                : {
+                    viewId: minor.viewId,
+                    index: url
+                  };
+            ext = ext || {};
+            ext["#"] = {};
+            extra.main_active_hide = main.hideNavi;
+            extra.sub_active_hide = sub.hideNavi;
+            extra.minor_active_hide = minor.hideNavi;
+            ext["#"] = JSON.stringify(extra);
+            if (main.deviceOnly) {
+              psTreeData.getValidId($state.params.id, "device").then(res => {
+                baseParam.id = res.id;
+                complete([name, extend(baseParam, extParams, ext)]);
+              });
+            } else {
+              complete([name, extend(baseParam, extParams, ext)]);
+            }
+          }
+        }
+      };
+    obj = dics[paramsArr.length];
+    obj["handler"].call(obj, paramsArr);
+    return complete();
+  }
+  function createAnaliticalType() {
+    let keys = [],
+      rs = [],
+      analiticalTypeFn = function(key, value) {
+        if (typeof value === "undefined") {
+          if (typeof key === "string") {
+            let inx = keys.indexOf(key);
+            return rs[inx];
+          } else {
+            return undefined;
+          }
+        } else {
+          keys.push(key);
+          rs.push(value);
+        }
+      };
+    return analiticalTypeFn;
+  }
+  function createPromise() {
+    let defer = q.defer();
+    return function(obj) {
+      if (typeof obj === "undefined") {
+        return defer.promise;
+      } else {
+        defer.resolve(obj);
+      }
+    };
+  }
+  function success(d) {
+    let defer = q.defer();
+    defer.resolve(d);
+    return defer.promise;
+  }
+  function createParamByRouter(d) {
+    let obj = {},
+      match,
+      str = d.router;
+    while ((match = /\/\:([^:?/]+)\??/.exec(str))) {
+      obj[match[1]] = "null";
+      str = str.slice(match.index + match[0].length);
+    }
+    return obj;
+  }
+  function getEachFirstChild(item) {
+    let rs = [];
+    while ((item = item.children && item.children[0])) {
+      rs.push(item);
+    }
+    return rs;
+  }
+  function getChildrenByIndex(target, queue) {
+    function mapId(a, b) {
+      a[b.index] = b;
+      return a;
+    }
+    let inx,
+      targeMap = target.reduce(mapId, {});
+    while (typeof (inx = queue.shift()) !== "undefined") {
+      targeMap =
+        targeMap &&
+        targeMap[inx] &&
+        targeMap[inx].children &&
+        targeMap[inx].children.reduce(mapId, {});
+    }
+
+    if (!targeMap) {
+      console.error("targeMap is not defined");
+    }
+    return Object.values(targeMap) || [];
+  }
+  analiticalType("电气分析", function(analiticalType) {
+    if (typeof analiticalType != "string") {
+      return false;
+    }
+    return analiticalType.split(",").indexOf("ELEC") != -1;
+  });
+  analiticalType("振动分析", function(analiticalType) {
+    if (typeof analiticalType != "string") {
+      return false;
+    }
+    return analiticalType.split(",").indexOf("VIBE") != -1;
+  });
+  analiticalType("模型分析", function(analiticalType) {
+    if (typeof analiticalType != "string") {
+      return false;
+    }
+    return analiticalType.split(",").indexOf("VIBE") != -1;
+  });
+  extend(factory, {
+    getDefaultParamByName(routername) {
+      let routers = registerService.getRouters(),
+        router = routers.find(router => router.ctrlname === routername);
+      if (typeof routers === "undefined") {
+        console.error(`router named ${routename} cannot be found`);
+        throw new Error(`router named ${routename} cannot be found`);
+      }
+      return createParamByRouter(router);
+    },
+    getCurrentRouterType() {
+      let routers = registerService.getRouters();
+      return factory.getCurrentTab().then(tab => {
+        let fd = routers.find(router => {
+          return router.ctrlname == tab.viewId;
+        });
+        return success(fd ? fd.ctrlname : "dashboard");
+      });
+    },
+    getCurrentTab() {
+      return psConfig.getRoleValues().then(values => {
+        let main = $state.params.main_active_index,
+          rs,
+          fd,
+          sub = $state.params.sub_active_index,
+          minor = $state.params.minor_active_index;
+        if (main != null) {
+          rs = values.children.find(c => c.index == main);
+        }
+        if (sub != null) {
+          fd = rs.children.find(c => c.index == sub);
+          if (fd == null) {
+            return success(rs);
+          }
+          rs = fd;
+        }
+        if (minor != null) {
+          fd = rs.children.find(c => c.index == minor);
+          if (fd == null) {
+            return success(rs);
+          }
+        }
+        return success(rs);
+      });
+    },
+    getCurrentMainTab() {
+      return psConfig.getRoleValues().then(values => {
+        let inx = $state.params.main_active_index;
+        return success(values.children.find(({ index }) => index == inx));
+      });
+    },
+    getSubTabs() {
+      return ajax
+        .post(getResourceById, $state.params.id)
+        .then(({ modelId, values }) => {
+          return ajax.post(getAttrsByModelId, modelId).then(attrs => {
+            let at = attrs.find(d => d.name == "analiticalType") || {};
+            return psConfig.getRoleValues().then(vals => {
+              let mainInx = $state.params.main_active_index,
+                specialDeviceType = ({ label }) => {
+                  let checker = analiticalType(label);
+                  if (typeof checker !== "function") {
+                    return true;
+                  }
+                  return checker(
+                    (values ? values.analiticalType : null) || at.sourceValue
+                  );
+                },
+                children = getChildrenByIndex(vals.children, [mainInx]);
+              return success(children.filter(specialDeviceType));
+            });
+          });
+        });
+    },
+    getMinorTabs() {
+      return ajax
+        .post(getResourceById, $state.params.id)
+        .then(({ modelId }) => {
+          return ajax.post(getAttrsByModelId, modelId).then(attrs => {
+            let at = attrs.find(d => d.name == "analiticalType") || {};
+            return psConfig.getRoleValues().then(values => {
+              let mainInx = $state.params.main_active_index,
+                subInx = $state.params.sub_active_index,
+                specialDeviceType = ({ label }) => {
+                  let checker = analiticalType(label);
+                  if (typeof checker === "undefined") {
+                    return true;
+                  }
+                  checker = analiticalType(at.sourceValue);
+                  return checker && checker(label);
+                },
+                children = getChildrenByIndex(values.children, [
+                  mainInx,
+                  subInx
+                ]);
+              return success(children.filter(specialDeviceType));
+            });
+          });
+        });
+    },
+    moveToNodeByCondition(fn, ext) {
+      return psConfig
+        .getRoleValues()
+        .then(values => {
+          let parents,
+            paramsArr,
+            node = tree().find(values, (n, i, p) => {
+              if (fn(n, i, p)) {
+                parents = p.slice(1);
+                return true;
+              }
+            }),
+            children;
+          if (typeof node === "undefined") {
+            throw new Error("error : 没找到符合条件的跳转路径");
+            return;
+          }
+          children = getEachFirstChild(node);
+          paramsArr = [...parents, node, ...children];
+          return createParams(paramsArr, undefined, ext);
+        })
+        .then(n => {
+          $state.go.apply($state, n);
+        });
+    },
+    moveToNodeByIndex(url, arr, ext) {
+      return psConfig
+        .getRoleValues()
+        .then(values => {
+          let paramsArr = [],
+            inx = 0,
+            item,
+            target = values.children;
+          while (inx < 3) {
+            let num = arr[inx],
+              item = target[num || 0];
+
+            if (item == null) {
+              break;
+            }
+            let { hideNavi } = item;
+            if (num == null && hideNavi == 1) {
+              break;
+            }
+            paramsArr.push(item);
+            target = item.children;
+            inx++;
+          }
+          return createParams(paramsArr, url, ext);
+        })
+        .then(n => {
+          $state.go.apply($state, n);
+        });
+    },
+    getRoleValues() {
+      return psConfig.getRoleValues();
+    }
+  });
+  return factory;
+}
+</script>

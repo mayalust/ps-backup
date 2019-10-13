@@ -1,0 +1,416 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl"
+        deps="dialogCommonReport,dialogDetailReport,dialogAddAlert"
+        params = "/:alertDailyReportId"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="padding-bottom-10">
+      <button class="btn btn-primary" ng-click="back()">返回</button>
+    </div>
+    <div class="col-md-12">
+      <div class="block margin-bottom-5 padding-10">
+        <div class="margin-bottom-5">
+          <span class="padding-left-right-10">厂区:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="modelId" data-options="model.id as model.label for model in models"></ps-select>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+          <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <div class="wrap">
+          <div class="table-title">
+            <span class="pull-left">异常记录</span>
+            <button class="pull-right btn btn-primary" ng-click="addAlert()">添加异常</button>
+          </div>
+          <table ps-table-sync
+                 data-paginate="pageonly"
+                 data-source="resources1"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>厂区</th>
+              <th>检测点位</th>
+              <th>设备编码</th>
+              <th>监测因子</th>
+              <th>排放标准(mg/m3)</th>
+              <th>监测值（mg/m3）</th>
+              <th>标记位</th>
+              <th>异常小时均值时间</th>
+              <th>异常原因</th>
+              <th>异常修约凭证提交状态</th>
+              <th>是否存在处罚风险</th>
+              <th>处理人</th>
+              <th>审核人</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic[item.nodeId].projectLabel"></td>
+              <td ng-bind="deviceDic[item.nodeId].label"></td>
+              <td ng-bind="deviceDic[item.nodeId].sn"></td>
+              <td ng-bind="item.factor"></td>
+              <td ng-bind="item.refValue"></td>
+              <td ng-bind="item.value"></td>
+              <td ng-bind="item.flag"></td>
+              <td ng-bind="dateFormart(item.arisingTime)"></td>
+              <td ng-bind="item.recordCause"></td>
+              <td ng-bind="item.status == 0 ? '未提交' : '已提交'"></td>
+              <td ng-bind="item.riskPunishment == -1 ? '未处理' :
+                 item.riskPunishment == 0 ? '是' :
+                item.riskPunishment == 1 ? '否' : '-'"></td>
+              <td ng-bind="item.ownerName"></td>
+              <td ng-bind="item.reviewerName"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.shenhe()" ng-if="item.reviewStatus == 0">审核确定</button>
+                  <button class="btn btn-primary" ng-click="item.queding()" ng-if="item.reviewStatus == 0">编辑</button>
+                  <button class="btn btn-primary" ng-click="item.hulue()" ng-if="item.reviewStatus == 0">忽略</button>
+                  <!--<button class="btn btn-primary" ng-click="item.tianxie()" ng-if="item.status == 0">填写异常报告</button>-->
+                  <button class="btn btn-primary" ng-click="item.detail()" ng-if="item.reviewStatus == 0">异常报告详情</button>
+                  <button class="btn btn-primary" ng-click="item.xiazai()" ng-if="item.reviewStatus == 1" >下载异常报告</button>
+                  <!--ng-if="item.reviewStatus == 1"-->
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block margin-bottom-5 padding-10">
+        <div class="margin-bottom-5">
+          <span class="padding-left-right-10">厂区:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="modelId" data-options="model.id as model.label for model in models"></ps-select>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+          <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            忽略异常记录
+          </div>
+          <table ps-table-sync
+                 data-paginate="all"
+                 data-source="resources"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>厂区</th>
+              <th>检测点位</th>
+              <th>设备编码</th>
+              <th>监测因子</th>
+              <th>排放标准(mg/m3)</th>
+              <th>监测值（mg/m3）</th>
+              <th>标记位</th>
+              <th>异常小时均值时间</th>
+              <th>忽略原因</th>
+              <!--<th>异常修约凭证提交状态</th>-->
+              <!--<th>是否存在处罚风险</th>-->
+              <th>处理人</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic[item.nodeId].projectLabel"></td>
+              <td ng-bind="deviceDic[item.nodeId].label"></td>
+              <td ng-bind="deviceDic[item.nodeId].sn"></td>
+              <td ng-bind="item.factor"></td>
+              <td ng-bind="item.refValue"></td>
+              <td ng-bind="item.value"></td>
+              <td ng-bind="item.flag"></td>
+              <td ng-bind="dateFormart(item.arisingTime)"></td>
+              <td ng-bind="item.questionCause"></td>
+              <!--<td ng-bind="item.status == 0 ? '未提交' : '已提交'"></td>-->
+              <!--<td ng-bind="item.riskPunishment == -1 ? '未处理' :-->
+              <!--item.riskPunishment == 0 ? '是' :-->
+              <!--item.riskPunishment == 1 ? '否' : '-'"></td>-->
+              <td ng-bind="item.ownerName"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.queding()">还原</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl){
+        let getResourceByModelId = "resourceUIService.getResourceByModelId",
+            currentTime = new Date(),
+            date = dateparser(currentTime),
+            trimToDate = date.trimmToDate().date,
+            trimToWeek = date.trimmToWeek().date,
+            trimToMonth = date.trimmToMonth().date;
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                    ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                    : "-";
+            }
+            download(){
+
+            }
+            detail(){
+                cms2.modal({
+                    title : "异常报告",
+                    directive : "dialog-detail-report",
+                    width : "50%",
+                    params : {
+                        model : "view",
+                        data : this
+                    }
+                }).then( d => {
+
+                });
+            }
+            xiazai(){
+                ajax.post("reportUIService.getReportTemplatesByCondition",{name:this.type}).then(e => {
+                    ajax.post("reportUIService.getReportWord",[e[0].id,[{
+                        defaultShow: true,
+                        defaultValue: null,
+                        format: "yyyy-MM-dd HH:mm:ss",
+                        label: "alertReportId",
+                        name: "alertReportId",
+                        optionList: [],
+                        showType: "STRING",
+                        showTypeValue: "STRING",
+                        title: "异常报告id",
+                        value: this.id
+                    }],[]
+                    ]).then(e => {
+                        window.open("../../.."+e)
+                        growl.success("下载成功");
+                    }).catch(err => {
+                         
+                    })
+                })
+            }
+            queding(){
+                cms2.modal({
+                    title : "确定异常",
+                    directive : "dialog-common-report",
+                    width : "50%",
+                    params : {
+                        type : "queding",
+                        data : this
+                    }
+                }).then( d => {
+                     
+                    if(d){
+                        d.state = 1
+                        ajax.post("environmentService.dealAlertReport",d).then(e => {
+                            if(e){
+                                init()
+                                growl.success("处理成功")
+                                cms2.refresh("prod_enviroment_daily");
+                            }
+                        })
+                    }
+                });
+            }
+            shenhe(){
+                var obj = this;
+                obj.reviewStatus = 1;
+                ajax.post("environmentService.reviewAlertReportList",[[obj]]).then(e => {
+                    if(e){
+                        init()
+                        growl.success("处理成功")
+                    }
+                })
+            }
+            hulue(){
+                cms2.modal({
+                    title : "忽略异常",
+                    directive : "dialog-common-report",
+                    width : "50%",
+                    params : {
+                        type : "hulue",
+                        data : this
+                    }
+                }).then( d => {
+                     
+                    if(d){
+                        d.state = 0
+                        ajax.post("environmentService.dealAlertReport",d).then(e => {
+                            if(e){
+                                init()
+                                growl.success("处理成功")
+                                cms2.refresh("prod_enviroment_daily");
+                            }
+                        })
+                    }
+                });
+            }
+            tianxie(){
+                cms2.modal({
+                    title : "异常报告",
+                    directive : "dialog-detail-report",
+                    width : "80%",
+                    params : {
+                        mode : "edit",
+                        data : this
+                    }
+                }).then( d => {
+                     
+                    if(d){
+                        d.status = 1
+                        ajax.post("environmentService.dealAlertReport",d).then(e => {
+                            if(e){
+                                init()
+                                growl.success("处理成功")
+                            }
+                        })
+                    }
+                });
+            }
+        }
+        scope.back = function(){
+            cms2.refresh("prod_enviroment_daily");
+        }
+        scope.dateFormart = function(e){
+            return e
+                ? dateparser(e).getDateString("yyyy-MM-dd hh:mm:ss")
+                : "-";
+        }
+        scope.addAlert = function(){
+            cms2.modal({
+                title : "添加异常",
+                directive : "dialog-add-alert",
+                width : "50%",
+                params : {
+
+                }
+            }).then( d => {
+                 
+                if(d){
+                    d.alertDailyReportId = $state.params.alertDailyReportId-0
+                    ajax.post("environmentService.saveAlertReport",d).then(e => {
+                        if(e){
+                            init()
+                            growl.success("处理成功")
+                        }
+                    }).catch(e => {
+                        growl.error(e)
+                    })
+                }
+            });
+        }
+        scope.timeSels = [{
+            label : "当日",
+            click(){
+                scope.starttime = trimToDate;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToDate == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        },{
+            label : "本周",
+            click(){
+                scope.starttime = trimToWeek;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToWeek == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        },{
+            label : "本月",
+            click(){
+                scope.starttime = trimToMonth;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToMonth == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        }];
+         
+
+        scope.models = [{
+            id : 300,
+            label : "管理域"
+        },{
+            id : 301,
+            label : "客户"
+        },{
+            id : 302,
+            label : "项目"
+        }];
+        function init(){
+            ajax.post("environmentService.getAlertReports",{alertDailyReportId : $state.params.alertDailyReportId-0}).then(d => {
+                scope.resources1 = d.filter(e => {
+                    return (e.state == -1 || e.state == 1)
+                }).map( d => new tableCell(d));
+                scope.resources = d.filter(e => {
+                    return e.state == 0
+                }).map( d => new tableCell(d));
+            })
+        }
+        init()
+        scope.clearFn = function(){
+            scope.filter = ( d => true );
+        }
+        scope.searchFn = function(){
+            scope.filter = ({ modelId, label, modifyTime }) => {
+                if( typeof scope.modelId !=="undefined" && modelId !== scope.modelId){
+                    return false;
+                }
+                if( typeof scope.label !=="undefined" && label.indexOf( scope.label ) == -1 ){
+                    return false;
+                }
+                let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+                    et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+                    mt = new Date( modifyTime );
+                if( mt - st < 0 || mt - et > 0 ){
+                    return false;
+                }
+                return true;
+            }
+        };
+    }
+</script>
+<style lang="less" scoped>
+  .row{
+    overflow-y: auto;
+    height: ~'calc( 100vh - 110px)';
+    .wrap {
+      padding : 5px 10px !important;
+      .option{
+        width : 160px;
+      }
+    }
+  }
+</style>

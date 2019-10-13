@@ -1,0 +1,331 @@
+<config injector="$scope, $rootScope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-20 top">
+          <div class="topo with-border">
+            <ps-topo-common></ps-topo-common>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-5">
+          <div class="tree-loading ng-scope" ng-if="!loaded"></div>
+          <h5>仪表总览</h5>
+          <div class="middle with-border">
+            <table class="tb-wrap">
+              <tr ng-repeat="datas in list">
+                <td class="title">
+                  <div ng-bind="getTitle1($index)"></div>
+                  <div ng-bind="getTitle2($index)"></div>
+                  <div ng-bind="getTitle3($index)"></div>
+                </td>
+                <td class="item" ng-repeat="data in datas">
+                  <div class="item-wrap">
+                    <div class="item-top" ng-bind="data.label"></div>
+                    <div class="item-middle">
+                      <div
+                        class="item-inner"
+                        ng-bind="data.getValue(0)"
+                        ng-style="data.getState(0)"
+                        ng-click="data.click(0)"
+                        data-show-time="data.getArisingTime(0)"
+                      ></div>
+                      <div
+                        class="item-inner"
+                        ng-bind="data.getValue(1)"
+                        ng-style="data.getState(1)"
+                        ng-click="data.click(1)"
+                        data-show-time="data.getArisingTime(1)"
+                      ></div>
+                      <div
+                        class="item-inner"
+                        ng-bind="data.getValue(2)"
+                        ng-style="data.getState(2)"
+                        ng-click="data.click(2)"
+                        data-show-time="data.getArisingTime(2)"
+                      ></div>
+                    </div>
+                  </div>
+                </td>
+                <td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-5">
+          <h5>报警通知</h5>
+          <div class="low with-border">
+            <ps-alert-info></ps-alert-info>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  rootScope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  let id = state.params.id,
+    kpisMap = {};
+  function ifTrueAelseB(condition) {
+    return function(a, b) {
+      return function(n) {
+        return condition.call(this, n) ? a : b;
+      };
+    };
+  }
+  function BigThan(num) {
+    return function(n) {
+      return n > num;
+    };
+  }
+  class DataCell {
+    constructor(d, index) {
+      this.kpisMap = kpisMap;
+      for (let i in d) {
+        this[i] = d[i];
+      }
+      this.$index = index;
+    }
+    getValue(num) {
+      let ins = this.kpis[num];
+      return ins.value == null ? "-" : ins.value + this.getUnit(num);
+    }
+    getUnit(num) {
+      let Dic = this.$index >= 40 ? ["V", "℃", "A"] : ["uΩ", "℃", "v"];
+      return Dic[num];
+    }
+    click(num) {
+      let ins = this.kpis[num],
+        enddate = ins.arisingTime && new Date(ins.arisingTime) - 0,
+        startdate = enddate && enddate - 2 * 3600 * 1000,
+        sensor = this.name,
+        dataItems = ins.dataItemId;
+      cms2.navigateTo("专业分析", {
+        sensor,
+        startdate,
+        enddate,
+        dataItems
+      });
+    }
+    getState(num) {
+      let ins = this.kpis[num],
+        state = ins.state || 0;
+      let color = ["#efd709", "#ee6b1c", "#e74e53"][state - 2] || "#00bc79";
+      return {
+        "background-color": color
+      };
+    }
+
+    getArisingTime(num) {
+      let ins = this.kpis[num];
+      return ins.arisingTime == null ? null : ins.arisingTime;
+    }
+  }
+  class PsBattery {
+    constructor() {
+      this.kpisMap = kpisMap;
+      this.instances = new Set();
+      this.kpis = new Set();
+      this.toListData(list => {
+        /** dataItem值和模版不统一，暂时将判断方式跟俊行数写死，之后需要更新模版和数据项重构 */
+        let condition = ifTrueAelseB(BigThan(3));
+        scope.getTitle1 = condition("电压", "内阻");
+        scope.getTitle2 = condition("温度", "温度");
+        scope.getTitle3 = condition("电流", "电压");
+        /** 以上三个方法增加整体耦合性，需日后重构 */
+
+        scope.list = list.slice(0, 40);
+        this.kpisMap = this.sensors.reduce((a, b) => {
+          let instance = b.name;
+          this.instances.add(instance);
+          a[instance] = b.kpis.reduce((a, b) => {
+            a[b.dataItemId] = b;
+            this.kpis.add(b.dataItemId);
+            return a;
+          }, {});
+          return a;
+        }, {});
+        this.loopGetKpiValueList(valueList => {
+          scope.loaded = true;
+          valueList.forEach(n => {
+            let kpiCode = n.kpiCode,
+              instance = n.instance,
+              state,
+              value,
+              arisingTime;
+            if (kpiCode === 999997) {
+              instance = instance.split("_");
+              kpiCode = instance[0];
+              instance = instance[1];
+              state = n.value;
+            } else {
+              value = n.value;
+              arisingTime = n.arisingTime;
+            }
+            this.kpisMap[instance][kpiCode] =
+              this.kpisMap[instance][kpiCode] || n;
+            state != null
+              ? (this.kpisMap[instance][kpiCode].state = state)
+              : null;
+            value != null
+              ? (this.kpisMap[instance][kpiCode].value = value)
+              : null;
+            arisingTime != null
+              ? (this.kpisMap[instance][kpiCode].arisingTime = arisingTime)
+              : null;
+            this.saveApply();
+          });
+        }, 6000);
+      });
+    }
+    saveApply(fn) {
+      if (rootScope.$$phase == "$apply" || rootScope.$$phase == "$digest") {
+        fn && fn.call(this);
+        return;
+      }
+      scope.$apply(fn);
+    }
+    destroy() {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    loopGetKpiValueList(callback, time) {
+      let loop = () => {
+        this.timer = setTimeout(() => {
+          this.getKpiValueList(d => {
+            callback(d);
+            loop();
+          });
+        }, time);
+      };
+      loop();
+    }
+    getKpiValueList(callback) {
+      let params = [
+        "kpi",
+        {
+          category: "ci",
+          isRealTimeData: true,
+          timePeriod: 0,
+          nodeIds: [id * 1],
+          kpiCodes: Array.from(this.kpis).concat([999997]),
+          startTime: null,
+          endTime: null,
+          timeRange: "",
+          statisticType: "psiot",
+          condList: [],
+          includeInstance: true
+          //queryInstance: Array.from(this.instances).join(",")
+        }
+      ];
+      return ajax
+        .post("kpiDataFlexService.getKpiValueList", params)
+        .then(v => callback(v));
+    }
+    toListData(callback) {
+      this.getSensor(sensors => {
+        let rs = [];
+        sensors.forEach((sen, i) => {
+          let level = Math.floor(i / 10);
+          rs[level] = rs[level] || [];
+          rs[level].push(new DataCell(sen, i));
+        });
+        callback(rs);
+      });
+    }
+    getSensor(callback) {
+      psTreeData(id)
+        .getState()
+        .then(resource => {
+          resource.getMeasureLocate().then(sensors => {
+            this.sensors = sensors;
+            callback(sensors);
+          });
+        });
+    }
+  }
+  let psBattery = new PsBattery();
+  scope.$on("$destroy", () => {
+    psBattery.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+.top {
+  min-height: 300px;
+  position: relative;
+}
+.middle {
+  min-height: 250px;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.art {
+  height: 483px;
+}
+.wrap {
+}
+.tb-wrap {
+  width: 100%;
+  table-layout: fixed;
+  .title {
+    width: 5%;
+    text-align: right;
+    padding: 25px 5px 0 0;
+    vertical-align: top;
+    div {
+      margin-top: 5px;
+    }
+  }
+  .item {
+    width: 9%;
+    padding: 3px;
+    .item-wrap {
+      width: 100%;
+      text-align: center;
+      border: 1px solid rgb(37, 114, 157);
+      .item-top {
+        background-color: rgb(33, 71, 112);
+      }
+      .item-middle {
+        padding: 5px;
+        .item-inner {
+          border-radius: 8px;
+          margin: 5px 0;
+          cursor: pointer;
+          background-color: rgb(0, 187, 123);
+          color: white;
+        }
+      }
+    }
+  }
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

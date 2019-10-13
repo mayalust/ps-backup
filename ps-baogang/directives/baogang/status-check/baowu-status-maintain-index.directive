@@ -1,0 +1,177 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,psRouter"
+></config>
+<template>
+  <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+    <ps-table config="config"></ps-table>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function ( q, ajax, psDialog,routeParams,psUltility,location,growl,commonMethodService,psRouter){
+    var target = commonMethodService(),resource;
+    return {
+      link(scope, element, attr) {
+           var  mode = target.getValue("mode");
+
+       target.on("tree_resourceChange", function (e) {
+        resource = e.resource;
+        scope.config = {
+          // title: "状态维护标准",
+          attributes: {
+            "standardNo": ["状态维护标准编号", "dict"],
+            "standardName": {
+              label:"状态项目维护名称",
+              type:"dict",
+            },
+            "deviceState":  {
+              label:"设备状态",
+              type:"dict",
+              name: "pcsDeviceState",
+              options: target.getRootScope("myDicts")["pcsDeviceState"],
+              format: {
+                id:"valueCode",
+                label:"label"
+              },
+
+            },
+            "actionUser": ["实施方", "dict" ],
+            "safetyPoint": ["安全挂牌","text"],
+            "executionCycle": ["周期单位", "text"],
+            "cycleNum": ["周期间隔", "text"],
+            "taskStatus": ["是否启用", "text"],
+            "firstExecutionTime": ["开始时间", "date"],
+            "createUserName": ["制定人", "text"]
+          },
+          search: {
+            body: [{
+              name: "standardNo",
+              label: "状态维护标准编号",
+              searchType: "input",
+            }, {
+              name: "taskStatus",
+              label:"是否启用",
+              searchType: 'select',
+              options: [{
+                id: 0,
+                label: "已启用"
+              },{
+                id: 1,
+                label: "已停用"
+              }],
+              format: {
+                  id:"id",
+                  label:"label"
+              },
+            }],
+          },
+          grid: {
+            body: ["standardNo","standardName", "deviceState", "actionUser", "safetyPoint", {
+                name: "executionCycle",
+                bind: function (row) {
+                    if(row.executionCycle == "day") {
+                        return "日"
+                    }else if(row.executionCycle == "week") {
+                        return "周"
+                    }else if(row.executionCycle == "month") {
+                        return "月"
+                    }else if(row.executionCycle == "year") {
+                        return "年"
+                    }else {
+                        return "非周期";
+                    }
+                }
+            }, {
+              name: "cycleNum",
+            }, {
+              name: "taskStatus",
+              bind: function (row) {
+                  return row.taskStatus == 0 ? "已启用": "已停用";
+              }
+            },{
+                name: "firstExecutionTime",
+                bind: function (row) {
+                    //GMT转普通格式
+                   function GMTToStr(time){
+                        let date = new Date(time)
+                        let Str=date.getFullYear() + '-' +
+                            (date.getMonth() + 1) + '-' +
+                            date.getDate() + ' ' +
+                            date.getHours() + ':' +
+                            date.getMinutes() + ':' +
+                            date.getSeconds()
+                        return Str;
+                    }
+                    return row.firstExecutionTime != undefined ? GMTToStr(row.firstExecutionTime) : null;
+                }
+            },{
+                name:"createUserName",
+
+            }],
+            buttons: {
+              outGrid: [{
+                label: "新增状态维护标准",
+                class: "primary",
+                on: {
+                  click: function (e) {
+                    if(resource.category == "Domain"){
+                      growl.info('请选中具体设备！');
+                      return;
+                    }
+                    target.setValue("mode","add");
+                    target.setValue("obj",{});
+                    target.navigateTo("index", {
+                      main : 6,
+                      sub : [0,"viewId:baowu-status-standard-operation"],
+                    });
+
+
+                  }
+                }
+              }],
+              inGrid: [["详情",
+                function (e) {
+                  target.setValue("obj",e.$row);
+                  target.setValue("mode", "detail");
+                  target.navigateTo("index", {
+                    main : 6,
+                    sub : [0,"viewId:baowu-status-standard-operation"]
+                  });
+                }], ["编辑",
+                function (e) {
+
+                  target.setValue("obj", e.$row);
+                  target.setValue("mode", "edit");
+                  target.navigateTo("index", {
+                    main : 6,
+                    sub : [0,"viewId:baowu-status-standard-operation"],
+                  });
+                }], ["删除",
+                function (e) {
+                  e.remove({
+                    message:"是否删除此项",
+                    url:"maintenanceTaskUIService.deleteTask",
+                    before:function(){
+                      return e.$row.id;
+                    }
+                  });
+                }]]
+            },
+            config: {//172853940170125
+              url: "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+              parameter: {"deviceId": resource.id,"ticketCategory" : "310"},
+              // ajax: true,
+              showIndex: false,
+              showSelector: false,
+              showSearch: false,
+                showPage: true,
+            },
+            options: []
+          }
+        };
+      });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

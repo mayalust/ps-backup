@@ -1,0 +1,247 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl"
+        deps="dialogGlobalRule"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <div class="margin-bottom-5">
+          <span class="padding-right-10">报警级别:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="level" data-options="model.id as model.label for model in levels"></ps-select>
+          </div>
+          <span class="padding-left-right-10">处理人:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="owner" data-options="model.id as model.label for model in owners"></ps-select>
+          </div>
+          <span class="padding-left-right-10">处理方式:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="state" data-options="model.id as model.label for model in states"></ps-select>
+          </div>
+        </div>
+        <div>
+          <span class="padding-right-10">处理时间:</span>
+          <button class="btn btn-default"
+                  ng-repeat="sel in timeSels"
+                  ng-class="sel.class()"
+                  ng-click="sel.click()"
+                  ng-bind="sel.label">
+          </button>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="starttime"></ps-date2>
+          </div>
+          <span class="padding-left-right-10">至</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="endtime"></ps-date2>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            异常报告
+          </div>
+          <table ps-table-sync
+                 data-paginate="all"
+                 data-source="resources"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>厂区</th>
+              <th>检测点位</th>
+              <th>设备编码</th>
+              <th>监测因子</th>
+              <th>排放标准(mg/m3)</th>
+              <th>监测值（mg/m3）</th>
+              <th>标记位</th>
+              <th>异常小时均值时间</th>
+              <th>异常原因</th>
+              <th>异常修约凭证提交状态</th>
+              <th>是否存在处罚风险</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic[item.nodeId].projectLabel"></td>
+              <td ng-bind="deviceDic[item.nodeId].label"></td>
+              <td ng-bind="deviceDic[item.nodeId].sn"></td>
+              <td ng-bind="item.factor"></td>
+              <td ng-bind="item.refValue"></td>
+              <td ng-bind="item.value"></td>
+              <td ng-bind="item.flag"></td>
+              <td ng-bind="dateFormart(item.arisingTime)"></td>
+              <td ng-bind="item.recordCause"></td>
+              <td ng-bind="item.status == 0 ? '未提交' : '已提交'"></td>
+              <td ng-bind="item.riskPunishment == -1 ? '未处理' :
+                 item.riskPunishment == 0 ? '是' :
+                item.riskPunishment == 1 ? '否' : '-'"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.detail()">下载异常报告</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl){
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToDate = date.trimmToDate().date,
+      trimToWeek = date.trimmToWeek().date,
+      trimToMonth = date.trimmToMonth().date;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      detail(){
+          ajax.post("reportUIService.getReportTemplatesByCondition",{name:this.type}).then(e => {
+              ajax.post("reportUIService.getReportWord",[e[0].id,[{
+                  defaultShow: true,
+                  defaultValue: null,
+                  format: "yyyy-MM-dd HH:mm:ss",
+                  label: "alertReportId",
+                  name: "alertReportId",
+                  optionList: [],
+                  showType: "STRING",
+                  showTypeValue: "STRING",
+                  title: "异常报告id",
+                  value: this.id
+              }],[]
+              ]).then(e => {
+                  window.open("../../.."+e)
+                  growl.success("下载成功");
+              }).catch(err => {
+                   
+              })
+          })
+      }
+    }
+      scope.dateFormart = function(e){
+          return e
+              ? dateparser(e).getDateString("yyyy-MM-dd hh:mm:ss")
+              : "-";
+      }
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+        scope.starttime = trimToDate;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToDate == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本周",
+      click(){
+        scope.starttime = trimToWeek;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToWeek == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    },{
+      label : "本月",
+      click(){
+        scope.starttime = trimToMonth;
+        scope.endtime = currentTime;
+      },
+      class(){
+        return scope.starttime - trimToMonth == 0
+        && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+    }];
+    cms2.getCurrentParents().then(function(parents){
+      scope.$root.treeStr = parents.map(function(d){
+        return d.label
+      }).join(" > ");
+    }).catch(function(e){
+      growl.error( e.message );
+    });
+    ajax.post("environmentService.getAlertReports",{"status":1}).then(d=>{
+        scope.resources = d.map( d => new tableCell(d));
+    })
+    scope.levels = [{
+        id : 2,
+        label : "注意"
+    },{
+        id : 3,
+        label : "警告"
+    },{
+        id : 4,
+        label : "危险"
+    }];
+    scope.states = [{
+        id : 5,
+        label : "已确定"
+    },{
+        id : 20,
+        label : "已解决"
+    },{
+        id : 30,
+        label : "已忽略"
+    }];
+    scope.owners = [{
+        id : "环保管理",
+        label : "环保管理"
+    },{
+        id : "废水",
+        label : "废水"
+    },{
+        id : "废气",
+        label : "废气"
+    }];
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+      scope.filter = ({ modelId, label, modifyTime }) => {
+        if( typeof scope.modelId !=="undefined" && modelId !== scope.modelId){
+          return false;
+        }
+        if( typeof scope.label !=="undefined" && label.indexOf( scope.label ) == -1 ){
+          return false;
+        }
+        let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+          et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+          mt = new Date( modifyTime );
+        if( mt - st < 0 || mt - et > 0 ){
+          return false;
+        }
+        return true;
+      }
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 80px;
+    }
+  }
+</style>

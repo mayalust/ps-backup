@@ -1,0 +1,95 @@
+<config injector="$rootScope,psTracker"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-accepting -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item">
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border">
+        <a>{{ item.title }}</a>
+      </h3>
+      <process-common-dir
+        class="timeline-header no-border"
+        data-process="elem"
+        ng-repeat="elem in item.data"
+      >
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+export default function(rootScope, psTracker) {
+  return {
+    scope: {
+      tracker: "="
+    },
+    link(scope, element, attr) {
+      let {
+        _icon,
+        createAttr,
+        createTitle,
+        _alertArisingTime,
+        _category,
+        _data: {
+          message,
+          ticketTask: {
+            handlerName,
+            values: { tallyCheck, tallyRemark }
+          }
+        }
+      } = scope.tracker;
+      let {
+        _data: {
+          ticketTask: { values }
+        }
+      } = scope.tracker;
+      class Handler {
+        abnormalEval() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["验收人", handlerName]),
+                createAttr(["验收说明", tallyCheck ? "不通过" : "通过"]),
+                createAttr(["验收说明", tallyRemark])
+              ]
+            }
+          ];
+        }
+        normalEval() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["验收人", handlerName]),
+                createAttr(["验收说明", tallyCheck ? "不通过" : "通过"]),
+                createAttr(["验收说明", tallyRemark])
+              ]
+            }
+          ];
+        }
+      }
+      function createRenderList() {
+        let handler = new Handler();
+        if (values) {
+          let { abnormalEvaluateCheckboxlist } = values;
+          if (abnormalEvaluateCheckboxlist) {
+            return handler.abnormalEval();
+          } else {
+            return handler.normalEval();
+          }
+        }
+      }
+      scope.tracker.__dicsloaded__.then(() => {
+        scope.renderList = createRenderList();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

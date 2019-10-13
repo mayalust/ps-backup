@@ -1,0 +1,506 @@
+<config injector="$scope,$timeout,$state,$registerService,psTreeData,ajax,commonMethodService2,commonMethodService,growl,resourceUIService"
+        deps="winding"
+></config>
+<template>
+  <div class="row wrap">
+    <div class="col-md-6 padding5">
+      <div class="row block margin-5">
+        <winding data-init="init(event)"></winding>
+      </div>
+    </div>
+    <div class="col-md-6 padding5">
+      <div class="row block margin-5 top-part">
+        <p class="title">送风支管状态总览</p>
+        <table class="small">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table1.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table1.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                >
+                  {{ v.value }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="small">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table2.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table2.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                >
+                  {{ v.value }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-md-12" style="padding: 5px;">
+      <div style="border: 1px solid #25729d;padding: 15px;">
+        <p class="title">送风支管状态总览</p>
+        <table class="big">
+          <thead>
+            <th></th>
+            <th ng-repeat="h in table3.header" ng-bind="h"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,value) in table3.value">
+              <td>{{ key }}</td>
+              <td ng-repeat="v in value">
+                <div
+                  class="item"
+                  ng-click="turnTo(v, key)"
+                  ng-class="'state-' + v.state"
+                >
+                  {{ v.value }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  timeout,
+  $state,
+  registerService,
+  psTreeData,
+  ajax,
+  commonMethodService2,
+  cms,
+  growl,
+  resourceUIService
+) {
+  let kpiNameArr = ["A温度", "B温度", "C温度", "D温度", "E温度"];
+  let kpiCodeArr = [40058, 40059, 40060, 40061, 40062];
+  let kpiArr = [
+    { code: 40058, name: "A温度" },
+    { code: 40059, name: "B温度" },
+    { code: 40060, name: "C温度" },
+    { code: 40061, name: "D温度" },
+    { code: 40062, name: "E温度" }
+  ];
+  scope.text = "prod_wind";
+  scope.init = function(event) {
+    let statusMap;
+    var target = event.target;
+    let id = $state.params.id;
+    let order = {
+      40058: 0,
+      40059: 1,
+      40060: 2,
+      40061: 3,
+      40062: 4
+    };
+    // 获取背景色的kpi
+    function getKpiValueList(kpis) {
+      let params = [
+        "kpi",
+        {
+          category: "ci",
+          includeInstance: true,
+          isRealTimeData: true,
+          nodeIds: [id],
+          kpiCodes: kpis
+        }
+      ];
+      return ajax.post("kpiDataFlexService.getKpiValueList", params);
+    }
+    psTreeData(id)
+      .getMeasureLocate()
+      .then(function(sensors) {
+        sensors = sensors.filter(d => d.label.indexOf("送风支管") == -1);
+        getKpiValueList([999997], function(valuelist) {
+          statusMap = valuelist.reduce(function(a, b) {
+            var instance = b.instance.split("_");
+            var ins = instance.pop();
+            a[ins] = a[ins] || 0;
+            a[ins] = b.value > a[ins] ? b.value : a[ins];
+            return a;
+          }, {});
+          function success(datas) {
+            var render = function() {
+              target.render(datas);
+            };
+            render();
+          }
+          sensors = sensors.map(d => {});
+          success(sensors);
+        });
+      });
+  };
+  /* scope.init1 = function(event) {
+    var target = event.target;
+    let id = $state.params.id;
+    // 获取背景色的kpi
+    var params = [
+      "kpi",
+      {
+        includeInstance: true,
+        isRealTimeData: true,
+        nodeIds: [id],
+        kpiCodes: [999997]
+      }
+    ];
+    ajax.post("kpiDataFlexService.getKpiValueList", params, function(tc333) {
+      var params = [
+        "kpi",
+        {
+          includeInstance: true,
+          isRealTimeData: true,
+          nodeIds: [id],
+          kpiCodes: [40058, 40059, 40060, 40061, 40062]
+        }
+      ];
+      tc333.forEach(item => {
+        let instanceArr = item.instance.split("_");
+        let find = kpiArr.find(item => {
+          return item.code == instanceArr[0];
+        });
+        if (find) {
+          if (Number(instanceArr[1]) < 11) {
+            setState(item, instanceArr[1], find, scope.table1);
+          } else if (
+            Number(instanceArr[1]) > 10 &&
+            Number(instanceArr[1]) < 21
+          ) {
+            setState(item, instanceArr[1], find, scope.table2);
+          } else if (Number(instanceArr[1]) > 20) {
+            setState(item, instanceArr[1], find, scope.table3);
+          }
+        }
+      });
+      ajax.post("kpiDataFlexService.getKpiValueList", params, function(tc) {
+        if (tc) {
+          var newDatas = [];
+          var data1 = tc333;
+          var newArr = tc;
+          //排序
+          var datas = [];
+          for (var i = 0; i < newArr.length; i++) {
+            if (newArr[i].kpiCode == 40058) {
+              datas.push(newArr[i]);
+            }
+            if (newArr[i].kpiCode == 40059) {
+              datas.push(newArr[i]);
+            }
+            if (newArr[i].kpiCode == 40060) {
+              datas.push(newArr[i]);
+            }
+            if (newArr[i].kpiCode == 40061) {
+              datas.push(newArr[i]);
+            }
+            if (newArr[i].kpiCode == 40062) {
+              datas.push(newArr[i]);
+            }
+          }
+          // 处理显示的数据
+          for (var i = 0; i < datas.length; i++) {
+            var obj = {};
+            obj.kpi = datas[i].instance;
+            obj.name = datas[i].kpiCode;
+            obj.data = datas[i].value;
+            obj.date = useMomentFormat(
+              datas[i].arisingTime,
+              "yyyy-MM-dd hh:mm:ss"
+            );
+            obj.id = datas[i].nodeId;
+            for (var j = 0; j < data1.length; j++) {
+              var objw = data1[j];
+              var objw1 = data1[j].instance.split("_")[0];
+              var objw2 = data1[j].instance.split("_")[1];
+              if (objw1 == datas[i].kpiCode && objw2 == datas[i].instance) {
+                obj.color = data1[j].value;
+              }
+            }
+            newDatas.push(obj);
+          }
+          // // 数据处理
+          var newDatas2 = new Array();
+          var mapData = new Map();
+
+          function GetNewDataArray(arrData) {
+            for (var i = 0; i < arrData.length; i++) {
+              var tmpObj = arrData[i];
+
+              if (mapData.has(tmpObj.kpi)) {
+                var tmpMapVal = mapData.get(tmpObj.kpi);
+                delete tmpObj.kpi;
+                delete tmpObj.id;
+                if (tmpObj.name == 33001) {
+                  tmpObj.name = "进水流量";
+                } else if (tmpObj.name == 33002) {
+                  tmpObj.name = "出水流量";
+                } else if (tmpObj.name == 33004) {
+                  tmpObj.name = "流量差";
+                }
+                tmpMapVal.status.push(tmpObj);
+                mapData.set(tmpMapVal.kpi, tmpMapVal);
+              } else {
+                var tmpMapVal = {};
+                tmpMapVal.kpi = tmpObj.kpi;
+                tmpMapVal.id = tmpObj.id;
+                tmpMapVal.status = [];
+                tmpMapVal.status.push(tmpObj.kpi);
+                delete tmpObj.kpi;
+                delete tmpObj.id;
+                if (tmpObj.name == 33001) {
+                  tmpObj.name = "进水流量";
+                } else if (tmpObj.name == 33002) {
+                  tmpObj.name = "出水流量";
+                } else if (tmpObj.name == 33004) {
+                  tmpObj.name = "流量差";
+                }
+                tmpMapVal.status.push(tmpObj);
+                mapData.set(tmpMapVal.kpi, tmpMapVal);
+              }
+            }
+
+            mapData.forEach(function(item, key, mapData) {
+              newDatas2.push(item);
+            });
+          }
+
+          GetNewDataArray(newDatas);
+          for (var i = 0; i < newDatas2.length; i++) {
+            var whui = newDatas2[i].status;
+            var tem1 = whui[0];
+            var tem2 = whui[1];
+            whui.splice(0, 1, tem2);
+            whui.splice(1, 1, tem1);
+          }
+          for (var i = 0; i < newDatas2.length; i++) {
+            var wh1 = newDatas2[i].status;
+            var arr = [];
+            for (var j = 0; j < wh1.length; j++) {
+              var wh2 = wh1[j];
+              if (wh2 && wh2.color) {
+                arr.push(wh2.color);
+              }
+            }
+
+            if (arr.length != 0) {
+              var max = Math.max.apply(null, arr);
+              var wh4 = wh1[1] + "_" + max.toString();
+              wh1.splice(1, 1, wh4);
+            }
+          }
+          // delete
+          var newDatas3 = [];
+          for (var i = 0; i < newDatas2.length; i++) {
+            var obj1 = newDatas2[i];
+            var arr1 = newDatas2[i].status;
+            if (arr1[1]) {
+              newDatas3.push(arr1[1]);
+            }
+          }
+          var data = newDatas3;
+
+          function success(datas) {
+            var render = function() {
+              target.render(datas);
+            };
+            render();
+          }
+          success(data);
+        }
+      });
+    });
+  }; */
+  scope.turnTo = function(item, key) {
+    let instance = item.header;
+    let find = kpiArr.find(d => {
+      return d.name === key;
+    });
+    commonMethodService2.navigateTo("专业分析", {
+      id: $state.params.id,
+      sensor: instance,
+      kpiId: find.code
+    });
+  };
+
+  function setValue(obj, dataLength) {
+    kpiArr.forEach(item => {
+      obj.value[item.name] = [];
+    });
+    obj.header.forEach(item => {
+      for (let key in obj.value) {
+        obj.value[key].push({
+          header: Number(item),
+          value: "--",
+          state: 1
+        });
+      }
+    });
+  }
+  scope.table1 = {
+    header: ["01", "02", "03", "04", "05", "06", "07", "08", "09", 10],
+    value: {}
+  };
+  setValue(scope.table1);
+  scope.table2 = {
+    header: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    value: {}
+  };
+  setValue(scope.table2);
+  scope.table3 = {
+    header: [
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ],
+    value: {}
+  };
+  setValue(scope.table3);
+
+  function setV(item, obj) {
+    for (let i = 0; i < obj.value[item.kpiName].length; i++) {
+      if (Number(item.instance) == obj.value[item.kpiName][i].header) {
+        obj.value[item.kpiName][i].value = item.value;
+        break;
+      }
+    }
+  }
+
+  function setState(item, point, find, obj) {
+    for (let i = 0; i < obj.value[find.name].length; i++) {
+      if (Number(point) == obj.value[find.name][i].header) {
+        obj.value[find.name][i].state = item.value;
+        break;
+      }
+    }
+  }
+
+  ajax.post("resourceUIService.getResourceById", $state.params.id).then(d => {
+    let kpiCodes = [];
+    d.physicalConfig.accessConfigs.forEach(k => {
+      kpiCodes.push(k.dataItemId);
+    });
+    var params = [
+      "kpi",
+      {
+        includeInstance: true,
+        isRealTimeData: true,
+        nodeIds: [$state.params.id * 1],
+        kpiCodes: kpiCodes
+      }
+    ];
+    ajax.post("kpiDataFlexService.getKpiValueList", params, function(tc) {
+      tc.forEach(item => {
+        if (kpiNameArr.includes(item.kpiName)) {
+          if (Number(item.instance) < 11) {
+            setV(item, scope.table1);
+          } else if (Number(item.instance) > 10 && Number(item.instance) < 21) {
+            setV(item, scope.table2);
+          } else if (Number(item.instance) > 20) {
+            setV(item, scope.table3);
+          }
+        }
+      });
+    });
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  .title {
+    font-size: 16px;
+    color: #fff;
+    font-weight: 300;
+  }
+  .top-part {
+    height: 600px;
+    padding: 20px !important;
+  }
+  table {
+    margin: 10px;
+    width: 100%;
+    thead {
+      background-color: #214770;
+      color: #fff;
+      th {
+        padding: 5px 0;
+      }
+    }
+    th {
+      text-align: center;
+    }
+    td {
+      padding: 5px;
+      text-align: center;
+    }
+  }
+  .item {
+    padding: 3px 10px;
+    background-color: #00bb7b;
+    color: white;
+    cursor: pointer;
+    &.state-1 {
+      background-color: #00bb7b;
+    }
+    &.state-2 {
+      background-color: #efd80b;
+    }
+    &.state-3 {
+      background-color: #ff8800;
+    }
+    &.state-4 {
+      background-color: #fd0001;
+    }
+  }
+  .margin-5 {
+    margin: 5px !important;
+  }
+  .big {
+    td {
+      width: 4.5%;
+    }
+  }
+  .small {
+    td {
+      width: 9%;
+    }
+  }
+}
+</style>

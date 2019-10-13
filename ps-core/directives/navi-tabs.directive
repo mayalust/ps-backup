@@ -1,0 +1,80 @@
+<config injector="$rootScope, psNavigators, $location,psRouter,$stateParams"
+></config>
+<template>
+  <ul class="nav nav-tabs" role="tablist">
+    <li
+      ng-class="{true : 'active'}[nav.active]"
+      ng-click="nav.click()"
+      ng-repeat="nav in navigators"
+    >
+      <a ng-bind="nav.label"></a>
+    </li>
+  </ul>
+</template>
+<script type="text/javascript">
+import { each } from "ps-ultility";
+export default function(
+  rootScope,
+  psNavigators,
+  location,
+  psRouter,
+  stateParams
+) {
+  return {
+    scope: true,
+    link(scope, element, attr, ngModel) {
+      let navs = psNavigators.get(),
+        paths = [],
+        url,
+        originalPath = window.location.hash,
+        naviattr = (function() {
+          for (var i in navs) {
+            for (var j in navs[i]) {
+              if (originalPath.indexOf(j) !== -1) {
+                return [navs[i], j];
+              }
+            }
+          }
+        })(),
+        navigators = [];
+      if (naviattr) {
+        for (let i in naviattr[0]) {
+          let label = naviattr[0][i],
+            active = naviattr[1] == i;
+          if (typeof label === "object") {
+            rootScope.showbackhistory = active
+              ? label.backhistory
+              : rootScope.showbackhistory;
+            url = label.url;
+            label = label.label;
+          } else if (typeof label === "string") {
+            label = label;
+          }
+          navigators.push({
+            label: label,
+            active: active,
+            url: url,
+            click: function() {
+              let n = this.url && this.url(stateParams);
+              n = "/" + (n || i);
+              location.path(n);
+            }
+          });
+        }
+      } else {
+        navigators = [
+          {
+            label: "未配置路由名称，请打开ps-navigators.service进行注册"
+          }
+        ];
+      }
+      scope.navigators = navigators;
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+li {
+  cursor: pointer;
+}
+</style>

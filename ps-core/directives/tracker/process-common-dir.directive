@@ -1,0 +1,46 @@
+<config injector="$rootScope,psTracker,$compile"></config>
+<template>
+  <h3 class="timeline-header no-border" ng-show="process">
+    <span ng-if="process && !process.type">
+      <span ng-bind="process.key" class="normal"></span>：<span
+        ng-bind="process.value"
+        ng-style="process.style"
+        class="normal"
+      ></span>
+    </span>
+    <button
+      ng-if="process && process.type=='button'"
+      ng-click="process.click()"
+      ng-bind="process.label"
+      ng-class="process.cls"
+      ng-style="process.style"
+    ></button>
+    <span
+      ng-if="process && process.type=='title'"
+      ng-bind="process.value || process.label"
+      ng-class="process.cls"
+      ng-style="process.style"
+    ></span>
+    <process-common-dir
+      ng-if="process && process.type=='group'"
+      data-process="elem"
+      ng-repeat="elem in process.data track by $index"
+    ></process-common-dir>
+  </h3>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(rootScope, psTracker, compile) {
+  return {
+    scope: {
+      process: "="
+    },
+    link(scope, element, attr) {}
+  };
+}
+</script>
+<style type="less" scoped="true">
+span.normal {
+  background-color: rgba(0, 0, 0, 0) !important;
+}
+</style>

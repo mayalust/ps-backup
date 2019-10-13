@@ -1,0 +1,124 @@
+<config injector="$rootScope,ajax"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>厂区 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <ps-select ng-model="clone.projectId" data-options="customer.id as customer.projectName for customer in projectDic" ng-change = "projectChange(clone.projectId)"></ps-select>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>检测点位 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <ps-select ng-model="clone.nodeId" data-options="kpi.id as kpi.label for kpi in deviceDic"></ps-select>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>标记位 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <ps-select ng-model="clone.flag" data-options="kpi.id as kpi.label for kpi in biaoji"></ps-select>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>时间 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <div>
+          <ps-date2 ng-model="clone.arisingTime"></ps-date2>
+        </div>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>是否存在处罚风险 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <ps-select ng-model="clone.riskPunishment" data-options="kpi.id as kpi.label for kpi in models"></ps-select>
+      </div>
+      <div class="col-md-4 margin-bottom-5">
+        <span class="title pull-right"> <span style="color: red">*  </span>异常原因 ：</span>
+      </div>
+      <div class="col-md-8 margin-bottom-5">
+        <div style="width: 100%;">
+          <input type="text" class="form-control" ng-model="clone.questionCause">
+        </div>
+      </div>
+
+
+  </div>
+    <div class="row">
+      <div class="col-md-4">
+
+      </div>
+      <div class="col-md-8">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope,ajax){
+    return {
+      link(scope, element, attr) {
+        scope.cusType = scope.params.cusType == "water" ? "废水" : "废气";
+        scope.models = [{
+            id:0 ,
+            label : "是"
+        },{
+            id : 1 ,
+            label : "否"
+        }]
+          scope.biaoji = [{
+              id:"D" ,
+              label : "D"
+          },{
+              id : "F" ,
+              label : "F"
+          },{
+              id : "M" ,
+              label : "M"
+          },{
+              id : "C" ,
+              label : "C"
+          },{
+              id : "T" ,
+              label : "T"
+          }]
+           
+          ajax.post("projectUIService.findProjectsByCondition",{}).then(d=>{
+              scope.projectDic = d.filter(e => {
+                  return e.customerName == scope.cusType
+              });
+          })
+          // ajax.post("customerUIService.findCustomersByCondition",{}).then(d=>{
+          //     scope.customerDic = d;
+          // })
+          ajax.post("resourceUIService.getDevicesByCondition",{}).then(d=>{
+              scope.deviceDics = d;
+          })
+          scope.projectChange = function(projectId){
+              scope.deviceDic = scope.deviceDics.filter(e => {
+                  return e.projectId == projectId;
+              })
+          }
+        scope.submitFn = function(d){
+          scope.submit(d);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

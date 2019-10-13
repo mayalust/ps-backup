@@ -1,0 +1,189 @@
+<div class="row contain">
+    <div class="col-lg-3">
+        <!--1 状态总览-->
+        <div class="left-padding">
+            <div class="box-background">
+                <!--标题和图例-->
+                <div class="row">
+                    <div class="left_text">状态总览</div>
+                    <div class="right_text">
+                        <div class="right_text-1">
+                            <span class="bar-blue"></span>
+                            <span style="vertical-align:middle">正常台数</span>
+                        </div>
+                        <div class="right_text-2">
+                            <span class="bar-yellow"></span>
+                            <span style="vertical-align:middle">预警台数</span>
+                        </div>
+                        <div class="right_text-3">
+                            <span class="bar-red"></span>
+                            <span style="vertical-align:middle">警告台数</span>
+                        </div>
+                    </div>
+                </div>
+                <!--四个柱图-->
+                <div class="row container-fluid">
+                    <svg-echarts option='option' ng-repeat="option in options"></svg-echarts>
+                </div>
+            </div>
+        </div>
+        <!--2 诊断绩效统计-->
+
+
+        <div class="left-padding">
+            <div class="box-background">
+                <!--标题和图例-->
+                <div class="row">
+                    <div class="left_text">诊断绩效统计(一个月内)</div>
+                    <div class="icon-text"><i class="fa fa-arrow-circle-o-right fa-5x iconfont-position"
+                                              aria-hidden="true"></i>
+                    </div>
+
+                </div>
+                <!--表格-->
+                <div class="table-box">
+                    <table class="table">
+                        <tr class="table-title">
+                            <td class="white-text">区域</td>
+                            <td>预警次数</td>
+                            <td>方案推送数量</td>
+                            <td>诊断准确率</td>
+                        </tr>
+                        <tr>
+                            <td class="white-text">宝山</td>
+                            <td>215</td>
+                            <td>150</td>
+                            <td>
+                                <div class="special-text">88%
+                                    <div class="slide-bar">
+                                        <div class="sliding-block"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="white-text">东山</td>
+                            <td>215</td>
+                            <td>150</td>
+                            <td>
+                                <div class="special-text">88%
+                                    <div class="slide-bar">
+                                        <div class="sliding-block"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="white-text">青山</td>
+                            <td>215</td>
+                            <td>150</td>
+                            <td>
+                                <div class="special-text">88%
+                                    <div class="slide-bar">
+                                        <div class="sliding-block"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="white-text">梅山</td>
+                            <td>215</td>
+                            <td>150</td>
+                            <td>
+                                <div class="special-text">88%
+                                    <div class="slide-bar">
+                                        <div class="sliding-block"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!--3 当前报警事件追踪（一周内）-->
+        <div class="left-padding ">
+            <div class="box-background">
+                <!--标题和图例-->
+                <div class="row">
+                    <div class="left_text">当前报警事件追踪（一周内）</div>
+                    <div class="right_text">
+                        <div class="right_text-1">
+                            <span class="bar-yellow"></span>
+                            <span style="vertical-align:middle">待处理</span>
+                        </div>
+                        <div class="right_text-2">
+                            <span class="bar-red"></span>
+                            <span style="vertical-align:middle">正在分析</span>
+                        </div>
+                        <div class="right_text-3">
+                            <span class="bar-blue"></span>
+                            <span style="vertical-align:middle">完成处理</span>
+                        </div>
+                    </div>
+                </div>
+                <!--四个饼图图-->
+                <div class="row container-fluid">
+                    <pie-echarts pieoption='pieoption' ng-repeat="pieoption in pieoptions"></pie-echarts>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="col-lg-6">
+        <!--<div class="cylinder-box">-->
+        <!--<div id="shanghai" style="height: 900px;background-color: #fff;"></div>-->
+        <!--<div style="height: 100px;color: rgb(255, 228, 0);font-size: 5vw ;text-align: center">上海宝山</div>-->
+        <!--</div>-->
+    </div>
+    <div class="col-lg-3">
+
+        <div class="right-padding">
+            <div class="box-background">
+                <!--标题和图例-->
+                <div class="row">
+                    <div class="left_text">故障异常预报分类（2017年6月)</div>
+                </div>
+                <div id="3dbarEchart" style="width:100% ;height: 700px"></div>
+            </div>
+        </div>
+        <div class="right-padding clearfix">
+            <div class="device-cartogram">
+                <div id="device" style="height: 1000px"></div>
+            </div>
+
+            <div class="system-notify">
+                <div class="row">
+                    <div class="left_text">系统通知</div>
+                </div>
+                <div class="row container-fluid content-box" ng-mousemove="enterContent()"
+                     ng-mouseleave="leaveContent()">
+
+                    <ul ng-repeat="content in contents">
+                        <li ng-class="{critical: $index == 0,major: $index == 1,minor: $index == 2,warning: $index == 3}"
+                            class="content-text " ng-bind="content.text" ng-mousemove="showContent(content.text)">
+                        </li>
+                        <p ng-class="{critical: $index == 0,major: $index == 1,minor: $index == 2,warning: $index == 3}"
+                           class="datetime-text" ng-bind="content.datetime"></p>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="right-padding">
+            <div class="box-background">
+                <div id="lineEchart" style="height: 1000px"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--<button class="btn btn-default" ng-click="testBtn()">调用接口</button>-->
+<!--<button class="btn btn-default" ng-click="NextPage()">跳转页面</button>-->
+
+

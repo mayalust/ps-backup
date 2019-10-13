@@ -1,0 +1,320 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService,$rootScope,resourceUIService,growl"
+        deps="dialogGlobalRule,dialogCommonAlerts,dialogDetailAlert,dialogRepairReport"
+></config>
+<template>
+  <div class="wrap">
+    <div class="padding-bottom-10">
+      <button class="btn btn-primary" ng-click="back()">返回</button>
+    </div>
+    <div class="row">
+
+      <div class="left25">
+        <div class="col-md-6">
+          <div class="row margin-bottom-5 pull-left col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right"><span style="color: red;">*</span>备件名称：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.rollerName" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right"><span style="color: red;">*</span>备件编码：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.rollerNo" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-left col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">备件类型：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.rollerType" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">规格型号：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.format" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-left col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">生产厂家：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.manufacturer" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">设计使用寿命：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.serviceLife" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-left col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">提醒偏差：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.deviations" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">智能提醒：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.reminder ? '启用' : '停用'" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-left col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">总过钢量：</span>
+            </div>
+            <div class="col-md-8">
+              <span class="value">300wT</span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-6">
+            <div class="col-md-4">
+              <span class="title pull-right">服役总时间：</span>
+            </div>
+            <div class="col-md-8">
+              <span ng-bind="clone.createBoardDays" class="value"></span>
+            </div>
+          </div>
+          <div class="row margin-bottom-5 pull-right col-md-12">
+            <div class="col-md-2">
+              <span class="title pull-right">附件：</span>
+            </div>
+            <div class="col-md-10">
+              <div style="width: 100%;white-space: normal;word-break: break-word;" class="value" ng-repeat="file in clone.files ">
+                <a ng-href="file.filePath" target="_blank">{{file.fileName}}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">事件类型:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="actionType"
+                           data-options="customer.valueCode as customer.label for customer in actionTypes"></ps-select>
+              </div>
+              <span class="padding-right-10">处理时间:</span>
+              <div class="horizontal width-200">
+                <ps-date2 ng-model="starttime"></ps-date2>
+              </div>
+              <span class="padding-left-right-10">至</span>
+              <div class="horizontal width-200">
+                <ps-date2 ng-model="endtime"></ps-date2>
+              </div>
+              <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+            </div>
+            <h4 class="margin-10">服役履历</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="alertOk"
+                   data-filter="filter2"
+                   data-sort="sort2"
+                   data-page="page2">
+              <thead>
+              <tr>
+                <th>事件类型</th>
+                <th>服役设备</th>
+                <th>设备编码</th>
+                <th>开始时间</th>
+                <th>结束时间</th>
+                <th>累计时间</th>
+                <th>累计过钢量</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="actionTypeFormat(item.actionType)"></td>
+                <td ng-bind="item.serviceDeviceName"></td>
+                <td ng-bind="item.values.serviceDeviceCode"></td>
+                <td ng-bind="formatTime(item.beginDate)"></td>
+                <td ng-bind="formatTime(item.endDate)"></td>
+                <td ng-bind="item.createBoardDays"></td>
+                <td>150万吨</td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-if="item.actionType == 3" ng-click="item.detail()">详情</button>
+                    <button class="btn btn-primary" ng-if="item.actionType == 1" ng-click="item.lvli()">检修履历</button>
+                    <button class="btn btn-primary" ng-if="item.actionType == 2" ng-click="item.baogao()">备修报告</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,cms,rootScope,rcus,growl){
+    let target = cms(),
+    currentTime = new Date(),
+    date = dateparser(currentTime),
+    trimToDate = date.trimmToDate().date,
+    trimToWeek = date.trimmToWeek().date,
+    actionTypes = [].slice.call(target.getRootScope("myDicts")["actionType"]),
+    trimToMonth = date.trimmToMonth().date;
+    scope.back = function(){
+        cms2.refresh("prod_repair_business_bjfyll");
+    }
+    scope.actionTypes = actionTypes.filter(function(ele) {
+        return ele.param == 2
+    });
+    var rowData = rootScope["rowData"];
+    scope.clone = rowData;
+    scope.actionTypeFormat = function(e){
+        if(e){
+            return scope.actionTypes.filter(function(ele) {
+                return ele.valueCode == e;
+            })[0].label;
+        }else {
+            return '-';
+        }
+    }
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+          scope.starttime = trimToDate;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToDate == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本周",
+      click(){
+          scope.starttime = trimToWeek;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToWeek == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本月",
+      click(){
+          scope.starttime = trimToMonth;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToMonth == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  }];
+
+    scope.formatTime = function (d) {
+        return d
+            ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+            : "-";
+    }
+
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      detail(){
+          cms2.modal({
+              title : "备件报废",
+              directive : "dialog-common-alerts",
+              width : "50%",
+              params : {
+                  mode : "edit",
+                  hasHead : true,
+                  commonKey : "报废原因",
+                  data :this,
+                  scrappedReason : "show"
+              }
+          }).then( d => {
+              if(d){
+
+              }
+          });
+      }
+      baogao() {
+          cms2
+              .modal({
+                  title: "备修报告",
+                  directive: "dialog-repair-report",
+                  width: "50%",
+                  params: {
+                      mode: "view",
+                      type: "",
+                      data: this
+                  }
+              })
+              .then(d => {
+                  console.log(d);
+              });
+      }
+      lvli(){
+          target.setValue("ticketNo", this.values.ticketNo);
+          target.refresh("prod_check_exception_resume");
+      }
+  }
+
+
+    function createRenderFunction(states){
+
+        return function( page, pageSize ){
+            let params = [states,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("rollerPartUIService.getRollerPartActionLogByConditionWithPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+
+    function timer(){
+        scope.alertOk = createRenderFunction({"serviceType":2,"rollerId":scope.clone.id,"actionType":"","beginDate":""});
+    }
+
+    timer();
+    scope.searchFn = function(){
+        scope.alertOk = createRenderFunction({"serviceType":2,"rollerId":scope.clone.id,"actionType":scope.actionType ? scope.actionType-0 : '',"beginDate":[scope.starttime,scope.endtime]});
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .left25{
+        margin-left: 25%;
+        font-size: 14px;
+    }
+    .option{
+      width : 160px;
+    }
+  }
+</style>

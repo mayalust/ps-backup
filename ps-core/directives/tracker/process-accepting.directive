@@ -1,0 +1,188 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-accepting -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item">
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border">
+        <a>{{ item.title }}</a>
+      </h3>
+      <process-common-dir
+        class="timeline-header no-border"
+        data-process="elem"
+        ng-repeat="elem in item.data"
+      >
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+export default function(rootScope, psTracker) {
+  return {
+    scope: {
+      tracker: "="
+    },
+    link(scope, element, attr) {
+      let {
+        _icon,
+        createAttr,
+        createTitle,
+        _alertArisingTime,
+        _category,
+        _attrsMap,
+        _ticketTaskValues: { tallyCheck, tallyRemark },
+        _data: {
+          message,
+          ticketTask: { handlerName }
+        }
+      } = scope.tracker;
+      let {
+        _data: {
+          ticketTask: { values }
+        }
+      } = scope.tracker;
+      class Handler {
+        acceptingNormal() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["验收人", handlerName]),
+                createAttr(["验收说明", tallyCheck ? "不通过" : "通过"]),
+                createAttr(["备注", tallyRemark])
+              ]
+            }
+          ];
+        }
+        acceptingValues() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["验收人", handlerName]),
+                createAttr(["验收说明", "待验收"])
+              ]
+            }
+          ];
+        }
+        acceptingAdvance() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["处理人", handlerName]),
+                createAttr(["评价说明", "待评价"])
+              ]
+            }
+          ];
+        }
+        acceptingAdvanceValues() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: message,
+              data: [
+                createAttr(["处理人", handlerName]),
+                createAttr(["评价说明", "待评价"])
+              ]
+            }
+          ];
+        }
+        c280_default() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "评价验收",
+              data: [
+                createAttr("处理人"),
+                createTitle("诊断状态"),
+                createAttr("验收结果"),
+                createAttr("验收说明"),
+                createTitle("状态判断评价"),
+                createAttr("评价等级"),
+                createAttr("评价说明")
+              ]
+            }
+          ];
+        }
+        c290_default() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "评价验收",
+              data: [
+                createAttr("处理人"),
+                createTitle("诊断状态"),
+                createAttr("验收结果"),
+                createAttr("验收说明"),
+                createTitle("状态判断评价"),
+                createAttr("评价等级"),
+                createAttr("评价说明")
+              ]
+            }
+          ];
+        }
+        c320_default() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "评价验收",
+              data: [
+                createAttr("处理人"),
+                createTitle("诊断状态"),
+                createAttr("验收结果"),
+                createAttr("验收说明"),
+                createTitle("状态判断评价"),
+                createAttr("评价等级"),
+                createAttr("评价说明")
+              ]
+            }
+          ];
+        }
+      }
+      function createRenderList() {
+        let handler = new Handler();
+        if (_category == 320) {
+          return handler.c320_default();
+        }
+        if (_category == 290) {
+          return handler.c290_default();
+        }
+        if (_category == 280) {
+          return handler.c280_default();
+        }
+        if (_category == 50) {
+          if (values) {
+            return handler.acceptingNormal();
+          } else {
+            return handler.acceptingValues();
+          }
+        } else {
+          if (values) {
+            return handler.acceptingAdvance();
+          } else {
+            return handler.acceptingAdvanceValues();
+          }
+        }
+        return psTracker.noNodeFound(scope.tracker);
+      }
+      scope.tracker.__dicsloaded__.then(() => {
+        scope.renderList = createRenderList();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

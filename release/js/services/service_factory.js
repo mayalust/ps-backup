@@ -1,0 +1,2 @@
+!function(o,n){"undefined"!=typeof window?"function"==typeof window.define?define(n):window.$services=n():module.exports=n()}(0,function(){"use strict";return{version:"V2",protocol:"ws:",host:"192.168.1.191",origin:"http://192.168.1.191",getUrl:function(o){if(o!=window)throw new Error("只可在WINDOW环境下执行，NODEJS环境下不可执行！");var n=o.location.hostname,t=o.location.port;return"localhost"==n&&"63342"==t?this.origin:""}}});
+//# sourceMappingURL=../../map/js/services/service_factory.js.map

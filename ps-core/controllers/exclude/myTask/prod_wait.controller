@@ -1,0 +1,184 @@
+<config injector="$scope,ajax,$location,growl">
+    </config>
+    <template>
+    <ps-table config="config"></ps-table>
+    </template>
+    <script type="text/javascript">
+export default function (scope, ajax,location,growl) {
+    scope.config = {
+        title: [["待处理", "prod_wait", true], ["处理中", "prod_process"], ["已完成", "prod_finish"]],
+        attributes: {
+            "devicePosition" : ["设备位置","dict"],
+            "deviceCode" : ["设备编码","dict"],
+            "taskStatus" : ["任务状态","dict"],
+            "domainPath" : ["厂部", "dict", {
+                name: "resource",
+                from: "domainPath",
+                to: "domainPath",
+                parameter: {
+                    modelId: 300,
+                    category: "Domain"
+                }
+            }],
+            "customerId": {
+                label:"车间",
+                type:"dict",
+                relate:{
+                    name: "customer",
+                    to:"id",
+                    label:"customerName"
+                },
+                upper:[{
+                    from:"domainPath",
+                    to:"domains"
+                }]
+            },
+            "projectId":  {
+                label:"线体",
+                type:"dict",
+                name: "project",
+                relate:{
+                    name: "project",
+                    label:"projectName"
+                },
+                upper:[{
+                    from:"domainPath",
+                    to:"domains"
+                },{
+                    from:"customerId",
+                    to:"customerId"
+                }]
+            },
+            "modelId": ["设备名称", "dict",{
+                name: "modelDefinition"
+            }],
+            "deviceName" : ["设备名称","text"],
+            "desc": ["任务来源","dict"],
+            "personLiable" : ["第一负责人","dict"],
+            "senderName" : ["处理人","dict"],
+            "overtimeStatus" : ["是否超时","dict",{
+                name: "state",
+                label: "value"
+            }],
+            "sendTime" : ["任务产生时间","date2"],
+            "finishedTime" : ["结束时间","date2"],
+        },
+        search: {
+            body: [{
+                name: "domainPath",
+                searchType: "tree"
+            }, {
+                name: "customerId",
+                format: "label:customerName"
+            }, "projectId","modelId", {
+                name: "desc",
+                searchType: "select",
+                options: [
+                    { id: 1, label: '任务来源1' },
+                    { id: 2, label: '任务来源2' },
+                    { id: 3, label: '任务来源3' }
+                ]
+            }, {
+                name: "personLiable",
+                searchType: "select",
+                relate: {
+                    name: "user",
+                    label: "user_name"
+
+                },
+                format: {
+                    id: "user_id",
+                    label: "user_name"
+                }
+            }, {
+                name: "overtimeStatus",
+                searchType: "select",
+                options: [
+                    { id: 0, label: '超时' },
+                    { id: 1, label: '正常' },
+                    { id: 2, label: '逾期' }
+                ]
+            },{
+                name: "sendTime",
+                searchType: "date2"
+            },{
+                name: "finishedTime",
+                searchType: "date2"
+            },]
+        },
+        grid: {
+            body: ["devicePosition", "deviceName", "deviceCode","desc", "personLiable", "sendTime",{
+                name: "overtimeStatus",
+                gridType: "status",
+                bind: function (row,relateStr) {
+                    var severityStr = "正常";
+                    var severityBg = "alerts-warning";
+                    if (relateStr == 1) {
+                        severityStr = "超时";
+                        severityBg = "alerts-major";
+                    } else if (relateStr == 2) {
+                        severityStr = "逾期";
+                        severityBg = "alerts-minor";
+                    }
+                    return [severityStr, severityBg];
+                }
+            }],
+            buttons: {
+                outGrid: [{
+                    label: "接单",
+                    class: "primary",
+                    icon: "",
+                    on: {
+                        click: function () {
+                            // location.path("/prod_device_property/0");
+                        }
+                    }
+                },{
+                    label: "导出",
+                    class: "primary",
+                    icon: "",
+                    on: {
+                        click: function () {
+                            // location.path("/prod_device_property/0");
+                        }
+                    }
+                }],
+                inGrid: [["接单",
+                    function (e) {
+                    // taskStatus为10  代表 待处理   100 处理中   200 已完成
+                    // overtimeStatus为0 代表 正常  1 超时  2 逾期
+                       if(e.$row.taskStatus === 10 ) {
+                           if(e.$row.overtimeStatus === 0  || e.$row.overtimeStatus === 1) {
+                               e.$row.taskStatus = 100;
+                               ajax.post("ticketTaskService.doTask", e.$row).then(function (d) {
+                                   growl.success("接单成功", {});
+                                    
+                               });
+                           }else {
+                               growl.warning("该任务已逾期，请联系班组长进行任务处理。");
+                           }
+
+                       }
+                    }],["任务关闭",
+                    function (e) {
+                        // location.path("/prod_device_property/" + e.$row.id);
+                    }],["过程跟踪",
+                    function (e) {
+                        location.path("/workOrderTimeLine/" + e.$row.ticketNo);
+                    }]]
+
+            },
+            config: {
+                url: "ticketTaskService.getTicketTasksByStatus",
+                parameter: 10,
+                showIndex: false,
+                showSelector: false,
+                showSearch: false
+            },
+            options: []
+        }
+    };
+};
+</script>
+<style type="less">
+    </style>

@@ -1,0 +1,141 @@
+<config 
+  injector="$scope,$timeout,$state,$registerService,commonMethodService2"
+  deps="psOffline"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="wrap">
+            <button class="btn btn-primary" ng-click="add()">add</button>
+            <button class="btn btn-primary" ng-click="search()">search</button>
+            <table
+              ps-table-sync
+              data-source="source"
+              data-filter="filter"
+              data-sort="sort"
+              data-page="page"
+            >
+              <thead>
+                <tr>
+                  <th>a</th>
+                  <th>b</th>
+                  <th>c</th>
+                  <th class="option">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="item in items">
+                  <td>{{ item.a }}</td>
+                  <td>
+                    <input class="form-control" ng-model="item.b" />
+                  </td>
+                  <td>
+                    <button class="btn btn-default" ng-click="item.remove()">
+                      delete
+                    </button>
+                  </td>
+                  <td>
+                    <div ps-option-group>
+                      <button class="btn btn-primary" ng-click="item.option1()">
+                        按钮
+                      </button>
+                      <button
+                        class="btn btn-default"
+                        ng-if="item.a > 5"
+                        ng-click="item.option2()"
+                      >
+                        按钮2
+                      </button>
+                      <button
+                        class="btn btn-default"
+                        ng-if="item.a > 5"
+                        ng-click="item.option3()"
+                      >
+                        按钮3
+                      </button>
+                      <button class="btn btn-default" ng-click="item.option4()">
+                        按钮4
+                      </button>
+                      <button class="btn btn-default" ng-click="item.option5()">
+                        按钮5
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(scope, timeout, $state, registerService, cms2) {
+  let inx = 0,
+    max = 50 + Math.random() * 200;
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+    option1() {
+      cms2
+        .modal({
+          title: "弹出窗口",
+          directive: "ps-offline",
+          scope: scope
+        })
+        .then(d => {});
+    }
+    option2() {}
+    option3() {}
+    option4() {}
+    option5() {}
+    update() {
+      this.a = 50;
+    }
+    remove() {
+      let inx = scope.items.indexOf(this);
+      scope.items.splice(inx, 1);
+    }
+  }
+  scope.search = function() {
+    scope.filter = ({ a, b }) => {
+      return (a - 0) % 2;
+    };
+  };
+  scope.add = function() {
+    scope.items.unshift(
+      new tableCell({
+        a: ++inx,
+        b: inx
+      })
+    );
+    scope.page = 0;
+  };
+  scope.source = (function() {
+    let rs = [];
+    for (inx = 0; inx < max; inx++) {
+      rs.push(
+        new tableCell({
+          a: inx,
+          b: "title" + inx
+        })
+      );
+    }
+    return rs;
+  })();
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  padding: 5px 10px !important;
+  .option {
+    width: 160px;
+  }
+}
+</style>

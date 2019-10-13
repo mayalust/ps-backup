@@ -1,0 +1,98 @@
+<config injector="$scope,ajax,$location,$routeParams,psDialog,growl" params="/:id?">
+</config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+export default function (scope, ajax, location, routeParams, psDialog,growl) {
+  scope.layout = {
+    label: "数据模板",
+    children: [{
+      label: "数据模板",
+      type: "panel",
+      children: [{
+        type: "table",
+        config: {
+          attributes: {
+            "devicePartLabel": ["部位", "dict"],
+            "dataTemplateLabel": ["数据模板", "dict"]
+          },
+          grid: {
+            body: [{
+              name: "devicePartLabel"
+            }, "dataTemplateLabel"],
+            buttons: {
+              outGrid: [{
+                label: "关联数据模板",
+                symbol: "inline",
+                class: "primary",
+                icon: "",
+              }],
+              inGrid: [{
+                label: "删除",
+                class: "btn btn-default",
+                on: {
+                  click: function (e) {
+                    e.remove({
+                      url: "resourceUIService.deleteDataTemplateItem",
+                      before: function (row) {
+                        return [routeParams.id, e.$row]
+                      }
+                    });
+                  }
+                }
+              }]
+            },
+            config: {
+              url: 'resourceUIService.getDataTemplateItems',
+              parameter: [routeParams.id],
+              inlineAdd: {
+                devicePartLabel: {
+                  type: 'select',
+                  relate: {
+                    name: "devicePart",
+                    parameter: {
+                      deviceModelId: Number(routeParams.id)
+                    }
+                  }
+                },
+                dataTemplateLabel: {
+                  type: 'select',
+                  relate: {
+                    name: "dataModelDefinition"
+                  }
+                },
+                submit: function (a, b, refreshGrid, allData) {
+                     
+                    let item = allData.find(d => {
+                        return d.devicePartId == b.devicePartLabel.id && d.dataTemplateId == b.dataTemplateLabel.id
+                    })
+                    if (!item) {
+                        ajax.post('resourceUIService.addDataTemplateItem', {
+                            "modelId": routeParams.id,
+                            "devicePartId": b.devicePartLabel.id,
+                            "devicePartLabel": b.devicePartLabel.label,
+                            "dataTemplateId": b.dataTemplateLabel.id,
+                            "dataTemplateLabel": b.dataTemplateLabel.label
+                        }).then(function () {
+                            refreshGrid();
+                        })
+                    } else {
+                        growl.warning('设备类型已关联该数据模板');
+                    }
+                }
+              },
+            },
+            options: []
+          }
+        }
+      }]
+    }]
+  }
+
+};
+</script>
+<style type="less">
+</style>

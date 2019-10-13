@@ -1,0 +1,31 @@
+<config injector="$rootScope,$q"></config>
+<script>
+/** mainCtrlRm" **/
+
+export default function(rootScope, q) {
+  let getConfigValues = q.defer();
+  function parse(str) {
+    let obj = null;
+    try {
+      obj = JSON.parse(str);
+    } catch (e) {
+      return null;
+    }
+    return obj;
+  }
+  const factory = {
+    getRoleValues() {
+      return getConfigValues.promise;
+    },
+    setRoleValues(d) {
+      getConfigValues.resolve(parse(d));
+    },
+    updateRoleValues(d) {
+      getConfigValues = q.defer();
+      getConfigValues.resolve(parse(d));
+      return getConfigValues.promise;
+    }
+  };
+  return factory;
+}
+</script>

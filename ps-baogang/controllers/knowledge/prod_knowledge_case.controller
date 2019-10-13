@@ -1,0 +1,194 @@
+<config injector="$scope, commonMethodService2, commonMethodService, $filter"></config>
+<template>
+  <div class="box" style="background-color: transparent;">
+    <div class="box-body">
+      <form role="form" class="search-area">
+        <div class="form-group col-sm-2">
+          <label class="control-label">检测对象</label>
+          <ps-input1 ng-model="deviceType"></ps-input1>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">检测专业</label>
+          <ps-select1 ng-model="detection" options="detectionOptions" config="detectionConfig"></ps-select1>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">综合状态等级</label>
+          <ps-select1 ng-model="statusGrade" options="statusGradeOptions" config="statusGradeConfig"></ps-select1>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">关键字</label>
+          <ps-input ng-model="keyWords"></ps-input>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">知识整理时间</label>
+          <ps-date ng-model="arrangeTime"></ps-date>
+        </div>
+        <div class="form-group col-sm-2 no-pad">
+          <label class="col-sm-12 control-label" style="color: transparent;">操作：</label>
+          <div class="btn-group block" style="padding: 0;border: none;">
+            <button type="button" class="btn btn-primary btn-sm" ng-click="goSearch()">
+              <i class="fa fa-search"></i>
+              <span class="hidden-sm"> 查询</span>
+            </button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="goClear()">
+              <i class="fa fa-close"></i>
+              <span class="hidden-sm"> 清除</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="box-footer">
+      <ps-grid1 ng-model="gridModel" config="config"></ps-grid1>
+    </div>
+  </div>
+</template>
+<script>
+export default function (scope, cms2, cms, $filter) {
+  const target = cms();
+  scope.statusGradeOptions = target.getRootScope("myDicts")["alertSeverity"];
+  scope.detectionOptions = target.getRootScope("myDicts")["specialtyProps"];
+  scope.statusGradeConfig = {
+    format: {
+      id: 'valueCode',
+      value: 'valueCode'
+    }
+  };
+  scope.detectionConfig = {
+    format: {
+      id: 'valueCode',
+      value: 'valueCode'
+    }
+  };
+  scope.professionOptions = [{
+    id: 1,
+    label: '探伤检测'
+  }, {
+    id: 2,
+    label: '振动检测'
+  }];
+  scope.checkObjOptions = [{
+    id: 1,
+    label: '电机'
+  }, {
+    id: 2,
+    label: '轴承'
+  }, {
+    id: 3,
+    label: '轴承'
+  }, {
+    id: 4,
+    label: '齿轮箱'
+  }];
+  scope.gridModel = [];
+  scope.config = {
+    url: 'knowledgeBaseService.getKnowledgeBaseWithPage',
+    parameter: {},
+    bodyButtons: [{
+      label: '知识整理',
+      on: {
+        click: function (item) {
+          cms2.refresh("prod_knowledge_organize", {
+            ticketNo: item.ticketNo
+          });
+        }
+      }
+    }],
+    columns: [{
+      key: 'deviceType',
+      label: '设备类型',
+      type: 'text'
+    }, {
+      key: 'statusGrade',
+      label: '综合状态等级',
+      type: 'text',
+      bind (row, value) {
+        let findStatus = scope.statusGradeOptions.find(status => {
+          return status.valueCode == value;
+        });
+        return findStatus && findStatus.label;
+      }
+    }, {
+      key: 'abnType',
+      label: '异常类型',
+      type: 'text'
+    }, {
+      key: 'detection',
+      label: '检测专业',
+      type: 'text'
+    }, {
+      key: 'treatmentPlan',
+      label: '处理方案',
+      type: 'text'
+    }, {
+      key: 'arrangeTime',
+      label: '知识整理时间',
+      type: 'text',
+      bind (row, value) {
+        return $filter('date')(value, 'yyyy-MM-dd HH:mm:ss');
+      }
+    }, {
+      key: 'user',
+      label: '整理人',
+      type: 'text',
+      relate: {
+        name: 'user',
+        url: 'userUIService.queryUserByCondition',
+        parameter: {},
+        from: 'creatUser',
+        to: 'userID'
+      },
+      bind (row, value) {
+        return row['_$$user'][0].userName;
+      }
+    }]
+  };
+  scope.goClear = function () {
+    scope.treatmentPlan = null;
+    scope.detection = null;
+    scope.statusGrade = null;
+    scope.keyWords = null;
+    scope.arrangeTime = null;
+  };
+  scope.goSearch = function () {
+    let gridScope = scope.$$childHead;
+    while (!gridScope.gridInstance) {
+      gridScope = gridScope.$$nextSibling;
+    }
+    let parameter = {};
+    if (scope.deviceType) {
+      parameter.deviceType = scope.deviceType;
+    }
+    if (scope.detection) {
+      parameter.detection = scope.detection;
+    }
+    if (scope.statusGrade) {
+      parameter.statusGrade = scope.statusGrade;
+    }
+    if (scope.keyWords) {
+      parameter.keyWords = scope.keyWords;
+    }
+    if (scope.arrangeTime) {
+      parameter.arrangeTime = scope.arrangeTime;
+    }
+    if (Object.keys(parameter).length > 0) {
+      gridScope.gridInstance.goSearch(parameter);
+    } else {
+      gridScope.gridInstance.goSearch();
+    }
+
+  };
+}
+</script>
+<style lang="less" scoped>
+.search-area {
+  [class*=col] {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+.block {
+  display: block;
+}
+</style>

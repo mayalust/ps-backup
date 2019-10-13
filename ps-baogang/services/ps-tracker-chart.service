@@ -1,0 +1,380 @@
+<config injector="$rootScope,$q,$state,ajax,growl,psStore,commonMethodService,commonMethodService2,psRouter,psBtnClick"></config>
+<script>
+/** mock **/
+import { dateparser, extend, isArray, isObject } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  $state,
+  ajax,
+  growl,
+  psStore,
+  cms,
+  cms2,
+  psRouter,
+  psBtnClick
+) {
+  let DicMap = {};
+  function _findValue(data, attr, debug) {
+    let obj = cms2.findValue(data, attr) || {},
+      { value, path } = obj;
+    let val = changeValue(attr, value);
+    if (path && debug == true) {
+      console.warn(`Debug find value from path = "${path}"`);
+    }
+    return val;
+  }
+  function attr(data, atrs) {
+    let arr = atrs.split(/\/|\./g),
+      item;
+    while ((item = arr.shift())) {
+      if (data) {
+        data = data[item];
+      } else {
+        return;
+      }
+    }
+    return data;
+  }
+  function _createText(name) {
+    if (!isArray(name)) {
+      throw new Error(`name has to be a array`);
+    }
+    return {
+      key: name[0],
+      value: name[1]
+    };
+  }
+  function _createDicAttr(name) {
+    if (!isArray(name)) {
+      throw new Error(`name has to be a array`);
+    }
+    name[2] = _findValue(this, name[2]);
+    return _createDic(name);
+  }
+  function _createDic(name) {
+    if (!isArray(name)) {
+      throw new Error(`name has to be a array`);
+    }
+    let obj = attr(DicMap, name[1]);
+    if (obj == null) {
+      return {
+        key: name[0],
+        value: "-"
+      };
+    }
+    let map = obj.reduce((a, b) => {
+      a[b.valueCode] = b;
+      return a;
+    }, {});
+    return {
+      key: name[0],
+      value: map[name[2]] ? map[name[2]].label : "-"
+    };
+  }
+  function _createAttr(name) {
+    if (!isArray(name)) {
+      throw new Error(`name has to be a array`);
+    }
+    return {
+      key: name[0],
+      value: attr(this, name[1]) || "-"
+    };
+  }
+  function _findAttr(name, debug) {
+    if (!isArray(name)) {
+      throw new Error(`name has to be a array`);
+    }
+    let value = _findValue(this, name[1], debug);
+    return {
+      key: name[0],
+      value: value == null ? "-" : changeValue(name[0], value)
+    };
+  }
+  function isTimeLike(str) {
+    return new RegExp(
+      "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\+\\d{4}",
+      "g"
+    ).test(str);
+  }
+  function changeValue(name, val) {
+    if (isTimeLike(val)) {
+      return dateparser(val).getDateString("yyyy-MM-dd,hh:mm:ss");
+    }
+    return cms2.getExplainerFromDiction(name)(val);
+  }
+  function _createTitle(title) {
+    return {
+      type: "title",
+      value: title,
+      style: {
+        color: "#2997bb"
+      }
+    };
+  }
+  function _createButton(arr, target) {
+    let name = arr[0],
+      handler = arr[1],
+      title = arr[2],
+      fn = psBtnClick[handler];
+
+    return {
+      type: "button",
+      cls: "btn btn-primary btn-sm",
+      label: name,
+      click: () => {
+        if (fn) {
+          fn.call(target || this, name, title);
+        } else {
+        }
+      }
+    };
+  }
+  class TrackerNode {
+    constructor(d, p, n) {
+      extend(this, d);
+      this._data = d;
+      this.prev = p;
+      this.next = n;
+    }
+    createAttr() {
+      return _createAttr.apply(this, arguments);
+    }
+    getAlertSeverity(n) {
+      return ["正常", "正常", "注意", "警告", "告警"][n] || "空";
+    }
+    findAttr() {
+      return _findAttr.apply(this, arguments);
+    }
+    createTitle() {
+      return _createTitle.apply(this, arguments);
+    }
+    createGroup(title, attr, callback) {
+      let arr = this.findValue(attr) || [];
+      return arr.map((d, i) => {
+        let n = arr[i + 1] || null,
+          p = arr[i - 1] || null,
+          nd = new TrackerNode(d, p, n);
+        return {
+          title: i == 0 ? title : "",
+          icon: i == 0 ? true : false,
+          time: nd.findValue("arisingTime"),
+          data: (callback && callback.call(nd, nd)) || []
+        };
+      });
+    }
+    createButton() {
+      return _createButton.apply(this, arguments);
+    }
+    findValue() {
+      return _findValue.apply(this, [this, ...arguments]);
+    }
+    createText() {
+      return _createText.apply(this, arguments);
+    }
+    createDic() {
+      return _createDic.apply(this, arguments);
+    }
+    createDicAttr() {
+      return _createDicAttr.apply(this, arguments);
+    }
+    hasAttr(attr) {
+      return typeof this.findValue(attr) != "undefined";
+    }
+    isFirstTimeGenerated() {
+      return !this.hasRepeat;
+    }
+    getEvaluate() {
+      let alertEvaluateInfoList = this.findValue("alertEvaluateInfoList") || [];
+      alertEvaluateInfoList = alertEvaluateInfoList[0] || {};
+      let evaluateCheckboxlist = alertEvaluateInfoList.evaluateCheckboxlist;
+      return ["空", "正确", "不正确"][evaluateCheckboxlist] || "空";
+    }
+    getDealReason() {
+      let complexDealType = _findValue(this, "dealType"),
+        tallyCheckboxlist = _findValue(this, "tallyCheckboxlist"),
+        fd = tallyCheckboxlist.find(d => d.id == complexDealType);
+      return fd ? fd.label : "-";
+    }
+    getHandlerType() {
+      let dealType = _findValue(this, "dealType");
+      return ["暂不处理", "自行处理", "发起委托"][dealType - 1];
+    }
+    getAlertState() {}
+    getTaskJob() {
+      /*  任务分类; */
+      return cms2.getTaskJob(this.getAppSource());
+    }
+    getAppSource() {
+      /*  任务来源; */
+      let variables = this.ticketTask.variables || {};
+      return cms2.getAppSource(variables);
+    }
+    createArtificalAlertHead(planName) {
+      let alertItemList = this.findValue("alertItemList"),
+        onlineRuleId = this.findValue("onlineRuleId");
+      if (alertItemList == null || !alertItemList.length > 0) {
+        return [];
+      }
+      let rs = [];
+      [].push.apply(
+        rs,
+        this.createGroup("告警信息", "alertItemList", function(n) {
+          return [
+            //n.createAttr(["告警类型", "alertTitle"]),
+            n.createDic(["报警级别", "alertSeverity", n.severity]),
+            n.createDic(["报警来源", "appName", n.appName]),
+            n.createAttr(["告警描述", "alertTitle"])
+          ];
+        })
+      );
+      [].push.call(
+        rs,
+        {
+          title: "智能决策",
+          icon: "fa fa-user fa-fw fa-circle-o bg-green",
+          time: this.findValue("executeTime"),
+          data: [this.findAttr(["异常名称", "taskMessage"])]
+        },
+        {
+          title: "智能方案",
+          icon: "fa fa-user fa-fw fa-circle-o bg-green",
+          time: this.findValue("executeTime"),
+          data: [
+            this.createText(["解决方案", planName || "状态维护"]),
+            this.findAttr(["标准项目编号", "standardProjectId"]),
+            this.findAttr(["标准项目名称", "standardProjectName"]),
+            this.createButton([
+              "查看规则",
+              onlineRuleId ? "checkOnlineRule" : "checkOnlineRule",
+              "查看规则"
+            ])
+          ]
+        }
+      );
+      return rs;
+    }
+    createAlertAhead() {
+      let rs = [],
+        alertItemList = this.findValue("alertItemList"),
+        onlineRuleId = this.findValue("onlineRuleId");
+      if (alertItemList) {
+        rs.push({
+          title: "报警产生",
+          icon: "fa fa-user fa-fw fa-circle-o bg-green",
+          time: this.findValue("alertArisingTime"),
+          data: alertItemList
+            .map(d => {
+              return [
+                this.createDic(["报警级别", "alertSeverity", d.severity]),
+                this.createDic(["报警来源", "appName", d.appName]),
+                this.createText(["报警描述", d.alertTitle])
+              ];
+            })
+            .reduce(function(a, b) {
+              return a.concat(b);
+            }, [])
+        });
+      } else if (onlineRuleId) {
+        let { onlineRule } = this;
+        let itemList = onlineRule ? onlineRule["itemList"] : [];
+        itemList = itemList.map(({ kpiThreshold }) => kpiThreshold);
+        if (itemList.length > 0) {
+          rs.push({
+            title: "报警产生",
+            icon: "fa fa-user fa-fw fa-circle-o bg-green",
+            time: this.findValue("alertArisingTime"),
+            data: itemList
+              .map(d => {
+                return [
+                  this.createText(["报警类型", d.title]),
+                  this.createDic(["报警级别", "alertSeverity", d.severity]),
+                  this.createText(["报警来源", d.instanceName]),
+                  this.createText(["报警描述", d.desc])
+                ];
+              })
+              .reduce(function(a, b) {
+                return a.concat(b);
+              }, [])
+          });
+        }
+      }
+      return rs;
+    }
+  }
+  function psTrackerChart(trackerList) {
+    class PsTrackerChart {
+      constructor(trackerList) {
+        this._loaded = psStore.get("getAllDicts").then(d => {
+          let len = trackerList.length;
+          (DicMap = d.reduce((a, b) => {
+            a[b.dictCode] = a[b.dictCode] || [];
+            a[b.dictCode].push(b);
+            return a;
+          }, {})),
+            (trackerList = trackerList
+              .filter(({ render }) => render)
+              .map(({ render, data, prev, next }, i) => {
+                let dt = new TrackerNode(data, prev, next);
+                dt.hasRepeat = trackerList.slice(0, i).some(tracker => {
+                  return (
+                    tracker.data.ticketTask.taskConfigName ==
+                    data.ticketTask.taskConfigName
+                  );
+                });
+                return {
+                  render: render,
+                  node: dt
+                };
+              }));
+          this.list = trackerList
+            .map(({ node, render }, i) => {
+              node.first = trackerList[0];
+              node.next = trackerList[i + 1] || null;
+              node.prev = trackerList[i - 1] || null;
+              node.last = trackerList[trackerList.length - 1];
+              node.$data = render
+                .apply(node, [
+                  function createAttr() {
+                    return _createAttr.apply(node, arguments);
+                  },
+                  function findAttr() {
+                    return _findAttr.apply(node, arguments);
+                  },
+                  function createTitle() {
+                    return _createTitle.apply(node, arguments);
+                  },
+                  function createButton() {
+                    return _createButton.apply(node, arguments);
+                  },
+                  function findValue() {
+                    return _findValue.apply(node, [node, ...arguments]);
+                  },
+                  function createText() {
+                    return _createText.apply(node, arguments);
+                  },
+                  function createDic() {
+                    return _createDic.apply(node, arguments);
+                  },
+                  function createDicAttr() {
+                    return _createDicAttr.apply(node, arguments);
+                  }
+                ])
+                .map(d => {
+                  d._data = node;
+                  return d;
+                });
+              return node.$data;
+            })
+            .reduce((a, b) => {
+              b = !isArray(b) ? [b] : b;
+              return a.concat(b);
+            }, []);
+        });
+      }
+    }
+    return new PsTrackerChart(trackerList);
+  }
+  return psTrackerChart;
+}
+</script>

@@ -1,0 +1,215 @@
+<config injector="$rootScope,$timeout,$compile" type="factory"
+></config>
+<script type="text/javascript">
+  import { screenOffset, addClass } from "ps-ultility";
+  export default function(rootScope,timeout,compile){
+    function copyAttr( target, ori ){
+      let attrs = ori.attributes;
+      for(let i = 0; i < attrs.length; i++){
+        let attr = attrs[i].value,
+          name = attrs[i].name;
+        if( name !== "class" && attr ){
+          target.setAttribute(attrs[i].name, attr)
+        };
+      }
+      target.innerHTML = ori.innerHTML;
+    }
+    function createDropAngular( target, buttons, scope ){
+      const template = `<ul class="steel dropdown-menu" ng-class="state" role="menu" style="position:absolute;"></ul>`;
+      let dom = document.createElement("div"),
+        fragment = document.createDocumentFragment(),
+        offset = screenOffset(target),
+        bodyClick = function(e){
+          destroy();
+          document.body.removeEventListener("click", bodyClick);
+        };
+      dom.setAttribute("class", "open");
+      dom.style.position = "fixed";
+      dom.style.zIndex = 9999999;
+      dom.innerHTML = template;
+      for( let i = 0; i < buttons.length; i++ ){
+        let dt = document.createElement("LI");
+        copyAttr( dt, buttons[i] );
+        fragment.appendChild( dt );
+      }
+      dom.children[0].appendChild( fragment );
+      document.body.appendChild(dom);
+      timeout(function(){
+        dom.style.top = offset.top + target.clientHeight + "px";
+        dom.style.left = offset.left - dom.children[0].clientWidth + target.clientWidth + "px";
+        document.body.addEventListener("click", bodyClick);
+      });
+      compile(dom)(scope);
+      function destroy(){
+        dom.remove();
+        dom = null;
+      }
+    }
+    function createDrop(target, data, position){
+      const scope = rootScope.$new(),
+        template = `<ul class="dropdown-menu" ng-class="state" role="menu" style="position:absolute;">
+        <li ng-click="clickFn(op, $index)"
+        ng-show="showfn(op)"
+        ng-repeat="op in options"><a role="button" ng-bind="op.label"></a></li>
+      </ul>`,
+        bodyClick = function(e){
+          destroy();
+          document.body.removeEventListener("click", bodyClick);
+        };
+      let dom = document.createElement("div"), events = {},
+        offset = screenOffset(target), rs;
+      dom.setAttribute("class", "open");
+      dom.style.position = "fixed";
+      dom.style.zIndex = 9999999;
+      dom.innerHTML = template;
+      scope.options = data;
+      document.body.appendChild(dom);
+      timeout(function(){
+        dom.style.top = offset.top + target.clientHeight + "px";
+        dom.style.left = ( position === "left" ? offset.left  : ( offset.left - dom.children[0].clientWidth + target.clientWidth ) ) + "px";
+        document.body.addEventListener("click", bodyClick);
+      });
+      scope.clickFn = function(op){
+        let fn = op.click;
+        fn && fn(op);
+        emit("submit", op);
+      };
+      scope.showfn = function(op){
+        let rs;
+        op.show = ( typeof op.show === "undefined" ) ? true : op.show;
+        rs = ( typeof op.show === "function")  ? op.show() : op.show;
+        return rs;
+      };
+      compile(dom)(scope);
+      function destroy(){
+        dom.remove();
+        scope.$destroy();
+        dom = null;
+        emit("close");
+      }
+      function on(eventname, callback){
+        events[eventname] = callback;
+        return rs;
+      }
+      function emit(eventname, data){
+        events[eventname] && events[eventname](data);
+      }
+      rs = {
+        destroy : destroy,
+        on : on
+      }
+      return rs
+    }
+    function createAutotDrop(target, data, search, format){
+      let dom = document.createElement("div"), events = {},
+        offset = screenOffset(target);
+      //select2-results__option--highlighted
+      const scope = rootScope.$new(),
+        template = `<span class="select2-container select2-container--default select2-container--open"
+        style="position: absolute;">
+    <span class="select2-dropdown select2-dropdown--below delSpace" style="width: ${target.clientWidth + target.clientLeft * 2}px;">
+      <span class="select2-results">
+        <ul class="select2-results__options">
+          <li class="select2-results__option"
+            ng-show="searchFn(op)"
+            ng-repeat="op in options"
+            ng-click="btnClick(op)"
+            role="treeitem" aria-selected="false" ng-bind="labelFn(op)"></li>
+        </ul>
+      </span>
+    </span>
+  </span>`,
+        bodyClick = function(e){
+          destroy();
+          document.body.removeEventListener("click", bodyClick);
+        };
+      dom.setAttribute("class", "open");
+      dom.style.position = "fixed";
+      dom.style.zIndex = 9999999;
+      dom.innerHTML = template;
+      scope.options = data;
+      document.body.appendChild(dom);
+      timeout(function(){
+        dom.style.top = offset.top + target.clientHeight + "px";
+        dom.style.left = offset.left + "px";
+        document.body.addEventListener("click", bodyClick);
+      });
+      scope.searchFn = function(op){
+        return typeof search === "function" ? search(op) : true;
+      };
+      scope.labelFn = function(op){
+        return typeof format === "function" ? format(op) : op;
+      }
+      scope.btnClick = function(op){
+        emit("submit", op);
+      }
+      scope.showfn = function(op){
+        let rs;
+        op.show = ( typeof op.show === "undefined" ) ? true : op.show;
+        rs = ( typeof op.show === "function")  ? op.show() : op.show;
+        return rs;
+      };
+      compile(dom)(scope);
+      function destroy(){
+        dom && dom.remove();
+        scope.$destroy();
+        dom = null;
+        emit("destroyed");
+      }
+      function on(eventname, callback){
+        events[eventname] = callback;
+      }
+      function emit(eventname, data){
+        events[eventname] && events[eventname](data);
+      }
+      return {
+        destroy : destroy,
+        on : on
+      }
+    }
+    function createTooltip(target, str, position){
+      const scope = rootScope.$new(),
+        template = `<div class="ps-tooltip"><span>${  !str ? "-" : str  }</span></div>`;
+      let dom = document.createElement("div"), events = {},
+        offset = screenOffset(target),
+        timer = setTimeout(function(){
+          dom.style.pointerEvents = "none";
+          dom.style.position = "fixed";
+          dom.style.zIndex = 9999999;
+          dom.innerHTML = template;
+          dom && dom.style
+            ? dom.style.top = offset.top - target.clientHeight - 20  + "px" : null;
+          dom && dom.style
+            ? dom.style.left = offset.left + "px" : null;
+          document.body.appendChild(dom);
+          setTimeout(() => {
+            addClass(dom.children[0], "open");
+          });
+          compile(dom)(scope);
+        }, 1000);
+      function destroy(){
+        timer ? clearTimeout(timer) : null;
+        dom && dom.remove();
+        scope.$destroy();
+        dom = null;
+        emit("destroyed");
+      }
+      function on(eventname, callback){
+        events[eventname] = callback;
+      }
+      function emit(eventname, data){
+        events[eventname] && events[eventname](data);
+      }
+      return {
+        destroy : destroy,
+        on : on
+      }
+    }
+    return {
+      createDropAngular : createDropAngular,
+      createDrop : createDrop,
+      createAutotDrop : createAutotDrop,
+      createTooltip : createTooltip
+    }
+  }
+</script>

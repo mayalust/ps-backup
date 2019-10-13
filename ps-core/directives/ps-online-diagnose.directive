@@ -1,0 +1,124 @@
+<config injector="$rootScope,$q,ajax,$state,commonMethodService2,commonMethodService,psTreeData,resourceUIService"></config>
+<template>
+  <div>
+    <table class="table table-hover dataTable no-footer">
+      <thead>
+        <tr>
+          <th>状态</th>
+          <th>专业</th>
+          <th>报告文件</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody ng-if="!offlines || offlines.length == 0">
+        <tr>
+          <td colspan="7" class="center">
+            没有符合条件的记录
+          </td>
+        </tr>
+      </tbody>
+      <tbody ng-if="offlines.length > 0">
+        <tr ng-repeat="item in offlines">
+          <td ng-bind="item.getSeverity()"></td>
+          <td ng-bind="item.getSpecialtyProp()"></td>
+          <td>
+            <a
+              ng-bind="item.reportFile.fileName"
+              ng-attr-href="{{item.reportFile.filePath}}"
+            ></a>
+          </td>
+          <td ng-bind="item.getTime()"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  cms2,
+  cms,
+  psTreeData,
+  resourceUIService
+) {
+  return {
+    scope: {},
+    link(scope, element, attr) {
+      let id = $state.params.id,
+        offline,
+        specialtyProps;
+      class TableCell {
+        constructor(d) {
+          for (let i in d) {
+            this[i] = d[i];
+          }
+        }
+        getSpecialtyProp() {
+          return specialtyProps[this.specialty];
+        }
+        getSeverity() {
+          return (
+            ["正常", "正常", "注意", "异常", "警告"][this.severity] || "正常"
+          );
+        }
+        getTime(time) {
+          return dateparser(this.rptDate).getDateString("yy/MM/dd hh:mm:ss");
+        }
+      }
+      class Offline {
+        constructor() {
+          this._getDeviceOfflineReportListByCondition =
+            "deviceResumeUIService.getDeviceOfflineReportListByCondition";
+        }
+        init() {
+          this.getSpecial().then(s => {
+            specialtyProps = s.reduce((a, b) => {
+              a[b.valueCode] = b.label;
+              return a;
+            }, {});
+            this.getResource().then(({ externalDevId }) => {
+              this.getDeviceOfflineReportListByCondition(externalDevId).then(
+                reports => {
+                  scope.offlines = reports.map(r => new TableCell(r));
+                }
+              );
+            });
+          });
+        }
+        getSpecial() {
+          let defer = q.defer();
+          resourceUIService.deviceLoader().then(() => {
+            rootScope.cacheAllData.on("getAllDicts", () => {
+              defer.resolve(rootScope.$$childHead["myDicts"]["specialtyProps"]);
+            });
+          });
+          return defer.promise;
+        }
+        getResource() {
+          return psTreeData(id).getState();
+        }
+        getDeviceOfflineReportListByCondition(deviceCode) {
+          return ajax.post(this._getDeviceOfflineReportListByCondition, {
+            devId: deviceCode
+          });
+        }
+        destroy() {}
+      }
+      offline = new Offline();
+      offline.init();
+      scope.$on("$destroy", () => {
+        offline.destroy();
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.center {
+  text-align: center;
+}
+</style>

@@ -1,0 +1,403 @@
+<config injector="$rootScope,$timeout,$compile,psEvent,psUltility,ajax" type="factory"
+></config>
+<script type="text/javascript">
+  import {extend, each, attribute, deepClone} from "ps-ultility";
+
+  export default function (rootScope, timeout, compile, psEvent, psUltility, ajax) {
+    let onceModalTemplates;
+
+    function clone (obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function setValue (template, data) {
+      return template;
+    }
+
+    const modalTemplates = createCache(),
+      alertTemplates = createCache();
+    let clear;
+    function voiceWave (template) {
+      let modal = document.createElement("div");
+      let scope = rootScope.$new();
+      modal.innerHTML =
+        `<div id="free-board" class="modal bootstrap-dialog type-primary size-normal in" style="display:table-cell;z-index:9999;position:absolute;overflow:auto;">
+        <div class="modal-dialog steel" style="width: 70%;">
+          <div class="modal-content">
+            <div class="modal-header bg-f2 padding-top-10 padding-bottom-10">
+              <div class="bootstrap-dialog-header">
+                <a role="button" class="close" ng-click="close()">×</a>
+                <h4 class="modal-title info-box-number ng-binding" ng-bind="option.label" id="ngdialog1-aria-labelledby"></h4>
+              </div>
+            </div>
+            <div class="modal-body padding-top-10 no-pad-bottom" style="overflow-y: auto;">
+              ${template}
+            </div>
+          </div>
+        </div>
+      </div>`;
+      modal.setAttribute("class", "ps-dialog");
+      document.body.appendChild(modal);
+      compile(modal)(scope);
+      scope.close = close;
+
+      function close () {
+        modal.remove();
+        modal = null;
+        clear && clear();
+      };
+      
+      return {
+        close: close
+      }
+    }
+    function infoBox(template, message) {
+      let alertDom = document.createElement("div"),
+        events = {},
+        scope = rootScope.$new();
+      scope.option = template;
+      alertDom.setAttribute("class", "ps-dialog steel");
+      alertDom.innerHTML =
+        `<div id="free-board" class="modal bootstrap-dialog type-primary size-normal in" style="display:table-cell;z-index:1000003;position:absolute;overflow:auto;">
+        <div class="modal-dialog steel">
+          <div class="modal-content" style="border-radius : 4px;">
+            <div class="modal-header">
+              <div class="bootstrap-dialog-header">
+                <div class="bootstrap-dialog-close-button" style="display: none;">
+                  <button class="close">×</button>
+                </div>
+                <div class="bootstrap-dialog-title ng-binding">提示</div>
+              </div>
+            </div>
+            <div class="modal-body">
+              <div class="bootstrap-dialog-body">
+                <div class="bootstrap-dialog-message ng-binding">${message}</div>
+              </div>
+            </div>
+            <div class="modal-footer" style="display: block;">
+              <div class="bootstrap-dialog-footer">
+                <div class="bootstrap-dialog-footer-buttons">
+                  <button ng-class="classfn(btn)" ng-repeat="btn in option.buttons"
+                  ng-click="click(btn, $event)"
+                  ng-bind="btn.label"
+                  ng-disabled="disabled(btn)"
+                  ng-bind="btn.label"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div>`;
+      scope.close = close;
+      scope.click = function (btn, event) {
+        let evt = psEvent(event, scope),
+          clickFn = psUltility.getClickFunction(btn);
+        extend(evt, {
+          close: close,
+          submit: submit
+        });
+        clickFn.call(evt, evt);
+      }
+      scope.classfn = function (btn) {
+        return btn.class || "btn btn-default"
+      }
+      scope.disabled = function (btn) {
+        if (typeof btn.disabled === "function") {
+          return btn.disabled();
+        } else {
+          return btn.disabled;
+        }
+      }
+
+      function submit () {
+        emit("submit");
+        alertDom.remove();
+        alertDom = null;
+      }
+
+      function close () {
+        emit("close");
+        alertDom.remove();
+        alertDom = null;
+      };
+
+      function on (eventname, handler) {
+        events[eventname] = handler;
+      }
+
+      function emit (eventname, data) {
+        typeof events[eventname] === "function" && events[eventname](data);
+      }
+
+      document.body.appendChild(alertDom);
+      compile(alertDom)(scope);
+      return {
+        on: on,
+        close: close,
+        submit: submit
+      }
+    }
+    function modal(template, data, sc, width) {
+      let modal = document.createElement("div"),
+        events = {},
+        scope = rootScope.$new();
+      scope['$$customRootScope'] = scope;
+      scope.option = setData(template, data = data || {});
+      // 1000003 会遮挡growl
+      modal.innerHTML =
+        `<div id="free-board" class="modal bootstrap-dialog type-primary size-normal in" style="display:table-cell;z-index:9999;position:absolute;overflow:auto;">
+        <div class="modal-dialog steel" style="width:${ width ? width : "850px" }">
+          <div class="modal-content">
+            <div class="modal-header bg-f2 padding-top-10 padding-bottom-10">
+              <div class="bootstrap-dialog-header">
+                <a role="button" class="close" ng-click="close()">×</a>
+                <h4 class="modal-title info-box-number ng-binding" ng-bind="option.label" id="ngdialog1-aria-labelledby"></h4>
+              </div>
+            </div>
+            <div class="modal-body padding-top-10 no-pad-bottom" style="overflow-y: auto;">
+              <ps-layout data-option="option" data-is-root="false"></ps-layout>
+            </div>
+            <div class="modal-footer padding-top-10">
+              <div class="bootstrap-dialog-footer" style="display: flex;justify-content: center;">
+                <div class="bootstrap-dialog-footer-buttons">
+                  <button ng-class="classfn(btn)" ng-repeat="btn in option.buttons"
+                  ng-click="click(btn, $event)"
+                  ng-bind="btn.label"
+                  ng-disabled="btn.$disabled"
+                  ng-bind="btn.label"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      modal.setAttribute("class", "ps-dialog");
+      document.body.appendChild(modal);
+      compile(modal)(scope);
+      scope.close = close;
+      scope.click = function (btn, event) {
+        let evt = psEvent(event, scope),
+          clickFn = psUltility.getClickFunction(btn);
+        evt.getData = getData;
+        extend(evt, {
+          close: close,
+          submit: submit,
+          upload: upload
+        });
+        clickFn.call(evt, evt);
+      }
+      scope.classfn = function (btn) {
+        return btn.class || "btn btn-default"
+      }
+
+      scope.getData = getData;
+      timeout(function(){
+        clear = psUltility.checkValidateByScope(scope, d => {
+          if(scope.option && scope.option.buttons && scope.option.buttons.length != 0){
+            scope.option.buttons[0].$disabled = !d;
+          }
+        })
+      });
+      function setData (template, data) {
+        recursive(template, "");
+
+        function recursive (node, depth) {
+          if (node.scope) {
+            depth += "." + node.scope;
+          } else if (node.key) {
+            let _key = depth + "." + node.key,
+            v = attribute(data, _key);
+            node[psUltility.keyPattern(node.key)] = ( typeof v == "undefined" )
+              ? node.value : v;
+          }
+          each(node.children, (n) => {
+            recursive(n, depth);
+          });
+        }
+
+        return template;
+      }
+
+      function getData () {
+        let rs = extend({}, data);
+        recursive(rs, scope.option);
+
+        function recursive (rs, node) {
+          if (node.scope) {
+            rs = rs[node.scope] = {};
+          } else if (node.key) {
+            let getter = typeof node.getter == "function"
+              ? node.getter : function (d) {
+                return d
+              }, val = getter(node[psUltility.keyPattern(node.key)]);
+            attribute( rs, node.key, typeof val === "undefined" ? null : val );
+          }
+          each(node.children, (n) => {
+            recursive(rs, n);
+          });
+        }
+
+        return rs;
+      }
+
+      function upload (obj) {
+        let data = getData();
+        let formData = new FormData();
+        let param = obj.before(data, formData);
+        if (param instanceof Array) {
+          for (let key  in param[0]) {
+            formData.append(key, encodeURIComponent(param[0][key]));
+          }
+          formData.append(param[1], param[2]);
+        } else {
+          for (let key in param) {
+            if (param[key] instanceof File) {
+              formData.append(key, param[key]);
+            } else {
+              formData.append(key, encodeURIComponent(param[key]));
+            }
+
+
+          }
+        }
+        ajax.upload(obj.url, formData).then(d => {
+          modal.remove();
+          modal = null;
+          obj.after && obj.after(d);
+        });
+      }
+
+      function submit () {
+        let data = getData();
+        emit("submit", data);
+        modal.remove();
+        modal = null;
+      }
+
+      function close () {
+        emit("close");
+        modal.remove();
+        modal = null;
+        clear && clear();
+      };
+
+      function on (eventname, handler) {
+        events[eventname] = handler;
+      }
+
+      function emit (eventname, data) {
+        typeof events[eventname] === "function" && events[eventname](data);
+      }
+
+      return {
+        on: on,
+        close: close,
+        submit: submit
+      }
+    }
+    function popup(template, data, width) {
+      let scope = rootScope.$new();
+      template.buttons = [{
+        label: "确 定",
+        class: "btn btn-primary btn-100",
+        on: {
+          click: function (e) {
+            this.submit();
+          }
+        }
+      }, {
+        label: "取 消",
+        class: "btn btn-default btn-100",
+        on: {
+          click: function (e) {
+            this.close();
+          }
+        }
+      }];
+      return modal(template, data, scope, width);
+    }
+    function confirm(message, callback) {
+      return infoBox({
+        type: "layout",
+        buttons: [{
+          label: "确定",
+          class: "btn btn-primary",
+          click: function () {
+            typeof callback === 'function' && callback();
+            this.submit();
+          }
+        }, {
+          label: "取消",
+          click: function () {
+            this.close();
+          }
+        }]
+      }, message);
+    };
+
+    function createCache () {
+      let cache = function (attr, val) {
+        if (typeof val !== "undefined") {
+          cache[attr] = val
+        } else {
+          return cache[attr];
+        }
+      }
+      return cache;
+    }
+
+    function createModalTemplate (obj) {
+      onceModalTemplates = createCache();
+      for (var i in obj) {
+        onceModalTemplates(i, obj[i]);
+      }
+    }
+
+    function registerModalTemplate (name, obj) {
+      modalTemplates(name, function () {
+        return deepClone(obj);
+      });
+    }
+
+    function registerAlertTemplate (name, obj) {
+      alertTemplates(name, function () {
+        return deepClone(obj);
+      });
+    }
+
+    function getModelTemplate (name) {
+      return modalTemplates[name];
+    }
+
+    function getAlertTemplate (name) {
+      return alertTemplates[name];
+    }
+
+    registerAlertTemplate("commonAlert", {
+      type: "layout",
+      buttons: [{
+        label: "确定",
+        class: "btn btn-primary",
+        click: function () {
+          this.submit();
+        }
+      }, {
+        label: "取消",
+        click: function () {
+          this.close();
+        }
+      }]
+    })
+    return {
+      infoBox: infoBox,
+      confirm: confirm,
+      modal: modal,
+      popup: popup,
+      voiceWave: voiceWave,
+      registerAlertTemplate: registerAlertTemplate,
+      createModalTemplate: createModalTemplate,
+      registerModalTemplate: registerModalTemplate,
+      getModelTemplate: getModelTemplate,
+      getAlertTemplate: getAlertTemplate
+    };
+  }
+</script>

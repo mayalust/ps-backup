@@ -1,0 +1,200 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,$filter" params="/:id?">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+  import {list2Tree} from "ps-ultility";
+  export default function (scope, ajax, location,psDialog,routeParams,$filter) {
+      scope.layout = {
+          modals : {
+              editModel : {
+                  label : "关联部位",
+                  type : "layout",
+                  children : [{
+                      type : "form-dialog",
+                      data : null,
+                      children : [{
+                          type : "select",
+                          label : "备件名称",
+                          composory: true,
+                          key : "sparePartId",
+                          options : 'sparePartUIService.getAllSpareParts',
+                      },{
+                          type: "tree",
+                          label : "备件使用部位",
+                          composory: true,
+                          key : "devicePartInstanceId",
+                          options : {
+                              url: 'resourceUIService.getDevicePartInstanceByDeviceId',
+                              param: routeParams.id,
+                              after: function (d) {
+                                  return list2Tree(d, (a, b) => {
+                                      return a.parentId == b.id;
+                                  });
+                              }
+                          }
+                      },{
+                          type : "date2",
+                          label : "开始使用时间",
+                          key : "startUseTime"
+                      },{
+                          type : "input",
+                          label : "更换次数",
+                          key : "replaceNum"
+                      }]
+                  }],
+                  buttons : [{
+                      label : "确定",
+                      class : "btn btn-primary",
+                      click : function(){
+                          this.submit();
+                      }
+                  },{
+                      label : "取消",
+                      click : function(){
+                          this.close();
+                      }
+                  }]
+              }
+          },
+          label: '设备备件',
+          children: [{
+              label: '设备备件',
+              type: "panel",
+              children: [{
+                  type: "table",
+                  config: {
+                      attributes: {
+                          "sparePartId": ["备件编码", "text"],
+                          "label": ["备件名称", "dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "label"
+                          }],
+                          "model": ["备件类型", "dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "model"
+                          }],
+                          "specification": ["规格型号", "dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "specification"
+                          }],
+                          "manufacturer": ["生产厂家","dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "manufacturer"
+                          }],
+                          "lifespan": ["使用寿命","dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "lifespan"
+                          }],
+                          "startUseTime": ["开始使用时间","text"],
+                          "imageUrl": ["附件","dict", {
+                              name: "sparePart",
+                              from: "sparePartId",
+                              label: "imageUrl"
+                          }],
+                          "devicePartInstanceId": ["备件使用部位" ,"dict", {
+                              name: "devicePartInstance",
+                              from: "devicePartInstanceId"
+                          }],
+                          "replaceNum": ["更换次数", "text"]
+                      },
+                      grid: {
+                          body: ["sparePartId","label","model", "specification","manufacturer",{
+                              name: "lifespan",
+                              bind : function (row,relate){
+                                  if(null != relate && "" != relate){
+                                      return relate + "天";
+                                  }
+                              }
+                          },{
+                              name : "startUseTime",
+                              bind : function (row){
+                                  return $filter('date')(row.startUseTime,'yyyy-MM-dd HH:mm:ss');
+                              }
+                          },{
+                              name: "imageUrl",
+                              bind : function (row,relate){
+                                  if(null != relate && "" != relate){
+                                      return row.__get__('sparePart').label + "." + relate.split(".")[1];
+                                  }
+                              }
+                          },"devicePartInstanceId" ,"replaceNum"],
+                          buttons: {
+                              outGrid: [{
+                                  label: " 添加备件",
+                                  class: "primary",
+                                  icon: "fa fa-plus",
+                                  on: {
+                                      click : function(e){
+                                          e.add({
+                                              template : "editModel",
+                                              before : function(d){
+                                                  //d.parentDevicePartId = e.$row.id;
+                                                  d.deviceId = routeParams.id;
+                                                  ajax.post("resourceUIService.getDevicePartInstanceById", [d.devicePartInstanceId]).then((msg)=>{
+                                                      d.devicePartPath = msg.devicePartPath;
+                                                   });
+                                                  return d;
+                                              },
+                                              url : "sparePartUIService.saveSpareUsePart",
+                                              after : function(d){
+                                                  return d;
+                                              }
+                                          });
+                                      }
+                                  }
+                              }],
+                              inGrid: [{
+                                  label: "编辑",
+                                  class: "btn btn-primary",
+                                  on: {
+                                      click: function (e) {
+                                          e.update({
+                                              template : "editModel",
+                                              before : function(d){
+                                                  return d;
+                                              },
+                                              url : "sparePartUIService.saveSpareUsePart"
+                                          });
+                                      }
+                                  }
+                              },{
+                                  label: "删除",
+                                  class: "btn btn-default",
+                                  on: {
+                                      click: function (e) {
+                                          e.remove({
+                                              before : function(d){
+                                                return e.$row.id;
+                                              },
+                                              url : "sparePartUIService.deleteSpareUsePart"
+                                          });
+                                      }
+                                  }
+                              }]
+                          },
+                          config: {
+                              url: 'sparePartUIService.getSpareUsePartByDeviceId',
+                              parameter: routeParams.id,
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false
+                          },
+                          options: []
+                      }
+                  }
+              }]
+          }]
+      }
+  };
+</script>
+<style type="less">
+</style>

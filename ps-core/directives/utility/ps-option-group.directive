@@ -1,0 +1,46 @@
+<config injector="$q,$timeout,$rootScope,$compile,psUi"></config>
+<template>
+  <div class="btn-group btn-group-sm">
+    <button ng-if="moreclick"
+        class="btn btn-default dropdown-toggle"
+        ng-click="$parent.moreclick( $event )"
+        >更多<span class="caret"></span>
+    </button>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function(q,timeout,rootScope,compile,psUi){
+    return {
+      scope : false,
+      replace : true,
+      restrict : "A",
+      transclude : true,
+      link(scope, element, attr, ngModel, transclude) {
+        element.css("display", "none");
+        transclude( clone => {
+          element.append( clone );
+          timeout( d => {
+            let buttons = element.children()
+              .filter((i,e)=>{
+              if( e.nodeName !== "BUTTON"){ return false; }
+              return getComputedStyle(e).getPropertyValue("display") !== "none";
+            }), btnDisp, btnDrop;
+            element.children().remove();
+            if( buttons.length > 3 ){
+              btnDisp = buttons.slice(0, 2);
+              btnDrop = buttons.slice(2);
+              scope.moreclick = ({ currentTarget }) => psUi.createDropAngular( currentTarget, btnDrop, scope );
+            } else {
+              btnDisp = buttons;
+            };
+            element.prepend(btnDisp);
+            compile(btnDisp)(scope);
+            element.css("display", "block");
+          });
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+</style>

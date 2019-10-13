@@ -1,0 +1,153 @@
+<config injector=""
+></config>
+<template>
+  <table>
+    <tr class="row" style="display: block;">
+      <td
+        class="col-md-2"
+        style="padding: 3px; text-align: center; position: relative;"
+      >
+        <span style="display: inline-block; width: 10px;"
+          ><span></span>
+          <div
+            id="900"
+            style="font-size: 20px; top: 5px; position: absolute; color: rgba(0, 0, 0, 0);"
+          >
+            *
+          </div></span
+        ><span>区域</span>
+      </td>
+      <td
+        class="col-md-3"
+        style="padding: 3px; text-align: center; position: relative;"
+      >
+        <span style="display: inline-block; width: 10px;"
+          ><span></span>
+          <div
+            id="6486"
+            style="font-size: 20px; top: 5px; position: absolute; color: rgba(0, 0, 0, 0);"
+          >
+            *
+          </div></span
+        ><span>综合诊断准确率</span>
+      </td>
+      <td
+        class="col-md-3"
+        style="padding: 3px; text-align: center; position: relative;"
+      >
+        <span style="display: inline-block; width: 10px;"
+          ><span></span>
+          <div
+            id="5253"
+            style="font-size: 20px; top: 5px; position: absolute; color: rgba(0, 0, 0, 0);"
+          >
+            *
+          </div></span
+        ><span>智能诊断准确率</span>
+      </td>
+      <td
+        class="col-md-4"
+        style="padding: 3px; text-align: center; position: relative;"
+      >
+        <span style="display: inline-block; width: 10px;"
+          ><span></span>
+          <div
+            id="4744"
+            style="font-size: 20px; top: 5px; position: absolute; color: rgba(0, 0, 0, 0);"
+          >
+            *
+          </div></span
+        ><span>大数据预警准确率</span>
+      </td>
+    </tr>
+    <tr class="row" style="display: block;">
+      <td
+        class="col-md-2"
+        style="padding: 3px; text-align: left; position: relative;"
+      >
+        <span style="display: inline-block; width: 10px;"
+          ><span></span>
+          <div
+            id="4707"
+            style="font-size: 20px; top: 5px; position: absolute; color: rgba(0, 0, 0, 0);"
+          >
+            *
+          </div></span
+        ><span>SP侧压机</span>
+      </td>
+      <td class="col-md-3" style="padding: 3px;">
+        <div style="display:table;">
+          <td style="vertical-align: middle; text-align: right;">
+            <span style="width:35px;display:inline-block;padding-right:2px;"
+              >0%</span
+            >
+          </td>
+          <td style="vertical-align: middle; width: 100%;">
+            <div class="progress sm" style="margin: auto;">
+              <div
+                class="progress-bar progress-bar-danger"
+                style="width: 0%;"
+              ></div>
+            </div>
+          </td>
+        </div>
+      </td>
+      <td class="col-md-3" style="padding: 3px;">
+        <div style="display:table;">
+          <td style="vertical-align: middle; text-align: right;">
+            <span style="width:35px;display:inline-block;padding-right:2px;"
+              >0%</span
+            >
+          </td>
+          <td style="vertical-align: middle; width: 100%;">
+            <div class="progress sm" style="margin: auto;">
+              <div
+                class="progress-bar progress-bar-danger"
+                style="width: 0%;"
+              ></div>
+            </div>
+          </td>
+        </div>
+      </td>
+      <td class="col-md-4" style="padding: 3px;">
+        <div style="display:table;">
+          <td style="vertical-align: middle; text-align: right;">
+            <span style="width:35px;display:inline-block;padding-right:2px;"
+              >0%</span
+            >
+          </td>
+          <td style="vertical-align: middle; width: 100%;">
+            <div class="progress sm" style="margin: auto;">
+              <div
+                class="progress-bar progress-bar-danger"
+                style="width: 0%;"
+              ></div>
+            </div>
+          </td>
+        </div>
+      </td>
+    </tr>
+  </table>
+</template>
+<script type="text/javascript">
+export default function() {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?",
+      options: "@"
+    },
+    require: "?ngModel",
+    link(scope, element, attr, ngModel) {}
+  };
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+  margin: 5px;
+  padding: 10px;
+  color: #333;
+  background-color: #eee;
+  border: 1px solid #ddd;
+}
+</style>

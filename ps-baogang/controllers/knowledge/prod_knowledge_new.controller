@@ -1,0 +1,382 @@
+<config injector="$scope,$q,$timeout,$state,$location,$registerService,ajax,commonMethodService2,commonMethodService,growl,userUIService,psLoading,psDialog"
+        params="/:userID"
+        deps="knowledgeDialog"
+></config>
+<template>
+  <section class="content" id="alerts">
+    <div class="row" style="max-height: calc(100vh - 115px); overflow-y: auto;">
+      <div class="col-md-12">
+        <div>
+          <div class="block margin-5 padding-5">
+            <div class="row">
+              <div class="col-md-2 item">
+                <label class="form-label">维度：</label>
+                <ps-select
+                    ng-model="dimension"
+                    data-options="item.valueCode as item.label for item in dimensions"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">知识库类型1：</label>
+                <ps-select
+                    ng-model="knowledgeType1"
+                    data-options="item.valueCode as item.label for item in knowledgeType1s"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">知识库类型2：</label>
+                <ps-select
+                    ng-model="knowledgeType2"
+                    data-options="item.valueCode as item.label for item in knowledgeType2s"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">知识库类型3：</label>
+                <ps-select
+                    ng-model="deviceUserType"
+                    data-options="item.valueCode as item.label for item in deviceUserTypes"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">知识库类型4：</label>
+                <div>
+                  <ps-select
+                      ng-model="caseType"
+                      data-options="item.valueCode as item.label for item in caseTypes"
+                  ></ps-select>
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">知识名称：</label>
+                <div>
+                  <input ng-model="name"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="pull-right padding-top-10">
+                  <button class="btn btn-primary" ng-click="search()">查询</button>
+                  <button class="btn btn-default" ng-click="reset()">清除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="block margin-5 padding-5">
+            <button class="btn btn-primary pull-right" ng-click="addNewKnowledge()" ng-if="roleID == '203520296708742'">新增知识</button>
+            <div class="table-title pull-left">知识库</div>
+            <div class="wrap">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="wrap">
+                    <table ps-table-sync="false"
+                           data-current="current"
+                           data-source="getKnowledgeSimpleByConditionWithPage"
+                           data-page="page">
+                      <thead>
+                      <tr>
+                        <th>维度</th>
+                        <th>知识库类型1</th>
+                        <th>知识库类型2</th>
+                        <th>知识库类型3</th>
+                        <th>知识库类型4</th>
+                        <th>知识名称</th>
+                        <th>时间</th>
+                        <th>责任人</th>
+                        <th>操作</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr ng-repeat="item in items">
+                        <td>
+                          <span ng-bind="item.dimension"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.knowledgeType1"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.knowledgeType2"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.deviceUserType"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.caseType"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.name"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.getUpdateTime()"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.updateUserName"></span>
+                        </td>
+                        <td style="width:160px">
+                          <div ps-option-group>
+                            <button class="btn btn-primary" ng-click="item.download()">下载</button>
+                            <button class="btn btn-default" ng-click="item.edit()" ng-if="roleID == '203520296708742'">编辑</button>
+                            <button class="btn btn-default" ng-click="item.remove()" ng-if="roleID == '203520296708742'">删除</button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+<script>
+  import { dateparser, extend, isArray } from "ps-ultility"
+  export default function( scope,q,timeout,$state,location,registerService,ajax,cms2,commonMethodService,growl,userUIService,psLoading,psDialog){
+    let getKnowledgeSimpleByConditionWithPage = "knowledgeUIService.getKnowledgeSimpleByConditionWithPage",
+      deleteKnowledgeSimple = "knowledgeUIService.deleteKnowledgeSimple",
+      target = commonMethodService(),
+      root = scope.$root.$$childHead;
+      scope.roleID = target.getCurrentUser().usercurrentRoleID; //203520296708742  知识文档管理员
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      download(){
+        let url = userUIService.uploadFileUrl + this.fileList[0].filePath;
+        window.open(url);
+      }
+      remove(){
+          psDialog.confirm("确定要删除吗？", () => {//es6防止改变this
+            ajax.post(deleteKnowledgeSimple, this).then( d => {
+              growl.success("删除知识成功");
+              scope.reset();
+            });
+          });
+
+      }
+      edit(){
+        cms2.modal({
+          title : "知识详情",
+          directive : "knowledge-dialog",
+          width : 800,
+          scope : scope,
+          params : extend({}, this),
+        }).then( s => {
+          if(typeof s !== "undefined" || s !== null){
+            let files = s.fileList,
+              newAdd = files.filter( d => d.name );
+            s.fileList = files.filter( d => d.fileName );
+            function uploadFile(){
+              let formData = new FormData();
+              formData.append("resourceId", 1 );
+              newAdd.forEach((v,i)=>{
+                formData.append(`file${i}`,v);
+              });
+              return ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+                let rs = []
+                if(d.code == "0"){
+                  let obj = {};
+                  if(isArray(d.data)){
+                    d.data.forEach((v,i)=>{
+                      obj = {};
+                      obj["fileName"] = newAdd[i].name;
+                      obj["filePath"] = v.qualifiedName;
+                      rs.push(obj);
+                    })
+                  }else {
+                    obj["fileName"] = newAdd[0].name;
+                    obj["filePath"] = d.data.qualifiedName;
+                    rs.push(obj);
+                  }
+                  return cms2.success(rs);
+                }
+              })
+            }
+            ( newAdd.length > 0 ? uploadFile() : cms2.success([])).then( d => {
+              [].push.apply(s.fileList, d);
+              if(s.fileList && s.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空!");
+              }else {
+                s.name = s.fileList[0].name || s.fileList[0].fileName;
+                psLoading.showLoading();
+                ajax.post("knowledgeUIService.addKnowledgeSimple",s).then(function (d) {
+                  if(d != null){
+                    psLoading.closeLoading();
+                    growl.success("编辑成功！");
+                    scope.reset();
+                  }
+                });
+              }
+            })
+          }
+        })
+      }
+      getUpdateTime(){
+        return dateparser(this.updateDate).getDateString("yyyy-MM-dd hh:mm:ss");
+      }
+    }
+    function getMyDicts(){
+      let defer = q.defer(),
+        clear = root.$watch("myDicts", d => {
+          if( typeof d !== "undefined"){
+            defer.resolve( d )
+            clear();
+          }
+        });
+      return defer.promise;
+    }
+    function createRenderFunction( ){
+      return function( page, pageSize ){
+        let query = function(){
+            let rs = {};
+            if( scope.dimension ){
+              rs.dimension = scope.dimension;
+            }
+            if( scope.knowledgeType1 ){
+              rs.knowledgeType1 = scope.knowledgeType1;
+            }
+            if( scope.knowledgeType2 ){
+              rs.knowledgeType2 = scope.knowledgeType2;
+            }
+            if( scope.deviceUserType ){
+              rs.deviceUserType = scope.deviceUserType;
+            }
+            if( scope.caseType ){
+              rs.caseType = scope.caseType;
+            }
+            if( scope.name ){
+              rs.name = scope.name;
+            }
+            return rs;
+          },
+          params = [query(),{
+            "start":page * pageSize,
+            "length":pageSize,
+            "statCount":true
+          }];
+        return ajax.post(getKnowledgeSimpleByConditionWithPage, params).then( dt => {
+          dt.data = dt.data.map( d => new tableCell(d))
+          return cms2.success( dt );
+        });
+      }
+    }
+    getMyDicts().then( myDicts => {
+      function getDiction(attr){
+        return myDicts[attr];
+      }
+      scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      scope.dimensions = getDiction("dimension");
+      scope.knowledgeType1s = getDiction("knowledgeType1");
+      scope.knowledgeType2s = getDiction("knowledgeType2");
+      scope.deviceUserTypes = getDiction("deviceUserType");
+      scope.caseTypes = getDiction("caseType");
+      scope.search = function(){
+        scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      }
+      scope.reset = function(){
+        scope.dimension
+          = scope.knowledgeType2
+          = scope.knowledgeType1
+          = scope.deviceUserType
+          = scope.caseType
+          = scope.name
+          = undefined;
+        scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      }
+    })
+    scope.addNewKnowledge = function(){
+      cms2.modal({
+        title : "知识详情",
+        directive : "knowledge-dialog",
+        width : 800,
+        scope : scope,
+        params : {},
+      }).then( s => {
+        let formData = new FormData(), files = s ? s.fileList : [] ;
+        formData.append("resourceId", 1 );
+        if(typeof s !== "undefined"){
+          if(s.fileList && s.fileList.length){
+            s.fileList.forEach((v,i)=>{
+              formData.append(`file${i}`,v);
+            });
+            s.fileList = [];
+            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+              if(d.code == "0"){
+                let obj = {};
+                if(isArray(d.data)){
+                  d.data.forEach((v,i)=>{
+                    obj = {};
+                    obj["fileName"] = files[i].name;
+                    obj["filePath"] = v.qualifiedName;
+                    s.fileList.push(obj);
+                  })
+                }else {
+                  obj["fileName"] = files[0].name;
+                  obj["filePath"] = d.data.qualifiedName;
+                  s.fileList.push(obj);
+                }
+                return cms2.success( s );
+              }
+            }).then(function (d) {
+              if(d.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空！");
+              }else {
+                psLoading.showLoading();
+                ajax.post("knowledgeUIService.addKnowledgeSimple",d).then(function (d) {
+                  if(d != null){
+                    psLoading.closeLoading();
+                    // growl.info("附件不能为空！");
+                    growl.success("新增成功！");
+                    scope.reset();
+                  }
+                })
+              }
+            });
+          }else{
+            psLoading.closeLoading();
+            growl.info("附件不能为空！");
+          }
+        }
+      })
+    }
+  }
+</script>
+<style lang="less" scoped>
+  table{
+    td {
+      height : 28px !important;
+    }
+  }
+  .margin-5{
+    margin : 5px;
+  }
+  .item {
+    padding : 5px !important;
+  }
+  .padding-5{
+    padding : 5px;
+  }
+  label.form-label{
+    text-align: center;
+  }
+  .wrap {
+    padding : 10px 0px !important;
+    a {
+      cursor : pointer;
+      font-weigh : bold;
+    }
+    .drop{
+      float : left;
+      width : 200px;
+    }
+    .option{
+      width : 160px;
+    }
+  }
+</style>

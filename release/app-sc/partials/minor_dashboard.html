@@ -1,0 +1,9 @@
+<section>
+    <div class="nav nav-tabs">
+        <li ng-click="minorNavToPage(item)" ng-class="{'active':item.index == minor_active_index}" style="cursor:pointer;"
+            ng-repeat="item in mintabs">
+            <a><span style="margin-right: 3px;"></span>{{item.name}}</a>
+        </li>
+    </div>
+    <ui-view></ui-view>
+</section>

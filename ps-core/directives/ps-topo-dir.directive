@@ -1,0 +1,67 @@
+<config injector="$rootScope,$q,ajax,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo,commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <div class="tree-loading ng-scope" ng-if="!loaded" data-a-58306b0e=""></div>
+    <div class="empty" ng-if="empty">没发现配置视图</div>
+    <div class="topo"></div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  rootScope,
+  q,
+  ajax,
+  SwSocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTopo,
+  commonMethodService
+) {
+  return {
+    scope: {
+      init: "&",
+      complete: "&"
+    },
+    link(scope, element, attr) {
+      scope.loaded = false;
+      let ins = commonMethodService({}, scope);
+      ins.element = element.find(".topo");
+      ins.advance = {
+        expression: {
+          on: {
+            init: function(event) {
+              scope.init({
+                event: event
+              });
+            },
+            complete: function(event) {
+              scope.loaded = true;
+              scope.complete();
+            },
+            empty: function(event) {
+              scope.loaded = true;
+              scope.empty = true;
+            }
+          }
+        }
+      };
+      let topo = {
+        element: ins,
+        previewMode: true
+      };
+      element.append(psTopo(topo));
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.empty {
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  position: absolute;
+  margin-top: -15px;
+}
+</style>

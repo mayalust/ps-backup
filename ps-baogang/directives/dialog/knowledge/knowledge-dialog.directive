@@ -1,0 +1,131 @@
+<config injector="$q,$rootScope,growl,commonMethodService2"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>维度:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.dimension"
+                data-options="item.valueCode as item.label for item in dimensions"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">知识库类型1:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.knowledgeType1"
+                data-options="item.valueCode as item.label for item in knowledgeType1s"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">知识库类型2:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.knowledgeType2"
+                data-options="item.valueCode as item.label for item in knowledgeType2s"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">知识库类型3:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.deviceUserType"
+                data-options="item.valueCode as item.label for item in deviceUserTypes"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">知识库类型4:</span>
+          </td>
+          <td>
+            <ps-select
+                ng-model="params.caseType"
+                data-options="item.valueCode as item.label for item in caseTypes"
+            ></ps-select>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right"><span style="color: red;">*</span>附件:</span>
+          </td>
+          <td>
+            <ps-file2 ng-model="params.fileList"></ps-file2>
+          </td>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(q,rootScope,growl,cms2){
+    return {
+      link(scope, element, attr) {
+        scope.submitFn = function(){
+          let promise = cms2.validate({
+            "params.dimension" : "维度不可为空",
+           /* "params.knowledgeType1" : "知识库类型1不可为空",
+            "params.knowledgeType2" : "知识库类型2不可为空",
+            "params.deviceUserType" : "（设备/人员）类型不可为空",
+            "params.caseType" : "方案类型不可为空"*/
+          }, scope);
+          promise.then(() => {
+            scope.submit(scope.params);
+          }).catch(e => {
+            growl.error( e );
+          })
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  table.item{
+    width : 100%;
+    td.title{
+      width : 130px;
+    }
+  }
+  .wrap{
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 5px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

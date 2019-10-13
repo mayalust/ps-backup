@@ -1,0 +1,497 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="element-row">
+      <div class="topo with-border">
+        <ps-topo-common></ps-topo-common>
+      </div>
+    </div>
+    <div class="element-row">
+      <div class="temperature with-border">
+        <div class="title">
+          <h5 style="margin: 0;">滚筒温度</h5>
+        </div>
+        <div class="temperature-left">
+          <div
+            class="temperature-item title-wrap"
+            ng-repeat="i in dataItemsLen"
+          >
+            <div>
+              <label>L侧温度</label>
+            </div>
+            <div class="status-wrap">
+              <label>R侧温度</label>
+            </div>
+          </div>
+        </div>
+        <div class="temperature-right">
+          <div class="temperature-item" ng-repeat="item in dataItems">
+            <div class="temperature-wrap with-border">
+              <p class="title">{{ item.label }}</p>
+              <div
+                class="status-wrap button"
+                ng-click="item.clickL()"
+                data-show-time="item.getArisingTimeL()"
+              >
+                <label class="status" ng-class="item.getClassL()">{{
+                  item.getValueL()
+                }}</label>
+              </div>
+              <div
+                class="status-wrap button"
+                ng-click="item.clickR()"
+                data-show-time="item.getArisingTimeR()"
+              >
+                <label class="status" ng-class="item.getClassR()">{{
+                  item.getValueR()
+                }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="element-row">
+      <div class="alarm with-border">
+        <h5 style="margin: 0;">报警通知</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly1"
+          data-source="resources1"
+          data-filter="filter1"
+          data-sort="sort1"
+          data-page="page1"
+        >
+          <thead>
+            <tr>
+              <th>产线</th>
+              <th>设备信息</th>
+              <th>报警来源</th>
+              <th>报警消息</th>
+              <th>报警级别</th>
+              <th>报警时间</th>
+              <th>报警状态</th>
+              <th class="option">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary">过程跟踪</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="diagnosis-report with-border">
+        <h5 style="margin: 0;">离线诊断</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly2"
+          data-source="resources2"
+          data-filter="filter2"
+          data-sort="sort2"
+          data-page="page2"
+        >
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>专业</th>
+              <th>报告编号</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  let dataItemMap = {},
+    statusItemMap = {},
+    clear,
+    webSocket;
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+  }
+  class dataItemCell {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+      this.kpiL = this.kpis[0].dataItemId;
+      this.kpiR = this.kpis[1].dataItemId;
+    }
+    clickL() {
+      cms2.navigateTo("专业分析", {
+        id: state.params.id,
+        sensor: this.name,
+        kpiId: this.kpiL
+      });
+    }
+    clickR() {
+      cms2.navigateTo("专业分析", {
+        id: state.params.id,
+        sensor: this.name,
+        kpiId: this.kpiR
+      });
+    }
+    getArisingTimeL() {
+      let val = attr(dataItemMap, `${this.name}/${this.kpiL}/arisingTime`);
+      return val || undefined;
+    }
+    getArisingTimeR() {
+      let val = attr(dataItemMap, `${this.name}/${this.kpiR}/arisingTime`);
+      return val || undefined;
+    }
+    getValueL() {
+      let val = attr(dataItemMap, `${this.name}/${this.kpiL}/value`);
+      return val ? val : "--";
+    }
+    getValueR() {
+      let val = attr(dataItemMap, `${this.name}/${this.kpiR}/value`);
+      return val ? val : "--";
+    }
+    getClassL() {
+      let state = attr(statusItemMap, `${this.name}/${this.kpiL}`);
+      return `state-${state ? state : 0}`;
+    }
+    getClassR() {
+      let state = attr(statusItemMap, `${this.name}/${this.kpiR}`);
+      return `state-${state ? state : 0}`;
+    }
+  }
+  function createBaseKpiQuery() {
+    return {
+      category: "ci",
+      isRealTimeData: true,
+      includeInstance: true,
+      timePeriod: 0,
+      startTime: null,
+      endTime: null,
+      timeRange: "",
+      statisticType: "psiot",
+      condList: []
+    };
+  }
+  function getKpiValueList(ciIds, kpiIds, sensors) {
+    let kpiQuery = createBaseKpiQuery(),
+      params = ["kpi", kpiQuery];
+    kpiQuery.nodeIds = ciIds;
+    kpiQuery.kpiCodes = kpiIds;
+    kpiQuery.queryInstances = sensors.map(s => s.name).join(",");
+    return ajax.post("kpiDataFlexService.getKpiValueList", params);
+  }
+  function getKpiStatus(ciIds) {
+    let kpiQuery = createBaseKpiQuery(),
+      params = ["kpi", kpiQuery];
+    kpiQuery.nodeIds = ciIds;
+    kpiQuery.kpiCodes = [999997];
+    return ajax.post("kpiDataFlexService.getKpiValueList", params);
+  }
+  function changeValue(valuelist) {
+    valuelist.forEach(value => {
+      let instance = value.instance,
+        kpiCode = value.kpiCode;
+      if (instance === null) {
+        return;
+      }
+      dataItemMap[instance] = dataItemMap[instance] || {};
+      dataItemMap[instance][kpiCode] = value;
+    });
+  }
+  function changeStatus(statuslist) {
+    statuslist.forEach(value => {
+      let instance = value.instance,
+        kpiCode;
+      if (typeof instance !== "string") {
+        return;
+      }
+      kpiCode = instance.split("_")[0];
+      instance = instance.split("_")[1];
+      statusItemMap[instance] = statusItemMap[instance] || {};
+      statusItemMap[instance][kpiCode] = value.value;
+    });
+  }
+  function $apply(fn) {
+    if (scope.$$eventPhase != "$apply" && scope.$$eventPhase != "$digest") {
+      scope.$apply(fn);
+    } else {
+      fn();
+    }
+  }
+  function render() {
+    let LoopGetKpiValueList, timer;
+    clear = function() {
+      LoopGetKpiValueList = null;
+      clearTimeout(timer);
+      timer = null;
+    };
+    psTreeData(state.params.id)
+      .getMeasureLocate()
+      .then(sensors => {
+        scope.dataItems = sensors
+          .filter(d => d.name != "00")
+          .map(d => new dataItemCell(d));
+        let ciIds = [state.params.id - 0],
+          kpiIds = sensors[0].kpis
+            .filter(d => d.dataItemId)
+            .map(d => d.dataItemId);
+        LoopGetKpiValueList = () => {
+          getKpiValueList(ciIds, kpiIds, sensors).then(valuelist => {
+            getKpiStatus(ciIds).then(statuslist => {
+              changeValue(valuelist);
+              changeStatus(statuslist);
+              timer = setTimeout(() => {
+                LoopGetKpiValueList && LoopGetKpiValueList();
+              }, 6000);
+            });
+          });
+        };
+        LoopGetKpiValueList();
+        /* getKpiValueList(ciIds, kpiIds, sensors).then(valuelist => {
+        return getKpiStatus(ciIds).then(statuslist => {
+          changeValue(valuelist);
+          changeStatus(statuslist);
+          webSocket = psWebsocket("rollerGroup");
+          webSocket.on(d => {
+            let kpiCode = value.kpiCode;
+            $apply(() => {
+              if (kpiCode == 999997) {
+                changeStatus([d]);
+                return;
+              }
+              changeValue([d]);
+            });
+          });
+          webSocket.send(ciIds, kpiIds.concat([999997]));
+        });
+      }); */
+      })
+      .catch(e => {
+        console.error(e);
+      });
+    return clear;
+  }
+
+  function attr(obj, path) {
+    let attrs = path.split("/"),
+      attr,
+      target = obj;
+    while ((attr = attrs.shift()) && target) {
+      target = target[attr];
+    }
+    return target;
+  }
+  function createArr(num) {
+    let rs = [];
+    for (let i = 0; i < num; i++) {
+      rs.push(i);
+    }
+    return rs;
+  }
+  scope.$watch("dataItems.length", (n, o, s) => {
+    if (typeof n == "number") {
+      s.dataItemsLen = createArr(Math.ceil(n / 9));
+    }
+  });
+  cms().getDomainAreaLineTree_alertStatus(function(find) {
+    let id = state.params.id;
+    ajax
+      .post("alertQueryFlexService.getAlertByPage", [
+        {
+          domain: "",
+          nodeType: "",
+          pageSize: 1000,
+          severities: "1,2,3,4",
+          states: "0,5,10,20",
+          nodeIds: id
+        },
+        {
+          start: 0,
+          length: "",
+          sort: "createTime",
+          sortType: "desc",
+          statCount: true,
+          total: 0
+        }
+      ])
+      .then(d => {
+        scope.resources2 = d.data.map(b => new tableCell(b));
+        if (find.category == "Device" && find.externalDevId) {
+          return ajax.post(
+            "deviceResumeUIService.getDeviceOfflineReportListByCondition",
+            {
+              devId: find.externalDevId
+            }
+          );
+        }
+      })
+      .then(d => {
+        scope.resources1 = d.map(b => new tableCell(b));
+      })
+      .catch(e => {
+        console.error(e);
+      });
+  });
+  clear = render();
+  scope.$on("$destroy", () => {
+    clear();
+    //webSocket.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+.element-row {
+  display: flex;
+  .topo {
+    flex: 3;
+    margin: 10px;
+    padding: 40px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+  .value-box,
+  .alarm,
+  .diagnosis-report {
+    flex: 1;
+    margin: 10px;
+  }
+  .temperature {
+    width: 100%;
+    margin: 10px;
+    display: flex;
+    padding: 5px;
+    flex-wrap: wrap;
+    .title {
+      width: 100%;
+    }
+    .temperature-left {
+      display: flex;
+      width: 5%;
+      flex-wrap: wrap;
+    }
+    .temperature-right {
+      display: flex;
+      width: 95%;
+      flex-wrap: wrap;
+    }
+    .temperature-item {
+      width: 10%;
+      padding: 10px;
+      &.title-wrap {
+        width: 70px;
+        padding-top: 50px;
+        padding-left: 20px;
+      }
+      .temperature-wrap {
+        .title {
+          margin: 0;
+          padding: 8px 5px;
+          text-align: center;
+          background: #214770;
+        }
+        .status-wrap {
+          text-align: center;
+          padding: 3px 10px;
+          &.button {
+            padding-top: 6px;
+            label {
+              cursor: pointer;
+            }
+          }
+        }
+      }
+    }
+  }
+  .value-box {
+    padding: 10px;
+    .value-item {
+      &-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      &-kpi {
+        display: flex;
+        padding: 5px 0;
+        .label {
+          color: rgb(170, 170, 170);
+          text-align: right;
+          flex: 1;
+        }
+        .status-box {
+          flex: 2;
+          padding-left: 20px;
+        }
+      }
+    }
+  }
+  .alarm,
+  .diagnosis-report {
+    padding: 10px;
+  }
+}
+
+.status {
+  height: 20px;
+  line-height: 20px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  width: 90px;
+  color: #fff;
+  text-align: center;
+  &.state-0 {
+    background-color: #00bb7b;
+  }
+  &.state-1 {
+    background-color: #00bb7b;
+  }
+  &.state-2 {
+    background-color: #efd80b;
+  }
+  &.state-3 {
+    background-color: #ff8800;
+  }
+  &.state-4 {
+    background-color: #fd0001;
+  }
+}
+
+.with-border {
+  border: 1px solid #25729d;
+}
+</style>

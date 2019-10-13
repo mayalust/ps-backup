@@ -1,0 +1,221 @@
+<config injector="$scope,$timeout,$state,$registerService,ajax,commonMethodService2,growl,psLoading"
+        params="/:userID"
+></config>
+<template>
+  <section class="content" id="alerts">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-header">
+            <div class="box-tools pull-left nav-tabs-header">
+              <ul class="nav nav-tabs">
+                <li ng-class="{true : 'active'}[nav.active]"
+                    ng-click="nav.click()"
+                    ng-repeat="nav in navigators">
+                  <a ng-bind="nav.label"></a>
+                </li>
+              </ul>
+            </div>
+            <div class="box-tools pull-right">
+              <span class="history-btn" role="button"
+                    ng-click="back();"><i class="proudsmart ps-back-01"></i></span>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-3">
+                <table style="width:100%;">
+                  <td style="width:100px;">
+                    <label class="form-label">选择管理域：</label>
+                  </td>
+                  <td>
+                    <ps-tree
+                        ng-model="domain"
+                        data-change="treeSelect(domain)"
+                        data-options="item.id as item.label for item in allDomains"
+                    ></ps-tree>
+                  </td>
+                </table>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-primary" ng-click="save()">
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="box-footer">
+            <div class="wrap">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="wrap">
+                    <table ps-table-sync
+                           data-current="current"
+                           data-source="domains"
+                           data-filter="filter"
+                           data-sort="sort"
+                           data-page="page">
+                      <thead>
+                      <tr>
+                        <th>域名称</th>
+                        <th>域描述</th>
+                        <th class="option">操作</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr ng-repeat="item in items">
+                        <td>
+                          <span ng-bind="item.label"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.description"></span>
+                        </td>
+                        <td>
+                          <div ps-option-group>
+                            <button class="btn btn-primary" ng-click="item.remove()">
+                              <i class="fa fa-trash  hidden-lg hidden-md hidden-sm"></i>
+                              删除
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+<script>
+  export default function( scope,timeout,$state,registerService,ajax,cms2,growl,psLoading){
+    let queryUserByCondition = "userUIService.queryUserByCondition",
+      getResourceByModelId = "resourceUIService.getResourceByModelId",
+      domainMap = {},
+      userInfo = null,
+      userID = $state.params.userID;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      remove(){
+        scope.domains = scope.domains.filter( d => d !== this );
+      }
+    }
+    function getDomainId( domainPath){
+      var match = /\/(\d+)\/$/.exec( domainPath );
+      return match ? match[1] - 0 : null;
+    }
+    function getParents( d ){
+      if( typeof d === "undefined"){
+        return;
+      }
+      let domainPath = d.domainPath,
+        id = d.id, item, rs = [],
+        queue = domainPath.split("/").slice(1,-1);
+      while( item = queue.shift()){
+        if( item == id){
+          return rs;
+        }
+        rs.push( item - 0 );
+      }
+      return null;
+    }
+    scope.current = null;
+    ajax.post(queryUserByCondition, {
+      userID : userID
+    }).then( user => {
+      userInfo = user[0];
+      let domainIds = userInfo.domainIds.split(",").map( d => d - 0),
+        userDomainId = getDomainId( userInfo.domainPath );
+      return ajax.post(getResourceByModelId, 300).then( domains => {
+        return ajax.post(getResourceByModelId, 301).then( customer => {
+          return ajax.post(getResourceByModelId, 302).then( project => {
+            return cms2.success(domains.concat(customer).concat(project));
+          });
+        });
+      }).then( domains => {
+        domainMap = domains.reduce( (a, b) => {
+          a[b.id] = b;
+          return a;
+        }, {});
+        let allIds = domainIds.concat(userDomainId);
+        domainIds = allIds.reduce( (a, b) => {
+          let parents = getParents( domainMap[b] ).concat( [b] );
+          if(allIds.filter( d => d !== b ).every( (id) => {
+              return parents.indexOf( id ) == -1;
+            })){
+            a[ b ] = domainMap[ b ];
+          }
+          return a;
+        }, {});
+        scope.allDomains = domains;
+        scope.domains = domains.filter(d => domainIds[d.id] ).map( d => new tableCell(d));
+      });
+    });
+    scope.navigators = [{
+      label : "域授权",
+      active : true
+    },{
+      label : "数据授权",
+      click : function(){
+        $state.go("prod_authorize_device", {
+          userID : userID
+        });
+      }
+    }];
+    scope.save = function(){
+      let domainIds = scope.domains.map( d => d.id).join(",");
+      userInfo.domainIds = domainIds;
+      //return;
+      ajax.post("userUIService.modifyUser", userInfo).then( d => {
+        growl.success("领授权完成");
+      }).catch( e => {
+        growl.error( e );
+      })
+    }
+    scope.back = function(){
+      window.location.href = "/app-oc/index.html#/usermanager";
+    }
+    scope.treeSelect = function(domain) {
+      domain = domain - 0;
+      let selDomainsParents = scope.domains.reduce(function(a,b){
+          let arr = getParents(domainMap[b.id]);
+          return a.concat(arr.filter( c => a.indexOf( c ) == -1));
+        },[]),
+        domainParents = getParents(domainMap[domain]);
+      if(selDomainsParents.indexOf(domain) !== -1){
+        growl.warning("所选域不可为当前所选域的父域");
+        return;
+      }
+      if(domainParents.some( d => scope.domains.some(({id}) => id == d ))){
+        growl.warning("所选域不可为所选域的子集");
+        return;
+      }
+      scope.domains = scope.domains.concat([new tableCell(domainMap[domain])]);
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .nav-tabs{
+    li {
+      cursor : pointer;
+    }
+  }
+  .wrap {
+    padding : 10px 0px !important;
+    .drop{
+      float : left;
+      width : 200px;
+    }
+    .option{
+      width : 160px;
+    }
+  }
+</style>

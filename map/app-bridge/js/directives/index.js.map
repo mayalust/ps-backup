@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-bridge/js/directives/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,kCAAmC","file":"app-bridge/js/directives/index.js","sourcesContent":["define(['../js/directives/bridge-dom.js'], function () {});"],"sourceRoot":"/source/"}

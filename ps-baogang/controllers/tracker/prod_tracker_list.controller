@@ -1,0 +1,377 @@
+<config injector="$scope,$q,$state,$registerService,ajax,psTreeData,commonMethodService2,psTracker,growl"
+        deps="historyTracker"
+></config>
+<template>
+  <div class="wrap">
+    <h3>测试过程跟踪列表</h3>
+    <table class="repair-unit-test">
+      <tr>
+        <th>序列号</th>
+        <th>工单号</th>
+        <th>在线</th>
+        <th>流程(红香)</th>
+        <th>原型(金盟)</th>
+        <th>当前任务</th>
+        <th>流程图(触发任务)</th>
+        <th>流程图(当前任务)</th>
+      </tr>
+      <tr ng-repeat="item in list" ng-class="item.tdcls()">
+        <td
+          ng-if="item._type == 'annotate'"
+          ng-bind="item.label"
+          colspan="9"
+          class="annotate"
+        ></td>
+        <th ng-if="item._type != 'annotate'" ng-bind="$index + 1"></th>
+        <td ng-if="item._type != 'annotate'" ng-bind="item.ticketNo"></td>
+        <td
+          ng-if="item._type != 'annotate'"
+          ng-bind="{true:'在线规则',false:'人工规则'}[item.online==true]"
+        ></td>
+        <td ng-if="item._type != 'annotate'" ng-bind="item.label"></td>
+        <td ng-if="item._type != 'annotate'" ng-bind="item.proto"></td>
+        <td ng-if="item._type != 'annotate'">
+          <button
+            ng-if="item.ticketNo"
+            class="btn btn-primary"
+            ng-click="item.click()"
+          >
+            当前任务
+          </button>
+        </td>
+        <td ng-if="item._type != 'annotate'">
+          <div class="btn-group">
+            <button
+              class="btn btn-default"
+              ng-if="item.flowstarget"
+              ng-bind="item.flowstarget.name"
+              ng-click="item.move2processTarget()"
+            ></button>
+          </div>
+        </td>
+        <td ng-if="item._type != 'annotate'">
+          <div class="btn-group">
+            <button
+              class="btn btn-default"
+              ng-if="item.flows"
+              ng-bind="item.flows.name"
+              ng-click="item.move2process()"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</template>
+<script>
+import { extend } from "ps-ultility";
+export default function(
+  scope,
+  q,
+  $state,
+  registerService,
+  ajax,
+  psTreeData,
+  cms2,
+  psTracker,
+  growl
+) {
+  const Dics = {
+    1: "在线预警",
+    2: "智能诊断",
+    3: "大数据分析",
+    4: "离线诊断",
+    100: "当日点检",
+    130: "点检异常",
+    110: "精密检测",
+    120: "检修计划",
+    140: "备修委托",
+    200: "总包多专业",
+    280: "在线预警",
+    290: "智能决策",
+    310: "状态维护标准",
+    320: "智能检修标准",
+    330: "临时委托",
+    340: "突发停机"
+  };
+  let flowsMap;
+  class tableCell {
+    constructor(d) {
+      extend(this, d);
+    }
+    getCat() {
+      return `${Dics[this.category]}[${this.category}]`;
+    }
+    tdcls() {
+      return this.finished ? "finished" : "";
+    }
+    cls() {
+      return this.finished
+        ? {
+            "font-weight": "bold",
+            color: "green"
+          }
+        : {
+            "font-weight": "normal",
+            color: "#666"
+          };
+    }
+    move2process() {
+      window.open("../app-flowsheet/index.html#/flow/" + this.flows.id);
+    }
+    move2processTarget() {
+      window.open("../app-flowsheet/index.html#/flow/" + this.flowstarget.id);
+    }
+    clickTrigger() {
+      $state.go("prod_tracker", {
+        ticketNo: this.triggeredTicketNo,
+        "#": JSON.stringify(this)
+      });
+    }
+    click() {
+      $state.go("prod_tracker", {
+        ticketNo: this.ticketNo,
+        "#": JSON.stringify(this)
+      });
+    }
+  }
+  function mapAllFlow() {
+    return ajax
+      .post("workflowDefinitionService.getWorkflowDefinitions")
+      .then(flows => {
+        function getCells({ name, id, viewContent }) {
+          let json = JSON.parse(viewContent);
+          return {
+            id: id,
+            label: name,
+            cells: json.cells.filter(cell => cell.type == "bpmn.Activity")
+          };
+        }
+        flows = flows
+          .map(flow => getCells(flow))
+          .reduce((a, b) => {
+            a.set(b.id, b);
+            return a;
+          }, new Map());
+        return cms2.success(flows);
+      });
+  }
+  function findTriggerTicketNo(list, ticketHandler) {
+    let promise,
+      inx = 0;
+    function getByTicketNo(item) {
+      let { ticketNo } = item;
+      if (ticketNo == null) {
+        let defer = q.defer();
+        defer.resolve();
+        return defer.promise;
+      }
+      return ajax
+        .post("ticketLogService.getByTicketNo", [ticketNo])
+        .then(ticketTask => {
+          let defer = q.defer();
+          ticketHandler && ticketHandler.call(item, ticketTask);
+          defer.resolve();
+          return defer.promise;
+        });
+    }
+    while (inx < list.length) {
+      let i = inx;
+      promise = promise
+        ? promise.then(() => getByTicketNo(list[i]))
+        : getByTicketNo(list[i]);
+      inx++;
+    }
+    return promise.then(() => {
+      let defer = q.defer();
+      defer.resolve(list);
+      return defer.promise;
+    });
+  }
+  function findFlowIdGen(target) {
+    let promise,
+      arr = target.slice();
+    function findFlowId(item) {
+      function getByTicketNo(no, key) {
+        if (no == null) {
+          let defer = q.defer();
+          defer.resolve();
+          return defer.promise;
+        }
+        return cms2
+          .findFlowByTicketNo(no)
+          .then(flow => {
+            let defer = q.defer();
+            item[key] = flow;
+            defer.resolve();
+            return defer.promise;
+          })
+          .catch(e => {
+            growl.warning(e);
+            let defer = q.defer();
+            defer.resolve();
+            return defer.promise;
+          });
+      }
+      return getByTicketNo(item.ticketNo, "flows").then(() => {
+        return getByTicketNo(item.triggeredTicketNo, "flowstarget");
+      });
+    }
+    while (arr.length > 0) {
+      let item = arr.shift();
+      promise = promise
+        ? promise.then(d => {
+            return findFlowId(item);
+          })
+        : findFlowId(item);
+    }
+    return promise.then(() => {
+      let defer = q.defer();
+      defer.resolve(target);
+      return defer.promise;
+    });
+  }
+  mapAllFlow().then(flows => {
+    flowsMap = flows;
+    let list = [
+      {
+        finished: true,
+        deviceName: "003#辊道",
+        category: 280,
+        label: "常规报警-常规处理（人工处理）",
+        proto: "过程跟踪（常规处理）",
+        ticketNo: "2019042314323100001"
+      },
+      {
+        finished: true,
+        deviceName: "263#辊道",
+        category: 290,
+        label: "在线结果维护规则-检修任务",
+        proto: "过程跟踪 (智能决策)-在线规则-维护",
+        ticketNo: "2019041913125500001"
+      },
+      {
+        finished: true,
+        deviceName: "263#辊道",
+        category: 310,
+        label: "在线结果维护规则-维护任务",
+        proto: "过程跟踪 (智能决策)-在线规则-检修",
+        ticketNo: "2019042316334600001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 310,
+        label: "维护结果触发检修任务/维护任务",
+        ticketNo: "2019042316565800001"
+      },
+      {
+        finished: true,
+        deviceName: "003#辊道",
+        category: 320,
+        label: "维护结果触发检修任务",
+        ticketNo: "2019042317122800001"
+      },
+      {
+        finished: true,
+        deviceName: "003#辊道",
+        category: 310,
+        label: "人工维护规则-检修任务",
+        ticketNo: "2019042412004800001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 320,
+        label: "人工维护规则-检修任务",
+        ticketNo: "2019042410455900001"
+      },
+      {
+        finished: true,
+        deviceName: "264#辊道",
+        category: 310,
+        label: "排故触发检修",
+        ticketNo: "2019050721025200001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 310,
+        label: "排故触发维护",
+        proto: "过程跟踪（排故）",
+        ticketNo: "2019050814362100001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 320,
+        label: "临时发起检修",
+        ticketNo: "2019050720542400001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 310,
+        label: "临时发起维护",
+        ticketNo: "2019050720514700001"
+      },
+      {
+        finished: true,
+        deviceName: "300#辊道",
+        category: 310,
+        label: "维护触发检修",
+        ticketNo: "2019050814550300001"
+      }
+    ].map(d => new tableCell(d));
+    findTriggerTicketNo(list, function ticketHandler(ticketTask) {
+      let tic = ticketTask
+          .map(task => {
+            return cms2.findValue(task, "sourceTicketNo");
+          })
+          .find(d => d),
+        online = ticketTask.some(task => cms2.findValue(task, "onlineRuleId"));
+      this.triggeredTicketNo = tic ? tic.value : undefined;
+      this.online = online;
+    })
+      .then(list => {
+        return findFlowIdGen(list);
+      })
+      .then(list => {
+        scope.list = list;
+      });
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  height: calc(100vh - 10px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+h3 {
+  color: #fff;
+  text-align: center;
+}
+table.repair-unit-test {
+  margin: auto;
+  border-top: 1px solid #666;
+  border-left: 1px solid #666;
+  box-shadow: 1px 1px 10px 1px rgba(0, 0, 0, 0.3);
+  background-color: #000;
+  th {
+    //background-color: #eee;
+    text-align: center;
+    background-color: rgba(250, 250, 250, 0.2);
+  }
+  td,
+  th {
+    padding: 10px;
+    border-bottom: 1px solid #666;
+    border-right: 1px solid #666;
+    &.annotate {
+      color: orange;
+      text-align: center;
+    }
+  }
+}
+</style>

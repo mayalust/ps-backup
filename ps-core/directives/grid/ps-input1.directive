@@ -1,0 +1,62 @@
+<config injector="psEvent"></config>
+<template>
+    <div>
+        <div class="wrap">
+            <input class="form-control" ng-disabled="config.disabled"/>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+export default function (psEvent) {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?"
+    },
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let $dom = element.find('input');
+      let dom = $dom[0];//get有的版本不支持
+      let defaultConfig = {
+        placeholder: '请输入...'
+      };
+      let config = Object.assign({}, defaultConfig, scope.config || {});
+      dom.placeholder = config.placeholder;
+      dom.addEventListener('keyup', function keyupListener () {
+        dom.__keyupListener = keyupListener;
+        ngModel.$setViewValue(this.value);
+      });
+      ngModel.$render = function (e) {
+        dom.value = typeof ngModel.$viewValue === 'undefined' ? '' : ngModel.$viewValue;
+      };
+      Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+        if (!n) {
+          return;
+        }
+        return n;
+      });
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        return n;
+      });
+      scope.$on("destroy", () => {
+        dom.removeEventListener('keyup', dom.__keyupListener);
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+    position: relative;
+    .instruction {
+        top: 20px;
+        left: 25px;
+        position: absolute;
+        color: red;
+        font-size: 12px;
+        background-color: red;
+        color: #fff;
+        border-radius: 3px;
+    }
+}
+</style>

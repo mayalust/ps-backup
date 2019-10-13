@@ -1,0 +1,123 @@
+<config injector="$scope,$q,ajax, psDialog,$routeParams,psUltility,$location,growl"
+        params="/:id?"
+></config>
+<template>
+    <proudsmart-base>
+        <div class="wrap">
+            <ps-layout data-option="option">
+            </ps-layout>
+        </div>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+    export default function (scope, q, ajax, psDialog,routeParams,psUltility,location,growl) {
+         
+        scope.option = {
+            title: "项目概况",
+            type : "layout",
+            init : {
+                post : function(){
+                    if(routeParams.id == 0){
+                        return;
+                    } else {
+                        return {
+                            url : "modelDefinitionService.findDataModelsByIds",
+                            param : [[routeParams.id]]
+                        }
+                    }
+                },
+
+                after : function(d){
+                    return {
+                        model : d[0]
+                    };
+                }
+            },
+            children: [{
+                label: "项目概况",
+                type: "panel",
+                children : [{
+                    type : "form-grid",
+                    scope : "model",
+                    children : [{
+                        type : "input",
+                        label : "项目方案名称",
+                        key : "label",
+                        composory: true,
+                    },{
+                        type : "select",
+                        label : "危险源",
+                        key : "desc",
+                        composory: true,
+                        options : [{
+                            id: 1,
+                            label: "地沟",
+                        }]
+                    },{
+                        type : "select",
+                        label : "动火等级",
+                        key : "level",
+                        composory: true,
+                        options : [{
+                            id: 1,
+                            label: "三级",
+                        }]
+                    }]
+                }]
+            },{
+                label: "人员准备",
+                type: "panel",
+                children: [{
+                    type: "table-form",
+                    key : "accessConfigs",
+                    config: {
+                        attributes: {
+                            "kpiName": ["数据名称", "text"],
+                            "type" : ["数据类型","text"],
+                            "readExpression" : ["读表达式","text"],
+                            "writeExpression" : ["写表达式","text"]
+                        },
+                        grid: {
+                            body: ["kpiName",{
+                                name : "type",
+                                gridType : function (e) {
+                                    return "select"
+                                },
+                                options : [{
+                                    id: 1,
+                                    label: "123"
+                                }],
+                                format :{
+                                    id : "id",
+                                    label :"name"
+                                }
+                            },{
+                                name : "readExpression",
+                                gridType : function (e) {
+                                    return "input"
+                                }
+                            },{
+                                name : "writeExpression",
+                                gridType : function (e) {
+                                    return "input"
+                                }
+                            }],
+                            buttons: {
+                                inGrid: []
+                            },
+                            config: {
+                                showIndex: false,
+                                showSelector: false,
+                                showSearch: false,
+                                showPage : false
+                            },
+                            options: []
+                        }
+                    }
+                }]
+            }]
+        }
+    }
+</script>
+<style type="less" scoped="true">
+</style>

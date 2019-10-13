@@ -1,0 +1,31 @@
+<config injector="$q"></config>
+<script>
+export default function($q) {
+  const defer = $q.defer();
+  const loadEchartPromise = defer.promise;
+
+  const loadEchart = () => {
+    if (typeof echarts == "undefined") {
+      window.require(
+        ["echarts"],
+        ec => {
+          setTimeout(function() {
+            defer.resolve(ec);
+          }, 5000);
+        },
+        e => {
+          defer.reject(e);
+        }
+      );
+    } else {
+      defer.resolve(echarts);
+    }
+  };
+  console.log("--->");
+  loadEchart();
+
+  return {
+    loadEchartPromise: loadEchartPromise
+  };
+}
+</script>

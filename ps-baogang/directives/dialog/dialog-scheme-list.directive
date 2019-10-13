@@ -1,0 +1,68 @@
+<config injector="$rootScope,growl"></config>
+<template>
+    <div class="wrap">
+        <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-4">
+                    <span class="text-danger">*</span>
+                    <span class="title pull-right">序号:</span>
+                </div>
+                <div class="col-md-8">
+                    <input ng-model="clone.xuno" class="form-control" ng-if="mode=='edit'"/>
+                </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-4">
+                    <span class="text-danger">*</span>
+                    <span class="title pull-right">施工方案:</span>
+                </div>
+                <div class="col-md-8">
+                    <input ng-model="clone.temporaryConstructionPlan" class="form-control" ng-if="mode=='edit'"/>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-5">
+            </div>
+            <div class="col-md-7">
+                <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+                <button class="btn btn-default" ng-click="close()">取消</button>
+            </div>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+    import { extend } from "ps-ultility";
+    export default function(rootScope,growl){
+        return {
+            link(scope, element, attr) {
+                scope.mode = scope.params.mode;
+                scope.clone = extend({}, scope.params.data);
+                scope.submitFn = function(d){
+                    if(!d.xuno){
+                        growl.warning("序号不可为空");
+                        return;
+                    }
+                    if(!d.temporaryConstructionPlan){
+                        growl.warning("施工方案不可为空");
+                        return;
+                    }
+                    scope.submit(d);
+                }
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+    .wrap{
+        width : 80%;
+        margin : auto;
+    .title{
+        line-height : 26px;
+        padding-right : 20px;
+    }
+    .value {
+        line-height : 26px;
+    }
+    }
+</style>

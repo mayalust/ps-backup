@@ -1,0 +1,449 @@
+<config injector="$scope,ajax,$routeParams,psDialog,psRouter,growl,psUltility,psLoading"
+        params="/:roleID?"
+  >
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+import { extend, clone } from "ps-ultility";
+export default function(
+  scope,
+  ajax,
+  routeParams,
+  psDialog,
+  psRouter,
+  growl,
+  psUltility,
+  psLoading
+) {
+  let paramObj = {
+      roleID: routeParams.roleID
+    },
+    resultObj;
+
+  ajax
+    .post("userEnterpriseService.queryEnterpriseRole", [])
+    .then(function(data) {
+      // v.roleID == 558747481450249
+      data.forEach(v => {
+        if (v.roleID == routeParams.roleID) {
+          paramObj.roleName = v.roleName;
+          resultObj = JSON.parse(v.values) || {
+            index: 0,
+            id: 0,
+            children: [],
+            label: "视图配置",
+            _isRoot: true
+          };
+          scope.layout = {
+            init: {},
+            modals: {
+              editModel: {
+                label: "设备类型",
+                type: "layout",
+                children: [
+                  {
+                    type: "form-dialog",
+                    data: null,
+                    children: [
+                      {
+                        type: "input",
+                        label: "序号",
+                        composory: true,
+                        key: "index"
+                      },
+                      {
+                        type: "select",
+                        label: "视图名称",
+                        composory: true,
+                        key: "viewId",
+                        options: {
+                          url: "viewFlexService.getAllMyViews",
+                          params: [],
+                          after: function(d) {
+                            scope.arr = [];
+                            arr = d
+                              .filter(f => f.viewType == "dashboard")
+                              .map(v => {
+                                v["id"] = v["viewId"];
+                                v["label"] = v["viewTitle"];
+                                return v;
+                              });
+                            return (scope.arr = arr);
+                          }
+                        },
+                        config: {
+                          // disabled: "disabled"
+                          on: {
+                            select: function(event) {
+                              // psUltility.setData(scope.addObj, {
+                              //     name: event.$select.viewTitle,
+                              // })
+                            }
+                          }
+                        }
+                      },
+                      {
+                        type: "input",
+                        label: "页签名称",
+                        composory: true,
+                        key: "name"
+                      },
+                      {
+                        type: "input",
+                        label: "别名",
+                        composory: false,
+                        key: "alias"
+                      },
+                      {
+                        type: "checkbox",
+                        label: "显示树",
+                        composory: false,
+                        key: "showTree",
+                        config: {
+                          format: {
+                            true: 1,
+                            false: 0
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                buttons: [
+                  {
+                    label: "保存",
+                    class: "btn btn-primary",
+                    click: function(e) {
+                      this.submit();
+                    }
+                  },
+                  {
+                    label: "取消",
+                    click: function() {
+                      this.close();
+                    }
+                  }
+                ]
+              }
+            },
+            label: "组件权限",
+            children: [
+              {
+                type: "form-inline",
+                children: [
+                  {
+                    type: "label",
+                    value: "标题名称"
+                  },
+                  {
+                    type: "input",
+                    label: "标题名称",
+                    key: "searchKey",
+                    config: {
+                      updateOn: "submitted"
+                    }
+                  },
+                  {
+                    type: "button",
+                    config: {
+                      label: "查询",
+                      class: "btn btn-sm btn-primary",
+                      click: function(e) {
+                        e.emit("submitted");
+                      }
+                    }
+                  },
+                  {
+                    type: "button",
+                    config: {
+                      label: "重置",
+                      class: "btn btn-sm btn-default",
+                      click: function(e) {
+                        e.setData({
+                          searchKey: ""
+                        });
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                type: "tree-view2",
+                options: [resultObj],
+                parentId: "parentModelId",
+                config: {
+                  search: "searchKey",
+                  format: {
+                    id: "viewId",
+                    label: "viewTitle"
+                  }
+                },
+                buttons: [
+                  {
+                    label: "",
+                    class: "glyphicon glyphicon-trash",
+                    tit: "刪除",
+                    icon: "",
+                    on: {
+                      click: function(e) {
+                        let obj;
+                        e.remove({
+                          before: function(source) {
+                            let rs = clone(resultObj);
+                            obj = source;
+                            function deleteRecursion(item) {
+                              //删除一级
+                              if (e.$row.parentModelId == 0) {
+                                item.children = item.children.filter(v => {
+                                  if (v.id !== e.$row.id) {
+                                    return v;
+                                  }
+                                });
+                                item.children.sort((a, b) => {
+                                  return a.index - 0 - b.index;
+                                });
+                              } else {
+                                for (var i = 0; i < item.children.length; i++) {
+                                  var isFlag = false;
+                                  if (item.children[i].id == e.$row.id) {
+                                    isFlag = true;
+                                    item.children = item.children.filter(v => {
+                                      if (v.id !== e.$row.id) {
+                                        return v;
+                                      }
+                                    });
+                                    item.children.sort((a, b) => {
+                                      return a.index - 0 - b.index;
+                                    });
+                                  }
+                                  if (!isFlag) {
+                                    deleteRecursion(item.children[i]);
+                                  }
+                                }
+                              }
+                            }
+                            deleteRecursion(rs);
+                            paramObj["values"] = JSON.stringify(rs);
+                            return paramObj;
+                          },
+                          after: function(d) {
+                            return obj;
+                          },
+                          url: "userRoleUIService.modifyRole"
+                        });
+                      }
+                    }
+                  },
+                  {
+                    label: "",
+                    class: "proudsmart ps-edit",
+                    tit: "编辑",
+                    icon: "",
+                    on: {
+                      click: function(e) {
+                        let obj;
+                        e.update({
+                          template: "editModel",
+                          before: function(source) {
+                            psLoading.showLoadingTip();
+                            let rs = clone(resultObj);
+                            obj = source;
+                            function editRecursion(item) {
+                              if (e.$row.parentModelId == 0) {
+                                item.children.some((ele, index) => {
+                                  if (ele.id == e.$row.id) {
+                                    source["label"] = source.name;
+                                    ele = angular.extend(ele, source);
+                                  }
+                                });
+                                item.children.sort((a, b) => {
+                                  return a.index - 0 - b.index;
+                                });
+                              } else {
+                                for (var i = 0; i < item.children.length; i++) {
+                                  var isFlag = false;
+                                  if (item.children[i].id == e.$row.id) {
+                                    isFlag = true;
+                                    item.children.some((ele, index) => {
+                                      if (ele.id == e.$row.id) {
+                                        source["label"] = source.name;
+                                        ele = angular.extend(ele, source);
+                                      }
+                                    });
+                                    item.children.sort((a, b) => {
+                                      return a.index - 0 - b.index;
+                                    });
+                                  }
+                                  if (!isFlag) {
+                                    editRecursion(item.children[i]);
+                                  }
+                                }
+                              }
+                            }
+                            editRecursion(rs);
+                            // 编辑一级标题
+
+                            paramObj["values"] = JSON.stringify(rs);
+                            return paramObj;
+                          },
+                          after: function(d) {
+                            // psLoading.closeLoading();
+                            return obj;
+                          },
+                          url: "userRoleUIService.modifyRole"
+                        });
+                      }
+                    }
+                  },
+                  {
+                    label: "",
+                    class: "glyphicon glyphicon-plus",
+                    tit: "添加",
+                    icon: "",
+                    rootShow: true,
+                    on: {
+                      click: function(e) {
+                        // 弹框的方法
+                        let obj;
+                        e.add({
+                          template: "editModel",
+                          before: function(s) {
+                            psLoading.showLoading();
+                            let rs = clone(resultObj);
+                            s["id"] = Math.uuid();
+                            s["label"] = s.name;
+                            s["children"] = [];
+                            s["showTree"] = s.showTree || 0;
+                            s["parentModelId"] = e.$row.id;
+                            obj = s;
+                            function addRecursion(item) {
+                              if (e.$row.id == 0) {
+                                item.children.push(s);
+                                item.children.sort((a, b) => {
+                                  return a.index - 0 - b.index;
+                                });
+                              } else {
+                                for (var i = 0; i < item.children.length; i++) {
+                                  var isFlag = false;
+                                  if (item.children[i].id == e.$row.id) {
+                                    isFlag = true;
+                                    item.children[i].children.push(s);
+                                    item.children[i].children.sort((a, b) => {
+                                      return a.index - 0 - b.index;
+                                    });
+                                  }
+                                  if (!isFlag) {
+                                    addRecursion(item.children[i]);
+                                  }
+                                }
+                              }
+                            }
+                            addRecursion(rs);
+                            paramObj["values"] = JSON.stringify(rs);
+                            return paramObj;
+                          },
+                          after: function(d) {
+                            psLoading.closeLoading();
+                            return obj;
+                          },
+                          url: "userRoleUIService.modifyRole"
+                        });
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          };
+        }
+      });
+    });
+
+  // 数据格式
+  // resultObj = {
+  //     "index": 0,
+  //     "id": 0,
+  //     "label": "视图配置",
+  //     "children": [{
+  //         "alias": "",
+  //         "children": [{
+  //             "alias": "",
+  //             "children": [{
+  //                 "alias": "",
+  //                 "id": 195456379970033,
+  //                 "index": 1,
+  //                 "label": "计划实施[卷筒工程师-3级]",
+  //                 "name": "计划实施[卷筒工程师-3级]",
+  //                 "parentModelId": 195456379970022,
+  //                 "path": "",
+  //                 "showTree": 1,
+  //                 "text": "计划实施[卷筒工程师-3级]",
+  //                 "viewId": 195456379970033
+  //             }],
+  //             "id": 195456379970022,
+  //             "index": 1,
+  //             "label": "计划实施[卷筒工程师-2级]",
+  //             "name": "计划实施[卷筒工程师-2级]",
+  //             "parentModelId": 195456379970000,
+  //             "path": "",
+  //             "showTree": 1,
+  //             "text": "计划实施[卷筒工程师-2级]",
+  //             "viewId": 195456379970022
+  //         }, {
+  //             "alias": "",
+  //             "id": 195456379970011,
+  //             "index": 1,
+  //             "label": "计划实施[卷筒工程师-22级]",
+  //             "name": "计划实施[卷筒工程师-22级]",
+  //             "parentModelId": 195456379970000,
+  //             "path": "",
+  //             "showTree": 1,
+  //             "text": "计划实施[卷筒工程师-22级]",
+  //             "viewId": 195456379970011
+  //         }],
+  //         "id": 195456379970000,
+  //         "index": 1,
+  //         "label": "计划实施[卷筒工程师-1级]",
+  //         "name": "计划实施[卷筒工程师-1级]",
+  //         "parentModelId": 0,
+  //         "showTree": 1,
+  //         "text": "计划实施[卷筒工程师-1级]",
+  //         "viewId": 195456379970000
+  //     }, {
+  //         "index": "2",
+  //         "text": 198066214630002,
+  //         "name": "2",
+  //         "alias": "2",
+  //         "showTree": null,
+  //         "id": 198066214630002,
+  //         "label": "2",
+  //         "parentModelId": 0
+  //     }, {
+  //         "index": "3",
+  //         "text": 198066214630001,
+  //         "name": "3",
+  //         "alias": "3",
+  //         "showTree": null,
+  //         "id": 198066214630001,
+  //         "label": "3",
+  //         "parentModelId": 0
+  //     }, {
+  //         "index": "1",
+  //         "text": 195456379970000,
+  //         "name": "1",
+  //         "alias": "1",
+  //         "showTree": null,
+  //         "id": 195456379970000,
+  //         "label": "1",
+  //         "parentModelId": 0
+  //     }],
+  //     "_isRoot": true
+  // };
+}
+</script>
+<style type="less">
+</style>

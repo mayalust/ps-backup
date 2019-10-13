@@ -1,0 +1,1093 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl,commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <ps-layout data-option="layout"> </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  ajax,
+  $location,
+  psDialog,
+  $routeParams,
+  growl,
+  commonMethodService
+) {
+  let row, resource;
+  let target = commonMethodService();
+  var itemList = [],
+    clist = [],
+    mlist = [],
+    rowValue,
+    lineData = [],
+    devList = [];
+
+  return {
+    link(scope, element, attr, ngModel) {
+      target.on("tree_resourceChange", function(e) {
+        resource = e.resource;
+         
+        var kpiCodeList = [],
+          instanceList = [];
+        if (resource.physicalConfig && resource.physicalConfig.accessConfigs) {
+          kpiCodeList = resource.physicalConfig.accessConfigs;
+        }
+        if (
+          resource.values &&
+          resource.values.MeasurePointLocate &&
+          resource.values.MeasurePointLocate != null
+        ) {
+          var MeasurePointLocate = eval(resource.values.MeasurePointLocate);
+          for (var i = 0; i < MeasurePointLocate.length; i++) {
+            for (var k in MeasurePointLocate[i]) {
+              for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                var item = {
+                  id: MeasurePointLocate[i][k][j].name,
+                  label: MeasurePointLocate[i][k][j].label
+                };
+                instanceList.push(item);
+              }
+            }
+          }
+        }
+
+        //获取当前设备的所有告警
+        var alertList = [];
+        scope.layout = {
+          init: function(next) {
+            ajax
+              .post(
+                "resourceUIService.getKpiThresholdListByConditionWithPage",
+                [
+                  {
+                    modelId: resource.modelId,
+                    nodeIds: resource.id + ""
+                  },
+                  { start: 0, length: 1000, statCount: true }
+                ]
+              )
+              .then(a => {
+                alertList = a.data;
+              });
+          },
+
+          modals: {
+            //添加，编辑
+            wholeModel: {
+              label: "在线判定结果维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "设备名称",
+                      key: "selectedDevName",
+                      value: resource.label
+                    },
+                    {
+                      type: "label",
+                      label: "设备编号",
+                      key: "selectedDevCode",
+                      value: resource.externalDevId
+                    },
+                    {
+                      type: "input",
+                      label: "规则名称",
+                      key: "ruleName",
+                      composory: true
+                    }
+                  ]
+                },
+                {
+                  label: "状态规则",
+                  type: "table-form",
+                  key: "itemList",
+                  config: {
+                    attributes: {
+                      instance: ["测点名称", "text"],
+                      title: ["告警规则", "text"],
+                      severity: ["状态等级", "text"],
+                      desc: ["规则描述", "text"],
+                      needState: ["是否必须", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "instance",
+                          bind: function(row) {
+                            if (
+                              row.kpiThreshold != null &&
+                              row.kpiThreshold.instanceName
+                            ) {
+                              return row.kpiThreshold.instanceName;
+                            } else {
+                              var obj = instanceList.find(a => {
+                                return row.kpiThreshold
+                                  ? a.id == row.kpiThreshold.instance
+                                  : false;
+                              });
+                              if (obj && obj.label) {
+                                return obj.label;
+                              } else {
+                                return "";
+                              }
+                            }
+                          }
+                        },
+                        {
+                          name: "title",
+                          bind: function(row) {
+                            if (row.kpiThreshold && row.kpiThreshold.title) {
+                              return row.kpiThreshold.title;
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "severity",
+                          bind: function(row) {
+                            if (row.kpiThreshold && row.kpiThreshold.severity) {
+                              var obj = target
+                                .getRootScope("myDicts")
+                                ["alertSeverity"].find(a => {
+                                  return row.kpiThreshold
+                                    ? a.valueCode == row.kpiThreshold.severity
+                                    : false;
+                                });
+                              if (obj && obj.label) {
+                                return obj.label;
+                              }
+                              return "";
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "desc",
+                          bind: function(row) {
+                            if (row.kpiThreshold && row.kpiThreshold.desc) {
+                              return row.kpiThreshold.desc;
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "needState",
+                          bind: function(row) {
+                            if (row.needState == 1) {
+                              return "必须";
+                            } else if (row.needState == 0) {
+                              return "非必须";
+                            } else {
+                              return "";
+                            }
+                          }
+                        }
+                      ],
+                      buttons: {
+                        outGrid: [
+                          {
+                            label: "添加",
+                            symbol: "inline",
+                            class: "primary"
+                          }
+                        ],
+                        inGrid: [
+                          {
+                            label: "删除",
+                            class: "primary",
+                            on: {
+                              click: function(e) {
+                                e.removeInline();
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      config: {
+                        composory: true,
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false,
+                        inlineAdd: {
+                          instance: {
+                            type: "select",
+                            url: "resourceUIService.getAttrsByModelId",
+                            parameter: resource.modelId,
+                            after: function(d, next, evt) {
+                              var sourceValue = d
+                                ? d.filter(function(ele) {
+                                    return ele.name == "MeasurePointLocate";
+                                  })
+                                : undefined;
+                              if (
+                                typeof sourceValue == "undefined" ||
+                                sourceValue.length == 0
+                              ) {
+                                return [];
+                              }
+                              // 查找测点MeasurePointLocateList
+                              var MeasurePointLocate = eval(
+                                sourceValue[0].sourceValue
+                              );
+                              var MeasurePointLocateList = [];
+                              for (
+                                var i = 0;
+                                i < MeasurePointLocate.length;
+                                i++
+                              ) {
+                                for (var k in MeasurePointLocate[i]) {
+                                  for (
+                                    var j = 0;
+                                    j < MeasurePointLocate[i][k].length;
+                                    j++
+                                  ) {
+                                    var item = {
+                                      id: MeasurePointLocate[i][k][j].name,
+                                      label: MeasurePointLocate[i][k][j].label
+                                    };
+                                    MeasurePointLocateList.push(item);
+                                  }
+                                }
+                              }
+                              return MeasurePointLocateList;
+                            }
+                          },
+                          title: {
+                            type: "select",
+                            watch: {
+                              key: "instance",
+                              handler: function(newValue, next) {
+                                ajax
+                                  .post(
+                                    "resourceUIService.getKpiThresholdListByConditionWithPage",
+                                    [
+                                      {
+                                        modelId: resource.modelId,
+                                        nodeIds: resource.id + "",
+                                        instance: newValue.id,
+                                        enabled: true
+                                      },
+                                      {
+                                        start: 0,
+                                        length: 1000,
+                                        statCount: true
+                                      }
+                                    ]
+                                  )
+                                  .then(a => {
+                                    var list = [];
+                                    for (var j = 0; j < a.data.length; j++) {
+                                      var res = true;
+                                      for (
+                                        var i = 0;
+                                        i < lineData.length;
+                                        i++
+                                      ) {
+                                        if (
+                                          lineData[i].kpiThreshold &&
+                                          lineData[i].kpiThreshold.id ==
+                                            a.data[j].id
+                                        ) {
+                                          res = false;
+                                        }
+                                      }
+                                      if (res) {
+                                        var obj = list.find(d => {
+                                          return d.id == a.data[j].id;
+                                        });
+                                        if (!obj) {
+                                          list.push(a.data[j]);
+                                        }
+                                      }
+                                    }
+                                    next(list);
+                                  });
+                              }
+                            },
+                            format: {
+                              id: "id",
+                              label: "title"
+                            }
+                          },
+                          severity: {
+                            type: "input",
+                            disabled: true,
+                            watch: {
+                              key: "title",
+                              handler: function(newValue, next) {
+                                var obj;
+                                if (newValue && newValue.severity) {
+                                  obj = target
+                                    .getRootScope("myDicts")
+                                    ["alertSeverity"].find(a => {
+                                      return a.valueCode == newValue.severity;
+                                    });
+                                }
+                                return obj && obj.label ? obj.label : "";
+                              }
+                            }
+                          },
+                          desc: {
+                            type: "input",
+                            disabled: "disabled",
+                            watch: {
+                              key: "title",
+                              handler: function(newValue, next) {
+                                if (newValue && newValue.desc) {
+                                  return newValue.desc;
+                                }
+                                return "";
+                              }
+                            }
+                          },
+                          needState: {
+                            type: "select",
+                            options: [
+                              { id: 1, label: "必须" },
+                              { id: 0, label: "非必须" }
+                            ]
+                          },
+                          submit: function(a, b, refreshGrid, allData) {
+                            refreshGrid(false);
+                            var OnlineJudgeRuleItem = {};
+                            OnlineJudgeRuleItem.ruleId =
+                              b.title && b.title.id ? b.title.id : 0;
+                            OnlineJudgeRuleItem.kpiThreshold = b.title
+                              ? b.title
+                              : null;
+                            OnlineJudgeRuleItem.needState = a.needState
+                              ? a.needState
+                              : 0;
+                            allData.push(OnlineJudgeRuleItem);
+                            lineData = allData;
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "select",
+                      label: "作用设备名称",
+                      composory: true,
+                      key: "deviceId",
+                      options: {
+                        url:
+                          "resourceUIService.getDevicesByCondition?includeFields=label,id,sn,externalDevId,domains,modelId",
+                        parameter: [{}],
+                        after: function(d) {
+                          devList = d;
+                          return d;
+                        }
+                      },
+                      watch: {
+                        key: "deviceCode",
+                        handler: function(e) {
+                          e.update({
+                            value: e.$value
+                          });
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "作用设备编码",
+                      composory: true,
+                      key: "deviceCode",
+                      options: {
+                        url:
+                          "resourceUIService.getDevicesByCondition?includeFields=label,id,sn,externalDevId,domains,modelId",
+                        parameter: [{}],
+                        after: function(d) {
+                          return d;
+                        }
+                      },
+                      watch: {
+                        key: "deviceId",
+                        handler: function(e) {
+                          e.update({
+                            value: e.$value
+                          });
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "externalDevId"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "故障类型",
+                      composory: true,
+                      key: "faultType"
+                    },
+                    {
+                      type: "select",
+                      label: "维护标准名称",
+                      key: "stateStandardId",
+                      watch: {
+                        key: "deviceId",
+                        handler: function(d) {
+                          if (
+                            d.$value &&
+                            (typeof d.$value == "string" ||
+                              typeof d.$value == "number")
+                          ) {
+                            ajax
+                              .post(
+                                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                [
+                                  {
+                                    deviceId: Number(d.$value),
+                                    ticketCategory: "310",
+                                    taskStatus: 0
+                                  },
+                                  {
+                                    start: 0,
+                                    length: 1000,
+                                    statCount: true
+                                  }
+                                ]
+                              )
+                              .then(function(res) {
+                                clist = res.data;
+                                clist.push({
+                                  id: 0,
+                                  standardName: "无",
+                                  standardNo: " "
+                                });
+                                d.update({
+                                  options: clist
+                                });
+                              });
+                          } else {
+                            return [
+                              { id: 0, standardName: "无", standardNo: " " }
+                            ];
+                          }
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "standardName"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "维护标准编号",
+                      key: "stateStandardNo",
+                      watch: {
+                        key: "stateStandardId",
+                        handler: function(e) {
+                          var id = e.$value;
+                          var obj = clist.find(a => {
+                            return a.id == id;
+                            prod_knowledge_new;
+                          });
+                          if (obj && obj.standardNo) {
+                            e.update({
+                              value: obj.standardNo
+                            });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "维护周期单位",
+                      key: "executionCycle",
+                      options: target.getRootScope("myDicts")["executionCycle"],
+                      format: {
+                        id: "valueCode",
+                        label: "label"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期间隔",
+                      key: "cycleNum",
+                      watch: {
+                        key: "executionCycle",
+                        handler: function(e) {
+                          if (e.$value == "none") {
+                            e.update({
+                              value: 0,
+                              config: {
+                                disabled: true
+                              }
+                            });
+                          } else {
+                            e.update({
+                              config: {
+                                disabled: false
+                              }
+                            });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "select",
+                      label: "检修标准名称",
+                      key: "maintainStandardId",
+                      watch: {
+                        key: "deviceId",
+                        handler: function(d) {
+                          if (
+                            d.$value &&
+                            (typeof d.$value == "string" ||
+                              typeof d.$value == "number")
+                          ) {
+                            ajax
+                              .post(
+                                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                                [
+                                  {
+                                    deviceId: Number(d.$value),
+                                    ticketCategory: "320",
+                                    taskStatus: 0
+                                  },
+                                  {
+                                    start: 0,
+                                    length: 1000,
+                                    statCount: true
+                                  }
+                                ]
+                              )
+                              .then(function(res) {
+                                mlist = res.data;
+                                mlist.push({
+                                  id: 0,
+                                  standardProjectName: "无",
+                                  standardProjectId: " "
+                                });
+                                d.update({
+                                  options: mlist
+                                });
+                              });
+                          } else {
+                            return [
+                              {
+                                id: 0,
+                                standardProjectName: "无",
+                                standardProjectId: " "
+                              }
+                            ];
+                          }
+                        }
+                      },
+                      format: {
+                        id: "id",
+                        label: "standardProjectName"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "检修标准编号",
+                      key: "maintainStandardNo",
+                      watch: {
+                        key: "maintainStandardId",
+                        handler: function(e) {
+                          var id = e.$value;
+                          var obj = mlist.find(a => {
+                            return a.id == id;
+                          });
+                          if (obj && obj.standardProjectId) {
+                            e.update({
+                              value: obj.standardProjectId
+                            });
+                          }
+                        }
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修完成期限(天)",
+                      key: "maintainLimitDay"
+                    },
+                    {
+                      type: "checkbox",
+                      key: "state",
+                      label: "是否启用",
+                      format: {
+                        true: 1,
+                        false: 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            //详情页面
+            wholeModelDis: {
+              label: "在线判定结果维护规则",
+              type: "layout",
+              children: [
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "label",
+                      label: "设备名称",
+                      key: "selectedDevName",
+                      value: resource.label
+                    },
+                    {
+                      type: "label",
+                      label: "设备编号",
+                      key: "selectedDevCode",
+                      value: resource.externalDevId
+                    },
+                    {
+                      type: "input",
+                      label: "规则名称",
+                      key: "ruleName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: "状态规则",
+                  type: "table-form",
+                  key: "itemList",
+                  config: {
+                    attributes: {
+                      instance: ["测点名称", "text"],
+                      title: ["告警规则", "text"],
+                      severity: ["状态等级", "text"],
+                      desc: ["规则描述", "text"],
+                      needState: ["是否必须", "text"]
+                    },
+                    grid: {
+                      body: [
+                        {
+                          name: "instance",
+                          bind: function(row) {
+                            if (
+                              row.kpiThreshold &&
+                              row.kpiThreshold.instanceName
+                            ) {
+                              return row.kpiThreshold.instanceName;
+                            } else {
+                              var obj = instanceList.find(a => {
+                                return row.kpiThreshold
+                                  ? a.id == row.kpiThreshold.instance
+                                  : false;
+                              });
+                              if (obj && obj.label) {
+                                return obj.label;
+                              } else {
+                                return "";
+                              }
+                            }
+                          }
+                        },
+                        {
+                          name: "title",
+                          bind: function(row) {
+                            if (row.kpiThreshold && row.kpiThreshold.title) {
+                              return row.kpiThreshold.title;
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "severity",
+                          bind: function(row) {
+                            if (row.kpiThreshold && row.kpiThreshold.severity) {
+                              var obj = target
+                                .getRootScope("myDicts")
+                                ["alertSeverity"].find(a => {
+                                  return row.kpiThreshold
+                                    ? a.valueCode == row.kpiThreshold.severity
+                                    : false;
+                                });
+                              if (obj && obj.label) {
+                                return obj.label;
+                              }
+                              return "";
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "desc",
+                          bind: function(row) {
+                            if (
+                              row.kpiThreshold &&
+                              row.kpiThreshold.desc &&
+                              row.kpiThreshold.desc != null
+                            ) {
+                              return row.kpiThreshold.desc;
+                            }
+                            return "";
+                          }
+                        },
+                        {
+                          name: "needState",
+                          bind: function(row) {
+                            if (row.needState == 1) {
+                              return "必须";
+                            } else if (row.needState == 0) {
+                              return "非必须";
+                            } else {
+                              return "";
+                            }
+                          }
+                        }
+                      ],
+                      buttons: {},
+                      config: {
+                        showIndex: false,
+                        showSelector: false,
+                        showSearch: false
+                      },
+                      options: itemList
+                    }
+                  }
+                },
+                {
+                  type: "form-grid",
+                  children: [
+                    {
+                      type: "input",
+                      label: "作用设备名称",
+                      composory: true,
+                      key: "deviceName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "作用设备编码",
+                      composory: true,
+                      key: "deviceCode",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "故障类型",
+                      composory: true,
+                      key: "cycleNum"
+                    },
+                    {
+                      type: "input",
+                      label: "维护标准名称",
+                      key: "stateStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "维护标准编号",
+                      key: "stateStandardNo",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期单位",
+                      key: "executionCycle",
+                      watch: {
+                        key: "stateStandardNo",
+                        handler: function(e) {
+                          var list = target.getRootScope("myDicts")[
+                            "executionCycle"
+                          ];
+                          var obj = list.find(a => {
+                            return a.valueCode == rowValue.executionCycle;
+                          });
+                          e.update({
+                            value: obj && obj.label ? obj.label : ""
+                          });
+                        }
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "维护周期间隔",
+                      key: "cycleNum",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修标准名称",
+                      key: "maintainStandardName",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "label",
+                      label: "检修标准编号",
+                      key: "maintainStandardNo",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "input",
+                      label: "检修完成期限(天)",
+                      key: "maintainLimitDay",
+                      config: {
+                        disabled: "disabled"
+                      }
+                    },
+                    {
+                      type: "checkbox",
+                      key: "state",
+                      label: "是否启用",
+                      format: {
+                        true: 1,
+                        false: 0
+                      },
+                      config: {
+                        disabled: "disabled"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          label: "在线判定结果维护规则",
+          children: [
+            {
+              type: "table",
+              config: {
+                attributes: {
+                  customerName: ["产线", "text"],
+                  deviceName: ["设备名称", "text"],
+                  deviceCode: ["设备编码", "text"],
+                  ruleName: ["规则名称", "text"],
+                  faultType: ["故障类型", "text"],
+                  stateStandardName: ["状态维护标准", "text"],
+                  maintainStandardName: ["智能检修标准", "text"],
+                  state: ["是否启用", "text"],
+                  createDate: ["制定时间", "date"]
+                },
+                search: {
+                  body: [
+                    {
+                      name: "ruleName",
+                      label: "规则名称",
+                      searchType: "input"
+                    },
+                    {
+                      name: "createDate",
+                      searchType: "date",
+                      label: "制定时间"
+                    }
+                  ]
+                },
+                grid: {
+                  body: [
+                    "customerName",
+                    "deviceName",
+                    "deviceCode",
+                    "ruleName",
+                    "faultType",
+                    "stateStandardName",
+                    "maintainStandardName",
+                    {
+                      name: "state",
+                      bind: function(row) {
+                        if (row.state == 1) {
+                          return "已启用";
+                        } else if (row.state == 0) {
+                          return "已停用";
+                        }
+                      }
+                    },
+                    {
+                      name: "createDate",
+                      gridType: "date"
+                    }
+                  ],
+                  buttons: {
+                    outGrid: [
+                      {
+                        label: " 添加规则",
+                        class: "primary",
+                        icon: "fa fa-plus",
+                        on: {
+                          click: function(e) {
+                            row = e.$row;
+                            lineData =
+                              e.$row && e.$row.itemList ? e.$row.itemList : [];
+                            if (resource.category == "Device") {
+                              e.add({
+                                width: "80%",
+                                template: "wholeModel",
+                                before: function(d) {
+                                  var dev = devList.find(a => {
+                                    return a.id == d.deviceId;
+                                  });
+                                  d.deviceCode =
+                                    dev && dev.externalDevId
+                                      ? dev.externalDevId
+                                      : "";
+
+                                  d.state = d.state ? 1 : 0;
+                                  d.domains =
+                                    resource && resource.domainPath
+                                      ? resource.domainPath
+                                      : "";
+                                  var obj1 = clist.find(a => {
+                                    return a.id == d.stateStandardId;
+                                  });
+                                  d.stateStandardName =
+                                    obj1 && obj1.standardName
+                                      ? obj1.standardName
+                                      : "无";
+                                  d.stateStandardNo =
+                                    d.stateStandardId && d.stateStandardId != 0
+                                      ? d.stateStandardNo
+                                      : "";
+                                  d.cycleNum =
+                                    d.stateStandardId && d.stateStandardId != 0
+                                      ? d.cycleNum
+                                      : 0;
+                                  d.executionCycle =
+                                    d.stateStandardId && d.stateStandardId != 0
+                                      ? d.executionCycle
+                                      : "";
+                                  var obj2 = mlist.find(a => {
+                                    return a.id == d.maintainStandardId;
+                                  });
+                                  d.maintainStandardName =
+                                    obj2 && obj2.standardProjectName
+                                      ? obj2.standardProjectName
+                                      : "";
+                                  d.selectedDevId = resource.id;
+                                  d.selectedDevName = resource.label;
+                                  d.selectedDevCode = resource.externalDevId;
+                                  return d;
+                                },
+                                url:
+                                  "maintenanceTaskUIService.addOnlineJudgeRule",
+                                after: function(d) {
+                                  return d;
+                                }
+                              });
+                            } else {
+                              growl.warning("请选择设备");
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    inGrid: [
+                      {
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function(e) {
+                            rowValue = e.$row;
+                            e.update({
+                              width: "80%",
+                              template: "wholeModelDis",
+                              before: function(d) {
+                                return d;
+                              }
+                            });
+                          }
+                        }
+                      },
+                      {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function(e) {
+                            rowValue = e.$row;
+                            lineData = e.$row.itemList;
+                            e.$row.deviceCode = e.$row.deviceId;
+                            e.update({
+                              width: "80%",
+                              template: "wholeModel",
+                              before: function(d) {
+                                d.state = d.state ? 1 : 0;
+                                d.domains = resource.domainPath;
+                                var obj2 = mlist.find(a => {
+                                  return a.id == d.maintainStandardId;
+                                });
+                                d.maintainStandardName =
+                                  obj2 && obj2.standardProjectName
+                                    ? obj2.standardProjectName
+                                    : "";
+                                var obj1 = clist.find(a => {
+                                  return a.id == d.stateStandardId;
+                                });
+                                d.stateStandardName =
+                                  obj1 && obj1.standardName
+                                    ? obj1.standardName
+                                    : "无";
+
+                                return d;
+                              },
+                              url: "maintenanceTaskUIService.addOnlineJudgeRule"
+                            });
+                          }
+                        }
+                      },
+                      {
+                        label: "删除",
+                        class: "btn btn-default",
+                        on: {
+                          click: function(e) {
+                            if (e.$row.state == 1) {
+                              growl.warning("该规则启用中，无法删除！");
+                              return;
+                            }
+                            e.remove({
+                              before: function(d) {
+                                return e.$row.id;
+                              },
+                              url: "maintenanceTaskUIService.delOnlineJudgeRule"
+                            });
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  config: {
+                    url:
+                      "maintenanceTaskUIService.getOnlineJudgeRuleListByConditionWithPage",
+                    ajax: true,
+                    parameter: { selectedDevId: resource.id },
+                    showIndex: false,
+                    showSelector: false,
+                    showPage: true,
+                    showSearch: false
+                  },
+                  options: []
+                }
+              }
+            }
+          ]
+        };
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

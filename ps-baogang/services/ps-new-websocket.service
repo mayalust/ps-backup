@@ -1,0 +1,92 @@
+<config injector="$q,$rootScope"></config>
+<script>
+import factory from "./../../js/services/service_factory.js";
+import { random } from "ps-ultility";
+
+export default function(q, rootScope) {
+  const DEBUG = false,
+    protocol = factory.protocol || "ws",
+    host = factory.host,
+    websockets = {},
+    websocketOpened = q.defer(),
+    url = `${protocol}//${host}/websocket/message`,
+    getId = d => (typeof d === "object" ? d.id : d);
+
+  function stringify(obj) {
+    return JSON.stringify(obj);
+  }
+
+  function parse(str) {
+    let a = {};
+    try {
+      a = JSON.parse(str);
+    } catch (e) {}
+    return a;
+  }
+
+  function createWs(name) {
+    class WebsocketCls {
+      constructor() {
+        this.listeners = [];
+        this.name = name;
+        this.uuid = random();
+        this.ws = new WebSocket(url);
+
+        this.ws.onopen = () => {
+          websocketOpened.resolve(this.ws);
+        };
+        this.ws.onerror = function(e) {
+          console.log(`websocket was on error, please try to re-link`);
+        };
+        this.ws.onclose = function(e) {
+          console.log(`websocket was closed, please try to re-link`);
+        };
+        this.ws.onmessage = e => {
+          let data = parse(e.data);
+          let { nodeId, kpiCode, value } = data.data ? data.data : data;
+          let fn = this.listeners[`${nodeId}_${kpiCode}`];
+          fn
+            ? fn.forEach(f => {
+                f(data.data);
+              })
+            : null;
+        };
+      }
+      send(ci, kpi) {
+        websocketOpened.promise.then(ws => {
+          ws.send(
+            stringify({
+              uuid: this.uuid,
+              operation: "register",
+              type: "kpi",
+              param: {
+                ciid: ci.map(getId).join(","),
+                kpi: kpi.map(getId).join(",")
+              }
+            })
+          );
+        });
+      }
+      destroy() {
+        this.ws.send(
+          stringify({
+            uuid: this.uuid,
+            operation: "unregister"
+          })
+        );
+      }
+      on(ci, kpi, callback) {
+        this.listeners[`${ci}_${kpi}`] = this.listeners[`${ci}_${kpi}`] || [];
+        this.listeners[`${ci}_${kpi}`].push(callback);
+      }
+    }
+
+    return new WebsocketCls(name);
+  }
+
+  return function(name) {
+    websockets[name] = websockets[name] || createWs(name);
+    return websockets[name];
+  };
+}
+</script>

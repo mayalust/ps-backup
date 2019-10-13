@@ -1,0 +1,694 @@
+<config injector="api, $rootScope, growl, commonMethodService, $timeout, $q"></config>
+<template>
+  <div class="wrap">
+    <div class="title" ng-if="params.type !== 'global'">
+      <p class="title-item">设备名称:</p>
+      <p class="title-item">{{ params.resource.label }}</p>
+      <p class="title-item">设备编号:</p>
+      <p class="title-item">{{ params.resource.externalDevId }}</p>
+    </div>
+    <div class="form-rule">
+      <div class="margin-bottom-10 label-value full-width">
+        <div class="label">
+          <span class="text-red">*</span>
+          <span>规则名称</span>
+        </div>
+        <div class="value">
+          <ps-input1 ng-model="ruleName"></ps-input1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <p style="margin: 0;font-size: 16px;font-weight: bold;">状态规则</p>
+      </div>
+      <div class="margin-bottom-10 label-value fully-width">
+        <ps-grid1 ng-model="gridModel" config="gridModelConfig"></ps-grid1>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span class="text-red">*</span>
+          <span>作用设备名称</span>
+        </div>
+        <div class="value">
+          <ps-select1
+            ng-model="deviceId"
+            options="deviceIdOptions"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>作用设备编码</span>
+        </div>
+        <div class="value">
+          <ps-select1
+            ng-model="deviceId"
+            options="deviceIdOptions"
+            config="deviceCodeConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span class="text-red">*</span>
+          <span>故障类型</span>
+        </div>
+        <div class="value">
+          <ps-input1 ng-model="faultType"></ps-input1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span></span>
+        </div>
+        <div class="value"></div>
+      </div>
+
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>维护标准名称</span>
+        </div>
+        <div class="value">
+          <ps-select1
+            ng-model="stateStandardId"
+            options="stateStandardIdOptions"
+            config="stateStandardIdConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>维护标准编号</span>
+        </div>
+        <div class="value">
+          <p style="margin: 0;font-size: 14px;">{{ stateStandardNo }}</p>
+        </div>
+      </div>
+
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>维护周期单位</span>
+        </div>
+        <div class="value">
+          <ps-select1
+            ng-model="executionCycle"
+            options="executionCycleOptions"
+            config="executionCycleConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>维护周期间隔</span>
+        </div>
+        <div class="value">
+          <ps-input1
+            ng-show="executionCycle != 'none'"
+            ng-model="cycleNum"
+          ></ps-input1>
+          <p
+            style="margin: 0;font-size: 14px;"
+            ng-show="executionCycle == 'none'"
+          >
+            0
+          </p>
+        </div>
+      </div>
+
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>检修标准名称</span>
+        </div>
+        <div class="value">
+          <ps-select1
+            ng-model="maintainStandardId"
+            options="maintainStandardIdOptions"
+            config="maintainStandardIdConfig"
+          ></ps-select1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>检修标准编号</span>
+        </div>
+        <div class="value">
+          <p style="margin: 0;font-size: 14px;">{{ maintainStandardNo }}</p>
+        </div>
+      </div>
+
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>检修完成期限(天)</span>
+        </div>
+        <div class="value">
+          <ps-input1 ng-model="maintainLimitDay"></ps-input1>
+        </div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span></span>
+        </div>
+        <div class="value"></div>
+      </div>
+      <div class="margin-bottom-10 label-value half-width">
+        <div class="label">
+          <span>是否启用</span>
+        </div>
+        <div class="value">
+          <input type="checkbox" ng-model="state" value="1" />
+        </div>
+      </div>
+    </div>
+    <div class="form-rule-footer">
+      <button
+        class="btn btn-primary"
+        ng-click="submitFn()"
+        ng-if="params.mode !== 'view'"
+        style="margin-right: 10px;"
+      >
+        提交
+      </button>
+      <button
+        class="btn btn-default"
+        ng-click="close()"
+        ng-if="params.mode !== 'view'"
+        style="margin-left: 10px;"
+      >
+        取消
+      </button>
+      <button
+        class="btn btn-default"
+        ng-click="close()"
+        ng-if="params.mode === 'view'"
+      >
+        关闭
+      </button>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(api, rootScope, growl, cms, timeout, $q) {
+  return {
+    link: function(scope, element, attr) {
+      const target = cms();
+      let deviceLists = [];
+      let ruleLists = [];
+      let severityLists = target.getRootScope("myDicts")["alertSeverity"];
+      let requireLists = [
+        {
+          id: 1,
+          label: "必须"
+        },
+        {
+          id: 0,
+          label: "非必须"
+        }
+      ];
+      let firstValue310 = false;
+      let firstValue320 = false;
+      const init = () => {
+        let inlineAddFlag = false;
+        let columns = [
+          {
+            key: "ruleId",
+            label: "告警规则",
+            type: "text",
+            add: {
+              type: "select",
+              options: ruleLists,
+              config: {
+                format: {
+                  label: "title"
+                }
+              }
+            },
+            edit: {
+              type: "select",
+              options: ruleLists,
+              config: {
+                format: {
+                  label: "title"
+                }
+              }
+            },
+            bind(row, value) {
+              return ruleLists.find(rule => {
+                return rule.id == value;
+              }).title;
+            }
+          },
+          {
+            key: "severity",
+            label: "状态等级",
+            type: "text",
+            bind(row, value) {
+              if (value) {
+                if (isNaN(Number(value))) {
+                  return value;
+                }
+                return severityLists.find(severity => {
+                  return severity.valueCode == value;
+                }).label;
+              }
+              return severityLists.find(severity => {
+                return severity.valueCode == row.kpiThreshold.severity;
+              }).label;
+            },
+            edit: {
+              type: "text",
+              watch: {
+                key: "ruleId",
+                handler(d) {
+                  if (d) {
+                    let findRule = ruleLists.find(rule => {
+                      return rule.id == d;
+                    });
+                    let findSeverity = severityLists.find(severity => {
+                      return severity.valueCode == findRule.severity;
+                    });
+                    return findSeverity.label;
+                  }
+                }
+              }
+            },
+            add: {
+              type: "text",
+              watch: {
+                key: "ruleId",
+                handler(d) {
+                  if (d) {
+                    let findRule = ruleLists.find(rule => {
+                      return rule.id == d;
+                    });
+                    let findSeverity = severityLists.find(severity => {
+                      return severity.valueCode == findRule.severity;
+                    });
+                    return findSeverity.label;
+                  }
+                }
+              }
+            }
+          },
+          {
+            key: "desc",
+            label: "规则描述",
+            type: "text",
+            bind(row, value) {
+              if (value) {
+                return value;
+              }
+              return row.kpiThreshold.desc;
+            },
+            add: {
+              type: "text",
+              watch: {
+                key: "ruleId",
+                handler(d) {
+                  if (d) {
+                    let findRule = ruleLists.find(rule => {
+                      return rule.id == d;
+                    });
+                    return findRule.desc;
+                  }
+                }
+              }
+            },
+            edit: {
+              type: "text",
+              watch: {
+                key: "ruleId",
+                handler(d) {
+                  if (d) {
+                    let findRule = ruleLists.find(rule => {
+                      return rule.id == d;
+                    });
+                    return findRule.desc;
+                  }
+                }
+              }
+            }
+          },
+          {
+            key: "needState",
+            label: "是否必须",
+            type: "text",
+            add: {
+              type: "select",
+              options: requireLists
+            },
+            edit: {
+              type: "select",
+              options: requireLists
+            },
+            bind(row, value) {
+              return requireLists.find(r => {
+                return r.id == value;
+              }).label;
+            }
+          }
+        ];
+        scope.gridModel = scope.gridModel || [];
+        scope.gridModelConfig = {
+          inlineAddConfirm: function(row, next) {
+            inlineAddFlag = false;
+            this.addRow(row);
+            next();
+          },
+          outButtons:
+            scope.params.mode === "view"
+              ? []
+              : [
+                  {
+                    label: "添加",
+                    symbol: "inlineAdd",
+                    on: {
+                      click: function() {
+                        inlineAddFlag = true;
+                        return true;
+                      }
+                    }
+                  }
+                ],
+          bodyButtons:
+            scope.params.mode === "view"
+              ? []
+              : [
+                  {
+                    label: "编辑",
+                    symbol: "inlineEdit"
+                  },
+                  {
+                    label: "删除",
+                    on: {
+                      click: function(row) {
+                        this.deleteRow(row);
+                      }
+                    }
+                  }
+                ],
+          columns: columns
+        };
+
+        scope.deviceIdOptions = deviceLists;
+        scope.deviceCodeConfig = {
+          format: {
+            label: "externalDevId"
+          }
+        };
+
+        scope.stateStandardIdOptions = [];
+        scope.stateStandardIdConfig = {
+          format: {
+            label: "standardName"
+          }
+        };
+
+        scope.executionCycleOptions = target.getRootScope("myDicts")[
+          "executionCycle"
+        ];
+        scope.executionCycleConfig = {
+          format: {
+            value: "valueCode"
+          }
+        };
+        scope.maintainStandardIdOptions = [];
+        scope.maintainStandardIdConfig = {
+          format: {
+            label: "standardProjectName"
+          }
+        };
+        const deviceChangeHandler = (n, o, s) => {
+          if (typeof n === "undefined" || n === null) {
+            s.stateStandardId = null;
+            s.stateStandardIdOptions = [];
+            s.maintainStandardId = null;
+            s.maintainStandardIdOptions = [];
+          } else {
+            api
+              .post(
+                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                [
+                  {
+                    deviceId: n,
+                    ticketCategory: "310",
+                    taskStatus: 0
+                  },
+                  {
+                    start: 0,
+                    length: 10000
+                  }
+                ]
+              )
+              .then(ret => {
+                s.stateStandardIdOptions = ret.data.data;
+                if (!firstValue310 && s.params.rule) {
+                  firstValue310 = true;
+                  s.stateStandardId = s.params.rule.stateStandardId;
+                } else {
+                  s.stateStandardId = null;
+                }
+              });
+            api
+              .post(
+                "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                [
+                  {
+                    deviceId: n,
+                    ticketCategory: "320",
+                    taskStatus: 0
+                  },
+                  {
+                    start: 0,
+                    length: 10000
+                  }
+                ]
+              )
+              .then(ret => {
+                s.maintainStandardIdOptions = [...ret.data.data];
+                if (!firstValue320 && s.params.rule) {
+                  firstValue320 = true;
+                  s.maintainStandardId = s.params.rule.maintainStandardId;
+                } else {
+                  s.maintainStandardId = null;
+                }
+              });
+          }
+        };
+        scope.$watch("deviceId", (n, o, s) => {
+          deviceChangeHandler(n, o, s);
+        });
+        scope.$watch("stateStandardId", (n, o, s) => {
+          if (!n) {
+            s.stateStandardNo = "";
+          } else {
+            let findStateOption = s.stateStandardIdOptions.find(item => {
+              return item.id == n;
+            });
+            s.stateStandardNo = findStateOption && findStateOption.standardNo;
+          }
+        });
+        scope.$watch("maintainStandardId", (n, o, s) => {
+          if (!n) {
+            s.maintainStandardNo = "";
+          } else {
+            let findMaintainOption = s.maintainStandardIdOptions.find(item => {
+              return item.id == n;
+            });
+            s.maintainStandardNo =
+              findMaintainOption && findMaintainOption.standardProjectId;
+          }
+        });
+
+        scope.submitFn = function() {
+          if (!scope.ruleName) {
+            growl.warning("请填写规则名称");
+            return;
+          }
+          if (!scope.deviceId) {
+            growl.warning("请选择作用设备");
+            return;
+          }
+          if (!scope.faultType) {
+            growl.warning("请填写故障类型");
+            return;
+          }
+          if (inlineAddFlag) {
+            growl.warning("有正在添加的状态规则，请先点击确定，再保存该规则");
+            return;
+          }
+          let findModel = scope.gridModel.find(item => {
+            return !!item.$$edit;
+          });
+          if (findModel) {
+            growl.warning("有正在编辑的状态规则，请先点击确定，再保存该规则");
+            return;
+          }
+          if (scope.gridModel.length < 1) {
+            growl.warning("请添加状态规则");
+            return;
+          }
+          let findDevice = scope.deviceIdOptions.find(device => {
+            return device.id == scope.deviceId;
+          });
+          let findState = scope.stateStandardIdOptions.find(state => {
+            return state.id == scope.stateStandardId;
+          });
+          let findMaintain = scope.maintainStandardIdOptions.find(maintain => {
+            return maintain.id == scope.maintainStandardId;
+          });
+          let params = {
+            selectedDevName: scope.params.resource.label,
+            selectedDevCode: scope.params.resource.externalDevId,
+            ruleName: scope.ruleName,
+            itemList: scope.gridModel.map(item => {
+              return {
+                ...item,
+                kpiThreshold: ruleLists.find(rule => {
+                  return rule.id == item.id;
+                })
+              };
+            }),
+            deviceId: findDevice.id,
+            deviceCode: findDevice.externalDevId,
+            state: scope.state ? 1 : 0,
+            domains: scope.params.resource.domainPath,
+            selectedDevId: scope.params.resource.id,
+            faultType: scope.faultType
+          };
+          if (scope.stateStandardId) {
+            params.stateStandardId = scope.stateStandardId;
+            params.stateStandardNo = scope.stateStandardNo;
+            params.stateStandardName = findState.standardName;
+            params.executionCycle = scope.executionCycle;
+            params.cycleNum = scope.cycleNum;
+          } else {
+            params.stateStandardId = null;
+            params.stateStandardNo = null;
+            params.stateStandardName = null;
+            params.executionCycle = null;
+            params.cycleNum = null;
+          }
+          if (scope.maintainStandardId) {
+            params.maintainStandardId = scope.maintainStandardId;
+            params.maintainStandardNo = scope.maintainStandardNo;
+            params.maintainStandardName = findMaintain.standardProjectName;
+            params.maintainLimitDay = scope.maintainLimitDay;
+          } else {
+            params.maintainStandardId = null;
+            params.maintainStandardNo = null;
+            params.maintainStandardName = null;
+            params.maintainLimitDay = null;
+          }
+          if (scope.params.mode === "edit") {
+            // params.id = scope.params.rule.id;
+            params = Object.assign({}, scope.params.rule, params);
+          }
+          api
+            .post("maintenanceTaskUIService.addOnlineJudgeRule", [params])
+            .then(ret => {
+              if (ret.code == 0) {
+                let controllerScope = scope.$parent.$parent;
+                let gridScope = controllerScope.$$childHead;
+                while (!gridScope.gridInstance) {
+                  gridScope = gridScope.$$nextSibling;
+                }
+                if (scope.params.mode !== "edit") {
+                  growl.success("添加报警规则成功");
+                } else {
+                  growl.success("编辑报警规则成功");
+                }
+                gridScope.gridInstance.goSearch();
+                scope.close();
+              }
+            });
+        };
+
+        scope.$apply();
+      };
+
+      Promise.all([
+        api.post(
+          "resourceUIService.getDevicesByCondition?includeFields=label,id,modelId,externalDevId",
+          [{}]
+        ),
+        api.post("resourceUIService.getKpiThresholdListByConditionWithPage", [
+          {
+            modelId: scope.params.resource.modelId,
+            nodeIds: scope.params.resource.id + "",
+            enabled: true
+          },
+          {
+            start: 0,
+            length: 10000
+          }
+        ])
+      ]).then(ret => {
+        deviceLists = ret[0].data;
+        ruleLists = ret[1].data.data;
+        if (scope.params.rule) {
+          let rule = scope.params.rule;
+          scope.ruleName = rule.ruleName;
+          scope.gridModel = rule.itemList || [];
+          scope.deviceId = rule.deviceId;
+          scope.cycleNum = rule.cycleNum;
+          scope.faultType = rule.faultType;
+          scope.executionCycle = rule.executionCycle;
+          scope.maintainLimitDay = rule.maintainLimitDay;
+          scope.state = rule.state == 1 ? true : false;
+        } else {
+          scope.gridModel = [];
+        }
+        init();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+}
+
+.form-rule {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form-rule-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.label-value {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+
+  &.half-width {
+    width: 50%;
+  }
+
+  &.fully-width {
+    width: 100%;
+  }
+
+  .label {
+    flex-basis: 120px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .value {
+    flex: 1;
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+
+  .title-item {
+    padding: 5px;
+    min-width: 10px;
+    margin: 0;
+  }
+}
+</style>

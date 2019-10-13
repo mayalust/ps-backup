@@ -1,0 +1,506 @@
+<config injector="$scope, $rootScope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psPolling,kpiDataService"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="block margin-5 padding-20 item" id="to-height">
+          <div class="reality-image"></div>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <div class="block margin-5 padding-5 row item" id="from-height">
+          <div
+            class="tree-loading ng-scope"
+            ng-if="!loaded"
+            data-a-58306b0e=""
+          ></div>
+          <div ng-repeat="sens in sensorsGroup" class="col-md-1">
+            <table class="state">
+              <thead>
+                <tr>
+                  <th>名称</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="sen in sens">
+                  <td ng-bind="sen.getLabel()"></td>
+                  <td>
+                    <div
+                      class="circle"
+                      ng-style="sen.getState()"
+                      data-show-time="sen.getArisingTime()"
+                    ></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-5" style="overflow:hidden;">
+          <div
+            class="tree-loading ng-scope"
+            ng-if="!loaded"
+            data-a-58306b0e=""
+          ></div>
+          <h5>炉身冷却壁检漏监测 单位（L/min）</h5>
+          <div class="cell-title">
+            <div class="before"></div>
+            <div style="width:7.5%;" ng-repeat="num in nums">
+              <div class="dataName top">
+                <p>出水流量</p>
+              </div>
+              <div class="dataName body">
+                <p>管号</p>
+              </div>
+              <div class="dataName middle">
+                <p>补正后差流量</p>
+              </div>
+              <div class="dataName foot">
+                <p>进水流量</p>
+              </div>
+            </div>
+          </div>
+          <div class="image-bg">
+            <div class="before"></div>
+            <div class="cell" ng-repeat="sensor in sensors">
+              <div
+                class="cell-content top"
+                ng-bind="sensor.getValueA()"
+                ng-click="sensor.clickTop()"
+                data-show-time="sensor.getTimeA()"
+              ></div>
+              <div
+                class="cell-content image"
+                ng-style="sensor.getState()"
+                ng-bind="sensor.getLabel()"
+              ></div>
+              <div
+                class="cell-content middle"
+                ng-bind="sensor.getValueB()"
+                ng-click="sensor.clickMiddle()"
+                data-show-time="sensor.getTimeB()"
+              ></div>
+              <div
+                class="cell-content bottom"
+                ng-bind="sensor.getValueC()"
+                ng-click="sensor.clickBottom()"
+                data-show-time="sensor.getTimeC()"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="block margin-5 padding-5">
+          <h5>报警通知</h5>
+          <div class="low with-border">
+            <ps-alert-info></ps-alert-info>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  rootScope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psPolling,
+  kpiDataService
+) {
+  let id = state.params.id,
+    valueListMap = {},
+    _kpisList = [33001, 33002, 33005],
+    reality;
+  scope.loaded = false;
+  function flat(key) {
+    return function(a, b) {
+      b[key].forEach(n => {
+        a.add(n.dataItemId);
+      });
+      return a;
+    };
+  }
+  function getId(d) {
+    return d.dataItemId - 0;
+  }
+  function toFixed(rule) {
+    return function(num) {
+      let len = Math.pow(10, rule);
+      return Math.round(num * len) / len;
+    };
+  }
+  function sliceBy(num) {
+    return function(a, b) {
+      let group = a[a.length - 1];
+      if (group.length >= num) {
+        group = [];
+        a.push(group);
+      }
+      group.push(new StateCell(b));
+      return a;
+    };
+  }
+  function format(d) {
+    return d == null ? "-" : toFixed(2)(d - 0);
+  }
+  function fillZero(num) {
+    if (num < 100) {
+      return "0" + fillZero(num * 10);
+    } else {
+      return "";
+    }
+  }
+  function createArr(num) {
+    let rs = [];
+    for (let i = 0; i < num; i++) {
+      rs.push(i);
+    }
+    return rs;
+  }
+  class StateCell {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    click(dataItemId) {
+      let arisingTime = this.getT(dataItemId),
+        enddate = arisingTime && new Date(arisingTime) - 0,
+        startdate = enddate && enddate - 2 * 60 * 60 * 1000;
+      cms2.navigateTo("专业分析", {
+        startdate,
+        enddate,
+        dataItems: dataItemId,
+        sensor: this.name
+      });
+    }
+    getLabel() {
+      let num = this.label.split("-")[1].trim();
+      return fillZero(num) + num;
+    }
+    getData(kpi, type = "value") {
+      let instance = this.name;
+      return (
+        valueListMap[instance] &&
+        valueListMap[instance][kpi] &&
+        valueListMap[instance][kpi][type]
+      );
+    }
+    getV(kpi) {
+      let dt = this.getData(kpi);
+      return dt && dt.value;
+    }
+    getT(kpi) {
+      let dt = this.getData(kpi);
+      return dt && dt.arisingTime;
+    }
+    getArisingTimeVal() {
+      let arisingTime = _kpisList.reduce((a, b) => {
+        let s = this.getData(b);
+        if (s == null) {
+          return a;
+        }
+        if (new Date(a) < new Date(s.arisingTime)) {
+          a = s.arisingTime;
+        }
+        return a;
+      }, 0);
+      return arisingTime;
+    }
+    getArisingTime() {
+      let state = _kpisList.reduce(
+        (a, b) => {
+          let s = this.getData(b, "state"),
+            v = s && s.value != null ? s.value : 0;
+          if (v > a.value) {
+            a.value = v;
+            a.arisingTime = s.arisingTime;
+          }
+          return a;
+        },
+        {
+          value: 0,
+          arisingTime: undefined
+        }
+      );
+      return state.arisingTime || this.getArisingTimeVal();
+    }
+    getState() {
+      let state = _kpisList.reduce((a, b) => {
+          let s = this.getData(b, "state"),
+            v = s && s.value != null ? s.value : 0;
+          return v > a ? v : a;
+        }, 0),
+        obj = {
+          backgroundColor:
+            ["#00bc79", "#00bc79", "#efd709", "#ee6b1c", "#e74e53"][state] ||
+            "#00bc79"
+        };
+      return obj;
+    }
+  }
+  class ImageCell extends StateCell {
+    constructor(d) {
+      super(d);
+    }
+    clickTop() {
+      this.click(33002);
+    }
+    clickMiddle() {
+      this.click(33005);
+    }
+    clickBottom() {
+      this.click(33001);
+    }
+    getValueA() {
+      return format(this.getV(33002));
+    }
+    getTimeA() {
+      return this.getT(33002);
+    }
+    getValueB() {
+      return format(this.getV(33005));
+    }
+    getTimeB() {
+      return this.getT(33005);
+    }
+    getValueC() {
+      return format(this.getV(33001));
+    }
+    getTimeC() {
+      return this.getT(33001);
+    }
+    getState() {
+      let state = _kpisList.reduce((a, b) => {
+          let s = this.getData(b, "state"),
+            v = s && s.value != null ? s.value : 0;
+          return v > a ? v : a;
+        }, 0),
+        url = ["bar_G", "bar_G", "bar_Y", "bar_O", "bar_R"][state] || "bar_G";
+      url = `url(../images/benti/${url}.svg)`;
+      return {
+        backgroundImage: url
+      };
+    }
+  }
+  class Reality {
+    constructor(id, time, isWebSocket, isDebug) {
+      this.id = id;
+      this.time = time;
+      this.polling = psPolling(time, isWebSocket, isDebug);
+    }
+    init() {
+      this.getSensors().then(sensors => {
+        this.sensors = scope.sensors = sensors.map(d => new ImageCell(d));
+        scope.sensorsGroup = sensors.reduce(sliceBy(15), [[]]);
+        scope.nums = createArr(Math.ceil(sensors.length / 15));
+        setTimeout(() => {
+          let fromEl = document.getElementById("from-height");
+          let toEl = document.getElementById("to-height");
+          toEl.style.height = fromEl.clientHeight + 2 + "px";
+        });
+        let nodeIds = [this.id - 0],
+          kpiCodes = Array.from(this.sensors.reduce(flat("kpis"), new Set())),
+          instances = this.sensors.map(d => d.name);
+        instances = instances.concat(
+          instances.reduce((a, b) => {
+            return a.concat(
+              kpiCodes.map(kpiCode => {
+                return kpiCode + "_" + b;
+              })
+            );
+          }, [])
+        );
+        this.polling.getData(nodeIds, kpiCodes, instances, valueList => {
+          scope.loaded = true;
+          valueList.forEach(value => {
+            this.handleValue(value);
+          });
+        });
+      });
+    }
+    handleValue(d) {
+      let { kpiCode, instance, value } = d,
+        type = "value";
+      if (kpiCode == "999997") {
+        let insArr = instance.split("_");
+        kpiCode = insArr[0];
+        instance = insArr[1];
+        type = "state";
+      }
+      valueListMap[instance] = valueListMap[instance] || {};
+      valueListMap[instance][kpiCode] = valueListMap[instance][kpiCode] || {};
+      valueListMap[instance][kpiCode][type] = d;
+    }
+    destroy() {
+      this.polling.destroy();
+    }
+    getSensors() {
+      return psTreeData(id)
+        .getState()
+        .then(resource => {
+          return resource.getMeasureLocate();
+        });
+    }
+  }
+  reality = new Reality(state.params.id, 6000, true);
+  reality.init();
+  scope.$on("$destroy", () => {
+    reality.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+table.state {
+  width: 100%;
+  margin: 2px;
+  th {
+    text-align: center;
+    line-height: 2;
+    background: rgb(33, 71, 103);
+  }
+  td {
+    text-align: center;
+    line-height: 2;
+    .circle {
+      vertical-align: middle;
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin: 0 26% 0 0;
+      cursor: pointer;
+    }
+  }
+}
+.cell-title {
+  position: absolute;
+  top: 53px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  padding: 0;
+  .dataName {
+    position: relative;
+    p {
+      font-size: 12px;
+      padding: 0;
+      width: 100%;
+      right: 0;
+      text-align: right;
+      position: absolute;
+    }
+    &.top {
+      padding-top: 37%;
+    }
+    &.body {
+      padding-top: 35%;
+    }
+    &.middle {
+      padding-top: 45%;
+    }
+    &.foot {
+      padding-top: 40%;
+      padding-bottom: 72%;
+    }
+  }
+  .before {
+    display: block;
+    width: 100%;
+    padding-bottom: 3.7%;
+  }
+}
+.image-bg {
+  background-image: url("../../images/benti/LBK.svg");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100%;
+  padding-left: 4.2%;
+  padding-right: 4%;
+  margin-left: 3%;
+  width: 100%;
+  overflow: hidden;
+  .before {
+    display: block;
+    width: 100%;
+    padding-bottom: 3.7%;
+  }
+  .cell {
+    float: left;
+    width: 6.65%;
+    padding-bottom: 19.06%;
+    box-sizing: border-box;
+    position: relative;
+    .cell-content {
+      cursor: pointer;
+      position: absolute;
+      width: 80%;
+      left: 0;
+      right: 0;
+      margin: auto;
+      text-align: center;
+      font-size: 14px;
+      &.top {
+        margin-top: 50%;
+        color: black;
+      }
+      &.image {
+        margin-top: 86%;
+        line-height: 1.8;
+        color: white;
+        background-size: cover;
+        background-position: center;
+      }
+      &.middle {
+        margin-top: 141%;
+        color: yellow;
+      }
+      &.bottom {
+        margin-top: 196%;
+        color: black;
+      }
+    }
+  }
+}
+.reality-image {
+  width: 100%;
+  height: 100%;
+  background-image: url("../../images/benti/gaolu.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  position: relative;
+}
+.item {
+  min-height: 560px;
+  position: relative;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.art {
+  height: 483px;
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

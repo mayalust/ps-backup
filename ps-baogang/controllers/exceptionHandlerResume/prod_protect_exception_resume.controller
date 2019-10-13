@@ -1,0 +1,387 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading"
+></config>
+<template>
+    <div>
+        <!--type3: 异常履历维护-->
+        <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+            <!--返回-->
+            <div class="row margin-top-10 margin-bottom-10">
+                <div class="col-md-1">
+                    <button class="btn btn-primary btn-100" ng-click="back()">返回</button>
+                </div>
+            </div>
+            <div class="titleHead">
+                <div class="col-md-6" style="font-weight: 700;font-size: 75%;">
+                    设备名称:<label ng-bind="resumeObj.ticket.values.devName"></label>
+                </div>
+                <div class="col-md-6" style="font-weight: 700;font-size: 75%;">
+                    设备编号:<label ng-bind="resumeObj.ticket.values.deviceCode"></label>
+                </div>
+            </div>
+            <!--维护委托-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">维护委托</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#check_entrust" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="check_entrust" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            状态维护标准编号:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.standardNo"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            状态维护项目名称:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.standardName"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            实施依据:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.maintainBasis"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            设备状态:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.deviceState"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            实施方:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.actionUser"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tbl">
+                                        <div class="radio-lbl">
+                                            <span class="text-red">*</span>
+                                            安全挂牌:
+                                        </div>
+                                        <div class="tbl-cell">
+                                            <ps-input data-config="{'disabled': true}" ng-model="resumeObj.ticket.values.standardInfo.safetyPoint"></ps-input>
+                                        </div>
+                                        <div class="radio-unit">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--工器具准备-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">工器具准备</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#tool_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="tool_prepare" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-1"></div>
+                                <div class="col-md-10">
+                                    <table ps-table-sync
+                                           data-paginate="pageonly"
+                                           data-source="resumeObj.ticket.values.standardInfo.toolList"
+                                           data-filter="filter2"
+                                           data-sort="sort2"
+                                           data-page="page2">
+                                        <thead>
+                                        <tr>
+                                            <th>名称</th>
+                                            <th>规格</th>
+                                            <th>数量</th>
+                                            <th>单位</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="(key,item) in items track by key">
+                                            <td ng-bind="item.name"></td>
+                                            <td ng-bind="item.format"></td>
+                                            <td ng-bind="item.num"></td>
+                                            <td ng-bind="item.unit"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-1"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--挂牌准备-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">挂牌准备</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#list_prepare" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="list_prepare" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-1"></div>
+                                <div class="col-md-10">
+                                    <table ps-table-sync
+                                           data-paginate="pageonly"
+                                           data-source="resumeObj.ticket.values.standardInfo.listDeviceList"
+                                           data-filter="filter6"
+                                           data-sort="sort6"
+                                           data-page="page6">
+                                        <thead>
+                                        <tr>
+                                            <th>序号</th>
+                                            <th>安全牌性质</th>
+                                            <th>挂牌位置</th>
+                                            <th>挂牌设备</th>
+                                            <th>挂牌确认</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="(key,item) in items track by key">
+                                            <td>{{key+1}}</td>
+                                            <td ng-bind="item.safeNature"></td>
+                                            <td ng-bind="item.listPosition"></td>
+                                            <td ng-bind="item.deviceName.indexOf('////') != -1 ? item.deviceName.split('////')[0] : item.deviceName"></td>
+                                            <td ng-bind="item.state == 0 ? '否'
+                                                                     :item.state == 1 ? '是'
+                                                                     : '-'
+                                                        "></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-1"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--施工步骤-->
+            <div class="row">
+                <div class="margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5 margin-top-15">
+                        <div class="table-title pull-left">施工步骤</div>
+                        <div class="pull-right">
+                            <span class="glyphicon glyphicon-chevron-down arrow" style="font-size: 26px" data-toggle="collapse"  data-target="#apply_steps" aria-haspopup="false" aria-expanded="true"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-10">
+                        <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                    </div>
+                    <div class="" id="apply_steps" class="collapse in">
+                        <div class="row margin-bottom-5">
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="col-md-1"></div>
+                                <div class="col-md-10">
+                                    <table ps-table-sync
+                                           data-paginate="pageonly"
+                                           data-source="resumeObj.ticket.values.standardInfo.stepsList"
+                                           data-filter="filter7"
+                                           data-sort="sort7"
+                                           data-page="page7">
+                                        <thead>
+                                        <tr>
+                                            <th>步骤</th>
+                                            <th>作业内容</th>
+                                            <th>数据类别</th>
+                                            <th>作业确认</th>
+                                            <th>备注</th>
+                                            <th>附件</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="(key,item) in items track by key">
+                                            <td>{{key+1}}</td>
+                                            <td ng-bind="item.content"></td>
+                                            <td ng-bind="item.dataType"></td>
+                                            <td ng-bind="item.dataType == '定性' ? (item.stepsResult == 1 ? '是' : '否') : item.stepsResult"></td>
+                                            <td ng-bind="item.remark"></td>
+                                            <td>
+                                                <ps-filelinks ng-model="item.resultFiles"></ps-filelinks>
+                                            </td>
+                                            <!--<td ng-bind="item.resultFiles"></td>-->
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { extend , dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psLoading){
+        var target = commonMethodService(),
+            ticketNo = target.getValue("ticketNo");
+        //2019042514362900001  状态维护  310
+      ajax.post("baogangTicketService.getDeviceCheckResumeByTicket",[ticketNo]).then( d => {
+        //  
+        //来源是维护的 获取标准信息
+        return  scope.resumeObj = d;
+      });
+      scope.formatTime = function (d) {
+        return d
+          ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+          : "-";
+      };
+      scope.back = function(){
+        history.back();
+      };
+    }
+</script>
+<style lang="less" scoped>
+    .buttons {
+        position: fixed;
+        width: 160px;
+        height: 36px;
+        z-index: 99999999;
+        right: 20px;
+        top: 110px;
+    }
+    .wrap {
+        padding : 5px 10px !important;
+        div {
+            span {
+                color: #fff;
+                font-size: 75%;
+                font-weight: 700;
+            }
+            .arrow {
+                color: #72b3d7 !important;
+                font-size: 26px!important;
+                font-weight: 700!important;
+            }
+        }
+        .titleHead{
+            border-bottom: 1px solid;
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+        }
+        .t_title {
+            font-size: 14px!important;
+            font-weight: 700!important;
+        }
+        .title{
+            line-height : 26px;
+            padding-right : 20px;
+        }
+        .value {
+            line-height : 26px;
+        }
+        .option{
+            width : 160px;
+        }
+        .tbl {
+            width: 100%;
+            display: table;
+        }
+        .tbl-cell {
+            display: table-cell;
+        }
+        .radio-lbl {
+            color: #ffff;
+            font-size: 75%;
+            font-weight: 700;
+            display: table-cell;
+            width: 150px;
+            text-align:right;
+            padding-right: 5px;
+
+        }
+        .radio-inp {
+            vertical-align:-2px;
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+        }
+        .radio-spa {
+            padding: 0 15px 0 2px;
+        }
+        .radio-unit {
+            display: table-cell;
+            padding-left: 2px;
+            width: 40px;
+        }
+        .chx {
+            vertical-align: -2px;
+            /*margin-right: 40px;*/
+        }
+        .div_inline {
+            display: inline-block;
+        }
+    }
+</style>

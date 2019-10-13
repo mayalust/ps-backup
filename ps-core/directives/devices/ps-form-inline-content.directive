@@ -1,0 +1,45 @@
+<config injector="$timeout, psScope, psUltility"
+></config>
+<template>
+  <div style="float : left; padding: 5px;" ng-style="minwidth()">
+    <ps-tools data-option="option"></ps-tools>
+  </div>
+</template>
+<script type="text/javascript">
+  import { findElement, isNumber } from "ps-ultility";
+  export default function(timeout, psScope, psUltility){
+    return {
+      restrict: 'E',
+      scope: {
+        option : "="
+      },
+      replace: true,
+      link: function (scope, element) {
+        scope.minwidth = function(){
+          let regex = "(?:label)|(?:button)",
+            defaultmin = scope.option.width;
+          if(isNumber(defaultmin)){
+            return {
+              "min-width" : defaultmin + "px"
+            }
+          } else if(!new RegExp(regex).test(scope.option.type)){
+            return {
+              "min-width" : "150px"
+            }
+          }
+        };
+        psUltility.registerCurrentScope(scope);
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .select2-selection{
+    line-height : 28px;
+    height : 28px;
+    padding : 0 8px;
+    .select2-selection__rendered{
+      margin : 0;
+    }
+  }
+</style>

@@ -1,0 +1,206 @@
+/**
+ * Created by whui on 2019/3/5.
+ */
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block padding-10">
+          <div class="margin-bottom-5">
+            <span class="padding-right-10">委托单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="label" class="form-control"/>
+            </div>
+            <span class="padding-right-10">工程单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="numberId" class="form-control"/>
+            </div>
+            <span class="padding-right-10">委托日期:</span>
+            <div class="horizontal width-200">
+              <ps-date2 ng-model="starttime"></ps-date2>
+            </div>
+            <span class="padding-left-right-10">至</span>
+            <div class="horizontal width-200">
+              <ps-date2 ng-model="endtime"></ps-date2>
+            </div>
+            <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+            <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+          </div>
+          <div>
+
+          </div>
+
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block">
+          <div class="wrap">
+            <div class="table-title">
+              设备工程单
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>委托单位</th>
+                <th>委托单号</th>
+                <th>项目等级</th>
+                <th>工程名称</th>
+                <th>工程单号</th>
+                <th>设备类型</th>
+                <th>修理方式</th>
+                <th>宝钢号</th>
+                <th>设备型号</th>
+                <th>委托日期</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="item.label"></td>
+                <td ng-bind="item.label"></td>
+                <td ng-bind="item.deviceType"></td>
+                <td ng-bind="item.label"></td>
+                <td ng-bind="item.numberId"></td>
+                <td ng-bind="item.rateCapacity"></td>
+                <td ng-bind="item.maker"></td>
+                <td ng-bind="item.makeId"></td>
+                <td ng-bind="item.getModifyTime()"></td>
+                <td ng-bind="item.label"></td>
+                <td ng-bind="item.label"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.totalDeal()">综合处理</button>
+                    <button class="btn btn-default" ng-click="item.sceneInfo()">现场信息</button>
+                    <button class="btn btn-primary" ng-click="item.repairResume()">检修履历</button>
+                    <button class="btn btn-default" ng-click="item.repairReport()">完工管理</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax){
+    let getResourceByModelId = "resourceUIService.getResourceByModelId",
+        currentTime = new Date(),
+        date = dateparser(currentTime);
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      analysis(){
+        cms2.navigateTo(2);
+      }
+      totalDeal(){
+
+      }
+      sceneInfo(){
+
+      }
+      repairResume(){
+
+      }
+      repairReport(){
+
+      }
+    }
+
+    cms2.getRoot().then( root => {
+      let id = root[0].id,
+        statusTabs = [{
+          value : "-",
+          color : "rgb(12, 70, 109)",
+          border : "#21a6fb",
+          text : "待处理任务",
+          icon : "ps-bw_01",
+          kpi : 3017
+        },{
+          value : "-",
+          color : "rgb(102, 72, 109)",
+          border : "rgb(224, 162, 239)",
+          text : "待处理任务",
+          icon : "ps-bw_02",
+          kpi : 3045
+        },{
+          value : "-",
+          color : "rgb(72, 75, 47)",
+          border : "rgb(231, 181, 43)",
+          text : "其他任务",
+          icon : "ps-bw_03",
+          kpi : 3046
+        }],
+        statusTabsIds = statusTabs.map(({kpi}) => kpi );
+      return cms2.getKpiValue( id, statusTabsIds ).then( vals => {
+        return cms2.success(statusTabs.map( d => {
+          d.value = vals[d.kpi];
+        }));
+      })
+    }).then( d => {
+      scope.statusTabs = d;
+      return ajax.post("resourceUIService.getResourceByModelId", 300).then( domains => {
+        return ajax.post("resourceUIService.getResourceByModelId", 301).then( customers => {
+          return ajax.post("resourceUIService.getResourceByModelId", 302).then( projects => {
+            return cms2.success((domains || [])
+              .concat(customers || []).concat(projects || []));
+          })
+        });
+      })
+    }).then( domains => {
+      scope.resources = domains.map( d => new tableCell(d));
+      scope.models = [{
+        id : 300,
+        label : "管理域"
+      },{
+        id : 301,
+        label : "客户"
+      },{
+        id : 302,
+        label : "项目"
+      }];
+    });
+
+
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+      scope.filter = ({ modelId }) => {
+        if( scope.modelId && modelId !== scope.modelId){
+          return false;
+        }
+        return true;
+      }
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

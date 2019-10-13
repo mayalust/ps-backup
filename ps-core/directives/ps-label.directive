@@ -1,0 +1,71 @@
+<config injector="$timeout, psScope, psUi"
+></config>
+<template>
+  <div ng-style="config.styles" style="width : 100%;overflow:hidden;text-overflow : ellipsis;">
+    <span ng-style="config.style" ng-click="config.on.click"></span>
+  </div>
+</template>
+<script type="text/javascript">
+  import { hasParent } from "ps-ultility";
+  export default function(timeout, psScope, psUi){
+    return {
+      scope : {
+        config : "=",
+        value : "="
+      },
+      require: '?ngModel',
+      link(scope, element, attr, ngModel) {
+        let wrap = element[0], dom = element[0].children[0], ins;
+        ngModel.$render = function(n){
+          let parser = scope.config && scope.config.parser,
+            text = typeof parser === "function" ? parser(ngModel.$viewValue) : ngModel.$viewValue;
+          if(text === 0){
+            text = 0;
+          }else {
+            text = text || scope.value;
+          }
+          dom.innerText = typeof text !== "undefined" && text !== null ? text : "";
+        };
+        ngModel.$formatters.push(function(n){
+          return n;
+        });
+        function onmouseover(e){
+          let currentTarget = e.currentTarget, fromElement = e.fromElement;
+          if(!hasParent(fromElement, currentTarget)){
+            ins = psUi.createTooltip(wrap, dom.innerText);
+            wrap.onmouseover = null;
+            timeout(()=>{
+              let fn = function(e){
+                if(!hasParent( e.toElement, currentTarget )){
+                  ins.destroy();
+                  timeout(()=>{
+                    wrap.onmouseover = onmouseover;
+                    document.removeEventListener("mouseout", fn);
+                  });
+                }
+              }
+              document.addEventListener("mouseout", fn)
+            });
+          } else {
+             
+            console.dir(e.fromElement);
+            console.dir(e.currentTarget)
+             
+          }
+        };
+        wrap.onmouseover = onmouseover;
+        scope.$on("$destroy", ()=>{
+          ins && ins.destroy();
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  span{
+    //text-overflow : ellipsis;
+    white-space: normal;
+    line-height : 20px;
+    font-size : 14px;
+  }
+</style>

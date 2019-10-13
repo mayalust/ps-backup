@@ -1,0 +1,2 @@
+define([],function(){return function(e){var n,t,r=e.element,i=$("<div></div>");r.style&&i.css(r.style),$$.runExpression(r.$attr("advance/expression"),function(e){t=0==e.code&&(t=e.data)||{}});var s=t.$attr("on/init"),a=function(t){require(["echarts","echartGalleryJs"],function(e){(n=e.init($(i)[0])).setOption(t)})};if(r.render=a,r.resize=function(){n.resize()},s)try{s({target:r})}catch(e){}else a();return i}});
+//# sourceMappingURL=../../map/toolkit/component/echartGallery.js.map

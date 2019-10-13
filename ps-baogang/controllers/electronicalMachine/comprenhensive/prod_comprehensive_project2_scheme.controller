@@ -1,0 +1,555 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,growl,commonMethodService,psLoading" deps="dialogSchemeList"
+></config>
+<template>
+    <div class="wrap">
+        <!--第一个-->
+        <div class="row">
+            <div class="col-md-12 margin-bottom-5">
+                <div class="block padding-10">
+                    <div class="margin-bottom-5">
+                        <div class="table-title">
+                            工程单详情
+                            <button ng-click="editResume()"
+                                    ng-if="currentRoleID == 59846674150228 && mode == 'resume'"
+                                    class="btn btn-primary pull-right">编辑</button>
+                        </div>
+                        <table ps-table-sync
+                               data-paginate="pageonly"
+                               data-source="resources"
+                               data-filter="filter"
+                               data-sort="sort"
+                               data-page="page">
+                            <thead>
+                            <tr>
+                                <th><input id="allboxs" ng-click="allcheck()" type="checkbox" ng-disabled="disableFn(mode,currentRoleID)"/></th>
+                                <th>序号</th>
+                                <th>材料类型</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="(key,item) in schemes track by key">
+                                <!--<td><input id="boxa" ng-click="checks(item.label)" name="boxs" type="checkbox" ng-model="bool" ng-bind="item.label"/></td>-->
+                                <td><input id="{{key}}" ng-click="checks(item)" name="boxs" type="checkbox" ng-model="test1" value="" ng-disabled="disableFn(mode,currentRoleID)"/></td>
+                                <td>{{key<9 ? "0"+(key+1): key+1}}</td>
+                                <td>
+                                        <label>{{item.label}}</label>
+                                        <div ng-if="key == 13">
+                                            <label>
+                                                负荷侧： <input type="text" ng-model="item.zcsnjLoadSide" class="pad-lf-5" ng-disabled="disableFn(mode,currentRoleID)">
+                                            </label>
+                                            <label>
+                                                非负荷侧： <input type="text" ng-model="item.zcsnjLoadSideNon" class="pad-lf-5" ng-disabled="disableFn(mode,currentRoleID)">
+                                            </label>
+                                        </div>
+                                        <div ng-if="key == 15">
+                                            <label>
+                                                负荷侧： <input type="text" ng-model="item.zcdzjloadSide" class="pad-lf-5" ng-disabled="disableFn(mode,currentRoleID)">
+                                            </label>
+                                            <label>
+                                                非负荷侧：<input type="text" ng-model="item.zcdzjLoadSideNon" class="pad-lf-5" ng-disabled="disableFn(mode,currentRoleID)">
+                                            </label>
+                                        </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!--第二个-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div id="disassembly_check" class="block padding-10">
+                    <div class="row margin-bottom-5">
+                        <!--自动增加标签-->
+                        <div class="table-title">
+                            <button ng-click="addScheme()"
+                                    class="btn btn-primary pull-right" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">新增方案</button>
+                        </div>
+                        <!--第一个-->
+                        <div class="col-md-12">
+                                <table ps-table-sync
+                                       data-paginate="pageonly"
+                                       data-source="resources"
+                                       data-filter="filter"
+                                       data-sort="sort"
+                                       data-page="page">
+                                    <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>临时施工方案</th>
+                                        <th class="option" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="(key,item) in items track by key">
+                                        <!--<td>{{key<10 ? "0"+(key+1): key+1}}</td>-->
+                                        <td ng-bind="item.xuno"></td>
+                                        <td ng-bind="item.temporaryConstructionPlan"></td>
+                                        <td ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">
+                                            <div ps-option-group>
+                                                <button class="btn btn-default" ng-click="item.edit()">编辑</button>
+                                                <button class="btn btn-default" ng-click="item.remove()">删除</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--第三个-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="block padding-10">
+                    <div class="row margin-bottom-5">
+                        <!--第一个-->
+                            <div class="col-md-12 margin-bottom-5">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        附件:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <ps-file2  ng-model="maintainObj.attachmentList" ng-disabled="disableFn(mode,currentRoleID)'"></ps-file2>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--第四个-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="block padding-10">
+                    <div class="row margin-bottom-5">
+                        <!--第一个-->
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    是否绕组大修:
+                                    <input class="chx" type="checkbox" ng-model="isWindingOverhaul" value="" ng-disabled="disableFn(mode,currentRoleID)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--提交 取消-->
+        <div class="row margin-top-10">
+            <div class="col-md-5">
+
+            </div>
+            <div class="col-md-7">
+                <button class="btn btn-primary btn-100" ng-click="submitFn()" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">保存</button>
+                <button class="btn btn-default btn-100" ng-click="close()" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">取消</button>
+            </div>
+        </div>
+
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,$state,registerService,cms2,ajax,growl,commonMethodService,psLoading){
+
+        var target = commonMethodService();
+        var params88 = target.getValue("maintainObj");
+        var params89 = params88.implementOrderNo;
+        var param99 = [];
+        param99.push(params89);
+        scope.mode = target.getValue('mode');
+        scope.maintainObj = scope.maintainObj || {};
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.editResume = function (){
+           scope.mode = 'superAdmin';
+        };
+        scope.disableFn = function (mode,currentRoleID){
+          return mode === 'resume'
+              || (currentRoleID == 59846674150228 && mode != 'superAdmin')
+              || (currentRoleID != 70153973788968  && currentRoleID != 59846674150228 );
+        };
+
+//        添加复选框全选
+        var stringList = [];
+        scope.allcheck = function () {
+            var nn = $("#allboxs").is(":checked");
+            var stringList = [];
+            if(nn == true) {
+                var namebox = $("input[name^='boxs']");
+                stringList = scope.schemes;
+                for(var i = 0; i < namebox.length; i++) {
+//                    stringList.push(namebox[i].textContent);
+                    namebox[i].checked=true;
+                }
+            }
+            if(nn == false) {
+                var namebox = $("input[name^='boxs']");
+                for(var i = 0; i < namebox.length; i++) {
+                    stringList = [];
+                    namebox[i].checked=false;
+                }
+            }
+            scope.constructionPlan = JSON.stringify(stringList);
+        }
+//        添加复选框单选
+        scope.checks = function (d) {
+            var nn0 = $("#"+ d.id);
+            var bool = nn0[0].checked;
+
+            if(bool){
+                if(!scope.constructionPlan){
+                    scope.constructionPlan = "[]";
+                }
+                if(scope.string1list){
+                    scope.constructionPlan = scope.string1list;
+                }
+                var datas = JSON.parse(scope.constructionPlan);
+                if(datas.length == 0){
+                    datas.push(d);
+                }else if(datas.length != 0){
+                    var sele = 0;
+                    for(var i=0;i<datas.length;i++){
+                        if(datas[i]){
+                            if(datas[i] == d ){
+                                sele = 2;
+                            }
+                        }
+                    }
+                    if(sele == 0){
+                        datas.push(d);
+                    }
+                }
+                scope.constructionPlan = JSON.stringify(datas);
+            }else {
+                if(scope.string1list){
+                    var datas = JSON.parse(scope.string1list);
+                    if(datas.length != 0){
+                        for(var i=0;i<datas.length;i++){
+                            if(datas[i]){
+                                if(datas[i].id == d.id ){
+                                    datas.splice(i,1);
+                                }
+                            }
+                        }
+                    }
+                    scope.string1list = JSON.stringify(datas);
+                    scope.constructionPlan = JSON.stringify(datas);
+                }
+            }
+        }
+
+
+
+        let saveMakePlan = "motorRepairUIService.saveMakePlan",
+                findMakePlans = "motorRepairUIService. findMakePlans",
+                currentTime = new Date(),
+                date = dateparser(currentTime);
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            edit(){
+                cms2.modal({
+                    title : "新增临时施工方案",
+                    directive : "dialog-scheme-list",
+                    width : "50%",
+                    params : {
+                        mode : "edit",
+                        data : this
+                    }
+                }).then( d => {
+                    if(this.xuno !== d.xuno || this.temporaryConstructionPlan !== d.temporaryConstructionPlan){
+                        for(var i=0;i<schemeList.length;i++){
+                            if(schemeList[i].xuno == this.xuno && schemeList[i].temporaryConstructionPlan == this.temporaryConstructionPlan){
+                                schemeList.splice(i,1);
+                            }
+                        }
+                    };
+                    var dataObj = {};
+                    dataObj.xuno = d.xuno;
+                    dataObj.temporaryConstructionPlan = d.temporaryConstructionPlan;
+                    schemeList.unshift(dataObj);
+                }).then( d =>{
+                        scope.resources = schemeList.map( d => new tableCell(d))
+                })
+            }
+            remove(){
+
+                if(this.xuno && this.temporaryConstructionPlan){
+                    var schemeList = scope.string2list;
+                    for(var i=0;i<schemeList.length;i++){
+                        if(schemeList[i].xuno == this.xuno && schemeList[i].temporaryConstructionPlan == this.temporaryConstructionPlan){
+                            schemeList.splice(i,1);
+                        }
+                    }
+                };
+                scope.resources = schemeList.map( d => new tableCell(d))
+            }
+        }
+
+//        展示数据
+        var schemeList = [];
+//        scope.resources = schemeList.map( d => new tableCell(d))
+        //添加table行
+        scope.addScheme = function(){
+            cms2.modal({
+                title : "新增临时施工方案",
+                directive : "dialog-scheme-list",
+                width : "50%",
+                params : {
+                    mode : "edit",
+                    data : {}
+                }
+            }).then( d => {
+                if(d.xuno && d.temporaryConstructionPlan){
+                    if(scope.string2list){
+                        schemeList = scope.string2list;
+                    }else if(schemeList.length <= 0){
+                        schemeList = [];
+                    }
+                    var dataObj = {};
+                    dataObj.xuno = d.xuno;
+                    dataObj.temporaryConstructionPlan = d.temporaryConstructionPlan;
+                    schemeList.unshift(dataObj);
+                    scope.temporaryConstructionPlan = JSON.stringify(schemeList);
+                }
+            }).then( d =>{
+                scope.resources = schemeList.map( d => new tableCell(d))
+            })
+        };
+
+
+        scope.schemes = [
+            {id:0,label:'电机预检：测量定子绝缘电阻；测量定子绕组三相直流电阻互差≤2%；记录电机原始数据、配件缺损情况'},
+            {id:1,label:'拉拔联轴器（接手），记录联轴器原始位置，检查键、键槽、轴伸有无异常磨损'},
+            {id:2,label:'电机解体。各零部件（风叶、风罩、端盖、挡油盖、挡油圈等）做好原始配合记录'},
+            {id:3,label:'抽芯，记录轴伸方向'},
+            {id:4,label:'定、转子直流电阻、对地绝缘测量'},
+            {id:5,label:'定子检查：线圈表面绝缘层是否完好，槽楔是否松动、脱落，其它部件是否完好'},
+            {id:6,label:'转子检查：线圈表面绝缘层是否完好，槽楔是否松动、脱落，其它部件是否完好'},
+            {id:7,label:'定子清洗，干燥。'},
+            {id:8,label:'转子滑环检查，拆除（注意保护绕组和引线）'},
+            // {id:9,label:'电机转子的各类机械新滑环检查，对地耐压测试（按新品滑环标准），滑环与轴配合的各类机械加工尺寸检查'},
+            {id:9,label:'新增滑环检查，对地耐压测试(按新品滑环标准)，滑环与轴配合的各类机械加功；'},
+            {id:10,label:'转子绕组进行各类数据（对地、匝间及直阻等）测试符合要求后浸漆一次处理'},
+            {id:11,label:'新滑环进行烘房预热后进行热套装，引线连接'},
+            {id:12,label:'电机刷架，刷握检查，位置调整及固定'},
+            {id:13,label:'检查清洁冷却箱、机壳、端盖等各机械部件。测量轴承室内径，标准公差范围如下:',zcsnjLoadSide:"",zcsnjLoadSideNon:""},
+            {id:14,label:'挡油圈无松动，顶丝有效。内外轴承盖无异常磨损、变形，进出油管清洁无堵塞'},
+            {id:15,label:'更换轴承：更换轴承：记录轴承型号。测量轴承档轴径，标准公差范围如下:',zcdzjloadSide:"",zcdzjLoadSideNon:""},
+            {id:16,label:'出线盒断螺丝处理，紧固'},
+            {id:17,label:'按工艺顺序组装电机，轴承油脂适量，组装后盘动电机手感良好，检查电机齿轮箱、冷却箱等配件'},
+            {id:18,label:'送试前电机自检（对地绝缘、直阻良好，各零部件安装齐全，外壳整洁等）外表清洁，底脚面平整'},
+            {id:19,label:'电机上试验台进行试验'},
+            {id:20,label:'外壳喷漆处理'},
+            {id:21,label:'套装联轴器'}
+        ];
+
+        scope.submitFn = function(){
+            var params = {};
+            params.implementOrderNo = params89;
+            if(scope.id){
+                params.id = scope.id;
+            }
+            if(scope.constructionPlan || scope.string1list){
+                params.constructionPlan = scope.constructionPlan?scope.constructionPlan:scope.string1list;
+                let plan = JSON.parse(params.constructionPlan);
+                if(plan.length !=0){
+                  plan = plan.map((v,i) =>{
+                    if(v.id == 13){
+                      v["zcsnjLoadSide"] = scope.schemes[13]["zcsnjLoadSide"];
+                      v["zcsnjLoadSideNon"] = scope.schemes[13]["zcsnjLoadSideNon"];
+                    }
+                    if(v.id == 15){
+                      v["zcdzjloadSide"] = scope.schemes[15]["zcdzjloadSide"];
+                      v["zcdzjLoadSideNon"] = scope.schemes[15]["zcdzjLoadSideNon"];
+                    }
+                    return v;
+                  });
+                  params.constructionPlan = JSON.stringify(plan);
+                }
+
+            }
+            if(scope.temporaryConstructionPlan || scope.string2list){
+                params.temporaryConstructionPlan = scope.temporaryConstructionPlan?scope.temporaryConstructionPlan:JSON.stringify(scope.string2list);
+            }
+            if(scope.isWindingOverhaul){
+                params.isWindingOverhaul = scope.isWindingOverhaul;
+            }
+           /* if(scope.attachmentList){
+                params.attachmentList = scope.attachmentList;
+            }*/
+            let promise = cms2.validate({}, scope);
+            promise.then(() => {
+                if( typeof (scope && scope.maintainObj) != "undefined"){
+                    scope.implementOrderNo = target.getValue("maintainObj").implementOrderNo;//根据implementOrderNo查询
+                    function getFiles(data) {
+                        let keys = Object.keys(data);
+                        let values = Object.values(data);
+                        let temp = [];
+                        let ret = [];
+                        keys.forEach((key, index) => {
+                            let obj = {};
+                            obj.key = key;
+                            obj.files = values[index];
+                            temp.push(obj);
+                        });
+
+                        let index = 0;
+                        temp.forEach(item => {
+                            if (item.files.length > 0) {
+                                item.files.forEach(file => {
+                                    ret.push({
+                                        name: file.name,
+                                        key: item.key,
+                                        file: file,
+                                        index: index
+                                    });
+                                    index ++ ;
+                                });
+                            }
+                        });
+
+                        return ret;
+                    }
+                    function setValueEmpty(data) {
+                        for(let key in data) {
+                            scope.maintainObj[key] = [];
+                        }
+                    }
+                    let formData = new FormData();
+                    let hasFileObj = {};
+                    hasFileObj.attachmentList = scope.maintainObj.attachmentList&&scope.maintainObj.attachmentList.map(v=>{
+                        if(v.hasOwnProperty('filePath'))
+                        {return v;}
+                    }) || [];
+                    let obj = {
+                        'attachmentList':  scope.maintainObj.attachmentList&&scope.maintainObj.attachmentList.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                    };
+                    let files = getFiles(obj);
+                    setValueEmpty(obj);
+                    formData.append("resourceId",2);
+                    if(files.length >0){
+                        files.forEach((v,i) => {
+                            formData.append(`file${v.index}`,v.file);
+                        })
+                    }
+                    if(files.length !== 0){
+                        psLoading.showLoadingTip();
+                        ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                            if(s.code == "0"){
+                                psLoading.closeLoading();
+                                let obj = {},sArr = s.data || [];
+                                if(isArray(s.data)){
+                                    s.data.forEach((v,i)=>{
+                                        obj = {};
+                                        obj["fileName"] = files[i].name;
+                                        // obj["filePath"] = v.qualifiedName;
+                                        obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                                        scope.maintainObj[files[i].key].push(obj);
+                                    })
+                                }else {
+                                    obj["fileName"] = files[0].name;
+                                    obj["filePath"] = s.data.qualifiedName;
+                                    scope.maintainObj[files[0].key].push(obj);
+                                }
+                                return cms2.success( scope);
+                            }
+                        }).then(function (scope) {
+                            psLoading.showLoading();
+                            scope.maintainObj.attachmentList = scope.maintainObj.attachmentList.concat(hasFileObj.attachmentList&&hasFileObj.attachmentList.filter(v=>v));
+                            params["attachmentList"] = scope.maintainObj.attachmentList || [];
+                            ajax.post(saveMakePlan,params).then( d => {
+                                if(d != null){
+                                    psLoading.closeLoading();
+                                    growl.info("制定方案成功！");
+                                }
+                            });
+                        })
+                    }else {
+                        psLoading.showLoading();
+                        scope.maintainObj.attachmentList = scope.maintainObj.attachmentList.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.attachmentList&&hasFileObj.attachmentList.filter(v=>v));
+                       params["attachmentList"] = scope.maintainObj.attachmentList || [];
+                        ajax.post(saveMakePlan,params).then( d => {
+                            if(d != null){
+                                psLoading.closeLoading();
+                                growl.info("制定方案成功！");
+                            }
+                        });
+
+                    }
+                }
+
+            }).catch(e => {
+                growl.warning( e);
+            });
+        };
+//        //展示数据
+
+        ajax.post(findMakePlans, param99).then( scheme => {
+
+            scope["maintainObj"]["attachmentList"] = scheme[0].attachmentList || [];
+            if(scheme[0].constructionPlan){
+                scope.string1list = scheme[0].constructionPlan;
+                var string1 = JSON.parse(scheme[0].constructionPlan);
+                var namebox = $("input[name^='boxs']");
+                for(var i=0;i<namebox.length;i++){
+                    for(var j=0;j<string1.length;j++){
+                        if(i == string1[j].id){
+                            namebox[i].checked=true;
+                        }
+                    }
+                }
+            }
+//            //over
+            if(scheme[0].temporaryConstructionPlan){
+                var string2 = JSON.parse(scheme[0].temporaryConstructionPlan);
+                scope.string2list = string2;
+                scope.resources = string2.map( d => new tableCell(d))
+            }else{
+                scope.string2list = [];
+            }
+            if(scheme[0].id){
+                scope.id = scheme[0].id;
+            }
+            if(scheme[0].constructionPlan){
+              let pl13 = JSON.parse(scheme[0].constructionPlan).find(v=>v.id == 13);
+              scope.schemes[13] = pl13
+                  ||{id:13,label:'检查清洁冷却箱、机壳、端盖等各机械部件。测量轴承室内径，标准公差范围如下:',zcsnjLoadSide:"",zcsnjLoadSideNon:""};
+              let pl15 = JSON.parse(scheme[0].constructionPlan).find(v=>v.id == 15);
+              scope.schemes[15] = pl15
+                  ||{id:15,label:'更换轴承：更换轴承：记录轴承型号。测量轴承档轴径，标准公差范围如下:',zcdzjloadSide:"",zcdzjLoadSideNon:""};
+            }
+            if(scheme[0].isWindingOverhaul == true){
+                scope.isWindingOverhaul = true;
+            }
+        })
+
+
+
+    }
+</script>
+<style lang="less" scoped>
+    .wrap {
+        padding : 5px 10px !important;
+        .option{
+            width : 160px;
+        }
+        .pad-lf-5 {
+            padding-left:5px;
+        }
+    }
+</style>

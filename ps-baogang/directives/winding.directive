@@ -1,0 +1,99 @@
+<config injector="$rootScope,$q,ajax,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<template>
+  <div class="wrap"></div>
+</template>
+<script type="text/javascript">
+export default function(
+  rootScope,
+  q,
+  ajax,
+  SwSocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTopo
+) {
+  return {
+    scope: {
+      init: "&",
+      complete: "&"
+    },
+    link(scope, element, attr) {
+      var dom = element;
+      var wrap = document.createElement("div");
+      var images = [
+        "url(../images/benti/gaolu_green.svg)",
+        "url(../images/benti/gaolu_green.svg)",
+        "url(../images/benti/gaolu_yellow.svg)",
+        "url(../images/benti/gaolu_orange.svg)",
+        "url(../images/benti/gaolu_red.svg)",
+        "url(../images/benti/gaolu_red.svg)"
+      ];
+      var render = function(d) {
+        var map = {};
+        var fragement = document.createDocumentFragment();
+        var wrap = document.createElement("div");
+        wrap.style.width = "100%";
+        wrap.style.height = "600px";
+        wrap.style.display = "flex";
+        wrap.style.justifyContent = "center";
+        wrap.style.alignItems = "center";
+        var wind = document.createElement("div");
+        wind.style.width = "250px";
+        wind.style.height = "250px";
+        wind.style.backgroundImage = "url('../images/benti/gaolubenti.svg')";
+        wind.style.backgroundRepeat = "no-repeat";
+        wind.style.backgroundPosition = "center top";
+        wind.style.backgroundSize = "contain";
+        wind.style.position = "relative";
+        wind.style.display = "flex";
+        wind.style.justifyContent = "center";
+        wind.style.alignItems = "center";
+        function each(n, i) {
+          var col = n;
+          var op = col.split("_")[1];
+          var point1 = document.createElement("div");
+          point1.innerText = i < 9 ? "0" + (i + 1) : i + 1;
+          point1.style.width = "30px";
+          point1.style.height = "80px";
+          point1.style.paddingTop = "5px";
+          point1.style.backgroundImage =
+            images[op] || "url(../images/benti/gaolu_green.svg)";
+          point1.style.backgroundSize = "contain";
+          point1.style.backgroundRepeat = "no-repeat";
+          point1.style.textAlign = "center";
+          point1.style.fontSize = "14px";
+          point1.style.color = "white";
+          var box = document.createElement("div");
+          box.style.width = "30px";
+          box.style.height = "410px";
+          box.style.position = "absolute";
+          box.style.transform = "rotate(" + i * 9 + "deg)";
+          map[i] = point1;
+          //设置默认样式
+          box.appendChild(point1);
+          wind.appendChild(box);
+        }
+        for (var i = 0; i < d.length; i++) {
+          each(d[i], i);
+        }
+        wrap.appendChild(wind);
+        fragement.appendChild(wrap);
+        dom[0].appendChild(fragement);
+        return function refresh(d) {
+          for (var i = 0; i < d.length; i++) {
+            map[i].style.backgroundImage =
+              images[d[i].split("_")[1]] ||
+              "url(../images/benti/gaolu_green.svg)";
+          }
+        };
+      };
+      element.render = render;
+      scope.init({ event: { target: element } });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

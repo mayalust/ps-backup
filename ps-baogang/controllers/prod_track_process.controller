@@ -1,0 +1,118 @@
+<config injector="$scope,$state,$registerService,ajax,psTreeData,commonMethodService2,psTrackData"
+        params="/:text"
+></config>
+<template>
+  <div id="free-board" class="steel">
+    <div class="title-wrap">
+      <button class="btn btn-primary" ng-click="back()">
+        <span class="glyphicon glyphicon-chevron-left"></span>返回
+      </button>
+      <label ng-if="deviceInfo.init">设备名称:</label>
+      <span
+          class="flow-chart"
+          ng-bind="deviceInfo.devName"
+          ng-if="deviceInfo.init"
+      ></span>
+      <label ng-if="deviceInfo.init">设备编码:</label>
+      <span
+          class="flow-chart"
+          ng-bind="deviceInfo.deviceCode"
+          ng-if="deviceInfo.init"
+      ></span>
+      <label ng-if="newMode">任务流程图:</label>
+      <span
+          class="flow-chart"
+          ng-bind="flowchart.id"
+          ng-repeat="flowchart in flowCharts"
+      ></span>
+      <h3
+          ng-bind="hash.label + '[' + hash.category + ']'"
+          ng-if="hash && hash.label && hash.category"
+      ></h3>
+    </div>
+
+    <div class="wrap">
+      <task-job task="data"></task-job>
+      <ps-old-history
+          ng-if="!newMode"
+          data-options="trackersList"
+      ></ps-old-history>
+      <history-tracker-chart
+          ng-if="newMode"
+          data-options="trackersList"
+      ></history-tracker-chart>
+    </div>
+  </div>
+</template>
+<script>
+export default function (scope, $state, registerService, ajax, psTreeData, commonMethodService2, psTrackData) {
+  scope.deviceInfo = {
+    init: false
+  };
+  ajax.post("ticketTaskService.getTicket", ["2019080114322700001"]).then(ret => {
+    scope.deviceInfo.init = true;
+    scope.deviceInfo.devName = ret.values && ret.values.devName;
+    scope.deviceInfo.deviceCode = ret.values && ret.values.deviceCode;
+    ajax.post("ticketLogService.getByTicketNo", ["2019080114322700001"]).then(d => {
+      d[1]["ticketTask"]["attributeDefinitions"] = [
+        {
+         "detailDialog": "dialog-project-maintain"
+        },
+        {
+          "directive": "dialog-project-rule"
+        },
+        {
+          "abnPosition": {
+            "label": "异常部位",  //"轴承",
+            "showInTracker": true
+          }
+        },
+        {
+          "abnType": {
+            "label": "异常类型",//"轴承磨损",
+            "showInTracker": true
+          }
+        },
+        {
+          "abnPhenomenon": {
+            "label": "异常现象",//"风机垂直振动值严重超标",
+            "showInTracker": false,
+          }
+        }]
+      d[1].process = psTrackData.generateTaskJobProcess(d[1]);
+      scope.data = d[1];
+      console.log(d[1])
+    })
+
+  });
+  // http://localhost:8080/api/rest/post/ticketTaskService/getTicket
+  scope.back = function () {
+    window.history.back();
+  };
+
+
+}
+</script>
+<style lang="less" scoped>
+h3 {
+  text-align: center;
+  margin: 0;
+  line-height: 100px;
+}
+
+.flow-chart {
+  display: inline-block;
+  padding: 0 10px;
+}
+
+.title-wrap {
+  overflow: hidden;
+  padding: 5px;
+}
+
+.wrap {
+  .item {
+    padding: 10px;
+  }
+}
+</style>

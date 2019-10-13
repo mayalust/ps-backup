@@ -1,0 +1,92 @@
+<config injector="ajax,$location,psDialog,$routeParams,growl,commonMethodService,psRouter"></config>
+<template>
+    <div class="wrap">
+        <ps-layout data-option="layout">
+        </ps-layout>
+    </div>
+</template>
+<script type="text/javascript">
+    export default function (ajax, $location, psDialog, $routeParams, growl, commonMethodService, psRouter) {
+        var target = commonMethodService();
+        var resource;
+
+        return {
+            link(scope, element, attr, ngModel) {
+                target.on("tree_resourceChange", function (e) {
+                    resource = e.resource;
+
+                    scope.layout = {
+                        label: '维护项目判定规则',
+                        children: [{
+                            type: "table",
+                            config: {
+                                attributes: {
+                                    "customerName": ["产线", "text"],
+                                    "deviceName": ["设备名称", "text"],
+                                    "deviceCode": ["设备编码", "text"],
+                                    "standardNo": ["状态维护标准编号", "text"],
+                                    "standardName": ["状态维护项目名称", "text"],
+                                    "maintainDate": ["维护时间", "date"],
+                                    "taskStatus": ["是否启用", "text"],
+                                    "maintainUserName": ["维护人", "text"]
+                                },
+                                search: {
+                                    body: [{
+                                        name: "standardName",
+                                        label: "状态维护项目名称",
+                                        searchType: "input"
+                                    }, {
+                                        name: "maintainDate",
+                                        searchType: "date",
+                                        label: "维护时间"
+                                    }]
+                                },
+                                grid: {
+                                    body: ["customerName", "deviceName", "deviceCode", "standardNo", "standardName", {
+                                        name: "maintainDate",
+                                        gridType: "date"
+                                    }, {
+                                        name: "taskStatus",
+                                        bind: function (row) {
+                                            if (row.taskStatus == 1) {
+                                                return "已停用";
+                                            } else if (row.taskStatus == 0) {
+                                                return "已启用";
+                                            }
+                                        }
+                                    }, "maintainUserName"],
+                                    buttons: {
+                                        outGrid: [],
+                                        inGrid: [["规则维护",
+                                            function (e) {
+                                                psRouter.set({
+                                                    obj: e.$row
+                                                });
+                                                target.navigateTo("index", {
+                                                    main: 7,
+                                                    sub: [0, "viewId:baowu-rule-maintain"],
+                                                }, "self");
+                                            }]]
+                                    },
+                                    config: {
+                                        url: 'maintenanceTaskUIService.getTaskBySimpleConditionWithPage',
+                                        ajax: true,
+                                        parameter: {"deviceId": resource.id, "ticketCategory": "310"},
+                                        showIndex: false,
+                                        showSelector: false,
+                                        showPage : true,
+                                        showSearch: false
+                                    },
+                                    options: []
+                                }
+                            }
+                        }]
+                    }
+                });
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+
+</style>

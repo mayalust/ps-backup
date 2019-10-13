@@ -1,0 +1,487 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService,$rootScope,resourceUIService,growl"
+        deps="dialogGlobalRule,dialogCommonAlerts,dialogDetailAlert,dialogDetailPerformance,dialogDetailPlan"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-10">
+      <div class="col-md-4" ng-repeat="tabs in statusTabs">
+        <div class="status-tabs" ng-style="{'background-color':tabs.color,'border-color':tabs.border}">
+          <div>
+            <table>
+              <tbody>
+              <tr>
+                <td class="title col-md-12">
+                  <span>{{tabs.value}}</span>
+                </td>
+                <td class="icon col-md-12" rowspan="2">
+                  <span class="proudsmart" ng-class="tabs.icon"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="desc col-md-12">
+                  <span>{{tabs.text}}</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <h4 class="margin-10">待处理任务</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="resources"
+                   data-filter="filter1"
+                   data-sort="sort1"
+                   data-page="page1">
+              <thead>
+              <tr>
+                <th>项目号</th>
+                <th>产线</th>
+                <th>下机设备名称</th>
+                <th>下机设备编码</th>
+                <th>委托原因</th>
+                <th>备件类型</th>
+                <th>辊道名称</th>
+                <th>辊道编码</th>
+                <th>进度位</th>
+                <th>备修委托时间</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="item.alertId"></td>
+                <td ng-bind="deviceDic[item.nodeId].customerLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].label"></td>
+                <td ng-bind="deviceDic[item.nodeId].sn"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="formatTime(item.firstArisingTime)"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.shiji()">检测实绩</button>
+                    <button class="btn btn-default" ng-click="item.fangan()">指定方案</button>
+                    <button class="btn btn-default" ng-click="item.back()">报废</button>
+                    <button class="btn btn-primary" ng-click="item.problem()">问题详情</button>
+                    <button class="btn btn-default" ng-click="item.fangan()">方案补充</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">辊道编码:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="customerId2"
+                           data-options="customer as customer.label for customer in customerDic"></ps-select>
+              </div>
+              <div>
+                <span class="padding-right-10">处理时间:</span>
+                <button class="btn btn-default"
+                        ng-repeat="sel in timeSels"
+                        ng-class="sel.class()"
+                        ng-click="sel.click()"
+                        ng-bind="sel.label">
+                </button>
+                <div class="horizontal width-200">
+                  <ps-date2 ng-model="starttime"></ps-date2>
+                </div>
+                <span class="padding-left-right-10">至</span>
+                <div class="horizontal width-200">
+                  <ps-date2 ng-model="endtime"></ps-date2>
+                </div>
+                <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+              </div>
+            </div>
+            <h4 class="margin-10">已处理任务</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="alertOk"
+                   data-filter="filter2"
+                   data-sort="sort2"
+                   data-page="page2">
+              <thead>
+              <tr>
+                <th>项目号</th>
+                <th>产线</th>
+                <th>下机设备名称</th>
+                <th>下机设备编码</th>
+                <th>委托原因</th>
+                <th>备件类型</th>
+                <th>辊道名称</th>
+                <th>辊道编码</th>
+                <th>进度位</th>
+                <th>备修委托时间</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="item.alertId"></td>
+                <td ng-bind="deviceDic[item.nodeId].customerLabel"></td>
+                <td ng-bind="deviceDic[item.nodeId].label"></td>
+                <td ng-bind="deviceDic[item.nodeId].sn"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="item.message"></td>
+                <td ng-bind="formatTime(item.firstArisingTime)"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.baogao()">备修报告</button>
+                    <button class="btn btn-primary" ng-click="item.baogao()">备修履历</button>
+                    <button class="btn btn-primary" ng-click="item.baogao()">检测实绩</button>
+                    <button class="btn btn-primary" ng-click="item.baogao()">备修方案</button>
+                    <button class="btn btn-primary" ng-click="item.baogao()">过程跟踪</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,cms,rootScope,rcus,growl){
+    let target = cms(),
+    currentTime = new Date(),
+    date = dateparser(currentTime),
+    trimToDate = date.trimmToDate().date,
+    trimToWeek = date.trimmToWeek().date,
+    trimToMonth = date.trimmToMonth().date;
+
+    rcus.deviceObjLoader().then(d => {
+        scope.deviceDic = d;
+         
+        timer();
+        // ajax.post("ticketTaskService.getTicketTasksByCondition",{
+        //     "taskStatus":10,"sendBeginTime":"","sendEndTime":"","categorys":"50,90,260,120,130,210","tickeTaskStatus":"maintaining"}).then(d => {
+        //         scope.resources = d.map(b =>new tableCell(b))
+        // })
+        // ajax.post("ticketTaskService.getDealTicketList",{"categorys":"50,90,130,120,210,260","tickeTaskStatus":"","commitBeginTime":"","commitEndTime":"","processedTickeTaskStatus":"maintaining","taskDealingStatus":"maintaining"}).then(d => {
+        //     scope.alertOk = d.map(b =>new tableCell(b))
+        // })
+    })
+    scope.timeSels = [{
+      label : "当日",
+      click(){
+          scope.starttime = trimToDate;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToDate == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本周",
+      click(){
+          scope.starttime = trimToWeek;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToWeek == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  },{
+      label : "本月",
+      click(){
+          scope.starttime = trimToMonth;
+          scope.endtime = currentTime;
+      },
+      class(){
+          return scope.starttime - trimToMonth == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+      }
+  }];
+
+    scope.formatTime = function (d) {
+        return d
+            ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+            : "-";
+    }
+
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      goods(){
+          growl.info("收货成功")
+      }
+      delivery(){
+          growl.info("发货成功")
+      }
+      fangan(){
+          cms2.modal({
+              title : "制定方案",
+              directive : "dialog-detail-plan",
+              width : "85%",
+              params : {
+                  mode : "edit",
+                  hasHead : true,
+                  data :this
+              }
+          }).then( d => {
+              if(d){
+                  growl.info("录入完成");
+              }
+          });
+      }
+      shiji(){
+          cms2.modal({
+              title : "检修实绩",
+              directive : "dialog-detail-performance",
+              width : "85%",
+              params : {
+                  mode : "edit",
+                  hasHead : true,
+                  data :this
+              }
+          }).then( d => {
+              if(d){
+                  growl.info("录入完成");
+              }
+          });
+      }
+      problem(){
+          cms2.modal({
+              title : "问题反馈",
+              directive : "dialog-common-alerts",
+              width : "50%",
+              params : {
+                  mode : "edit",
+                  hasHead : true,
+                  commonKey : "问题反馈",
+                  data :this,
+                  problem : "problem"
+              }
+          }).then( d => {
+              if(d){
+                  growl.info("报废完成");
+              }
+          });
+      }
+      back(){
+          cms2.modal({
+              title : "报废",
+              directive : "dialog-common-alerts",
+              width : "50%",
+              params : {
+                  mode : "edit",
+                  hasHead : true,
+                  commonKey : "报废原因",
+                  data :this
+              }
+          }).then( d => {
+              if(d){
+                  growl.info("报废完成");
+              }
+          });
+      }
+      baogao(){
+            cms2.modal({
+                title : "详情",
+                directive : "dialog-detail-alert",
+                width : "50%",
+                params : {
+                    mode : "view",
+                    type : "",
+                    data :this
+                }
+            }).then( d => {
+                 
+                 
+            });
+      }
+  }
+    if(rootScope.$$childTail.menuitems["A42_01"]){//废气
+          ajax.post("alertQueryFlexService.getAlertByPage", [{
+              "severities":"1,2,3,4",
+              "states":"-100,0,10",
+          },
+              {"start":0,"length":1,"statCount":true}
+          ]).then( alert1 => {
+              return ajax.post("alertQueryFlexService.getAlertByPage", [{
+                  "firstTimeFrom":trimToMonth,
+                  "firstTimeTo":currentTime,
+                  "severities":"1,2,3,4",
+                  "states":"5",
+              },
+                  {"start":0,"length":1,"statCount":true}
+              ]).then( alert2 => {
+                  return ajax.post("environmentService.countAbnormalReport", [
+                          {
+                              "startTime":trimToMonth,
+                              "endTime":currentTime,
+                              "state":1,   // -1:待处理,0:待审核,1:已完成
+                              "dailyReportType":"gas",// gas:废气,water:废水
+                          },
+                      ]
+                  ).then( yichang1 => {
+                      return ajax.post("environmentService.countExcessiveAbnormal", [
+                          trimToMonth,  //startTime currentTime trimToMonth
+                          currentTime,  //endTime
+                          "gas"
+                          ]).then(yichang2 => {
+                          return [{
+                              value : alert1.total,
+                              color : "rgb(12, 70, 109)",
+                              border : "#21a6fb",
+                              text : "待处理报警",
+                              icon : "ps-bw_01",
+                              classN : "col-md-3"
+                          },{
+                              value : alert2.total,
+                              color : "rgb(102, 72, 109)",
+                              border : "rgb(224, 162, 239)",
+                              text : "已确认报警（当月内）",
+                              icon : "ps-bw_02",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang1,
+                              color : "rgb(72, 75, 47)",
+                              border : "rgb(231, 181, 43)",
+                              text : "废气异常报告（当月内）",
+                              icon : "ps-bw_03",
+                              classN : "col-md-3"
+                          },{
+                              value : yichang2,
+                              color : "rgb(32, 45, 57)",
+                              border : "rgb(131, 121, 53)",
+                              text : "废气超标类异常（当月内）",
+                              icon : "ps-bw_04",
+                              classN : "col-md-3"
+                          }]
+                      })
+                  })
+              });
+          }).then(d => {
+              scope.statusTabs = d;
+              scope.classN = "col-md-3"
+          })
+      }
+
+    scope.statusTabs = [{
+          value : "3",
+          color : "rgb(12, 70, 109)",
+          border : "#21a6fb",
+          text : "待处理备修委托数",
+          icon : "ps-bw_01",
+          kpi : 3017
+      },{
+          value : "2",
+          color : "rgb(102, 72, 109)",
+          border : "rgb(224, 162, 239)",
+          text : "完成备修项目数（当年内）",
+          icon : "ps-bw_02",
+          kpi : 3045
+      }]
+
+    function createRenderFunction(states){
+
+        return function( page, pageSize ){
+            let params = [states,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("alertQueryFlexService.getAlertByPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+
+    function timer(){
+        scope.resources = createRenderFunction({"severities":"1,2,3,4","states":"-100,0,10"});
+        scope.alertOk = createRenderFunction({"severities":"1,2,3,4","states":"5,20,30"});
+    }
+
+    scope.attentions = [{
+        id : "国控",
+        label : "国控"
+    },{
+        id : "市控",
+        label : "市控"
+    }];
+    scope.levels = [{
+        id : 2,
+        label : "注意"
+    },{
+        id : 3,
+        label : "警告"
+    },{
+        id : 4,
+        label : "危险"
+    }];
+
+    scope.clear1 = function(){
+        scope.projectId1 = "";
+        scope.customerId1 = "";
+        scope.attention1 = "";
+        scope.level1 = "";
+    }
+    scope.clear2 = function(){
+        scope.projectId2 = "";
+        scope.customerId2 = "";
+        scope.attention2 = "";
+        scope.level2 = "";
+    }
+
+    scope.search1 = function () {
+        var search1Parms = {"severities":scope.level1,"states":"-100,0,10","domain" : scope.projectId1 ? scope.projectId1.domainPath : scope.customerId1 ? scope.customerId1.domainPath : ''}
+        scope.resources = createRenderFunction(search1Parms);
+    }
+    scope.search2 = function () {
+        var search2Parms = {"severities":scope.level2,"states":"5,20,30","domain" : scope.projectId2 ? scope.projectId2.domainPath : scope.customerId2 ? scope.customerId2.domainPath : ''}
+        scope.alertOk = createRenderFunction(search2Parms);
+    }
+
+    scope.searchFn = function(){
+        scope.filter = ({ modelId, modifyTime }) => {
+          if( typeof scope.modelId !=="undefined" && modelId !== scope.modelId){
+            return false;
+          }
+          let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+            et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+            mt = new Date( modifyTime );
+          if( mt - st < 0 || mt - et > 0 ){
+            return false;
+          }
+          return true;
+        }
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

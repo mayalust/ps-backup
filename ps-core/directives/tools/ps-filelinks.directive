@@ -1,0 +1,56 @@
+<config injector="$timeout, psScope, psUi"
+></config>
+<template>
+  <div ng-style="config.styles" style="width : 100%;overflow:hidden;text-overflow : ellipsis;">
+  </div>
+</template>
+<script type="text/javascript">
+  import { hasParent } from "ps-ultility";
+  export default function(timeout, psScope, psUi){
+    return {
+      scope : {
+        config : "=",
+        value : "="
+      },
+      require: '?ngModel',
+      link(scope, element, attr, ngModel) {
+        let elem = element[0],tName="";
+        ngModel.$render = d => {
+          let list = ngModel.$viewValue, str = "";
+          if(list){
+            for(var i = 0; i < list.length; i++){
+                tName = list[i].label;
+                list[i].label = tName.slice(0,tName.lastIndexOf("."));
+              str += `<li style="list-style: none">
+                        <span style="color: #e7675d;cursor:pointer;">×</span>
+                        <a target="_blank" href="${list[i].src}">${list[i].label}</a>
+                      </li>`;
+            }
+          }
+          elem.innerHTML = str;
+          [].slice.call(elem.getElementsByTagName("span")).forEach( (d, i) =>{
+              d.onclick = function( e ){
+                  d.parentNode.remove();
+                  ngModel.$setViewValue(ngModel.$viewValue.filter((d,j)=>{
+                      return i != j;
+                  }));
+              }
+          });
+
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  a {
+    cursor : pointer;
+  }
+  span{
+    text-overflow : ellipsis;
+    white-space: nowrap;
+    line-height : 20px;
+    font-size : 14px;
+    cursor: pointer;
+  }
+</style>

@@ -1,0 +1,970 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,commonMethodService2,psLoading, psRouter"
+></config>
+<template>
+    <div class="wrap row block" style="overflow-y: auto;height: calc(100vh - 120px);padding-top: 15px;">
+        <ps-layout data-option="option">
+        </ps-layout>
+    </div>
+</template>
+<script type="text/javascript">
+  export default function (q, ajax, psDialog, routeParams, psUltility, location, growl, commonMethodService,cms2, psLoading,psRouter) {
+    var target = commonMethodService(), resource,repairArr=[],consumableArr=[],allRollerTypes= [];
+    return {
+      link(scope, element, attr) {
+        let target = commonMethodService(),
+            modePlan = target.getValue("mode"),
+            smartObj = target.getValue("obj") || {};
+        function showBodyButtons(){
+          return modePlan != 'detail' ? [{
+            label: "编辑",
+            class: "btn btn-primary",
+            show: function () {
+              return modePlan == "detail" ? false : true;
+            },
+            symbol: 'inlineEdit'
+          }, {
+            label: "删除",
+            class: "btn btn-primary",
+            show: function () {
+              return modePlan == "detail" ? false : true;
+            },
+            on: {
+              click: function (row) {
+                this.deleteRow(row);
+              }
+            }
+          }]:[]
+        }
+        //getDictValuesByDictCodeAndValueCode
+        ajax.post("dictionaryService.getDictValuesByDictCodeAndValueCode",["rollerType",2]).then( res => {
+          let rollerTypes = res || [];
+          scope.option = {
+            title: "备修标准",
+            type: "layout",
+            init: function () {
+              smartObj.standardProjectId = smartObj.standardProjectId || "";
+              smartObj.standardProjectName = smartObj.standardProjectName || "";
+              smartObj.rollerType = smartObj.rollerType || "";
+              smartObj.repairDedicatedParts = smartObj.repairDedicatedParts || [] ;
+              smartObj.spareRepairPlans = smartObj.spareRepairPlans && smartObj.spareRepairPlans.length!= 0 && smartObj.spareRepairPlans.map((v,k) => {
+               v.planCheckitems.sort((a,b) => {
+                 if(a.itemName.includes('////') && b.itemName.includes('////')){
+                   return a.itemName.split('////')[1] - 0 - b.itemName.split('////')[1];
+                 }else {
+                   return a.itemName - 0 - b.itemName;
+                 }
+               }).map((val,ind) => {
+                  if(val.itemName.includes('////')){
+                    val['inx'] = val.itemName.split('////')[1];
+                  }else {
+                    val['inx'] = ind + 1;
+                  }
+                  return val;
+                } )
+                return v;
+              });
+              smartObj.spareRepairPlans = smartObj.spareRepairPlans || [];
+              smartObj.assemblyProcess = smartObj.assemblyProcess || [];
+              return  {smartObj : smartObj};
+            },
+            children: [{
+              type: "form-grid",
+              scope: "smartObj",
+              children: [{
+                type: "input",
+                label: "备修标准项目编号",
+                key: "standardProjectId",
+                col: 4,
+                composory: true,
+                config: {
+                  disabled: modePlan == "detail" ? "disabled" : false
+                },
+              }, {
+                type: "input",
+                label: "备修标准项目名称",
+                key: "standardProjectName",
+                col: 4,
+                composory: true,
+                config: {
+                  disabled: modePlan == "detail" ? "disabled" : false
+                },
+              }, {
+                type: "select",
+                label: "备件类型",
+                key: "rollerType",
+                col: 4,
+                composory: true,
+                config: {
+                  disabled: modePlan == "detail" ? "disabled" : false
+                },
+                options: rollerTypes,
+                // options: target.getRootScope("myDicts")["rollerType"],
+                format: {
+                  id: 'label',
+                  label: "label"
+                },
+              }]
+            }, {//修复专用件明细
+              label: "修复专用件明细",
+              type: "panel",
+              children: [{
+                type: "new-grid",
+                key: "smartObj.repairDedicatedParts",
+                config: {
+                  showIndex: true,
+                  inlineAddConfirm: function (row, next) {
+                    this.addRow(row, true);
+                    next();
+                  },
+                  outButtons: [{
+                    label: '新增修复专用件明细',
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    symbol: 'inlineAdd'
+                  }],
+                  bodyButtons: showBodyButtons(),
+                  columns: [{
+                    key: 'code',
+                    label: '代号',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'name',
+                    label: '名称',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'quantity',
+                    label: '数量',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'material',
+                    label: '材料',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'singleWeight',
+                    label: '单重',
+                    type: 'text',
+                    edit: {
+                      type: 'input'
+                    },
+                    add: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'remarks',
+                    label: '备注属性',
+                    type: 'text',
+                    edit: {
+                      type: 'input'
+                    },
+                    add: {
+                      type: 'input',
+                    }
+                  }]
+                }
+              }]
+            }, {//修复标准件明细
+              label: "修复标准件明细",
+              type: "panel",
+              children: [{
+                type: "new-grid",
+                key: "smartObj.repairStandardParts",
+                config: {
+                  showIndex: true,
+                  inlineAddConfirm: function (row, next) {
+                    this.addRow(row, true);
+                    next();
+                  },
+                  outButtons: [{
+                    label: '新增修复标准件明细',
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    symbol: 'inlineAdd'
+                  }],
+                  bodyButtons: showBodyButtons(),
+                  columns: [{
+                    key: 'code',
+                    label: '代号',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'name',
+                    label: '名称',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'quantity',
+                    label: '数量',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'material',
+                    label: '材料',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'singleWeight',
+                    label: '单重',
+                    type: 'text',
+                    edit: {
+                      type: 'input'
+                    },
+                    add: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'remarks',
+                    label: '备注属性',
+                    type: 'text',
+                    edit: {
+                      type: 'input'
+                    },
+                    add: {
+                      type: 'input',
+                    }
+                  }]
+                }
+              }]
+            }, {//修复检测方案
+              label: "*修复检测方案",
+              type: "panel",
+              children: [{
+                type: "new-grid",
+                key: "smartObj.spareRepairPlans",
+                config: {
+                  showIndex: true,
+                  outButtons: [{
+                    label: '新增修复检测方案',
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    on: {
+                      click: function () {
+                        psDialog.modal({
+                          label: "修复检测方案",
+                          type: "layout",
+                          children: [{
+                            type: "form-grid",
+                            children: [{
+                              type: "input",
+                              label: "零件名称",
+                              key: "spareComponent.componentName",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                            }, {
+                              type: "input",
+                              label: "零件图号",
+                              key: "spareComponent.drawingNo",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+
+                            },{
+                              type: "input",
+                              label: "零件编号",
+                              key: "spareComponent.componentNo",
+                              col: 4,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+
+                            }, {
+                              type: "select",
+                              label: "工艺",
+                              key: "spareComponent.crafts",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                search: false,
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                              options: target.getRootScope("myDicts")["crafts"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+
+                            }]
+                          },{//修复检测项目
+                            label: "修复检测项目",
+                            type: "panel",
+                            children: [{
+                              type: "new-grid",
+                              key: "planCheckitems",
+                              config: {
+                                // showIndex: true,
+                                // inlineAddConfirm: function (row, next) {
+                                //   if(row.itemName == null || typeof row.itemName == "undefined" || row.itemName === ""){
+                                //     growl.info("检查项目不可为空");
+                                //   }else {
+                                //     this.addRow(row, true);
+                                //     next();
+                                //   }
+                                // },
+                                // inlineEditConfirm: function (newRow,oldRow, next) {
+                                //   let newItemName = newRow.itemName;
+                                //   if(newItemName == null || typeof newItemName == "undefined" || newItemName === ""){
+                                //     growl.info("检查项目不可为空");
+                                //     next(oldRow.itemName);
+                                //   }
+                                //   next();
+                                // },
+                                inlineAddConfirm: function (row,next) {
+
+                                  if(row.itemName == null || typeof row.itemName == "undefined" || row.itemName === ""){
+                                    growl.info("检查项目不可为空");
+                                  }else {
+                                    let sData = [];
+                                    if(modePlan == 'add'){
+                                      sData = this.data || [];
+                                    }else {
+                                      sData = this.data || [];
+                                    }
+                                    if(sData.length == 0){
+                                      row['inx'] = 1;
+                                      row.itemName += "////" + row["inx"].toString();
+                                    }else {
+                                      sData = sData.map(v => {
+                                        if(v.itemName.includes('////')){
+                                          return v = v.itemName.split("////")[1] - 0;
+
+                                        }else {
+                                          return v = v.inx || 1;
+                                        }
+
+                                      });
+                                      row['inx'] = Math.max.apply(null,sData) + 1;
+                                      row['itemName'] += "////" + row["inx"].toString();
+                                    }
+                                    this.addRow(row, true);
+                                    next();
+                                  }
+                                },
+                                inlineEditConfirm: function (newRow,oldRow, next) {
+                                  let newItemName = newRow.itemName;
+                                  newRow['inx'] = oldRow['inx'];
+                                  newRow.itemName += "////" + newRow["inx"].toString();
+                                  if(newItemName == null || typeof newItemName == "undefined" || newItemName === ""){
+                                    growl.info("检查项目不可为空");
+                                    next(oldRow.itemName);
+                                  }
+                                  next();
+                                },
+                                outButtons: [{
+                                  label: '新增修复检测项目',
+                                  show: function () {
+                                    return modePlan == "detail" ? false : true;
+                                  },
+                                  symbol: 'inlineAdd'
+                                }],
+                                bodyButtons: [{
+                                  label: "编辑",
+                                  class: "btn btn-primary",
+                                  show: function () {
+                                    return modePlan == "detail" ? false : true;
+                                  },
+                                  symbol: 'inlineEdit'
+                                }, {
+                                  label: "删除",
+                                  class: "btn btn-primary",
+                                  show: function () {
+                                    return modePlan == "detail" ? false : true;
+                                  },
+                                  on: {
+                                    click: function (row) {
+                                      this.deleteRow(row);
+                                    }
+                                  }
+                                }],
+                                columns: [{
+                                  key: 'inx',
+                                  label: "序号",
+                                  type: "text",
+                                  add: {
+                                    type: 'text',
+                                    value: '系统生成',
+                                  },
+                                  edit: {
+                                    type: 'text',
+                                  },
+                                  bind: function (row) {
+                                    row.inx = row.inx;
+                                    return row.inx;
+
+                                  }
+                                },{
+                                  key: 'itemName',
+                                  label: '*检查项目',
+                                  type: 'text',
+                                  add: {
+                                    type: 'input',
+                                  },
+                                  edit: {
+                                    type: 'input',
+                                  },
+                                  bind:function (row) {
+                                    row.itemName = row.itemName.includes('////') ? row.itemName.split('////')[0] : row.itemName;
+                                    return row.itemName;
+                                  }
+                                }]
+                                // columns: [{
+                                //   key: 'itemName',
+                                //   label: '*检查项目',
+                                //   type: 'text',
+                                //   add: {
+                                //     type: 'input',
+                                //   },
+                                //   edit: {
+                                //     type: 'input',
+                                //   }
+                                // }]
+                              }
+                            }]
+                          }],
+                          buttons : [{
+                            label : "确定",
+                            class : "btn btn-primary",
+                            click : function(e){
+                              smartObj = smartObj || {};
+                              smartObj.spareRepairPlans = [...smartObj.spareRepairPlans] || [];
+                              smartObj.spareRepairPlans = [{...e.getData()},...smartObj.spareRepairPlans];
+                              this.close();
+                            }
+                          },{
+                            label : "取消",
+                            click : function(){
+                              this.close();
+                            }
+                          }]
+                        },null,"",'80%');
+                      }
+                    }
+                  }],
+                  bodyButtons: [{
+                    label: "详情",
+                    class: "btn btn-primary",
+                    show: function () {
+                      return true;
+                    },
+                    on: {
+                      click: function (value) {
+                        psDialog.modal({
+                          label: "修复检测方案",
+                          type: "layout",
+                          children: [{
+                            type: "form-grid",
+                            children: [{
+                              type: "input",
+                              label: "零件名称",
+                              key: "spareComponent.componentName",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: true,
+                              },
+                            }, {
+                              type: "input",
+                              label: "零件图号",
+                              key: "spareComponent.drawingNo",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: true,
+                              },
+                            },{
+                              type: "input",
+                              label: "零件编号",
+                              key: "spareComponent.componentNo",
+                              col: 4,
+                              config: {
+                                disabled: true,
+                              },
+                            }, {
+                              type: "select",
+                              label: "工艺",
+                              key: "spareComponent.crafts",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: true,
+                              },
+                              options: target.getRootScope("myDicts")["crafts"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+                            }]
+                          },{//修复检测项目
+                            label: "修复检测项目",
+                            type: "panel",
+                            children: [{
+                              type: "new-grid",
+                              key: "planCheckitems",
+                              config: {
+                                // showIndex: true,
+                                /*inlineAddConfirm: function (row, next) {
+                                  this.addRow(row, true);
+                                  next();
+                                },*/
+                                outButtons: [],
+                                bodyButtons: [],
+                                columns: [{
+                                  key: 'inx',
+                                  label: "序号",
+                                  type: "text",
+                                  add: {
+                                    type: 'text',
+                                    value: '系统生成',
+                                  },
+                                  edit: {
+                                    type: 'text',
+                                  },
+                                  bind: function (row) {
+                                    row.inx = row.inx;
+                                    return row.inx;
+
+                                  }
+                                },{
+                                  key: 'itemName',
+                                  label: '*检查项目',
+                                  type: 'text',
+                                  add: {
+                                    type: 'input',
+                                  },
+                                  edit: {
+                                    type: 'input',
+                                  },
+                                  bind:function (row) {
+                                    row.itemName = row.itemName.includes('////') ? row.itemName.split('////')[0] : row.itemName;
+                                    return row.itemName;
+                                  }
+                                }]
+                               /* columns: [{
+                                  key: 'itemName',
+                                  label: '检查项目',
+                                  type: 'text',
+                                }]*/
+                              }
+                            }]
+                          }],
+                        },value,"","80%");
+                      }
+                    }
+                  },{
+                    label: "编辑",
+                    class: "btn btn-primary",
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    on: {
+                      click: function (value, index) {
+                        scope.index = index;
+                        psDialog.modal({
+                          label: "修复检测方案",
+                          type: "layout",
+                          children: [{
+                            type: "form-grid",
+                            children: [{
+                              type: "input",
+                              label: "零件名称",
+                              key: "spareComponent.componentName",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                            }, {
+                              type: "input",
+                              label: "零件图号",
+                              key: "spareComponent.drawingNo",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                            },{
+                              type: "input",
+                              label: "零件编号",
+                              key: "spareComponent.componentNo",
+                              col: 4,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                            }, {
+                              type: "select",
+                              label: "工艺",
+                              key: "spareComponent.crafts",
+                              col: 4,
+                              composory: true,
+                              config: {
+                                disabled: modePlan == "detail" ? "disabled" : false
+                              },
+                              options: target.getRootScope("myDicts")["crafts"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+                            }]
+                          },{//修复检测项目
+                            label: "修复检测项目",
+                            type: "panel",
+                            children: [{
+                              type: "new-grid",
+                              key: "planCheckitems",
+                              config: {
+                                // showIndex: true,
+                                inlineAddConfirm: function (row,next) {
+                                  let sData = this.data || [];
+                                  if(row.itemName == null || typeof row.itemName == "undefined" || row.itemName === ""){
+                                    growl.info("检查项目不可为空");
+                                  }else {
+                                    if(sData.length == 0){
+                                      row['inx'] = 1;
+                                      row.itemName += "////" + row["inx"].toString();
+                                    }else {
+                                       sData = sData.map(v => {
+                                        if(v.itemName.includes('////')){
+                                          return v = v.itemName.split("////")[1] - 0;
+
+                                        }else {
+                                          return v = v.inx || 1;
+                                        }
+
+                                      });
+                                      row['inx'] = Math.max.apply(null,sData) + 1;
+                                      row['itemName'] += "////" + row["inx"].toString();
+                                    }
+                                    this.addRow(row, true);
+                                    next();
+                                  }
+                                },
+                                inlineEditConfirm: function (newRow,oldRow, next) {
+                                  let newItemName = newRow.itemName;
+                                  newRow['inx'] = oldRow['inx'];
+                                  newRow.itemName += "////" + newRow["inx"].toString();
+                                  if(newItemName == null || typeof newItemName == "undefined" || newItemName === ""){
+                                    growl.info("检查项目不可为空");
+                                    next(oldRow.itemName);
+                                  }
+                                  next();
+                                },
+                                outButtons: [{
+                                  label: '新增修复检测项目',
+                                  show: function () {
+                                    return true;
+                                  },
+                                  symbol: 'inlineAdd'
+                                }],
+                                bodyButtons: [{
+                                  label: "编辑",
+                                  class: "btn btn-primary",
+                                  show: function () {
+                                    return true;
+                                  },
+                                  symbol: 'inlineEdit'
+                                }, {
+                                  label: "删除",
+                                  class: "btn btn-primary",
+                                  show: function () {
+                                    return true;
+                                  },
+                                  on: {
+                                    click: function (row) {
+                                      this.deleteRow(row);
+                                    }
+                                  }
+                                }],
+                                columns: [{
+                                  key: 'inx',
+                                  label: "序号",
+                                  type: "text",
+                                  add: {
+                                    type: 'text',
+                                    value: '系统生成',
+                                  },
+                                  edit: {
+                                    type: 'text',
+                                  },
+                                  bind: function (row) {
+                                    row.inx = row.inx;
+                                    return row.inx;
+
+                                  }
+                                },{
+                                  key: 'itemName',
+                                  label: '*检查项目',
+                                  type: 'text',
+                                  add: {
+                                    type: 'input',
+                                  },
+                                  edit: {
+                                    type: 'input',
+                                  },
+                                  bind:function (row) {
+                                    row.itemName = row.itemName.includes('////') ? row.itemName.split('////')[0] : row.itemName;
+                                    return row.itemName;
+                                  }
+                                }]
+                              }
+                            }]
+                          }],
+                          buttons : [{
+                            label : "确定",
+                            class : "btn btn-primary",
+                            click : function(e){
+                              smartObj.spareRepairPlans = [...smartObj.spareRepairPlans] || [];
+                              smartObj.spareRepairPlans[scope.index] = {...e.getData()};
+                              this.close();
+                            }
+                          },{
+                            label : "取消",
+                            click : function(){
+                              this.close();
+                            }
+                          }]
+                        }, value,"","80%");
+                      }
+                    }
+                  }, {
+                    label: "删除",
+                    class: "btn btn-primary",
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    on: {
+                      click: function (row) {
+                        this.deleteRow(row);
+                      }
+                    }
+                  }],
+                  columns: [{
+                    key: "spareComponent.componentName",
+                    label: "零件名称",
+                    type: "text",
+                  },{
+                    key: "spareComponent.crafts",
+                    label: "工艺",
+                    type: "text",
+                  },{
+                    key: "spareComponent.drawingNo",
+                    label: "零件图号",
+                    type: "text",
+                  },{
+                    key: "spareComponent.componentNo",
+                    label: "零件编号",
+                    type: "text",
+                  }]
+                },
+              }]
+            }, {//总成装配过程明细
+              label: "*总成装配过程明细",
+              type: "panel",
+              children: [{
+                type: "new-grid",
+                key: "smartObj.assemblyProcess",
+                config: {
+                  showIndex: true,
+                  inlineAddConfirm: function (row,next) {
+                    this.addRow(row, true);
+                    next();
+                  },
+                  outButtons: [{
+                    label: '新增总成装配过程明细',
+                    show: function () {
+                      return modePlan == "detail" ? false : true;
+                    },
+                    symbol: 'inlineAdd'
+                  }],
+                  bodyButtons: showBodyButtons(),
+                  columns: [{
+                    key: 'checkContent',
+                    label: '检查内容',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    },
+                  }, {
+                    key: 'drawingProcess',
+                    label: '图纸数据/过程自检',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'checkTools',
+                    label: '检查工具',
+                    type: 'text',
+                    add: {
+                      type: 'input',
+                    },
+                    edit: {
+                      type: 'input',
+                    }
+                  }, {
+                    key: 'category',
+                    label: '数据类别',
+                    type: 'text',
+                    add: {
+                      type: 'select',
+                      options: [{
+                        id: "定性",
+                        label: "定性",
+                      },{
+                        id: "定量",
+                        label: "定量",
+                      }],
+                    },
+                    edit: {
+                      type: 'select',
+                      options: [{
+                        id: "定性",
+                        label: "定性",
+                      },{
+                        id: "定量",
+                        label: "定量",
+                      }],
+                    },
+                    bind: function (row,value) {
+                      return value;
+                    }
+                  }]
+                }
+              },]
+            },{
+              type: "form-inline",
+              children: [{
+                type: "button",
+                width: 10,
+                config: {
+                  class: "btn-primary btn-100",
+                  validCheck: true,
+                  label: "确 定",
+                  show: modePlan == "detail" ? false : true,
+                  // validCheck: ["maintainObj.resultDesc"],
+                  on: {
+                    click: function (e) {
+                      let obj = e.getData().smartObj;
+                      smartObj.standardProjectId = obj.standardProjectId;
+                      smartObj.standardProjectName = obj.standardProjectName;
+                      smartObj.rollerType = obj.rollerType;
+                      smartObj.repairDedicatedParts = obj.repairDedicatedParts;
+                      smartObj.repairStandardParts = obj.repairStandardParts;
+                      smartObj.spareRepairPlans = obj.spareRepairPlans && obj.spareRepairPlans.map((v,k) => {
+                        v.planCheckitems.map((val,ind) => {
+                          if(!val.itemName.includes('////')){
+                            val['itemName'] = val.itemName + '////'+val['inx'];
+                          }
+                          return val;
+                        } )
+                        return v;
+                      }) || [];
+                      smartObj.assemblyProcess = obj.assemblyProcess;
+                      psLoading.showLoading();
+                      ajax.post("maintenanceTaskUIService.saveRepairPartsStandard",smartObj).then(d => {
+                        psLoading.closeLoading();
+                        if(modePlan == "edit"){
+                          growl.success("编辑成功");
+                        }else {
+                          growl.success("新增成功");
+                        }
+                        cms2.navigateTo(1);
+                      }).catch(function () {
+                        psLoading.closeLoading();
+                      })
+                    }
+                  }
+                },
+                key: "save"
+              }, {
+                type: "button",
+                width: 10,
+                config: {
+                  label: "取 消",
+                  class: "btn btn-default btn-100",
+                  show: modePlan == "detail" ? false : true,
+                  click: function () {
+                    cms2.navigateTo(1);
+                  }
+                },
+              },{
+                type: "button",
+                width: 10,
+                config: {
+                  label: "返 回",
+                  class: "btn btn-default btn-100",
+                  show: modePlan == "detail" ? true : false,
+                  click: function () {
+                    cms2.navigateTo(1);
+                  }
+                },
+              }]
+            }]
+          }
+        });
+
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+    .wrap {
+        padding: 20px 15px;
+    }
+
+</style>

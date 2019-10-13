@@ -1,0 +1,596 @@
+<config injector="$scope,$timeout,$state,$location,$registerService,ajax,commonMethodService2,growl,userUIService"
+        params="/:userID"
+></config>
+<template>
+  <section class="content" id="alerts">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-header">
+            <div class="box-tools pull-left nav-tabs-header">
+              <ul class="nav nav-tabs" role="tablist">
+                <li
+                  ng-class="{true : 'active'}[nav.active]"
+                  ng-click="nav.click()"
+                  ng-repeat="nav in navigators"
+                >
+                  <a ng-bind="nav.label"></a>
+                </li>
+              </ul>
+            </div>
+            <div class="box-tools pull-right">
+              <span class="history-btn" role="button" ng-click="back();"
+                ><i class="proudsmart ps-back-01"></i
+              ></span>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-2 item">
+                <label class="form-label">用户域：</label>
+                <ps-select
+                  ng-model="domain"
+                  data-options="item.id as item.label for item in domains"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">设备模版：</label>
+                <ps-select
+                  ng-model="model"
+                  data-options="item.id as item.label for item in models"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">产线：</label>
+                <ps-select
+                  ng-model="customer"
+                  data-options="item.id as item.label for item in customers"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">区域：</label>
+                <ps-select
+                  ng-model="project"
+                  data-options="item.id as item.label for item in projects"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">设备名称：</label>
+                <input ng-model="label" class="form-control" />
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">序列号：</label>
+                <input ng-model="sn" class="form-control" />
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">授权状况</label>
+                <ps-select
+                  ng-model="auth"
+                  data-options="item.id as item.label for item in authorizes"
+                ></ps-select>
+              </div>
+              <div class="col-md-10 item">
+                <div class="btn-group" style="margin-top:26px;">
+                  <button ng-click="search()" class="btn btn-primary btn-sm">
+                    <i class="fa fa-search"></i
+                    ><span class="hidden-sm"> 查询</span>
+                  </button>
+                  <button ng-click="advance()" class="btn btn-default btn-sm">
+                    <i
+                      class="fa fa-angle-double-down"
+                      ng-class="{true:'fa-angle-double-up',false:'fa-angle-double-down'}[seniorQuery]"
+                    ></i>
+                    <span class="hidden-sm"> 高级</span>
+                  </button>
+                  <button ng-click="clear()" class="btn btn-default btn-sm">
+                    <i class="fa fa-close"></i>
+                    <span class="hidden-sm"> 清除</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-md-2 item" ng-if="seniorQuery">
+                <label class="form-label">添加属性</label>
+                <ps-select
+                  ng-model="attribute"
+                  data-change="attributechange(attribute)"
+                  data-options="item as item.label for item in attributes"
+                ></ps-select>
+              </div>
+
+              <div
+                class="col-md-2 item"
+                ng-repeat="item in attrQueries track by $index"
+                ng-if="seniorQuery"
+              >
+                <label class="form-label" ng-bind="item.label"></label>
+                <table class="button-group">
+                  <td>
+                    <input
+                      ng-model="valuesQuery[item.name]"
+                      class="form-control"
+                    />
+                  </td>
+                  <td>
+                    <button class="btn btn-default" ng-click="item.click()">
+                      <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                  </td>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="box-footer">
+            <div class="btn-group">
+              <button class="btn btn-primary" ng-click="save()">
+                保存授权
+              </button>
+              <button class="btn btn-default" ng-click="selectAll()">
+                全选
+              </button>
+            </div>
+            <div class="wrap">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="wrap">
+                    <table
+                      ps-table-sync
+                      data-current="current"
+                      data-source="devices"
+                      data-filter="filter"
+                      data-sort="sort"
+                      data-page="page"
+                    >
+                      <thead>
+                        <tr>
+                          <th>
+                            <ps-checkbox
+                              ng-if="current && current.length > 0"
+                              ng-model="$parent.$parent.$parent.allchecked"
+                              data-change="$parent.$parent.$parent.checkboxClick( $parent.$parent.$parent.allchecked )"
+                            >
+                            </ps-checkbox>
+                          </th>
+                          <th>产线</th>
+                          <th>区域</th>
+                          <th>设备模版</th>
+                          <th>设备名称</th>
+                          <th>设备序列号</th>
+                          <th>管理域</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr ng-repeat="item in items">
+                          <td>
+                            <ps-checkbox
+                              ng-model="item.checked"
+                              data-change="item.checkChange()"
+                            >
+                            </ps-checkbox>
+                          </td>
+                          <td>
+                            <span ng-bind="item.line()"></span>
+                          </td>
+                          <td>
+                            <span ng-bind="item.area()"></span>
+                          </td>
+                          <td ng-click="item.modelClick()">
+                            <a ng-bind="item.model()"></a>
+                          </td>
+                          <td ng-click="item.resourceClick()">
+                            <a ng-bind="item.label"></a>
+                          </td>
+                          <td>
+                            <span ng-bind="item.sn"></span>
+                          </td>
+                          <td>
+                            <span ng-bind="item.getDomains()"></span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+<script>
+export default function(
+  scope,
+  timeout,
+  $state,
+  location,
+  registerService,
+  ajax,
+  cms2,
+  growl,
+  userUIService
+) {
+  let queryUserByCondition = "userUIService.queryUserByCondition",
+    getAllAttrs = "resourceUIService.getAllAttrs",
+    queryUserDeviceByDeviceDomains =
+      "userUIService.queryUserDeviceByDeviceDomains",
+    getResourceByModelId =
+      "resourceUIService.getResourceByModelId?includeFields=id,label,domains,domainPath,modelId",
+    getDevicesByCondition =
+      "resourceUIService.getDevicesByCondition?includeFields=id,domains,domainPath,customerId,projectId,sn,modelId,label,gatewayId,values",
+    getModels = "resourceUIService.getModels?includeFields=id,label",
+    domainMap = {},
+    deviceMap = {},
+    userInfo = null,
+    attributes = [],
+    modelMap = {},
+    cached = {},
+    userID = $state.params.userID;
+  class valueCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+    click() {
+      scope.attrQueries = scope.attrQueries.filter(d => d !== this);
+      delete scope.valuesQuery[this.name];
+      scope.attributes = attributes.filter(
+        d => typeof scope.valuesQuery[d.name] == "undefined"
+      );
+    }
+  }
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+    checkChange() {
+      timeout(() => {
+        scope.allchecked = scope.current.every(({ checked }) => checked);
+      });
+    }
+    modelClick() {
+      window.location.href =
+        "/app-oc/index.html#/lookModel/" + modelMap[this.modelId].id;
+    }
+    resourceClick() {
+      window.location.href =
+        "/app-oc/index.html#/facility_detail/DETAIL/" +
+        deviceMap[this.id].gatewayId +
+        "/" +
+        this.id;
+    }
+    line() {
+      return domainMap[this.customerId].label;
+    }
+    area() {
+      return domainMap[this.projectId].label;
+    }
+    model() {
+      return modelMap[this.modelId].label;
+    }
+    remove() {
+      let inx = scope.domains.findIndex(d => d === this);
+      scope.domains.splice(inx, 1);
+    }
+    getDomains() {
+      let domains = this.domains.split("/").slice(3, -1);
+      return domains
+        .map(d => {
+          return domainMap[d] ? domainMap[d].label : d;
+        })
+        .join("/");
+    }
+  }
+  function getDomainId(domainPath) {
+    var match = /\/(\d+)\/$/.exec(domainPath);
+    return match ? match[1] - 0 : null;
+  }
+  function getParents(d) {
+    let domainPath = d.domainPath,
+      id = d.id,
+      item,
+      rs = [],
+      queue = domainPath.split("/").slice(1, -1);
+    while ((item = queue.shift())) {
+      if (item == id) {
+        return rs;
+      }
+      rs.push(item - 0);
+    }
+    return null;
+  }
+  ajax
+    .post(queryUserByCondition, {
+      userID: userID
+    })
+    .then(user => {
+      userInfo = user[0];
+      let domainIds = userInfo.domainIds.split(",").map(d => d - 0),
+        userDomainId = getDomainId(userInfo.domainPath);
+      return ajax
+        .post(getModels)
+        .then(models => {
+          modelMap = models.reduce(function(a, b) {
+            a[b.id] = b;
+            return a;
+          }, {});
+          scope.models = [
+            {
+              id: 0,
+              label: "--任意模版--"
+            }
+          ].concat(models);
+          scope.model = scope.models[0].id;
+          return ajax.post(getResourceByModelId, 300).then(domains => {
+            return ajax.post(getResourceByModelId, 301).then(customer => {
+              scope.customers = [
+                {
+                  id: 0,
+                  label: "--任意产线--"
+                }
+              ].concat(customer);
+              scope.customer = scope.customers[0].id;
+              return ajax.post(getResourceByModelId, 302).then(project => {
+                scope.projects = [
+                  {
+                    id: 0,
+                    label: "--任意产线--"
+                  }
+                ].concat(project);
+                scope.project = scope.projects[0].id;
+                return cms2.success(domains.concat(customer).concat(project));
+              });
+            });
+          });
+        })
+        .then(domains => {
+          domainMap = domains.reduce((a, b) => {
+            a[b.id] = b;
+            return a;
+          }, {});
+          let allIds = domainIds.concat(userDomainId);
+          domainIds = allIds.reduce((a, b) => {
+            let parents = getParents(domainMap[b]).concat([b]);
+            if (
+              allIds
+                .filter(d => d !== b)
+                .every(id => {
+                  return parents.indexOf(id) == -1;
+                })
+            ) {
+              a[b] = domainMap[b];
+            }
+            return a;
+          }, {});
+          scope.domains = domains
+            .filter(d => domainIds[d.id])
+            .map(d => new tableCell(d));
+          scope.domain = scope.domains[0].id;
+          render(scope.domain);
+          return ajax.post(getAllAttrs);
+        })
+        .then(attrs => {
+          scope.attributes = attributes = attrs.map(d => new valueCell(d));
+        });
+    });
+  function isNoEmpty(a) {
+    return typeof a !== "undefined" && a !== null;
+  }
+  function someProp(obj, callback) {
+    for (var i in obj) {
+      if (callback(obj[i], i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function makeFilter() {
+    return function(device) {
+      if (scope.select == 1 && device.checked == true) {
+        return true;
+      }
+      if (scope.model && scope.model !== device.modelId) {
+        return false;
+      }
+      if (scope.project && scope.project !== device.projectId) {
+        return false;
+      }
+      if (scope.customer && scope.customer !== device.customerId) {
+        return false;
+      }
+      if (scope.label && device.label.indexOf(scope.label) == -1) {
+        return false;
+      }
+      if (scope.sn && device.sn.indexOf(scope.sn) == -1) {
+        return false;
+      }
+      if (scope.auth == 1 && device.checked != true) {
+        return false;
+      }
+      if (scope.auth == 2 && device.checked == true) {
+        return false;
+      }
+      if (scope.seniorQuery == true) {
+        if (
+          someProp(scope.valuesQuery, (n, i) => {
+            if (typeof n === "undefined" || n === null) {
+              return false;
+            }
+            var a = device.values[i.toLowerCase()] || "";
+            return a.indexOf(n) == -1;
+          })
+        ) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+  function render(domains) {
+    if (typeof cached[domains] === "undefined") {
+      cached = {};
+      cached[domains] = ajax
+        .post(queryUserDeviceByDeviceDomains, [userID, domains])
+        .then(d => {
+          let selecedDeviceStr = d.map(n => n.deviceId - 0).join(";");
+          return ajax
+            .post(getDevicesByCondition, {
+              domains: domains
+            })
+            .then(devices => {
+              deviceMap = devices.reduce(function(a, b) {
+                a[b.id] = b;
+                return a;
+              }, {});
+              scope.devices = devices.map(a => new tableCell(a));
+              scope.devices.forEach(n => {
+                n.checked = selecedDeviceStr.indexOf(n.id) !== -1;
+              });
+              scope.page = 0;
+              scope.filter = makeFilter();
+            });
+        });
+    } else {
+      scope.page = 0;
+      scope.filter = makeFilter();
+    }
+  }
+  scope.clear = function() {
+    scope.domain = scope.domains[0].id;
+    scope.model = scope.models[0].id;
+    scope.customer = scope.customers[0].id;
+    scope.project = scope.projects[0].id;
+    scope.label = undefined;
+    scope.sn = undefined;
+    scope.auth = undefined;
+    scope.filter = makeFilter();
+    //scope.filter = () => true;
+  };
+  scope.click = function() {
+    scope.allchecked = !scope.allchecked;
+  };
+  scope.seniorQuery = false;
+  scope.valuesQuery = {};
+  scope.current = null;
+  scope.select = 0;
+  scope.selects = [
+    {
+      id: 0,
+      label: "否"
+    },
+    {
+      id: 1,
+      label: "是"
+    }
+  ];
+  scope.authorizes = [
+    {
+      id: 0,
+      label: "--全部--"
+    },
+    {
+      id: 1,
+      label: "已授权"
+    },
+    {
+      id: 2,
+      label: "未授权"
+    }
+  ];
+  scope.auth = scope.authorizes[0].id;
+  scope.advance = function() {
+    scope.seniorQuery = !scope.seniorQuery;
+  };
+  scope.navigators = [
+    {
+      label: "域授权",
+      click: function() {
+        $state.go("prod_authorize_domain", {
+          userID: userID
+        });
+      }
+    },
+    {
+      label: "数据授权",
+      active: true
+    }
+  ];
+  scope.selectAll = function() {
+    let ft = scope.devices.filter(scope.filter);
+    ft.forEach(d => {
+      d.checked = true;
+    });
+  };
+  scope.$watch("current", (n, o, s) => {
+    if (n) {
+      scope.allchecked = scope.current.every(({ checked }) => checked);
+    }
+  });
+  scope.checkboxClick = function(allchecked) {
+    scope.current.forEach(d => {
+      d.checked = allchecked;
+    });
+  };
+  scope.attributechange = function(attribute) {
+    scope.attrQueries = scope.attrQueries || [];
+    scope.valuesQuery[attribute.name] = attribute.sourceValue;
+    scope.attributes = attributes.filter(
+      d => typeof scope.valuesQuery[d.name] == "undefined"
+    );
+    scope.attrQueries.push(attribute);
+    delete scope.attribute;
+  };
+  scope.save = function() {
+    let deviceIds = scope.devices.filter(d => d.checked).map(d => d.id);
+    userInfo.deviceIds = deviceIds;
+    userInfo.deviceDomainId = scope.domain;
+    //return;
+    ajax
+      .post("userUIService.modifyUser", userInfo)
+      .then(d => {
+        growl.success("领授权完成");
+      })
+      .catch(e => {
+        growl.error(e);
+      });
+  };
+  scope.back = function() {
+    window.location.href = "/app-oc/index.html#/usermanager";
+  };
+  scope.search = function() {
+    render(scope.domain);
+  };
+}
+</script>
+<style lang="less" scoped>
+.nav-tabs {
+  li {
+    cursor: pointer;
+  }
+}
+label.form-label {
+  text-align: center;
+}
+.item {
+  padding-bottom: 10px;
+  min-height: 69px;
+}
+.wrap {
+  padding: 5px 0px !important;
+  a {
+    cursor: pointer;
+    font-weigh: bold;
+  }
+  .drop {
+    float: left;
+    width: 200px;
+  }
+  .option {
+    width: 160px;
+  }
+}
+</style>

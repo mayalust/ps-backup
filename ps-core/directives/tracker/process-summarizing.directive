@@ -1,0 +1,74 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-summarizing -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item" >
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border"><a>{{ item.title }}</a></h3>
+      <process-common-dir class="timeline-header no-border"
+                          data-process="elem"
+                          ng-repeat="elem in item.data">
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+  export default function(rootScope,psTracker){
+    return {
+      scope : {
+        tracker : "="
+      },
+      link(scope, element, attr) {
+        let {
+          _icon,
+          createAttr,
+          createButton,
+          createTitle,
+          _alertArisingTime,
+          _category,
+          _attrsMap
+        } = scope.tracker;
+        let {
+          message
+        } = scope.tracker._data;
+        let {
+          handlerName,
+          values
+        } = scope.tracker._data.ticketTask;
+        class Handler {
+          c340_default(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "状态维护",
+              data : [
+                createAttr("工单号"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr("维护项目编号"),
+                createAttr("维护项目名称"),
+                createAttr("实施依据"),
+                createAttr("处理人"),
+                createButton.call(scope.tracker, "维护实绩", "keepResult")
+              ]
+            }]
+          }
+        }
+        function createRenderList(){
+          let handler = new Handler;
+          if( _category == 340 ) {
+            return handler.c340_default();
+          }
+          return psTracker.noNodeFound(scope.tracker);
+        }
+        scope.tracker.__dicsloaded__.then(() => {
+          scope.renderList = createRenderList();
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

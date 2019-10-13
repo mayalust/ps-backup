@@ -1,0 +1,689 @@
+<config
+    injector="$q,$timeout,$state,$location,$registerService,ajax,commonMethodService2,growl,userUIService,psLoading,psDialog,commonMethodService,$filter"></config>
+<template>
+  <div class="wrap">
+
+    <div class="title">
+      <p class="title-item">作业内容:</p>
+      <p class="title-item">{{content}}</p>
+      <p class="title-item">数据类别:</p>
+      <p class="title-item">{{dataType}}</p>
+    </div>
+    <div class="form-rule">
+      <div class="margin-bottom-10 label-value fully-width">
+        <ps-grid1 ng-model="gridModel5" config="config5"></ps-grid1>
+      </div>
+    </div>
+    <div class="form-rule-footer">
+      <button class="btn btn-primary" ng-click="submitFn()" style="margin-right: 10px;">提交</button>
+      <button class="btn btn-default" ng-click="close('_CLOSE_MODAL')" style="margin-left: 10px;">取消</button>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+import { extend } from "ps-ultility";
+
+export default function (q, timeout, $state, location, registerService, ajax, cms2, growl, userUIService, psLoading, psDialog, commonMethodService, $filter) {
+
+  return {
+    link (scope, element, attr) {
+      var target = commonMethodService();
+      var res = scope.params.data;
+      var type = scope.params.type;
+
+      scope.isView = function () {
+        return true;
+      }
+
+
+      let getData1 = function (data) {
+        //变量定义
+        scope.content = "";
+        scope.dataType = "";
+        scope.ruleList = [];
+
+        if (res) {
+          if (res.content) {
+            scope.content = res.content;
+            scope.dataType = res.dataType ? res.dataType : "";
+          }
+          if (res.ruleList && res.ruleList.length > 0) {
+            scope.ruleList = res.ruleList;
+          }
+        }
+
+        scope.gridModel5 = scope.ruleList;
+        scope.config5 = {
+          columns: [{
+            key: 'result',
+            label: '结果',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'effectDeviceId',
+            label: '作用设备',
+            type: 'text',
+            add: {
+              type: 'select',
+              options: data.devList
+            },
+            edit: {
+              type: 'select',
+              options: data.devList
+            },
+            bind: function (row) {
+              var obj = data.devList.find(a => {
+                return a.id == row.effectDeviceId;
+              });
+              return obj && obj.label ? obj.label : "";
+            }
+          }, {
+            key: 'stateStandardId',
+            label: '维护标准名称',
+            type: 'text',
+            add: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "310", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardName"
+                }
+              }
+            },
+            edit: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "310", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardName"
+                }
+              }
+            },
+            bind: function (row) {
+              let obj1 = data.nList.find(a => {
+                return a.id == row.stateStandardId;
+              });
+              return obj1 && obj1.standardName;
+            }
+          }, {
+            key: 'executionCycle',
+            label: '维护周期单位',
+            type: 'text',
+            add: {
+              type: 'select',
+              options: target.getRootScope("myDicts")["executionCycle"]
+            },
+            edit: {
+              type: 'select',
+              options: target.getRootScope("myDicts")["executionCycle"]
+            },
+            bind (row, value) {
+              let executionCycle = target.getRootScope("myDicts")["executionCycle"].find(item => {
+                return item.id == row.executionCycle;
+              });
+              return executionCycle && executionCycle.label;
+            }
+          }, {
+            key: 'cycleNum',
+            label: '维护周期间隔',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'maintainStandardId',
+            label: '检修标准名称',
+            type: 'text',
+            add: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "320", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardProjectName"
+                }
+              }
+            },
+            edit: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "320", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardProjectName"
+                }
+              }
+            },
+            bind: function (row) {
+              let obj2 = data.mList.find(a => {
+                return a.id == row.maintainStandardId;
+              });
+              return obj2 && obj2.standardProjectName;
+            }
+          }, {
+            key: 'maintainLimitDay',
+            label: '检修完成期限（天）',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }],
+          outButtons: [{
+            label: '新增规则',
+            symbol: 'inlineAdd'
+          }],
+          bodyButtons: [{
+            label: "编辑",
+            class: "btn btn-primary",
+            symbol: "inlineEdit"
+          }, {
+            label: "删除",
+            class: "btn btn-primary",
+            on: {
+              click: function (row) {
+                this.deleteRow(row);
+                for (var i in scope.dealList) {
+                  if (row.index == scope.dealList[i].id) {
+                    scope.ruleList.splice(i, 1)
+                  }
+                }
+              }
+            }
+          }],
+          inlineAddConfirm: function (row, next) {
+            row.index = scope.ruleList.length;
+            //维护标准
+            var obj1 = data.nList.find(a => {
+              return a.id == row.stateStandardId;
+            });
+            row.stateStandardNo = obj1 && obj1.standardNo ? obj1.standardNo : "";
+            row.stateStandardName = obj1 && obj1.standardName ? obj1.standardName : "";
+            //检修标准
+            var obj2 = data.mList.find(a => {
+              return a.id == row.maintainStandardId;
+            });
+            row.maintainStandardNo = obj2 && obj2.standardProjectId ? obj2.standardProjectId : "";
+            row.maintainStandardName = obj2 && obj2.standardProjectName ? obj2.standardProjectName : "";
+
+            //row.cycleNum = typeof row.cycleNum == 'number' ? row.cycleNum : Number(row.cycleNum);
+            //row.maintainLimitDay = typeof row.maintainLimitDay == 'number' ? row.maintainLimitDay : Number(row.maintainLimitDay);
+            this.addRow(row, true);
+            scope.ruleList = this.data;
+            next();
+          }
+        };
+
+        scope.submitFn = function () {
+          //res.ruleList = scope.ruleList;
+          scope.submit(scope.ruleList);
+        }
+      }
+
+      var getData2 = function (data) {
+        //变量定义
+        scope.content = "";
+        scope.dataType = "";
+        scope.ruleList = [];
+
+        if (res) {
+          if (res.content) {
+            scope.content = res.content;
+            scope.dataType = res.dataType ? res.dataType : "";
+          }
+          if (res.ruleList && res.ruleList.length > 0) {
+            scope.ruleList = res.ruleList;
+          }
+        }
+
+        //排故步骤
+        scope.gridModel5 = scope.ruleList;
+        scope.config5 = {
+          columns: [{
+            key: 'unit',
+            label: '计量单位',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'upperLimit',
+            label: '上限',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'lowerLimit',
+            label: '下限',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'effectDeviceId',
+            label: '作用设备',
+            type: 'text',
+            add: {
+              type: 'select',
+              options: data.devList
+            },
+            edit: {
+              type: 'select',
+              options: data.devList
+            },
+            bind: function (row) {
+              var obj = data.devList.find(a => {
+                return a.id == row.effectDeviceId;
+              });
+              return obj && obj.label ? obj.label : "";
+            }
+          }, {
+            key: 'stateStandardId',
+            label: '维护标准名称',
+            type: 'text',
+            add: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "310", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardName"
+                }
+              }
+            },
+            edit: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "310", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardName"
+                }
+              }
+            },
+            bind: function (row) {
+              let obj1 = data.nList.find(a => {
+                return a.id == row.stateStandardId;
+              });
+              return obj1 && obj1.standardName;
+            }
+          }, {
+            key: 'executionCycle',
+            label: '维护周期单位',
+            type: 'text',
+            add: {
+              type: 'select',
+              options: target.getRootScope("myDicts")["executionCycle"],
+              config: {
+                format: {
+                  value: 'valueCode'
+                }
+              }
+            },
+            edit: {
+              type: 'select',
+              options: target.getRootScope("myDicts")["executionCycle"],
+              config: {
+                format: {
+                  value: 'valueCode'
+                }
+              }
+            },
+            bind (row, value) {
+              let executionCycle = target.getRootScope("myDicts")["executionCycle"].find(item => {
+                return item.valueCode == row.executionCycle;
+              });
+              return executionCycle && executionCycle.label;
+            }
+          }, {
+            key: 'cycleNum',
+            label: '维护周期间隔',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }, {
+            key: 'maintainStandardId',
+            label: '检修标准名称',
+            type: 'text',
+            add: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "320", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardProjectName"
+                }
+              }
+            },
+            edit: {
+              type: 'select',
+              watch: {
+                key: 'effectDeviceId',
+                handler: function (d, next) {
+                  if (d) {
+                    ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                      [{"deviceId": d, "ticketCategory": "320", "taskStatus": 0}, {
+                        start: 0,
+                        length: 1000,
+                        statCount: true
+                      }]).then(function (a) {
+                      var list = a.data;
+                      next({
+                        $options: list,
+                        $value: null
+                      });
+                    });
+                  } else {
+                    return [];
+                  }
+                }
+              },
+              config: {
+                format: {
+                  label: "standardProjectName"
+                }
+              }
+            },
+            bind: function (row) {
+              let obj2 = data.mList.find(a => {
+                return a.id == row.maintainStandardId;
+              });
+              return obj2 && obj2.standardProjectName;
+            }
+          }, {
+            key: 'maintainLimitDay',
+            label: '检修完成期限（天）',
+            type: 'text',
+            add: {
+              type: 'input'
+            },
+            edit: {
+              type: 'input'
+            }
+          }],
+          outButtons: [{
+            label: '新增规则',
+            symbol: 'inlineAdd'
+          }],
+          bodyButtons: [{
+            label: "编辑",
+            class: "btn btn-primary",
+            symbol: "inlineEdit"
+          }, {
+            label: "删除",
+            class: "btn btn-primary",
+            on: {
+              click: function (row) {
+                this.deleteRow(row);
+                for (var i in scope.dealList) {
+                  if (row.index == scope.dealList[i].id) {
+                    scope.ruleList.splice(i, 1)
+                  }
+                }
+              }
+            }
+          }],
+          inlineAddConfirm: function (row, next) {
+            row.index = scope.ruleList.length;
+            //维护标准
+            var obj1 = data.nList.find(a => {
+              return a.id == row.stateStandardId;
+            });
+            row.stateStandardNo = (obj1 && obj1.standardNo) ? obj1.standardNo : "";
+            row.stateStandardName = (obj1 && obj1.standardName) ? obj1.standardName : "";
+            //检修标准
+            var obj2 = data.mList.find(a => {
+              return a.id == row.maintainStandardId;
+            });
+            row.maintainStandardNo = (obj2 && obj2.standardProjectId) ? obj2.standardProjectId : "";
+            row.maintainStandardName = (obj2 && obj2.standardProjectName) ? obj2.standardProjectName : "";
+
+            //row.cycleNum = typeof row.cycleNum == 'number' ? row.cycleNum : Number(row.cycleNum);
+            //row.maintainLimitDay = typeof row.maintainLimitDay == 'number' ? row.maintainLimitDay : Number(row.maintainLimitDay);
+            this.addRow(row, true);
+            scope.ruleList = this.data;
+            next();
+          }
+        }
+
+        scope.submitFn = function () {
+          scope.submit(scope.ruleList);
+        }
+      }
+
+      const init = function () {
+        let data = {};
+        ajax.post("resourceUIService.getDevicesByCondition?includeFields=label,externalDevId,id,sn,values.images,domains,modelId", [{}]).then(a => {
+          data.devList = a;
+          ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage", [{
+            "ticketCategory": "320",
+            "taskStatus": 0
+          }, {start: 0, statCount: true}]).then(ret1 => {
+            data.mList = ret1.data;
+            ajax.post("maintenanceTaskUIService.getTaskBySimpleConditionWithPage", [{
+              "ticketCategory": "310", "taskStatus": 0
+            }, {start: 0, statCount: true}]).then(ret2 => {
+              data.nList = ret2.data;
+              if (type == 'dx') {
+                getData1(data);
+              } else if (type == 'dl') {
+                getData2(data);
+              }
+            });
+          });
+        });
+      }
+
+      init();
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+}
+
+.form-rule {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form-rule-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.label-value {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+
+  &.half-width {
+    width: 50%;
+  }
+
+  &.fully-width {
+    width: 100%;
+  }
+
+  .label {
+    flex-basis: 120px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .value {
+    flex: 1;
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+
+  .title-item {
+    padding: 5px;
+    min-width: 10px;
+    margin: 0;
+  }
+}
+</style>

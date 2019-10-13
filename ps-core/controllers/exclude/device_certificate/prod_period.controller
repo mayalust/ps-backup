@@ -1,0 +1,129 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,growl" params="/:id?"></config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+    export default function (scope, ajax, location,psDialog,routeParams,growl) {
+        scope.layout = {
+            modals : {
+                editModel : {
+                    label : "添加分类",
+                    type : "layout",
+                    children : [{
+                        type : "form-dialog",
+                        data : null,
+                        children : [{
+                            type : "select",
+                            label : "设备类型",
+                            composory: true,
+                            key : "modelId",
+                            options : 'resourceUIService.getAllModels',
+                        },{
+                            type : "input",
+                            label : "分类名称",
+                            composory: true,
+                            key : "label",
+                        },{
+                            type : "input",
+                            label : "计量周期",
+                            composory: true,
+                            key : "period"
+                        }]
+                    }],
+                    buttons : [{
+                        label : "确定",
+                        class : "btn btn-primary",
+                        click : function(){
+                            this.submit();
+                        }
+                    },{
+                        label : "取消",
+                        click : function(){
+                            this.close();
+                        }
+                    }]
+                }
+            },
+            label: '计量周期',
+            children: [{
+                type: "table",
+                config: {
+                    attributes: {
+                        "modelId": ["设备类型",  "dict", {
+                            name: "modelDefinition",
+                            from: "modelId"
+                        }],
+                        "label": ["设备分类","text"],
+                        "period": ["计量周期/年", "text"]
+                    },
+                    search: {
+                        body: ["label"]
+                    },
+                    grid: {
+                        body: ["label","period"],
+                        buttons: {
+                            outGrid: [{
+                                label: " 添加分类",
+                                class: "primary",
+                                icon: "fa fa-plus",
+                                on: {
+                                    click : function(e){
+                                        e.add({
+                                            template : "editModel",
+                                            before : function(d){
+                                                return d;
+                                            },
+                                            url : "resourceUIService.saveMeter",
+                                            after : function(d){
+                                                return d;
+                                            }
+                                        });
+                                    }
+                                }
+                            }],
+                            inGrid: [{
+                                label: "编辑",
+                                class: "btn btn-primary",
+                                on: {
+                                    click: function (e) {
+                                        e.update({
+                                            template : "editModel",
+                                            before : function(d){
+                                                return d;
+                                            },
+                                            url : "resourceUIService.saveMeter"
+                                        });
+                                    }
+                                }
+                            },{
+                                label: "删除",
+                                on: {
+                                    click: function (e) {
+                                        e.remove({
+                                            before : function(){
+                                                return e.$row.id;
+                                            },
+                                            url : "resourceUIService.deleteMeter"
+                                        });
+                                    }
+                                }
+                            }]
+                        },
+                        config: {
+                            url: 'resourceUIService.getMeterByCondition',
+                            parameter: {},
+                            showIndex: false,
+                            showSelector: false,
+                            showSearch: false
+                        },
+                        options: []
+                    }
+                }
+            }]
+        }
+    };
+</script>
+<style type="less">
+</style>

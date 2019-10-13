@@ -1,0 +1,2 @@
+define(["angular","angular-route","angular-resource","angular-animate","angular-growl","ng-dialog","./controllers/index","./directives/index","./filters/index","./services/index","./values/index"],function(e){"use strict";return e.module("app",["controllers","directives","filters","services","values","angular-growl","ngDialog","ngAnimate","ngRoute"])});
+//# sourceMappingURL=../../map/app-ac/js/app.js.map

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-editor/js/toolkit/optionEdit.js"],"names":["define","jquery","jui"],"mappings":"AAAAA,OAAO,CAAC,SAAU,aAAc,SAAUC,EAAQC,GAEhD,MADiB","file":"app-editor/js/toolkit/optionEdit.js","sourcesContent":["define([\"jquery\", \"jquery-ui\"], function (jquery, jui) {\n  var optionEdit = {};\n  return optionEdit;\n});"],"sourceRoot":"/source/"}

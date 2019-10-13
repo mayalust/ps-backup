@@ -1,0 +1,110 @@
+<config injector="$q,$rootScope"
+></config>
+<template>
+  <div class="dataTables_paginate paging_simple_numbers">
+    <ul class="pagination">
+      <li class="paginate_button previous" ng-click="prev()">
+        <a>上页</a>
+      </li>
+      <li class="paginate_button"
+          ng-class="pagen.class( page )"
+          ng-click="pagen.pageTo()"
+          ng-repeat="pagen in pagination"
+          ng-disabled="pagen.disabled">
+        <a ng-bind="pagen.label"></a>
+      </li>
+      <li class="paginate_button next" ng-click="next()">
+        <a>下页</a>
+      </li>
+    </ul>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function(q,rootScope){
+    return {
+      scope : {
+        page : "=",
+        total : "="
+      },
+      link(scope, element, attr, ngModel) {
+        function makeLadder( num ){
+          let rs = [];
+          for(let i = 0; i< num; i++){
+            rs.push(i);
+          }
+          return rs;
+        }
+        class pagination{
+          constructor( val ){
+            if(val === null){
+              this.label = "...";
+              this.disabled = true;
+            } else {
+              this.value = val;
+              this.label = val + 1;
+            }
+          }
+          class( num ){
+            if( this.disabled ){
+              return "disabled"
+            }
+            if( this.value == num){
+              return "active";
+            }
+          }
+          pageTo(){
+            scope.page = this.value;
+          }
+        }
+        scope.$watchGroup(["page","total"], (n,o,s) => {
+          let page = n[0],
+            total = n[1],
+            nums = makeLadder( total );
+          if( typeof page === "undefined" ){
+            s["page"] = 0;
+            return;
+          }
+          if(typeof total === "undefined" ){
+            return;
+          }
+          s['pagination'] = nums.reduce((a, b)=> {
+            let first = page - 2,
+              last = page + 2;
+            if( b == 0 || b == total - 1){
+              return a.concat([b]);
+            }
+            if( b > first && b < last ){
+              return a.concat([b]);
+            }
+            if( page < 3 && b < 5 ){
+              return a.concat([b]);
+            }
+            if( page > total - 4 && b > total - 6 ){
+              return a.concat([b]);
+            }
+            if( a[a.length - 1] !== null ){
+              return a.concat([null]);
+            }
+            return a;
+          }, []).map( d => new pagination(d));
+        });
+        scope.prev = function(){
+          scope.page = scope.page > 0
+            ? scope.page - 1 : scope.page
+        }
+        scope.next = function(){
+          scope.page = scope.page < scope.total - 1
+            ? scope.page + 1 : scope.page
+        }
+      }
+    }
+  }
+</script>
+<style lang="less" scoped>
+  .dataTables_paginate{
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+  }
+</style>

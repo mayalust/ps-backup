@@ -1,0 +1,52 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,userUIService" params="/:id?">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+  export default function (scope, ajax, location,psDialog,routeParams,userUIService) {
+      scope.layout = {
+          label: '公共文档',
+          children: [{
+              label: '公共文档',
+              type: "panel",
+              children: [{
+                  type: "table",
+                  config: {
+                      attributes: {
+                          "name": ["文档名称", "text"],
+                          "description": ["文档描述", "text"],
+                      },
+                      grid: {
+                          body: ["name","description"],
+                          buttons: {
+                              inGrid: [{
+                                  label: "下载",
+                                  class: "btn btn-primary",
+                                  on : {
+                                      click : function(e){
+                                          var url = userUIService.uploadFileUrl + e.$row.qualifiedName;
+                                          window.open(url);
+                                      }
+                                  }
+                              }]
+                          },
+                          config: {
+                              url: 'resourceUIService.getUploadModelFileListByDeviceId',
+                              parameter: routeParams.id,
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false
+                          },
+                          options: []
+                      }
+                  }
+              }]
+          }]
+      }
+  };
+</script>
+<style type="less">
+</style>

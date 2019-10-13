@@ -1,0 +1,10 @@
+//当DOM结构加载完成后，bootstrap.js文件将会命令AngularJS启动起来并继续执行
+define(['angular', 'domReady', 'app'], function(angular, domReady, app) {
+  app(function(){
+    /**
+    require(['domReady!'], function(document) {
+      angular.bootstrap(document, ['app']);
+    });
+     **/
+  });
+});

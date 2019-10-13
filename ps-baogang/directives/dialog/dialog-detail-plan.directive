@@ -1,0 +1,258 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="titleHead">
+      <div class="col-md-6">
+        辊道名称: <span ng-bind="rollerNameBack"></span>
+      </div>
+      <div class="col-md-6">
+        辊道编号: <span ng-bind="rollerNoBack"></span>
+      </div>
+    </div>
+    <hr>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"><span style="color: red">*</span> 备修标准项目编号：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="repairPartsStandard.standardProjectId" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.standardProjectId" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 备修标准项目名称：</span>
+      </div>
+      <div class="col-md-8">
+        <input ng-model="repairPartsStandard.standardProjectName" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.standardProjectName" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 备件类型：</span>
+      </div>
+      <div class="col-md-8">
+        <!--<ps-select ng-model="repairPartsStandard.rollerType" data-options="model.id as model.label for model in clone.types"></ps-select>-->
+        <input ng-model="repairPartsStandard.rollerType" class="form-control" ng-if="mode=='edit'" disabled="disabled"/>
+        <span ng-bind="repairPartsStandard.rollerType" ng-if="mode=='view'" class="title"></span>
+      </div>
+    </div>
+
+    <!--专用件明细-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">修复专用件明细</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#rotor_check" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="rotor_check" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12">
+              <table ps-table-sync
+                     data-paginate="all"
+                     data-source="repairPartsStandard.repairDedicatedParts"
+                     data-filter="filter1"
+                     data-sort="sort1"
+                     data-page="page1">
+                <thead>
+                <tr>
+                  <th>
+                    序号
+                  </th>
+                  <th>代号</th>
+                  <th>名称</th>
+                  <th>数量</th>
+                  <th>材料</th>
+                  <th>单重</th>
+                  <th>备注属性</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(key,item) in items track by key">
+                  <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                  <td ng-bind="item.code"></td>
+                  <td ng-bind="item.name"></td>
+                  <td ng-bind="item.quantity"></td>
+                  <td ng-bind="item.material"></td>
+                  <td ng-bind="item.singleWeight"></td>
+                  <td ng-bind="item.remarks"></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--标准件明细-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">修复标准件明细</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#rotor_check1" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="rotor_check1" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12">
+              <table ps-table-sync
+                     data-paginate="all"
+                     data-source="repairPartsStandard.repairStandardParts"
+                     data-filter="filter1"
+                     data-sort="sort1"
+                     data-page="page1">
+                <thead>
+                <tr>
+                  <th>
+                    序号
+                  </th>
+                  <th>代号</th>
+                  <th>名称</th>
+                  <th>数量</th>
+                  <th>材料</th>
+                  <th>单重</th>
+                  <th>备注属性</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(key,item) in items track by key">
+                  <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                  <td ng-bind="item.code"></td>
+                  <td ng-bind="item.name"></td>
+                  <td ng-bind="item.quantity"></td>
+                  <td ng-bind="item.material"></td>
+                  <td ng-bind="item.singleWeight"></td>
+                  <td ng-bind="item.remarks"></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--检测方案-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">修复检测方案</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px;cursor: pointer" data-toggle="collapse"  data-target="#rotor_check2" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="rotor_check2" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12">
+              <table ps-table-sync
+                     data-paginate="all"
+                     data-source="repairPartsStandard.spareRepairPlans"
+                     data-filter="filter1"
+                     data-sort="sort1"
+                     data-page="page1">
+                <thead>
+                <tr>
+                  <th>
+                    序号
+                  </th>
+                  <th>零件名称</th>
+                  <th>工艺</th>
+                  <th>零件图号</th>
+                  <th>零件编号</th>
+                  <th>是否应用</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(key,item) in items track by key">
+                  <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+                  <td ng-bind="item.spareComponent.componentName"></td>
+                  <td ng-bind="item.spareComponent.crafts"></td>
+                  <td ng-bind="item.spareComponent.drawingNo"></td>
+                  <td ng-bind="item.spareComponent.componentNo"></td>
+                  <td>
+                    <input type="checkbox" id="{{'plan_'+key}}" ng-model="item.apply">
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+
+      </div>
+      <div class="col-md-8" ng-if="btnShow">
+        <button class="btn btn-primary" ng-click="submitFn()">确定</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+    import { extend } from "ps-ultility";
+    export default function(rootScope){
+        return {
+            link(scope, element, attr) {
+                scope.deviceDic = rootScope.deviceDic;
+                scope.mode = scope.params.mode;
+                scope.btnShow = scope.params.btnShow;
+                scope.clone = extend({}, scope.params.data);
+                scope.repairPartsStandard = scope.clone.variables.ticket.values.repairPartsStandard;
+                scope.rollerNameBack = scope.clone.variables.ticket.values.repairPartsStandard.rollerName;
+                scope.rollerNoBack = scope.clone.variables.ticket.values.repairPartsStandard.rollerNo;
+                scope.cos = false;
+                class tableCell{
+                    constructor(data){
+                        for(var i in data){
+                            this[i] = data[i];
+                        }
+                    }
+                }
+
+                scope.special = [].map(b =>new tableCell(b));
+                scope.standard = [].map(b =>new tableCell(b));
+                scope.plan = [].map(b =>new tableCell(b));
+
+                scope.submitFn = function(d){
+                    scope.submit(scope.repairPartsStandard.spareRepairPlans );
+                }
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .titleHead{
+      border-bottom: 1px solid;
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

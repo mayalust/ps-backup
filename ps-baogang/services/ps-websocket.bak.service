@@ -1,0 +1,144 @@
+<config injector="$q,$rootScope"></config>
+<script>
+import factory from "./../../js/services/service_factory.js";
+import { random } from "ps-ultility";
+export default function(q, rootScope) {
+  const DEBUG = false,
+    protocol = factory.protocol || "ws",
+    host = factory.host,
+    websockets = {},
+    websocketOpened = q.defer(),
+    url =
+      location.hostname == "localhost"
+        ? `${protocol}//${host}/websocket/message`
+        : `${protocol}//${location.host}/websocket/message`,
+    getId = d => (typeof d === "object" ? d.id : d);
+  console.log(url);
+  function stringify(obj) {
+    return JSON.stringify(obj);
+  }
+  function parse(str) {
+    let a;
+    try {
+      a = JSON.parse(str);
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+    return a;
+  }
+  function createWs(name) {
+    let ws = new WebSocket(url),
+      listeners = {},
+      onDataEvent = [];
+    class WebsocketCls {
+      constructor() {
+        this.name = name;
+        this.uuid = random();
+      }
+      send(ci, kpi) {
+        websocketOpened.promise
+          .then(d => {
+            d.send(
+              stringify({
+                uuid: this.uuid,
+                operation: "register",
+                type: "kpi",
+                param: {
+                  ciid: ci.map(getId).join(","),
+                  kpi: kpi.map(getId).join(",")
+                }
+              })
+            );
+          })
+          .catch(e => {
+            console.error(e);
+          });
+      }
+      data(handler) {
+        onDataEvent.push(handler);
+      }
+      destroy() {
+        onDataEvent.forEach((d, i) => {
+          onDataEvent[i] = null;
+        });
+        onDataEvent = [];
+        websocketOpened.promise
+          .then(d => {
+            d.send(
+              stringify({
+                uuid: this.uuid,
+                operation: "unregister"
+              })
+            );
+          })
+          .catch(e => {
+            console.error(e);
+          });
+      }
+      on(ci, kpi, callback) {
+        listeners[`${ci}_${kpi}`] = listeners[`${ci}_${kpi}`] || [];
+        listeners[`${ci}_${kpi}`].push(callback);
+        return function() {
+          listeners[`${ci}_${kpi}`] = listeners[`${ci}_${kpi}`].filter(
+            d => d !== callback
+          );
+        };
+      }
+    }
+    ws.onopen = function() {
+      websocketOpened.resolve(ws);
+    };
+    ws.onerror = function(e) {
+      websocketOpened.reject(`websocket was on error, please try to re-link`);
+    };
+    ws.onclose = function(e) {
+      websocketOpened.reject(`websocket was closed, please try to re-link`);
+    };
+    ws.onmessage = function(e) {
+      let { nodeId, kpiCode, value } = parse(e.data),
+        fn = listeners[`${nodeId}_${kpiCode}`];
+      onDataEvent.forEach(handler => {
+        handler(e.data);
+      });
+      fn
+        ? fn.forEach(f => {
+            f(value);
+          })
+        : null;
+    };
+
+    /** local test utils only **/
+    if (DEBUG) {
+      setInterval(() => {
+        let ks = keys(listeners);
+        ks.forEach(d => {
+          let state = Math.round(Math.random() * 4),
+            fns = listeners[`${d}`];
+          fns && fns.forEach(fn => fn(state));
+        });
+        /* let state = Math.round( Math.random() * 4 ),
+            fn = listeners["557055315256066_999999"];
+          for(var i in fn){
+            fn[i](state)
+          } */
+      }, 500);
+    }
+    /** local test utils only **/
+
+    return new WebsocketCls();
+  }
+  function keys(obj) {
+    let rs = [],
+      i;
+    for (i in obj) {
+      rs.push(i);
+    }
+    return rs;
+  }
+  return function(name) {
+    websockets[name] = websockets[name] || createWs(name);
+    return websockets[name];
+  };
+}
+</script>

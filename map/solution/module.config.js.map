@@ -1,0 +1,1 @@
+{"version":3,"sources":["solution/module.config.js"],"names":["define","controllers","services"],"mappings":"AAAAA,OAAO,CACLC,YAAa,CAAC,cACdC,SAAU,CAAC","file":"solution/module.config.js","sourcesContent":["define({\n  controllers: [\"controller\"],\n  services: [\"service\"]\n});"],"sourceRoot":"/source/"}

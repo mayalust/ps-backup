@@ -1,0 +1,147 @@
+<config injector="$q,$rootScope,$compile"
+        deps="psTablePage,psOptionGroup"
+></config>
+<template>
+  <div class="dataTables_wrapper form-inline dt-bootstrap no-footer">
+    <table ng-transclude class="table table-hover dataTable no-footer"></table>
+    <div class="row" ng-if="paginate=='all'">
+      <div class="col-lg-3">
+        <div class="dataTables_length">
+          <label>每页显示
+            <select class="form-control input-sm"
+                    ng-model="$parent.pageSize"
+                    ng-options="num for num in $parent.pageSizes">
+            </select>项</label>
+        </div>
+      </div>
+      <div class="col-lg-2">
+        <div class="dataTables_info">
+          第 <span ng-bind="startp"></span> 至 <span ng-bind="endp"></span> 项，共 <span ng-bind="totalp"></span> 项
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <ps-table-page
+            data-page="$parent.page"
+            data-total="$parent.total"
+        ></ps-table-page>
+      </div>
+    </div>
+    <div class="row" ng-if="paginate=='pageonly'">
+      <div class="col-lg-12">
+        <ps-table-page
+            data-page="$parent.page"
+            data-total="$parent.total"
+        ></ps-table-page>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { isArray } from "ps-ultility";
+  export default function(q,rootScope,compile){
+    return {
+      replace : true,
+      scope : {
+        current : "=?",
+        filter : "=",
+        sort : "=",
+        page : "=",
+        source : "="
+      },
+      transclude : true,
+      restrict : "EA",
+      require : "?ngModel",
+      link(scope, element, attr, transclude) {
+        let type = attr["psTableSync"], noDataDom = $(`<tr><td colspan='1000' style="text-align:center">暂无数据</td></tr>`);
+        scope.paginate = attr["paginate"] || "all";
+        scope.pageSizes = [10, 15, 25, 50, 100];
+        function showNoData(){
+          let tbody = element.find("tbody");
+          tbody.append( noDataDom );
+        }
+        function hideNoData(){
+          noDataDom.remove();
+        }
+        if( type !== "false"){
+          scope.$watchGroup(["filter", "sort", "pageSize", "page", `source`], (n,o,s)=>{
+            let filter = n[0],
+              sort = n[1],
+              pageSize = n[2],
+              page = n[3],
+              source = n[4];
+            if( typeof filter !== "function" ){
+              s.filter = ( d => d )
+              return;
+            }
+            if( typeof sort !== "function" ){
+              s.sort = ( (a, b)=> 1 )
+              return;
+            }
+            if( typeof pageSize !== "number"){
+              s.pageSize = 10
+              return;
+            }
+            if( typeof page !== "number" ){
+              s.page = 0;
+              return;
+            }
+            if( !isArray(source) ){
+              return;
+            }
+            let filtered = source
+                .filter(filter),
+              rs = filtered
+                .filter( (d, i) => Math.floor( i / pageSize ) == page );
+            scope.total = Math.ceil( filtered.length / pageSize ) || 1;
+            if( page > scope.total - 1 ){
+              s.page = scope.total - 1;
+              return;
+            }
+            rs.sort( sort );
+            filtered.length ? hideNoData() : showNoData();
+            s.totalp = filtered.length;
+            s.startp = page * pageSize + 1;
+            s.endp = ( page + 1 ) * pageSize > s.totalp
+              ? s.totalp : ( page + 1 ) * pageSize;
+            scope.current = scope.$$childHead.items = rs;
+          })
+        } else {
+          scope.$watchGroup(["pageSize", "page", `source`], (n,o,s)=>{
+            let pageSize = n[0],
+              page = n[1],
+              fn = n[2];
+            if( typeof page === "undefined" ){
+              s.page = 0;
+              return;
+            }
+            if( typeof pageSize === "undefined"){
+              s.pageSize = 10;
+              return;
+            }
+            if(typeof fn !== "function"){
+              return;
+            }
+            fn( page, pageSize ).then( ({data, total}) => {
+              s.total = Math.ceil( total / pageSize ) || 1;
+              if( page > s.total - 1 ){
+                s.page = s.total - 1;
+                return;
+              }
+              total ? hideNoData() : showNoData();
+              s.totalp = total;
+              s.startp = page * pageSize + 1;
+              s.endp = ( page + 1 ) * pageSize > s.totalp
+                ? s.totalp : ( page + 1 ) * pageSize;
+              scope.current = scope.$$childHead.items = data;
+            });
+          })
+        }
+      }
+    }
+  }
+</script>
+<style type="less">
+  .echart{
+    height : 400px;
+  }
+</style>

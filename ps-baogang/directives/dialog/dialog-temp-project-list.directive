@@ -1,0 +1,159 @@
+<config injector="$q,$rootScope,growl,commonMethodService,ajax"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>设备类型:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-select ng-model="clone.motorType"
+                 ng-disabled="mode =='view'"
+                 data-change = "modelChange(motorType + motorType.length)"
+                 data-options="motorType.valueCode as motorType.label for motorType in motorTypes"></ps-select>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>宝钢号:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-select ng-model="clone.baogangNo"
+                   ng-disabled="mode =='view'"
+                   data-change = "modelChange(baogangNo + baogangNo.length)"
+                   data-options="baogangNo for baogangNo in baogangNos"></ps-select>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>修理方式:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-select ng-model="clone.repairWay"
+                   ng-disabled="mode =='view'"
+                   data-change = "modelChange(repairWay + repairWay.length)"
+                   data-options="repairWay.valueCode as repairWay.label for repairWay in repairWays"></ps-select>
+      </div>
+
+    </div>
+
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>设备型号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.motorModel" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>进厂日期:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-date2 ng-model="clone.intoTheFactoryDate"  ng-disabled="mode=='view'"></ps-date2>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>工程单号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.implementOrderNo" class="form-control" ng-if="type ==='tempAdd'"/>
+        <ps-select ng-model="clone.implementOrderNo"
+                   ng-disabled="mode =='view'"
+                   ng-if="type !== 'tempAdd'"
+                   data-change = "modelChange(implementOrderNo + implementOrderNo.length)"
+                   data-options="implementOrderNo for implementOrderNo in implementOrderNos"></ps-select>
+        <!--<span ng-bind="clone.implementOrderNo" ng-if="mode=='view'" class="value"></span>-->
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">附件:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-file2 ng-model="clone.attachmentList"></ps-file2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()" ng-if="mode != 'view'">提交</button>
+        <button class="btn btn-default" ng-click="close()"  ng-if="mode != 'view'">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(q,rootScope,growl,commonMethodService,ajax){
+    var target = commonMethodService();
+    return {
+      link(scope, element, attr) {
+          let obj = {
+              "clone.motorType" : "设备类型" ,
+              "clone.repairWay" : "修理方式" ,
+              "clone.motorModel" : "设备型号" ,
+              "clone.baogangNo" : "宝钢号" ,
+              "clone.implementOrderNo" : "工程单号",
+              "clone.intoTheFactoryDate" : "进厂日期" ,
+          }
+          function isEmpty(val){
+              if( typeof val == "undefined" || val === null || val === ""){
+                  return true;
+              }
+              return false;
+          }
+          function validate(obj){
+              let defer = q.defer();
+              for(var i in obj){
+                  if(isEmpty(eval("scope." + i))){
+                      defer.reject(obj[i] + "不能为空");
+                  }
+              };
+              defer.resolve("success");
+              return defer.promise;
+          }
+          scope.mode = scope.params.mode;
+          scope.type = scope.params.type;
+          scope.clone = extend({}, scope.params.data);
+          scope.motorTypes = target.getRootScope("myDicts")["motorType"];
+          scope.repairWays = target.getRootScope("myDicts")["repairWay"];
+          ajax.post("motorRepairUIService.findImplementOrder",{}).then(d =>{
+              scope.implementOrderNos = [];
+              if(d && d.length != 0){
+                  d.map(v=>{
+                      if(scope.implementOrderNos.indexOf(v.implementOrderNo) == -1 && v.projectName === "临时工程单"){
+                          scope.implementOrderNos.push(v.implementOrderNo);
+                      }
+                  })
+              }
+          }).then(function () {
+              scope.baogangNos = [];
+              ajax.post("motorRepairUIService.findBaogangNoList").then( d=>{
+                  scope.baogangNos = [].slice.call(d);
+              })
+
+          }).then(function () {
+              scope.submitFn = function(){
+                  validate(obj)
+                      .then(() => {
+                          //弹框返回数据
+                          scope.submit(scope);
+                      })
+                      .catch(e => {
+                          growl.error( e );
+                      })
+              }
+          })
+
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

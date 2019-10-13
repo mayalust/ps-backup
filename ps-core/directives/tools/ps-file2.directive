@@ -1,0 +1,110 @@
+<config injector="$q"></config>
+<template>
+  <div>
+    <button class="fileBtn">上传文件</button>
+    <span class="text-red" style="padding-left: 2px"></span>
+    <input style="display: none;" type="file" class="fileInp" multiple>
+    <ul class="ps-file2">
+      <li style="color:#fff;" ng-repeat="file in ngModel">
+        <span class="glyphicon glyphicon-trash" style="color:#e7675d;" ng-click="click(file)"></span>
+        <span ng-show="!file.url && !file.filePath" ng-bind="file.name || file.fileName"></span>
+        <a ng-show="file.url || file.filePath" ng-href="{{file.url || file.filePath}}" ng-bind="file.name || file.fileName" target="_blank"></a>
+      </li>
+    </ul>
+  </div>
+</template>
+<script type="text/javascript">
+export default function () {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?"
+    },
+    replace: true,
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let file = element[0].children[2],
+        spa = element[0].children[1],
+        ul = element[0].children[3],
+        button = element[0].children[0],
+        defaultConfig = {
+          preventFile: ".bat .exe"
+        };
+      scope.config = $.extend({}, defaultConfig, scope.config || {});
+      file.onchange = function (event) {
+        //typeof ngModel.$viewValue == "undefined"  之前的判断条件，判断不出来null的情况
+        if (!ngModel.$viewValue) {
+          spa.innerText = "";
+          ngModel.$viewValue = [];
+        }
+        let fileList = Array.prototype.slice.call(this.files);
+        let flag = true;
+        fileList.forEach(file => {
+          let fname = file.name;
+          var type = fname.slice(fname.lastIndexOf("."));
+          if (scope.config.preventFile.includes(type)) {
+            spa.innerText = `不支持${type}类型的文件`;
+            flag = false;
+          }
+        });
+        if (flag) {
+          let rs = fileList.filter(d => {
+            return !(ngModel.$viewValue.find(nv => {
+              return (nv.fileName || nv.name) == d.name
+            }));
+          });
+          spa.innerText = "";
+          ngModel.$setViewValue(ngModel.$viewValue.concat(rs));
+        }
+        event.target.value = null;
+      }
+      scope.click = function (item) {
+        let rs = ngModel.$viewValue.filter(d => {
+          return item !== d;
+        });
+        ngModel.$setViewValue(rs);
+      }
+      button.addEventListener('click', function (e) {
+        file.click();
+      })
+
+      Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+        if (typeof n === 'undefined') {
+          return;
+        }
+        return n;
+      });
+
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        if (typeof n === 'undefined') {
+          return;
+        }
+        return n;
+      });
+
+      scope.$on('destroy', () => {
+        //ul.removeEventListener();
+        //button.removeEventListener();
+        file = null;
+        button = null;
+        ul = null;
+      })
+
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+input:focus {
+  border: 0 !important;
+  outline: none !important;
+}
+
+button {
+  border: none;
+  outline: none;
+  height: 28px !important;
+  line-height: 28px !important;
+}
+
+</style>

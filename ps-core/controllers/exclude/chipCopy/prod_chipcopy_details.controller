@@ -1,0 +1,68 @@
+<config injector="$scope,ajax,$location">
+    </config>
+    <template>
+    <ps-table config="config"></ps-table>
+    </template>
+    <script type="text/javascript">
+export default function (scope, ajax,location) {
+    scope.config = {
+        title: [
+            ["芯片ID明细查询", "/prod_chipcopy_details", true],
+            ["结果查询", "/prod_chipcopy_result", false]
+        ],
+        attributes: {
+            "groupName":["生成日期","date"],
+            "description":["芯片ID","text"],
+        },
+        search: {
+            body: [{
+                name:"nodeIds",
+                label: "自抄写设备",
+                searchType: "select",
+                relate: {
+                    name: "resource",
+                    parameter: {
+                        modelId:489599816450210
+                    }
+                }
+            },{
+                name:"startTime",
+                searchType: "date2",
+                label: "日期"
+            },{
+                name:"endTime",
+                searchType: "date2",
+                label: "-"
+            }],
+            beforeSearch:function(a){
+                var par=a;
+                par.kpiCodes=[6001];
+                par.nodeIds=[par.nodeIds];
+                par.isRealTimeData=false;
+                a=["kpi",par];
+                 
+                return a;
+            }
+        },
+        grid: {
+            body:[{
+                name:"groupName",
+                inquery:true
+            },{
+                name:"description",
+                inquery:true
+            }],
+            config: {
+                url: "kpiDataFlexService.getKpiValueList",
+                parameter: ["kpi",{}],
+                showIndex: false,
+                showSelector: false,
+                showSearch: false
+            },
+            options: []
+        }
+    };
+};
+</script>
+<style type="less">
+    </style>

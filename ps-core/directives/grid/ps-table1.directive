@@ -1,0 +1,81 @@
+<config injector="$rootScope">
+</config>
+<template>
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <ps-header1 ng-if="config.title" navigators="$parent.navigators"></ps-header1>
+                    <ps-search1
+                            ng-show="config.search && config.search.body.length > 0 && tableInstance.searchInstance.type !== 'simple'"
+                            config="tableInstance.searchInstance"></ps-search1>
+                    <div class="box-footer" ng-style="borderTop()">
+                        <ps-operation config="tableInstance.operationInstance"></ps-operation>
+                        <ps-grid1 config="tableInstance.gridInstance"></ps-grid1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+<script type="text/javascript">
+import PsTable from './ps-table';
+
+export default function () {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?"
+    },
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let isType = (type, obj) => Object.prototype.toString.call(obj) === `[object ${type}]`;
+      let init = () => {
+        scope.tableInstance = new PsTable(scope.config);
+        if (scope.ngModel) {
+          scope.tableInstance.gridInstance.setData(scope.ngModel);
+        }
+        scope.borderTop = _ => {
+          return {
+            "border-top": !scope.config.title && (!scope.config.search || scope.config.search.type === 'simple' || scope.config.search.body.length < 1) ? "none" : "1px solid #f4f4f4"
+          }
+        };
+        /****************************** 标题相关 ******************************/
+        scope.navigators = isType('Array', scope.config.title) ? scope.config.title.map(d => {
+          return isType('Array', d) ? {
+            label: d[0],
+            url: d[1],
+            active: !!d[2]
+          } : d;
+        }) : [{
+          label: scope.config.title,
+          active: true
+        }];
+        /*----------------------------- 标题相关 -----------------------------*/
+      };
+      scope.$watch(`config`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          init();
+        }
+      });
+      /****************************** 点击查询区域的确定按钮触发的事件 ******************************/
+      scope.$on('PS_REFRESH_GRID_FROM_SEARCH', function (e, p) {
+        scope.$broadcast('PS_REFRESH_GRID_FROM_SEARCH_DONE', p);
+      });
+      /*----------------------------- 点击查询区域的确定按钮触发的事件 -----------------------------*/
+      /****************************** 当GRID查询完数据触发的事件 ******************************/
+      scope.$on('PS_SET_TABLE_MODEL', function (e, m) {
+        let d = m.getData();
+        /*** 设置ng-model ***/
+        ngModel.$setViewValue(d);
+      });
+      /*----------------------------- 当GRID查询完数据触发的事件 -----------------------------*/
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        return n;
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+</style>

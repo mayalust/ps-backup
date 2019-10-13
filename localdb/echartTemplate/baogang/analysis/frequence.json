@@ -1,0 +1,160 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "label": "控制板1",
+        "type": "block",
+        "source": "BLOCK",
+        "style": {
+          "padding": "5px",
+          "margin": "5px"
+        },
+        "advance": {
+          "expression": {}
+        },
+        "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+              {
+                "label": "控件组",
+                "type": "ctrlgroup",
+                "source": "CTRLGROUP",
+                "advance": {
+                  "expression": "expression = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var dItem,kpi;\n      var dateRangeTime =null;\n      var subaccessConfigValues;\n      var resource = target.getValue(\"global/resource\");\n      var sensor = target.getValue(\"global/sensor\") || {};\n      var time = target.getValue(\"global/time\");\n      var success = function () {\n        var ci = [resource.id]; // 设备 526443915616079\n        var modelId = [resource.modelId] // 获取modelId\n        var accessConfigValues = resource.physicalConfig.accessConfigs;\n        target.getAttrsByModelId(modelId, function (attrs) {\n          var MeasurePointLocate = attrs.find(function (elem) {\n            return elem.name == \"MeasurePointLocate\";\n          }) || {};\n          var triggerEvent = function () {\n            target.trigger(\"drawDiagnoseFeatureEchart3\", {\n              ins: dItem,\n              kpi: kpi,\n              time : time\n            })\n          }\n          // 设备的属性表达式\n          var sourceValue = eval(MeasurePointLocate.sourceValue)|| \"\";\n          var sourceValueArr = [];\n          for (var i in sourceValue) {\n            for (var j in sourceValue[i]) {\n              for(var k in sourceValue[i][j]){\n                sourceValueArr.push(sourceValue[i][j][k])\n              }\n            }\n          };\n          // 默认第一个选中\n          dItem = sourceValueArr.find(function(elem){\n                if(sensor) {\n                    return sensor.instance == elem.name;\n                } else {\n                    return false;\n                }\n              }) || sourceValueArr[0];\n          subaccessConfigValues = accessConfigValues.filter(function(value){\n            return value.instance == dItem.name;\n          });\n          kpi = subaccessConfigValues.find(function(elem){\n              return elem.dataItemId == sensor.kpiId;\n          }) || subaccessConfigValues[0];\n          //target.setValue(\"subaccessConfigValue\",subaccessConfigValues[0]);\n          debugger;\n          var render = function () {\n            triggerEvent();\n            var ctrlGroups = [\n              [{\n                type: \"label\",\n                value: \"测点\",\n                class: \"col-md-1\",\n                style: {\n                  textAlign: \"center\"\n                }\n              }, {\n                type: \"select\",\n                value: dItem.name,\n                class: \"col-md-2\",\n                on: {\n                  change: function (elem) {\n                    dItem = elem.value;\n                    subaccessConfigValues = accessConfigValues.filter(function(value){\n                      return value.instance == dItem.name;\n                    })\n\n                    render();\n                  }\n                },\n                options: sourceValueArr,\n                format: {\n                  \"id\": \"name\",\n                  \"label\": \"label\"\n                }\n              }, {\n                type: \"label\",\n                value: \"参数\",\n                class: \"col-md-1\",\n                style: {\n                  textAlign: \"center\"\n                }\n              }, {\n                type: \"select\",\n                value: kpi.kpiId,\n                class: \"col-md-2\",\n                on: {\n                  change: function (elem) {\n                    kpi = elem.value;\n                    triggerEvent();\n                  }\n                },\n                options: subaccessConfigValues,\n                format: {\n                  \"id\": \"kpiId\",\n                  \"label\": \"kpiName\"\n                },\n              },{\n                type: \"button\",\n                class: \"col-md-1\",\n                btnclass: \"btn btn-primary\",\n                value: \"设备信息\",\n                btnStyle: {\n                  width: \"100%\",\n                },\n                on: {\n                  click: function (elem) {\n                  }\n                }\n              }, {\n                type: \"button\",\n                class: \"col-md-1\",\n                btnclass: \"btn btn-primary\",\n                value: \"添加依据\",\n                btnStyle: {\n                  width: \"100%\",\n                },\n                on: {\n                  click: function (elem) {\n                  }\n                }\n              }]\n            ];\n            target.render(ctrlGroups);\n          };\n          render();\n        })\n      }\n      success();\n      target.on(\"tree_resourceChange\", function (node) {\n        success();\n      })\n    }\n  }\n}"
+                },
+                "style": {
+                  "margin": "5px",
+                  "font-size": "12px"
+                },
+                "help": "../pdf/ctrlgroup.pdf",
+                "url": "images/map/map1.png",
+                "parameters": {}
+              }
+            ]
+          }
+        ],
+        "url": "images/map/map1.png"
+      },
+      {
+        "label": "控制板1",
+        "type": "block",
+        "source": "BLOCK",
+        "style": {
+          "padding": "10px",
+          "margin": "5px",
+          "border": "0",
+          "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+          "background-color": "rgba(250,250,250,0)"
+        },
+        "advance": {
+          "expression": {}
+        },
+        "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+              {
+                "label": "控制板1",
+                "type": "block",
+                "source": "BLOCK",
+                "style": {
+                  "padding": "10px",
+                  "margin": "5px",
+                  "border": "0",
+                  "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+                  "background-color": "rgba(250,250,250,0)"
+                },
+                "children": [
+                  {
+                    "type": "column",
+                    "col": 12,
+                    "children": [
+                      {
+                        "type": "row",
+                        "source": "ROW",
+                        "parameters": {
+                          "alignment": "bootstrap"
+                        },
+                        "style": {},
+                        "children": [
+                          {
+                            "type": "column",
+                            "children": [
+                              {
+                                "label": "控件组",
+                                "type": "ctrlgroup",
+                                "source": "CTRLGROUP",
+                                "advance": {
+                                  "expression": "expression = {\n  width : \"auto\",\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      target.setValue(\"type\", 0);\n      target.setValue(\"x0\", undefined);\n      target.setValue(\"x1\", undefined);\n      var render = function(){\n          var x0 = target.getValue(\"x0\") || 0;\n          var y0 = target.getValue(\"y0\") || 0;\n          var x1 = target.getValue(\"x1\") || 0;\n          var y1 = target.getValue(\"y1\") || 0;\n          var ctrlGroups = [\n           [{\n               type : \"jquery\",\n               render : function(){\n                   var div = $(\"<div></div>\");\n                   div.width(25);\n                   div.height(10);\n                   div.css(\"background-color\", \"blue\");\n                   return div;\n               }\n           },{\n              type : \"label\",\n              value : \"X\",\n              style : {\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : x0,\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\"\n              }\n            },{\n              type : \"label\",\n              value : \"Y\",\n              style : {\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : y0,\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\"\n              }\n            },{\n               type : \"jquery\",\n               render : function(){\n                   var div = $(\"<div></div>\");\n                   div.width(25);\n                   div.height(10);\n                   div.css(\"margin-left\", \"50px\");\n                   div.css(\"background-color\", \"red\");\n                   return div;\n               }\n           },{\n              type : \"label\",\n              value : \"X\",\n              style : {\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : x1 || \"0.00\",\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\"\n              }\n            },{\n              type : \"label\",\n              value : \"Y\",\n              style : {\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : y1,\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\"\n              }\n            },{\n              type : \"label\",\n              value : \"?X\",\n              style : {\n                  \"margin-left\" : \"50px\",\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : (x1-x0).toFixed(2),\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\"\n              }\n            },{\n              type : \"label\",\n              value : \"?Y\",\n              style : {\n                  \"padding\" : \"3px\"\n              }\n            },{\n              type : \"label\",\n              value : (y1-y0).toFixed(2),\n              style : {\n                  \"width\" : \"50px\",\n                  \"padding\" : \"3px 10px\",\n                  \"background-color\" : \"rgba(0,0,0,.1)\",\n                  \"margin-right\" : \"50px\"\n              }\n            }]\n          ];\n          target.render(ctrlGroups);\n      }\n      target.on(\"handleChange\", function(){\n          render();\n      })\n      render();\n    }\n  }\n}"
+                                },
+                                "style": {
+                                  "margin": "5px",
+                                  "font-size": "12px"
+                                },
+                                "help": "../pdf/ctrlgroup.pdf",
+                                "parameters": {}
+                              }
+                            ],
+                            "col": 7
+                          },
+                          {
+                            "type": "column",
+                            "children": [
+                              {
+                                "label": "控件组",
+                                "type": "ctrlgroup",
+                                "source": "CTRLGROUP",
+                                "advance": {
+                                  "expression": "expression = {\n  width : \"auto\",\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      target.setValue(\"type\", 0);\n      var render = function(){\n          var type = target.getValue(\"type\") || 0;\n          var feature = target.getValue(\"type\") || 0;\n          var ctrlGroups = [\n           [{\n              type : \"buttonGroup\",\n              class : \"col-md-24\",\n              content : [{\n                type : \"button\",\n                value : \"显示谱峰\",\n                icon : \"glyphicon glyphicon-indent-right\",\n                btnclass : type == 3 ? \"btn btn-primary\" : \"btn btn-default\",\n                on : {\n                  click : function(elem){\n                      if(target.getValue(\"type\") != 3){\n                          target.setValue(\"type\", 3);\n                      } else {\n                          target.setValue(\"type\", 0);\n                      };\n                      target.trigger(\"renderChart\");\n                      render();\n                  }\n                }\n              },{\n                type : \"button\",\n                value : \"倍频\",\n                icon : \"glyphicon glyphicon-indent-right\",\n                btnclass : type == 1 ? \"btn btn-primary\" : \"btn btn-default\",\n                on : {\n                  click : function(elem){\n                      if(target.getValue(\"type\") != 1){\n                          target.setValue(\"type\", 1);\n                      } else {\n                          target.setValue(\"type\", 0);\n                      };\n                      target.trigger(\"renderChart\");\n                      render();\n                  }\n                }\n              },{\n                type : \"button\",\n                value : \"边带\",\n                icon : \"glyphicon glyphicon-list\",\n                btnclass : type == 2 ? \"btn btn-primary\" : \"btn btn-default\",\n                on : {\n                  click : function(elem){\n                      if(target.getValue(\"type\") != 2){\n                          target.setValue(\"type\", 2);\n                      } else {\n                          target.setValue(\"type\", 0);\n                      };\n                      target.trigger(\"renderChart\");\n                      render();\n                  }\n                }\n              }]\n            }]\n          ];\n          target.render(ctrlGroups);\n      };\n      render();\n    }\n  }\n}"
+                                },
+                                "style": {
+                                  "margin": "5px",
+                                  "font-size": "12px"
+                                },
+                                "help": "../pdf/ctrlgroup.pdf",
+                                "parameters": {}
+                              }
+                            ],
+                            "col": 5
+                          }
+                        ]
+                      },
+                      {
+                        "label": "高级视图",
+                        "type": "advanceEchart",
+                        "source": "ADVANCEECHART",
+                        "advance": {
+                          "expression": "express = {\n  on: {\n    init: function (event) {\n      var target = event.target;\n      var global = event.global;\n      var color = \"#ffe400\";\n      var kpi;\n      var LENGTH = 50;\n      var resource = target.getValue(\"global/resource\");\n      var ci = [resource.id];\n      var time = 0;\n      //kpi = [target.getValue(\"subaccessConfigValue\").dataItemId];\n      var renderFFTEchart = function (ci, kpi, time) {\n          time = time || target.dateHandler();\n        var params = {\n          time:0,\n          kpiCodes:kpi,\n          isRealTimeData:false,\n          nodeIds:ci,\n          startTime:time.getUTCDateString(),\n          endTime:time.getUTCDateString(),\n          transformerType:\"FFT\"\n        }\n        target.showLoading();\n        target.hideNoData();\n        event.target.postService(\"kpiDataFlexService\", \"getKpiValueList\", [\"kpi\",params], function(returnData){\n            target.hideLoading();\n          if (returnData.data.length > 0) {\n            var data = eval(returnData.data[0].value);\n            var dataList = data[0];\n            var valueList = data[1];\n            // var dataList = returnData[0].value||[0];\n            // var valueList = returnData[0].value||[0];\n            var render = function (init, sub) {\n               
+                        },
+                        "style": {
+                          "margin": "auto",
+                          "width": "100%",
+                          "height": "500px"
+                        },
+                        "url": "images/map/map1.png",
+                        "parameters": {
+                          "theme": "dark"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "advance": {
+                  "expression": {}
+                },
+                "url": "images/map/map1.png"
+              }
+            ]
+          }
+        ],
+        "url": "images/map/map1.png"
+      }
+    ],
+    "col": 12
+  },
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

@@ -1,0 +1,112 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="titleHead">
+      <div class="col-md-6">
+        设备名称: <span ng-bind="deviceDic[clone.nodeId].label"></span>
+      </div>
+      <div class="col-md-6">
+        设备编号: <span ng-bind="clone.nodeId"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right">异常因子：</span>
+      </div>
+      <div class="col-md-8">
+        <span ng-bind="clone.factor"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 异常发生时间：</span>
+      </div>
+      <div class="col-md-8">
+        <!--<input ng-model="{{clone.openTime || date:'yy-mm-dd'}}" class="form-control" ng-if="mode=='view'"/>-->
+        <span ng-if="mode=='view'">{{clone.openTime | date:'yyyy-MM-dd hh:mm:ss'}}</span>
+        <div class="horizontal width-200" ng-if="mode=='edit'">
+          <ps-date2 ng-model="clone.openTime"></ps-date2>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-4">
+      <div class="col-md-4">
+        <span class="title pull-right"> <span style="color: red">*</span> 异常结束时间：</span>
+      </div>
+      <div class="col-md-8">
+        <!--<input ng-model="clone.closeTime" class="form-control"/>-->
+        <span ng-if="mode=='view'">{{clone.closeTime | date:'yyyy-MM-dd hh:mm:ss'}}</span>
+        <div class="horizontal width-200"  ng-if="mode=='edit'">
+          <ps-date2 ng-model="clone.closeTime"></ps-date2>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-12">
+      <div class="col-md-2">
+        <span class="title pull-right"> <span style="color: red">*</span> 异常原因：</span>
+      </div>
+      <div class="col-md-10">
+        <input type="text" ng-model="clone.recordCause" class="form-control">
+      </div>
+    </div>
+    <div class="row margin-bottom-5 pull-left col-md-12">
+      <div class="col-md-2">
+        <span class="title pull-right"> <span style="color: red">*</span> 处理结果：</span>
+      </div>
+      <div class="col-md-10">
+        <input type="text" ng-model="clone.recordResult" class="form-control">
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-md-4">
+
+      </div>
+      <div class="col-md-8">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">确定</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+    import { extend } from "ps-ultility";
+    export default function(rootScope){
+        return {
+            link(scope, element, attr) {
+                scope.deviceDic = rootScope.deviceDic;
+                scope.mode = scope.params.mode;
+                scope.clone = extend({}, scope.params.data);
+                scope.cos = false;
+                scope.submitFn = function(d){
+                    if(d.openTime){
+                        d.openTime = new Date(d.openTime)
+                    }
+                    if(d.closeTime){
+                        d.closeTime = new Date(d.closeTime)
+                    }
+                    scope.submit(d);
+                }
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .titleHead{
+      border-bottom: 1px solid;
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

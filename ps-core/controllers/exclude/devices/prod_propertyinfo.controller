@@ -1,0 +1,581 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams,psRouter,psUltility,psAttribute"
+        params="/:id?/:id2?/:id3?">
+</config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+import {extend} from "ps-ultility";
+
+export default function (scope, ajax, location, psDialog, routeParams, psRouter, psUltility, psAttribute) {
+  let trueFalse = [{
+    id: true,
+    label: "是"
+  }, {
+    id: false,
+    label: "否"
+  }];
+    let originalDataType = [{
+        id: "numberic",
+        label: "数值类型"
+    }, {
+        id: "string",
+        label: "字符类型"
+    }];
+  let showType = {
+    searchType: [{
+      id: "input",
+      label: "输入框"
+    }, {
+      id: "select",
+      label: "下拉框"
+    }, {
+      id: "tree",
+      label: "下拉树"
+    }, {
+      id: "date",
+      label: "日期"
+    }],
+    editType: [{
+      id: "input",
+      label: "输入框"
+    }, {
+      id: "select",
+      label: "下拉框"
+    }, {
+      id: "tree",
+      label: "下拉树"
+    }, {
+      id: "date",
+      label: "日期"
+    }],
+    gridType: [{
+      id: "text",
+      label: "文本"
+    }, {
+      id: "link",
+      label: "链接"
+    }, {
+      id: "date",
+      label: "日期"
+    }],
+  }
+  let allDataTypes = [{
+    id: "numberic",
+    label: "数值类型"
+  }, {
+    id: "string",
+    label: "字符类型"
+  }, {
+    id: "dict",
+    label: "字典类型"
+  }, {
+    id: "relate",
+    label: "关联类型"
+  }, {
+    id: "enum",
+    label: "枚举类型"
+  }, {
+    id: "date",
+    label: "日期类型"
+  }, {
+    id: "standardAddress",
+    label: "标准地址类型"
+  }, {
+    id: "file",
+    label: "文件类型"
+  }, {
+    id: "icon",
+    label: "图标类型"
+  }];
+  scope.layout = {
+    label: "设备属性",
+    init: {
+      post: function () {
+        if (routeParams.id == 0) {
+          return;
+        } else {
+          return {
+            url: "resourceUIService.getAttrsByModelIdAndAttrTypes",
+            param: routeParams.id
+          }
+        }
+      },
+      after: function (d) {
+        let groups = [];
+        let resource = psRouter.params("resource");
+        for (var i in d) {
+          groups.push({
+            attrType: i,
+            data: {
+              attrtable: d[i]
+            }
+          })
+        }
+        return {
+          model: resource,
+          dtable: groups
+        }
+      }
+    },
+    modals: {
+      attrTemp: {
+        label: "添加属性",
+        type: "layout",
+        children: [{
+          type: "form-dialog",
+          children: [{
+            type: "input",
+            label: "属性名称",
+            composory: true,
+            key: "name"
+          }, {
+            type: "input",
+            label: "显示名称",
+            composory: true,
+            key: "label"
+          }, {
+            type: "select",
+            label: "数据类型",
+            key: "dataType",
+            options: allDataTypes,
+            value: "string",
+            on: {
+              click: function (e) {
+                 
+              }
+            }
+          }, {
+            type: "select",
+            label: "显示在表格中",
+            key: "showGrid",
+            options: trueFalse,
+            value: true
+          }, {
+            type: "select",
+            label: "显示在搜索条件中",
+            key: "showSearch",
+            options: trueFalse,
+            value: false
+          }, {
+            type: "input",
+            label: "默认值",
+            key: "sourceValue",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'numberic' || d === 'string';
+              }
+            }
+          }, {
+            type: "address",
+            label: "默认值",
+            key: "defaultAddress",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'standardAddress';
+              }
+            }
+          }, {
+            type: "input",
+            label: "字典名称",
+            key: "dictName",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'dict';
+              }
+            }
+          }, {
+            type: "input",
+            label: "枚举定义",
+            key: "enumDefinition",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'enum';
+              }
+            }
+          }, {
+            type: "input",
+            label: "关联集合名",
+            composory: true,
+            key: "relateName",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'relate';
+              }
+            }
+          }, {
+            type: "input",
+            label: "当前对象属性名",
+            key: "relateFrom",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'relate';
+              }
+            }
+          }, {
+            type: "input",
+            label: "关联对象属性名",
+            key: "relateTo",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'relate';
+              }
+            }
+          }, {
+            type: "input",
+            label: "默认查询参数",
+            key: "relateParameter",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'relate';
+              }
+            }
+          }, {
+              type: "switch",
+              label: "是否多选",
+              key: "relateIsMultiSelect",
+              show: {
+                  watch: "dataType",
+                  handler: function (d) {
+                      return d === 'relate';
+                  }
+              }
+          }, {
+              type: "select",
+              label: "原始数据类型",
+              key: "relateOriginalDataType",
+              options: originalDataType,
+              value: false,
+              show: {
+                  watch: "dataType",
+                  handler: function (d) {
+                      return d === 'relate';
+                  }
+              }
+          }, {
+            type: "input",
+            label: "显示属性名称",
+            key: "relateLabel",
+            show: {
+              watch: "dataType",
+              handler: function (d) {
+                return d === 'relate';
+              }
+            }
+          }, {
+            type: "select",
+            label: "搜索显示类型",
+            key: "searchTypeDialog",
+            options: showType.searchType,
+            watch: {
+              key: "dataType",
+              handler: function (e) {
+                e.update({
+                  value: psAttribute.getDefaultType(e.$value, 'search')
+                });
+              }
+            }
+          }, {
+            type: "input",
+            label: "搜索显示类型格式化",
+            key: "searchFormat",
+            show: {
+              watch: "searchTypeDialog",
+              handler: function (d) {
+                return d !== 'input';
+              }
+            }
+          }, {
+            type: "select",
+            label: "编辑显示类型",
+            key: "editTypeDialog",
+            options: showType.editType,
+            watch: {
+              key: "dataType",
+              handler: function (e) {
+                e.update({
+                  value: psAttribute.getDefaultType(e.$value, 'edit')
+                });
+              }
+            }
+          }, {
+            type: "input",
+            label: "编辑显示类型格式化",
+            key: "editFormat",
+            show: {
+              watch: "editTypeDialog",
+              handler: function (d) {
+                return d !== 'input';
+              }
+            }
+          }, {
+            type: "select",
+            label: "表格显示类型",
+            key: "gridTypeDialog",
+            options: showType.gridType,
+            watch: {
+              key: "dataType",
+              handler: function (e) {
+                e.update({
+                  value: psAttribute.getDefaultType(e.$value, 'grid')
+                });
+              }
+            }
+          }, {
+            type: "input",
+            label: "表格显示类型格式化",
+            key: "gridFormat",
+            show: {
+              watch: "gridTypeDialog",
+              handler: function (d) {
+                return d === 'date';
+              }
+            }
+          },]
+        }],
+        buttons: [{
+          label: "确定",
+          class: "btn btn-primary",
+          click: function (e) {
+            this.submit();
+          }
+        }, {
+          label: "取消",
+          click: function () {
+            this.close();
+          }
+        }]
+      }
+    },
+    children: [{
+      label: "类型信息",
+      type: "panel",
+      children: [{
+        type: "form",
+        scope: "model",
+        attributes: {
+          label: ["类型名称", "string"],
+          desc: ["描述", "string"],
+        },
+        children: ["label", "desc"]
+      }]
+    }, {
+      label: "设备属性",
+      type: "panel",
+      children: [{
+        type: "tabs-dynamic",
+        key: "dtable",
+        children: [{
+          type: "table-form",
+          key: "attrtable",
+          config: {
+            attributes: {
+              "label": ["显示名称", "text"],
+              "name": {
+                label: "属性名称",
+                type: "text"
+              },
+              "dataType": ["数据类型", "text"],
+              "sourceValue": ["默认值", "text"]
+            },
+            grid: {
+              body: ["name", "label", {
+                name: "dataType",
+                bind: function (row) {
+                  return allDataTypes.find(dt => {
+                    return dt.id == row.dataType;
+                  })['label'];
+                }
+              }, "sourceValue"],
+              buttons: {
+                outGrid: [{
+                  label: "添加属性",
+                  class: "primary",
+                  icon: "fa fa-plus",
+                  on: {
+                    click: function (e) {
+                      e.add({
+                        template: "attrTemp",
+                        url: "resourceUIService.saveAttrs",
+                        before: function (d) {
+                          extend(d, scope.dtable.select);
+                          d.relate = {
+                            name: d.relateName,
+                            from: d.relateFrom,
+                            to: d.relateTo,
+                            parameter: d.relateParameter,
+                            label: d.relateLabel,
+                            isMultiSelect :d.relateIsMultiSelect,
+                            originalDataType:d.relateOriginalDataType
+                          };
+                          d.showGrid = !!d.showGrid;
+                          d.showSearch = !!d.showSearch;
+                          d.searchType = {
+                            type: d.searchTypeDialog,
+                            format: JSON.parse(d.searchFormat ? d.searchFormat : '{}')
+                          };
+                          d.editType = {
+                            type: d.editTypeDialog,
+                            format: JSON.parse(d.editFormat ? d.editFormat : '{}')
+                          };
+                          d.gridType = {
+                            type: d.gridTypeDialog,
+                            format: JSON.parse(d.gridFormat ? d.gridFormat : '{}')
+                          };
+                          d.modelId = scope.modelId || routeParams.id;
+
+                          if (d.dataType === 'standardAddress') {
+                            d.sourceValue = d.defaultAddress;
+                          }
+                          if (d.dataType === 'enum') {
+                            d.attrTypeValue = d.enumDefinition;
+                          }
+                          if (d.dataType === 'dict') {
+                            d.attrTypeValue = d.dictName;
+                          }
+                          return [[d]];
+                        },
+                        after: function (d) {
+                          return d.successObj[0];
+                        }
+                      });
+                    }
+                  }
+                }],
+                inGrid: [{
+                  label: "编辑",
+                  class: "btn btn-primary",
+                  on: {
+                    click: function (e) {
+                      e.$row.relateName = e.$row.relate ? e.$row.relate.name : '';
+                      e.$row.relateFrom = e.$row.relate ? e.$row.relate.from : '';
+                      e.$row.relateTo = e.$row.relate ? e.$row.relate.to : '';
+                      e.$row.relateParameter = e.$row.relate ? e.$row.relate.parameter : '';
+                      e.$row.relateLabel = e.$row.relate ? e.$row.relate.label : '';
+                      e.$row.relateIsMultiSelect = e.$row.relate ? e.$row.relate.isMultiSelect : '';
+                      e.$row.relateOriginalDataType = e.$row.relate ? e.$row.relate.originalDataType : '';
+                      e.$row.searchFormat = e.$row.searchType ? JSON.stringify(e.$row.searchType.format) : '';
+                      e.$row.searchTypeDialog = e.$row.searchType ? e.$row.searchType.type : '';
+                      e.$row.editFormat = e.$row.editType ? JSON.stringify(e.$row.editType.format) : '';
+                      e.$row.editTypeDialog = e.$row.editType ? e.$row.editType.type : '';
+                      e.$row.gridFormat = e.$row.gridType ? JSON.stringify(e.$row.gridType.format) : '';
+                      e.$row.gridTypeDialog = e.$row.gridType ? e.$row.gridType.type : '';
+                      if (e.$row.dataType === 'standardAddress') {
+                        e.$row.defaultAddress = e.$row.sourceValue;
+                      }
+                      if (e.$row.dataType === 'enum') {
+                        e.$row.enumDefinition = e.$row.attrTypeValue;
+                      }
+                      if (e.$row.dataType === 'dict') {
+                        e.$row.dictName = e.$row.attrTypeValue;
+                      }
+                      e.update({
+                        template: "attrTemp",
+                        url: "resourceUIService.saveAttrs",
+                        before: function (d) {
+                          d.modelId = scope.modelId || routeParams.id;
+                          d.relate = {
+                            name: d.relateName,
+                            from: d.relateFrom,
+                            to: d.relateTo,
+                            parameter: d.relateParameter,
+                            label: d.relateLabel,
+                            isMultiSelect :d.relateIsMultiSelect,
+                            originalDataType:d.relateOriginalDataType
+                          };
+                          d.showGrid = !!d.showGrid;
+                          d.showSearch = !!d.showSearch;
+                          d.searchType = {
+                            type: d.searchTypeDialog,
+                            format: JSON.parse(d.searchFormat ? d.searchFormat : '{}')
+                          };
+                          d.editType = {
+                            type: d.editTypeDialog,
+                            format: JSON.parse(d.editFormat ? d.editFormat : '{}')
+                          };
+                          d.gridType = {
+                            type: d.gridTypeDialog,
+                            format: JSON.parse(d.gridFormat ? d.gridFormat : '{}')
+                          };
+                          return [[d]];
+                        },
+                        after: function (d) {
+                          return d.successObj[0];
+                        }
+                      });
+                    }
+                  }
+                }, {
+                  label: "删除",
+                  class: "btn btn-default",
+                  show: function (row) {
+                    return row && (row.id - 0) > 1000;
+                  },
+                  on: {
+                    click: function (e) {
+                      e.remove({
+                        url: "resourceUIService.deleteAttrs"
+                      }).pipe((d) => {
+                        return d
+                      });
+                    }
+                  }
+                }]
+              },
+              config: {
+                showIndex: false,
+                showSelector: false,
+                showSearch: false
+              },
+              options: []
+            }
+          }
+        }],
+        config: {
+          showname: function (d) {
+            if (d.attrType == "default") {
+              return "基本属性"
+            } else {
+              return d.attrType;
+            }
+          },
+          items: [/*{
+            type: "input",
+            label: "组名称",
+            key: "attrTypeLabel",
+            value: "新建组"
+          }, */{
+            type: "input",
+            label: "新建组",
+            key: "attrType",
+            value: "group"
+          }, {
+            type: "input",
+            label: "序号",
+            key: "attrTypeSort",
+            value: "0"
+          }]
+        },
+        value: [{
+          label: "基本属性",
+          after: function (d) {
+            return d;
+          }
+        }]
+      }]
+    }]
+  }
+};
+</script>
+<style type="less">
+</style>

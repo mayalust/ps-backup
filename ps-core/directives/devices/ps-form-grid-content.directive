@@ -1,0 +1,105 @@
+<config injector="$timeout, psScope, psUltility"
+></config>
+<template>
+    <div ng-show="_show">
+        <div class="col-md-12" ng-if="option.type == 'title'">
+            <div class="title">
+                <h ng-bind="option.label"></h>
+            </div>
+        </div>
+        <div ng-class="renderCol()" ng-if="option.type != 'title'">
+            <div class="row margin-bottom-5">
+                <div class="label">
+                    <div class="inner">
+                        <span class="text-red" ng-if="option.composory">*</span>
+                        <span ng-bind="option.label"></span>
+                    </div>
+                </div>
+                <div class="value">
+                    <ps-tools data-option="option"></ps-tools>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+import {findElement} from "ps-ultility";
+
+export default function (timeout, psScope, psUltility) {
+  return {
+    restrict: 'E',
+    scope: {
+      option: "="
+    },
+    replace: true,
+    link: function (scope, element) {
+      if (scope.option.format) {
+        scope.option.config = scope.option.config || {};
+        scope.option.config.format = scope.option.format;
+      }
+      let _show = psUltility.keyPattern("show");
+
+      function isTrue (val) {
+        if (typeof val === "string") {
+          return val !== "false"
+        } else {
+          return typeof val === "undefined" ? true : !!val
+        }
+      }
+
+      scope.$watch("option." + _show, (n, o, s) => {
+        scope._show = isTrue(n);
+      });
+      scope.renderCol = function () {
+        let col = scope.option.col ? scope.option.col : 6
+        return "col-md-" + col;
+      }
+      psUltility.registerCurrentScope(scope);
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.title {
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 6px;
+    margin: 5px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.label {
+    line-height: 28px;
+    text-align: right;
+    width: 160px;
+    float: left;
+    .inner {
+        padding-right: 10px;
+    }
+}
+
+.value {
+    width: ~'calc( 100% - 160px)';
+    line-height : 34px;
+    float: left;
+}
+
+.range {
+    height: 20px !important;
+}
+
+.bk-form-input {
+    width: ~'calc( 100% - 2px)';
+}
+
+.select2-selection {
+    line-height: 28px;
+    height: 28px;
+    padding: 0 6px;
+    .select2-selection__rendered {
+        margin-top: 0;
+    }
+}
+</style>

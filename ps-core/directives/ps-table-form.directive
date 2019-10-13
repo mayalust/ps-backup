@@ -1,0 +1,47 @@
+<config injector="ajax, $timeout, psScope, psUltility">
+</config>
+<template>
+    <div>
+        <ps-table data-option="option" data-config="config" data-table-form="true"></ps-table>
+    </div>
+</template>
+<script type="text/javascript">
+    import {attribute, isString, isArray, isUndefined} from "ps-ultility";
+
+    export default function (ajax, timeout, psScope, psUltility) {
+        return {
+            scope: {
+                option: '='
+            },
+            link(scope, element, attr, ngModel) {
+                let key = scope.option["key"], _depth, _ori, watch1, watch2,
+                    _key = isString(key) ? psUltility.keyPattern(key) : null;
+                psScope(scope, function () {
+                    scope.config = scope.option.config;
+                    _ori = attribute(scope, `option.${_key}`);
+                    !isArray(_ori) ? attribute(scope, `option.${_key}`, []) : null;
+
+                    timeout(() => {
+                        watch1 = scope.$watch(`option.${_key}`, (n, o, s) => {
+                            if (isArray(n)) {
+                                _depth = psUltility.getCurrentDepth(scope);
+                                attribute(s.$$customParentScope, _depth, n);
+                                scope.config.grid.options = n;
+                            } else {
+                                scope.config.grid.options = [];
+                            }
+                        });
+                    })
+                });
+                scope.$on("$destroy", () => {
+                    watch1 && watch1();
+                })
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+    .box {
+        padding: 6px;
+    }
+</style>

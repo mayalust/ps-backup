@@ -1,0 +1,101 @@
+<config injector="$rootScope,$q,ajax,psWebsocket"></config>
+<script>
+export default function(rootScope, q, ajax, psWebsocket) {
+  /** 抽象轮询和websocket查寻数据的方法 */
+  let id = 0;
+  class KpiValueListGetter {
+    constructor(time) {
+      this.id = id++;
+      this.time = time;
+    }
+    getKpiValueList(nodeIds, kpiCodes, instances = [], callback) {
+      let params = [
+        "kpi",
+        {
+          includeInstance: true,
+          isRealTimeData: true,
+          nodeIds: nodeIds,
+          queryInstances: instances.join(","),
+          kpiCodes: kpiCodes
+        }
+      ];
+      ajax
+        .post("kpiDataFlexService.getKpiValueList", params)
+        .then(d => {
+          callback && callback.call(this, d);
+        })
+        .catch(e => {
+          callback && callback.call(this, []);
+        });
+    }
+  }
+  class Polling extends KpiValueListGetter {
+    constructor(time) {
+      super(time);
+    }
+    getData(nodeIds, kpiCodes, instances, callback) {
+      this.polling = () => {
+        this.getKpiValueList(nodeIds, kpiCodes, instances, valuelist => {
+          callback && callback.call(this, valuelist);
+          this.timer = setTimeout(() => {
+            this.polling && this.polling();
+          }, this.time);
+        });
+      };
+      this.polling();
+    }
+    destroy() {
+      clearTimeout(this.timer);
+      delete this.time;
+      delete this.polling;
+    }
+  }
+  class WebSocket extends KpiValueListGetter {
+    constructor(time, isDebug) {
+      super(time);
+      this.isDebug = isDebug;
+    }
+    getData(nodeIds, kpiCodes, instances, callback) {
+      this.ws = psWebsocket("webSocket_" + this.id, this.time, this.isDebug);
+      this.ws.on((v, dt) => {
+        callback && callback.call(this, v, dt);
+      });
+      this.getKpiValueList(nodeIds, kpiCodes, instances, valuelist => {
+        callback && callback.call(this, valuelist);
+        this.ws.send(nodeIds, kpiCodes, instances);
+      });
+    }
+    destroy() {
+      this.ws.destroy();
+    }
+  }
+  class PsPolling {
+    constructor(time, isWebsocket, isDebug) {
+      this.time = time;
+      this.isWebsocket = isWebsocket;
+      this.valueGetter = this.isWebsocket
+        ? new WebSocket(this.time, isDebug)
+        : new Polling(this.time);
+    }
+    getData(nodeIds, kpiCodes, instances, callback) {
+      this.valueGetter.getData(nodeIds, kpiCodes, instances, (v, dt) => {
+        this.saveApply(() => {
+          callback && callback.call(this, v, dt);
+        });
+      });
+    }
+    saveApply(fn) {
+      if (rootScope.$$phase == "$digest" || rootScope.$$phase == "$apply") {
+        return fn();
+      }
+      return rootScope.$apply(fn);
+    }
+    destroy() {
+      this.valueGetter.destroy();
+    }
+  }
+  return (time, mode, isDebug) => {
+    return new PsPolling(time, mode, isDebug);
+  };
+}
+</script>

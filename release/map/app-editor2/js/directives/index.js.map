@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-editor2/js/directives/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,gCAAiC,sCAAuC","file":"app-editor2/js/directives/index.js","sourcesContent":["define(['../js/directives/tools-dom.js', '../js/directives/free-board-dom.js'], function () {});"],"sourceRoot":"/source/"}

@@ -1,0 +1,66 @@
+<config injector="$scope,$routeParams,ajax,$location,psRouter,psDialog" params="/:gatewayId?/:deviceId?">
+</config>
+<template>
+    <ps-table config="config"></ps-table>
+</template>
+<script type="text/javascript">
+export default function (scope, routeParams, ajax,location,psRouter) {
+  scope.config = {
+    title: "设备信息",
+    attributes: {
+      deviceLabel: ["设备名称", "text"],
+      deviceId: ["设备名称", "dict", {
+        name: "resource",
+        parameter: {
+          category: 'Device'
+        }
+      }],
+      devicePartLabel: ["部位", "dict"],
+      devicePartId: ["部位", "dict", {
+        name: "devicePart"
+      }],
+      dataModelLabel: ["数据模板", "text"],
+      gatewayLabel: ["所属网关", "text"],
+      allocated: ["是否配置", "text"]
+    },
+    search: {
+      body: [{
+        name: "deviceId"
+      }, {
+        name: "devicePartId"
+      }]
+    },
+    grid: {
+      body: ["deviceLabel", "devicePartLabel", "dataModelLabel", "gatewayLabel", {
+        name: "allocated",
+        bind: function (row) {
+          return row.allocated ? "是" : "否";
+        }
+      }],
+      buttons: {
+        inGrid: [
+          ["协议配置",function (e) {
+               
+//              location.path("prod_deviceAccessSet/" + JSON.stringify(e.$row));
+              psRouter.go("prod_deviceAccessSet",{access : e.$row});
+//              location.path("prod_addModel/" + 0);
+          }],
+          ["删除", function (row) {
+             
+          }]
+        ]
+      },
+      config: {
+        url: "devicePartConfigUIService.getDevicePartModelList",
+        parameter: [routeParams.gatewayId, routeParams.deviceId],
+        showIndex: false,
+        showSelector: false,
+        showSearch: false
+      },
+      options: []
+    }
+  };
+};
+</script>
+<style type="less">
+</style>

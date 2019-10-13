@@ -1,0 +1,242 @@
+<config injector="$scope, psDialog, commonMethodService, commonMethodService2, api, $timeout, $filter, growl"
+        deps="dialogOnlineMaintainrule"></config>
+<template>
+  <div class="box" style="background-color: transparent;">
+    <div class="box-body">
+      <form role="form" class="search-area">
+        <div class="form-group col-sm-2">
+          <label class="control-label">规则名称</label>
+          <ps-input ng-model="ruleName"></ps-input>
+        </div>
+        <div class="form-group col-sm-2">
+          <label class="control-label">制定时间</label>
+          <ps-date ng-model="createDate"></ps-date>
+        </div>
+        <div class="form-group col-sm-2 no-pad">
+          <label class="col-sm-12 control-label" style="color: transparent;"
+            >操作：</label
+          >
+          <div class="btn-group block" style="padding: 0;border: none;">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              ng-click="goSearch()"
+            >
+              <i class="fa fa-search"></i>
+              <span class="hidden-sm"> 查询</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-default btn-sm"
+              ng-click="goClear()"
+            >
+              <i class="fa fa-close"></i>
+              <span class="hidden-sm"> 清除</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="box-footer">
+      <ps-grid1 ng-model="gridModel" config="config"></ps-grid1>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  scope,
+  psDialog,
+  cms,
+  cms2,
+  api,
+  $timeout,
+  $filter,
+  growl
+) {
+  const target = cms();
+  const initPage = e => {
+    const resource = e.resource;
+
+    scope.gridModel = [];
+    scope.config = {
+      url: "maintenanceTaskUIService.getOnlineJudgeRuleListByConditionWithPage",
+      parameter: {
+        selectedDevId: resource.id
+      },
+      outButtons: [
+        {
+          label: "添加规则",
+          on: {
+            click: function() {
+              if (resource.category !== "Device") {
+                growl.warning("请选择一个设备");
+                return;
+              }
+              cms2.modal({
+                title: "在线判定结果维护规则",
+                directive: "dialog-online-maintainrule",
+                width: "70%",
+                scope: scope,
+                params: {
+                  mode: "add",
+                  resource: resource
+                }
+              });
+            }
+          }
+        }
+      ],
+      bodyButtons: [
+        {
+          label: "详情",
+          on: {
+            click: function(row) {
+              let params = {
+                mode: "view",
+                resource: resource,
+                rule: row
+              };
+              cms2.modal({
+                title: `查看规则`,
+                directive: "dialog-online-maintainrule",
+                width: "70%",
+                scope: scope,
+                params: params
+              });
+            }
+          }
+        },
+        {
+          label: "编辑",
+          on: {
+            click: function(row) {
+              let params = {
+                mode: "edit",
+                resource: resource,
+                rule: row
+              };
+              cms2.modal({
+                title: `编辑规则`,
+                directive: "dialog-online-maintainrule",
+                width: "70%",
+                scope: scope,
+                params: params
+              });
+            }
+          }
+        },
+        {
+          label: "删除",
+          on: {
+            click: function(row) {
+              api
+                .post("maintenanceTaskUIService.delOnlineJudgeRule", row.id)
+                .then(ret => {
+                  this.deleteRow(row);
+                  growl.success("删除成功！");
+                });
+            }
+          }
+        }
+      ],
+      columns: [
+        {
+          key: "customerName",
+          label: "产线名称",
+          type: "text"
+        },
+        {
+          key: "selectedDevName",
+          label: "设备名称",
+          type: "text"
+        },
+        {
+          key: "selectedDevCode",
+          label: "设备编码",
+          type: "text"
+        },
+        {
+          key: "ruleName",
+          label: "规则名称",
+          type: "text"
+        },
+        {
+          key: "faultType",
+          label: "故障类型",
+          type: "text"
+        },
+        {
+          key: "stateStandardName",
+          label: "状态标准维护",
+          type: "text"
+        },
+        {
+          key: "maintainStandardName",
+          label: "智能检修标准",
+          type: "text"
+        },
+        {
+          key: "state",
+          label: "是否启用",
+          type: "text",
+          bind(row, value) {
+            if (value == 1) {
+              return "已启用";
+            } else if (value == 0) {
+              return "已停用";
+            }
+          }
+        },
+        {
+          key: "createDate",
+          label: "制定时间",
+          type: "text",
+          bind: function(row, value) {
+            return $filter("date")(new Date(value), "yyyy-MM-dd HH:mm:ss");
+          }
+        }
+      ]
+    };
+
+    scope.goClear = function() {
+      scope.ruleName = "";
+      scope.createDate = null;
+    };
+
+    scope.goSearch = function() {
+      let gridScope = scope.$$childHead;
+      while (!gridScope.gridInstance) {
+        gridScope = gridScope.$$nextSibling;
+      }
+      let parameter = {};
+      if (scope.ruleName) {
+        parameter.ruleName = scope.ruleName;
+      }
+      if (scope.createDate) {
+        parameter.createDate = scope.createDate;
+      }
+      if (Object.keys(parameter).length > 0) {
+        gridScope.gridInstance.goSearch(parameter);
+      } else {
+        gridScope.gridInstance.goSearch();
+      }
+    };
+  };
+
+  target.on("tree_resourceChange", function(e) {
+    initPage(e);
+  });
+}
+</script>
+<style type="less" scoped="true">
+.search-area {
+  [class*="col"] {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+.block {
+  display: block;
+}
+</style>

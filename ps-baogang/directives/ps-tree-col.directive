@@ -1,0 +1,39 @@
+<config injector="$rootScope"
+        deps = "psTreeColRecursive"
+></config>
+<template>
+  <div class="wrap">
+    <ps-tree-col-recursive
+        ng-repeat="item in options"
+        data-item="item"
+        data-key="key"
+        data-depth="1"
+        data-options="item.children">
+      <ng-transclude></ng-transclude>
+    </ps-tree-col-recursive>
+  </div>
+</template>
+<script type="text/javascript">
+  export default function(rootScope){
+    return {
+      replace : true,
+      scope : {},
+      transclude : true,
+      link(scope, element, attr, ngModel, transclude) {
+        let optStr = attr["options"],
+          match = /(?:\s*)([^\s]+)(?:\s+)in(?:\s+)([^\s]+)(?:\s*)/.exec(optStr),
+          key = match[1],
+          optionStr = match[2];
+        scope.key = key;
+        scope.$parent.$watch(optionStr, (n,o,s)=>{
+          if( n ){
+            scope.options = n;
+          }
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

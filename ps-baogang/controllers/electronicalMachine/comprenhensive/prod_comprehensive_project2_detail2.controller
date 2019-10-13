@@ -1,0 +1,670 @@
+/**
+* Created by whui on 2019/3/5.
+*/
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService"
+></config>
+<template>
+    <div class="wrap">
+        <div class="row">
+            <div class="col-md-12 margin-bottom-5">
+                <div class="block padding-10">
+                    <!--第一个委托单详情-->
+                    <div class="margin-bottom-5">
+                        <div class="block">
+                            <div class="wrap">
+                                <div class="table-title">
+                                    委托单详情
+                                </div>
+                                <div data-source="resources">
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">委托单号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.entrustOrderNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备等级:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.equipmentLevel" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">工程名称:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.projectName" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备原值:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.originalValueOfEquipment" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">委托单位:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.entrustDepartments" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">点       检:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.examine" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">联系方式:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.contac" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">备件管理号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.sparePartsManagementNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">质量层级:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.qualityLevel" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">委托日期:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.entrustDate" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">需求交货日期:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.requiredDeliveryDate" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">型       号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.entrustOrder.model" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <span class="title pull-right">委托内容:</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input ng-model="resources.entrustOrder.entrustContent" class="form-control" readonly="readonly"/>
+                                    </div>
+                                </div>
+                                <!--清楚浮动-->
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--第二个工程单详情-->
+                    <div class="col-md-12 margin-bottom-5">
+                        <div class="block">
+                            <div class="wrap">
+                                <div class="table-title">
+                                    工程单详情
+                                </div>
+                                <div data-source="resources">
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">工程单号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.implementOrderNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">宝钢号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.baogangNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备型号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.motorModel" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">作业区:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.workZone" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备类型:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.motorType" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">修理方式:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.repairWay" class="form-control" readonly="readonly"/>
+                                        </div>
+
+
+
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">进厂日期:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.intoTheFactoryDate" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">施工班组:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.implementOrder.extensionTeam" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">附       件:</span>
+                                        </div>
+                                        <div class="col-md-10">
+                                           <!-- <ps-file2  ng-model="maintainObj.bei"></ps-file2>-->
+                                            <ps-file2  ng-model="resources.implementOrder.attachmentList"></ps-file2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--清楚浮动-->
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--第三个设备信息-->
+                    <div class="col-md-12 margin-bottom-5">
+                        <div class="block">
+                            <div class="wrap">
+                                <div class="table-title">
+                                    设备信息
+                                </div>
+                                <!--变压器设备信息-->
+                                <div data-source="resources" ng-if=" motorType == 'TRANSFORMER'">
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">设备类型:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.motorType" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">电机型号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.motorModel" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">宝钢号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.baogangNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">容      量:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.ratedCapacity" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">定子电压:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.statorVoltage" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">定子电流:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.statorCurrent" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">转子电压:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotorVoltage" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">转子电流:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotorCurrent" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">功      率:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.power" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">转       速:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotateSpeed" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">绝缘等级:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.insulationGrade" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">重       量:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.weight" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">制造编号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturingNumber" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">制造厂商:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturers" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">制造时间:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturingDate" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">负荷侧轴承型号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.loadSideBearingType" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">非负荷侧轴承型号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.nonLoadSideBearingType" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="title pull-right">油脂牌号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.oilBrand" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!--交流设备信息-->
+                                <div data-source="resources" ng-if=" motorType == 'AC_MOTOR'">
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">所属厂部:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                   <!--                         <ps-select ng-model="resources.motorInfo.department"
+                                                       data-config="{disabled:true}"
+                                                       data-change = "modelChange(motorInfo.department + motorInfo.department.length)"
+                                                       data-options="motorInfo.department.valueCode as motorInfo.department.label for motorInfo.department in departments"></ps-select>-->
+                                            <input ng-model="resources.motorInfo.department" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备类型:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.motorType" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">电机型号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.motorModel" class="form-control" readonly="readonly"/>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">宝钢号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.baogangNo" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">制造厂商:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturers" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">制造编号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturingNumber" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">制造日期:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.manufacturingDate" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">设备管理号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.deviceNumber" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定容量:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.ratedCapacity" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定频率:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.ratedfrequency" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">绝缘等级:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.insulationGrade" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定电压1(V):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.nominalVoltage1" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定电流1(A):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.ratedCurrent1" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">转速(r/min):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotateSpeed" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定电压2(V):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.nominalVoltage2" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">额定电流2(A):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.ratedCurrent2" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">接法:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.connectionMethon" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">转子电压(V):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotorVoltage" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">转子电流(A):</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.rotorCurrent" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">工作制:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.workingSystem" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">负荷侧轴承型号1:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.loadSideBearingType1" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">非负荷侧轴承型号1:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.nonLoadSideBearingType1" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">负荷侧轴承型号2:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.loadSideBearingType2" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">非负荷侧轴承型号2:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.nonLoadSideBearingType2" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">油脂牌号:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.oilBrand" class="form-control" readonly="readonly"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">重量:</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input ng-model="resources.motorInfo.kgsWeight" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12  margin-bottom-5">
+                                        <div class="col-md-2">
+                                            <span class="title pull-right">备注:</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input ng-model="resources.motorInfo.remark" class="form-control" readonly="readonly"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--清楚浮动-->
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--清楚浮动-->
+                    <div style="clear:both;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,$state,registerService,cms2,ajax,commonMethodService){
+        let findImplementOrderDetail = "motorRepairUIService.findImplementOrderDetail",
+                currentTime = new Date(),
+                date = dateparser(currentTime);
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                        ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                        : "-";
+            }
+        }
+
+        var target = commonMethodService();
+        var params1 = target.getValue("maintainObj");
+        //规避切换角色跳转到详情的问题
+        /*if(typeof params1 == 'undefined' || params1.toString() == '{}'){
+            cms2.refresh('prod_comprehensive_project_list_mangage');
+            return;
+        }*/
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.$watch('currentRoleID',function (roleID) {
+            if(roleID == 70153973788969 || roleID == 70153973788968 || roleID == 70153973788970){
+                cms2.refresh("prod_comprehensive_project_list_mangage");
+            }
+        });
+        scope.motorType =  params1 && params1.motorType || '';
+        // scope.departments = target.getRootScope("myDicts")["factoryHeadquarters"];
+        /*scope.motorTypes = target.getRootScope("myDicts")["motorType"];
+        scope.repairWays = target.getRootScope("myDicts")["repairTypeWay"];
+        scope.workZones = target.getRootScope("myDicts")["workZone"];*/
+//         
+        var param = [];
+        if(params1 && params1.implementOrderNo){
+            param.push(params1.implementOrderNo);
+            ajax.post(findImplementOrderDetail, param).then( detail => {
+                return cms2.success(detail || []);
+            })
+                .then( domains => {
+                    /*由于ps-select不支持多层.,待优化 angel*/
+                    if(domains.entrustOrder && domains.entrustOrder.entrustDate){
+                        var a = dateparser(domains.entrustOrder.entrustDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                        domains.entrustOrder.entrustDate = a;
+                    }
+                    if(domains.entrustOrder && domains.entrustOrder.requiredDeliveryDate){
+                        var b = dateparser(domains.entrustOrder.requiredDeliveryDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                        domains.entrustOrder.requiredDeliveryDate = b;
+                    }
+                    if(domains.implementOrder && domains.implementOrder.intoTheFactoryDate){
+                        var c = dateparser(domains.implementOrder.intoTheFactoryDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                        domains.implementOrder.intoTheFactoryDate = c;
+                    }
+                    if(domains.motorInfo && domains.motorInfo.manufacturingDate){
+                        var d = dateparser(domains.motorInfo.manufacturingDate).getDateString("yyyy-MM-dd,hh:mm:ss");
+                        domains.motorInfo.manufacturingDate = d;
+                    }
+                    if(domains && domains.motorInfo && domains.motorInfo.motorType){//设备信息
+                        if(domains.motorInfo.motorType == 'AC_MOTOR'){
+                            domains.motorInfo.motorType = '交流电机';
+                        }else if(domains.motorInfo.motorType == 'DC_MOTOR'){
+                            domains.motorInfo.motorType = '直流电机';
+                        }else if(domains.motorInfo.motorType == 'TRANSFORMER'){
+                            domains.motorInfo.motorType = '变压器';
+                        }
+                    }
+                    if(domains && domains.motorInfo && domains.motorInfo.department){//设备信息 所属厂部
+                        let objDepartment = {
+                            'abrasion': '冷轧厂',
+                            'warmwalzwerk': '热轧厂',
+                            'powerPlant': '电厂',
+                            'steelPipeDepartment': '钢管事业部',
+                            'steelWorks': '炼钢厂',
+                            'ringPart': '能环部',
+                            'thickPlatePlant': '厚板厂',
+                            'motDepartment': '运输部',
+                            'siliconSteelDepartment': '硅钢部',
+                            'baori': '宝日',
+                            'bwtcDepartment': '宝武碳材',
+                            'elseDepartment': '其他'
+                        };
+                        if(objDepartment.hasOwnProperty(domains.motorInfo.department)){
+                            domains.motorInfo.department = objDepartment[domains.motorInfo.department];
+                        }else {
+                            domains.motorInfo.department = domains.motorInfo.department? domains.motorInfo.department : '-';
+                        }
+                    }
+
+                    if(domains && domains.implementOrder && domains.implementOrder.motorType){//工单详情
+                        if(domains.implementOrder.motorType == 'AC_MOTOR'){
+                            domains.implementOrder.motorType = '交流电机';
+                        }else if(domains.implementOrder.motorType == 'DC_MOTOR'){
+                            domains.implementOrder.motorType = '直流电机';
+                        }else if(domains.implementOrder.motorType == 'TRANSFORMER'){
+                            domains.implementOrder.motorType = '变压器';
+                        }
+                    }
+                    if(domains && domains.implementOrder && domains.implementOrder.workZone){//工单详情 作业区
+                        if(domains.implementOrder.workZone == 'AC_MOTOR'){
+                            domains.implementOrder.workZone = '备修';
+                        }else if(domains.implementOrder.workZone == 'DC_MOTOR'){
+                            domains.implementOrder.workZone = '大电机';
+                        }else if(domains.implementOrder.workZone == 'TRANSFORMER'){
+                            domains.implementOrder.workZone = '变压器';
+                        }
+                    }
+                    if(domains && domains.implementOrder && domains.implementOrder.repairWay){//工单详情 修理方式
+                        if(domains.implementOrder.repairWay == 'DDJNCWX_REPAIR'){
+                            domains.implementOrder.repairWay = '大电机内场维修';
+                        }else if(domains.implementOrder.repairWay == 'DJBX_REPAIR'){
+                            domains.implementOrder.repairWay = '电机备修';
+                        }else if(domains.implementOrder.repairWay == 'XCDDJ_REPAIR'){
+                            domains.implementOrder.repairWay = '现场大电机维修';
+                        }
+                    }
+                    scope.resources = domains;
+                })
+        }
+
+
+    }
+
+
+</script>
+<style lang="less" scoped>
+    .wrap {
+        padding : 5px 10px !important;
+    .option{
+        width : 160px;
+    }
+    }
+    /*测试*/
+    #box{
+        height: 0;
+        overflow: hidden;
+    }
+    #div{
+        background: blue;width: 100px;min-height: 200px;
+    }
+</style>

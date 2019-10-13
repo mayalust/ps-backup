@@ -1,0 +1,2 @@
+define([],function(){return function(e,n,a){var t=e.recordList,r=function(){return t?t.map(function(e){return e.category}):[]},u=function(){var e=[{name:"设备告警",data:[]}];return t?(e[0].data=t.map(function(e){return{name:e.category,value:e.alert_code_count}}),e):[{name:"设备告警",data:[{name:"设备告警",value:0}]}]};a({rawData:e,data:{legend:r(),series:u()},getLegend:r,getSeries:u})}});
+//# sourceMappingURL=../../../map/toolkit/component/explainer/alert.js.map

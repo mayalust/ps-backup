@@ -1,0 +1,280 @@
+<config injector="$q,$rootScope,growl,commonMethodService"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>所属厂部:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-select ng-model="clone.department"
+                   data-config="{disabled:ifDis}"
+                   data-change = "modelChange(department + department.length)"
+                   data-options="department.valueCode as department.label for department in departments"></ps-select>
+        <!--<input ng-model="clone.department" class="form-control" ng-disabled="mode=='view'"/>-->
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>设备类型:</span>
+      </div>
+      <div class="col-md-2">
+        <!--<input ng-model="clone.motorType" class="form-control" ng-disabled="true"/>-->
+        <ps-select ng-model="clone.motorType"
+                   data-config="{disabled:true}"
+                   data-change = "modelChange(motorType + motorType.length)"
+                   data-options="motorType.valueCode as motorType.label for motorType in motorTypes"></ps-select>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>电机型号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.motorModel" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>宝钢号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.baogangNo" class="form-control" ng-disabled="mode=='view'|| flag == 'bg'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">制造厂商:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.manufacturers" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">制造编号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.manufacturingNumber" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">制造日期:</span>
+      </div>
+      <div class="col-md-2">
+        <ps-date2 ng-model="clone.manufacturingDate" data-config="{disabled:ifDis}"></ps-date2>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">设备管理号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.deviceNumber" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>额定容量:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.ratedCapacity" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right"><span style="color: red;">*</span>额定频率:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.ratedfrequency" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">绝缘等级:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.insulationGrade" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">额定电压1(V):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.nominalVoltage1" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">额定电流1(A):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.ratedCurrent1" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">转速(r/min):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.rotateSpeed" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">额定电压2(V):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.nominalVoltage2" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">额定电流2(A):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.ratedCurrent2" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">接法:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.connectionMethon" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">转子电压(V):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.rotorVoltage" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">转子电流(A):</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.rotorCurrent" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">工作制:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.workingSystem" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">负荷侧轴承型号1:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.loadSideBearingType1" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">非负荷侧轴承型号1:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.nonLoadSideBearingType1" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">负荷侧轴承型号2:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.loadSideBearingType2" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">非负荷侧轴承型号2:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.nonLoadSideBearingType2" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">油脂牌号:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.oilBrand" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+      <div class="col-md-2">
+        <span class="title pull-right">重量:</span>
+      </div>
+      <div class="col-md-2">
+        <input ng-model="clone.kgsWeight" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+
+    <div class="row margin-bottom-5">
+      <div class="col-md-2">
+        <span class="title pull-right">备注:</span>
+      </div>
+      <div class="col-md-6">
+        <input ng-model="clone.remark" class="form-control" ng-disabled="mode=='view'"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+
+      </div>
+      <div class="col-md-7">
+        <button class="btn btn-primary" ng-click="submitFn()" ng-if="mode != 'view'">提交</button>
+        <button class="btn btn-default" ng-click="close()" ng-if="mode != 'view'">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(q,rootScope,growl,commonMethodService){
+    var target = commonMethodService();
+    return {
+      link(scope, element, attr) {
+         let obj = {
+            /* "department" : "所属厂部",
+             "motorType" : "设备类型" ,*/
+             "clone.department" : "所属厂部",
+             "clone.motorType" : "设备类型" ,
+             "clone.motorModel" : "电机型号" ,
+             "clone.baogangNo" : "宝钢号" ,
+             "clone.ratedfrequency" : "额定频率" ,
+             // "clone.nominalVoltage" : "额定电压" ,
+             // "clone.ratedCurrent" : "额定电流" ,
+             "clone.ratedCapacity" : "额定容量" ,
+         };
+         function isEmpty(val){
+             if( typeof val == "undefined" || val === null || val === "" ){
+                 return true;
+             }
+             return false;
+         }
+         function validate(obj){
+             let defer = q.defer();
+             for(var i in obj){
+                 if(isEmpty(eval("scope." + i))){
+                     defer.reject(obj[i] + "不能为空");
+                 }
+             };
+             defer.resolve("success");
+             return defer.promise;
+         }
+          scope.departments = target.getRootScope("myDicts")["factoryHeadquarters"];
+          scope.motorTypes = target.getRootScope("myDicts")["motorType"];
+          scope.modelChange = function(a){
+              //  
+          }
+          scope.mode = scope.params.mode;
+          scope.ifDis = scope.mode =='view';
+          scope.flag = scope.params.flag;
+          scope.clone = extend({}, scope.params.data);
+          scope.submitFn = function(){
+              validate(obj)
+                  .then(() => {
+                      scope.submit(scope);
+                  })
+                  .catch(e => {
+                      growl.warning( e );
+                  })
+          }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

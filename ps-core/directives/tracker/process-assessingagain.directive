@@ -1,0 +1,138 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-assessingagain -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item" >
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border"><a>{{ item.title }}</a></h3>
+      <process-common-dir class="timeline-header no-border"
+                          data-process="elem"
+                          ng-repeat="elem in item.data">
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+  export default function(rootScope,psTracker){
+    return {
+      scope : {
+        tracker : "="
+      },
+      link(scope, element, attr) {
+        let {
+          createAttr,
+          _icon,
+          _category,
+          _attrsMap,
+          _severity,
+          _alertArisingTime
+        } = scope.tracker;
+        let {
+          alertItemList
+        } = scope.tracker._ticketTaskVariables;
+        let {
+          message
+        } = scope.tracker._data;
+        let {
+          values,
+          handlerName
+        } = scope.tracker._data.ticketTask;
+        class Handler {
+          alertEveluateValues(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "报警评价",
+              data : [{
+                key : "评价人",
+                value : handlerName
+              },{
+                type : "button",
+                cls : "btn btn-primary btn-sm",
+                label : "报警评价",
+                click : function(){
+                   
+                }
+              }]
+            }]
+          }
+          alertEveluate() {
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : message,
+              data : [{
+                time : message,
+                icon: _icon,
+                title : "报警评价",
+                data : [{
+                  key : "评价人",
+                  value : handlerName
+                }]
+              }]
+            }]
+          }
+          c280_default() {
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : "报警评价",
+              data : [
+                createAttr("处理人"),
+                {
+                  type: "title",
+                  value : "在线预警"
+                },
+                createAttr("报警级别"),
+                createAttr("报警来源"),
+                createAttr("报警描述"),
+                createAttr("报警时间"),
+                createAttr("评价等级"),
+                createAttr("评价说明")
+              ]
+            }]
+          }
+          c290_default() {
+            return [{
+              time : _alertArisingTime,
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              title : "报警评价",
+              data : alertItemList.map(({ specialtyName, alertTitle}) => {
+                return [
+                  createAttr(["报警级别", _severity ]),
+                  createAttr(["报警描述", alertTitle]),
+                  createAttr(["报警时间", alertTitle]),
+                  createAttr(["评价等级", "正确"]),
+                  createAttr(["评价说明", "说明"])
+                ]
+              }).reduce((a,b) => {
+                return a.concat(b);
+              }, [])
+            }]
+          }
+        }
+        function createRenderList(){
+          let handler = new Handler;
+          if( _category == 280 ){
+            return handler.c280_default();
+          }
+          if( _category == 290){
+            return handler.c290_default();
+          }
+          if( values ){
+            return handler.alertEveluateValues();
+          } else {
+            return handler.alertEveluate();
+          }
+        }
+        scope.tracker.__dicsloaded__.then(() => {
+          scope.renderList = createRenderList();
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

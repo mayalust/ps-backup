@@ -1,0 +1,1274 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService,psRouter,psLoading"
+        deps="psChecklist"
+></config>
+<template>
+  <div class="wrap">
+    <span>model:{{model}}</span> <br>
+    <p>dataOptions:{{dataOptions}}</p>
+    <ps-checklist ng-model="model"  data-options="dataOptions"></ps-checklist>
+    <span>model2:{{model2}}</span> <br>
+    <p>dataOptions2:{{dataOptions2}}</p>
+    <ps-checklist ng-model="model2"  data-options="dataOptions2"></ps-checklist>
+
+
+
+    <span>model:{{model3}}</span> <br>
+    <p>dataOptions:{{dataOptions3}}</p>
+    <span>model2:{{model4}}</span> <br>
+    <p>dataOptions2:{{dataOptions4}}</p>
+    <ps-radiolist ng-model="model3"  data-options="dataOptions3"></ps-radiolist>
+    <ps-radiolist ng-model="model4"  data-options="dataOptions4"></ps-radiolist>
+
+
+    <ps-layout data-option="option">
+    </ps-layout>
+  </div>
+</template>
+<script type="text/javascript">
+    export default function ( q, ajax, psDialog,routeParams,psUltility,location,growl,commonMethodService,psRouter,psLoading){
+        var target = commonMethodService(),resource,
+            mode = target.getParameter("mode");
+        return {
+            link(scope, element, attr) {
+              scope.model3 = 2;
+              scope.model4 = 0;
+
+              scope.dataOptions3 = [{
+                label: '优',
+                value: true
+              },{
+                label: '良',
+                value: false
+              },{
+                label: '差',
+                value: false
+              }];
+              scope.dataOptions4 = [{
+                label: '优',
+                value: true
+              },{
+                label: '良',
+                value: false
+              }];
+
+              // scope.model2 = [true,false, true];
+              scope.model2 = [];
+              scope.model = "true";
+              scope.dataOptions = [{
+                label: '优',
+                value: true
+              }];
+              scope.dataOptions2 = [{
+                label: '优',
+                value: false
+              },{
+                label: '良',
+                value: false
+              },{
+                label: '差',
+                value: false
+              }]
+
+
+                let maintainObj = {};
+                let bool = target.getValue("maintainListDataflag");
+                function showDelete() {
+                    return mode != "edit" ? [{ label: "删除",
+                        class: "btn btn-primary",
+                        on: {
+                            click: function (e) {
+                                e.removeInline();
+                            }
+                        }}] : [];
+                }
+                function getOutGrid (str) {
+                    return  [{
+                        label: str,
+                        symbol: "inline",
+                        class: "primary",
+                        show: function(){
+                            return mode == "edit" ? false: true;
+                        },
+                    }]
+                }
+                function fillTables(str,refreshGrid,b,allData) {
+                    if(str.indexOf("stepsList")!= -1 ) {
+                        allData.push(b);
+                    }else {
+                        allData.unshift(b);
+                    }
+                    refreshGrid(false);
+                }
+                maintainObj =  target.getValue("maintainListData");
+                let repairArr =  maintainObj.repairableParts,
+                    repairLogArr =  maintainObj.repairablePartActionLogs,
+                    consumableArr =  maintainObj.consumableParts,
+                    allRollerTypes;
+                ajax.post("rollerPartUIService.getLinkRepairableParts",[maintainObj.deviceId,false]).then(r => {
+                  if(r && r.length != 0){
+                    return scope.d = r;
+                  }
+                }).then(function () {
+                  ajax.post("rollerPartUIService.getRollerPartByConditionWithPage",[{"type":3,"values.deviceIds":maintainObj.deviceId},{}]).then(d => {
+                    if(d && d.length != 0){
+                      return scope.res = d.data;
+                    }
+                  }).then(function () {
+                    ajax.post("rollerPartUIService.getLinkRepairRollerPart",[maintainObj.deviceId]).then(d => {
+                      if(d && d.length != 0){
+                        d.forEach(function (item) {
+                          item.fatherRollerIdOptions = item.onlinePartList || [];
+                          item.rollerIdOptions = item.storePartList || [];
+                        });
+                        allRollerTypes = d;
+                        let arr = [];
+                        maintainObj.repairablePartActionLogs = maintainObj.repairablePartActionLogs || [];
+                        for (var i = 0; i < maintainObj.repairablePartActionLogs.length ; i++) {
+                          for(var j = 0; j < d.length ; j++){
+                            let obj = {};
+                            if(d[j].rollerType == maintainObj.repairablePartActionLogs[i]["values"]["rollerType"]){
+                              obj["rollerType"] = d[j].rollerType;
+                              // obj["fatherRollerId"] = null;
+                              obj["fatherRollerId"] = maintainObj.repairablePartActionLogs[i].fatherRollerId;
+                              obj.fatherRollerIdOptions = d[j].onlinePartList || [];
+                              obj["rollerId"] = maintainObj.repairablePartActionLogs[i].rollerId;
+                              // obj["rollerId"] = null;
+                              obj.rollerIdOptions = d[j].storePartList || [];
+                              /* obj["fatherRollerId"] = d[j].onlinePartList || [];
+                               obj["rollerId"] = d[j].storePartList || [];*/
+                              arr.push(obj);
+                            }
+                          }
+                        }
+                        maintainObj.repairablePartsBak = arr;
+                        // maintainObj.repairableParts = arr;
+                        return d;
+                      }
+                    }).then(function (result) {
+
+                      let resultArr=[],resultArr2= [];
+                      if(consumableArr && consumableArr.length != 0 && scope.res && scope.res.length != 0)
+                        for (var i = 0; i < scope.res.length ; i++) {
+                          for (var j = 0; j < consumableArr.length ; j++) {
+                            if(consumableArr[j].rollerNo == scope.res[i].rollerNo){
+                              consumableArr[j].reserveNum = scope.res[i].reserveNum;
+                              resultArr2.push(consumableArr[j]);
+                            }
+                          }
+                        }
+                      maintainObj.consumableParts = resultArr2;
+                      scope.option = {
+                        title: "检修履历",
+                        type : "layout",
+                        init : function () {
+                          if(maintainObj && maintainObj.listDeviceList){
+                            if(bool){
+                              maintainObj.listDeviceList.forEach(d=>{
+                                return d.state = 0;
+                              })
+                            }
+                          }
+                          if(maintainObj && maintainObj.stepsList){
+                            maintainObj.stepsList.sort((a,b)=>{
+                              return a.stepsNo - 0 - ( b.stepsNo - 0 );
+                            })
+                          }
+                          return {
+                            maintainObj:maintainObj
+                          };
+                        },
+                        children: [{
+                          type : "form-inline",
+                          children : [{
+                            name: "deviceName",
+                            type : "label",
+                            width :10,
+                            value: "设备名称:"
+                          },{
+                            type: "label",
+                            width: 10,
+                            value: target.getValue("maintainListData").deviceName,
+                          },{
+                            name: "deviceCode",
+                            type: "label",
+                            width: 10,
+                            value: "设备编号:"
+                          },{
+                            type: "label",
+                            width: 10,
+                            value: target.getValue("maintainListData").deviceCode,
+                          }]
+                        },{//检修委托
+                          label: "检修委托",
+                          type: "panel",
+                          children: [{
+                            type: "form-grid",
+                            scope: "maintainObj",
+                            children: [{
+                              type: "input",
+                              label: "标准项目编号",
+                              key: "standardProjectId",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "input",
+                              label: "标准项目名称",
+                              key: "standardName",//standardProjectName
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "select",
+                              label: "产线工程师",
+                              key: "executioner",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: function () {
+                                var allUsers = target.getRootScope("getAllUserInfo"),
+                                  smartUsers = [],roleArr = [];
+                                allUsers.forEach(function (item) {
+                                  if(item.roleID && item.roleID.indexOf(",") !== -1){
+                                    roleArr = item.roleID.split(",");
+                                    roleArr.some((v)=>{
+                                      if(v == "496878991490167"){
+                                        smartUsers.push(item);
+                                        return true;
+                                      }
+                                    })
+                                  }else {
+                                    if (item.roleID == "496878991490167") {//智能产线工程师roleID "496878991490167,496878991490169"
+                                      smartUsers.push(item);
+                                    }
+                                  }
+                                });
+                                return smartUsers;
+                              },
+                              format: {
+                                id: "userID",
+                                label: "userName"
+                              },
+                            }, {
+                              type: "select",
+                              label: "施工类别",
+                              key: "constructionType",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: target.getRootScope("myDicts")["constructionType"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              }
+                            }, {
+                              type: "select",
+                              label: "项目类别",
+                              key: "projectCategory",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: target.getRootScope("myDicts")["baowuProjectCategory"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              }
+                            }, {
+                              type: "select",
+                              label: "高危等级",
+                              key: "highDangerLevel",
+                              composory: false,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: target.getRootScope("myDicts")["highDangerLevel"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              }
+                            }, {
+                              type: "input",
+                              label: "实施依据",
+                              key: "maintainBasis",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "input",
+                              label: "建议班组名称",
+                              key: "suggesTeamName",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "input",
+                              label: "作业时长(H)",
+                              key: "needTime",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled",
+                                type: "number",
+                                min: 0
+                              },
+                            }, {
+                              type: "input",
+                              label: "总人数",
+                              key: "totalPerpsonNum",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled",
+                                type: "number",
+                                min: 0,
+                              },
+                            }, {
+                              type: "input",
+                              label: "总工时(H)",
+                              key: "totalUseTime",
+                              composory: true,
+                              col: 4,
+                              config: {
+                                disabled: "disabled",
+                                type: "number",
+                                min: 0,
+                              },
+                            }, {
+                              type: "input",
+                              label: "工作内容",
+                              key: "workContent",
+                              composory: true,
+                              col: 12,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            },]
+                          }]
+                        },{//方案概况
+                          label: "方案概况",
+                          type: "panel",
+                          children: [{
+                            type: "form-grid",
+                            scope: "maintainObj",
+                            children: [{
+                              type: "input",
+                              label: "检修方案名称",
+                              key: "maintainPlanName",
+                              col: 4,
+                              composory: true,
+                            }, {
+                              type: "auto",
+                              label: "危险源",
+                              col: 4,
+                              key: "dangerSource",
+                              composory: true,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: target.getRootScope("myDicts")["dangerSource"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+                            }, {
+                              type: "select",
+                              label: "动火等级",
+                              col: 4,
+                              key: "fireGrade",
+                              composory: true,
+                              config: {
+                                disabled: "disabled"
+                              },
+                              options: target.getRootScope("myDicts")["fireGrade"],
+                              format: {
+                                id: "valueCode",
+                                label: "label"
+                              },
+                            }, {
+                              type: "date2",
+                              label: "项目实施时间",
+                              col: 4,
+                              key: "projectImplTime",
+                              composory: true,
+                              col: 4,
+                            },]
+                          }]
+                        },{//人员准备
+                          label: "人员准备",
+                          type: "panel",
+                          children: [{
+                            type: "table-form",
+                            key: "maintainObj.personList",
+                            config: {
+                              attributes: {
+                                "personType": ["人员类型", "text"],
+                                "personNum": ["人员数量", "text"],
+                              },
+                              grid: {
+                                body: [{
+                                  name: "personType",
+                                }, {
+                                  name: "personNum",
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage: true,
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        }, {//工器具准备
+                          label: "工器具准备",
+                          type: "panel",
+                          children: [{
+                            type: "table-form",
+                            key: "maintainObj.toolList",
+                            config: {
+                              attributes: {
+                                "name": ["名称", "text"],
+                                "format": ["规格", "text"],
+                                "num": ["数量", "text"],
+                                "unit": ["单位", "text"],
+                              },
+                              grid: {
+                                body: [{
+                                  name: "name",
+                                }, {
+                                  name: "format",
+                                }, {
+                                  name: "num",
+                                }, {
+                                  name: "unit",
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage: true,
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        }, {//常用材料准备
+                          label: "常用材料准备",
+                          type: "panel",
+                          children: [{
+                            type: "table-form",
+                            key: "maintainObj.materialList",
+                            config: {
+                              attributes: {
+                                "name": ["名称", "text"],
+                                "format": ["规格", "text"],
+                                "num": ["数量", "text"],
+                                "unit": ["单位", "text"],
+                              },
+                              grid: {
+                                body: [{
+                                  name: "name",
+                                }, {
+                                  name: "format",
+                                }, {
+                                  name: "num",
+                                }, {
+                                  name: "unit",
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage: true,
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        }, {//备件准备
+                          label: "备件准备",
+                          type: "panel",
+                          children: [{//易耗件
+                            type: "table-form",
+                            key : "maintainObj.consumableParts",
+                            config: {
+                              attributes: {
+                                "rollerName": ["备件名称", "dict"],
+                                "rollerNo": ["备件编码", "text"],
+                                "format": ["规格型号", "dict"],
+                                "manufacturer": ["生产厂家", "dict"],
+                                "reserveNum": ["库存", "dict"],
+                                "useNum": ["使用数量", "text"]
+                              },
+                              grid: {
+                                body: [{
+                                  name: "rollerName",
+                                }, {
+                                  name: "rollerNo",
+                                }, {
+                                  name: "format",
+                                }, {
+                                  name: "manufacturer",
+                                }, {
+                                  name: "reserveNum",
+                                  bind:function (row) {
+                                    if(scope.res && scope.res.length != 0){
+                                      for (let i = 0; i <scope.res.length ; i++) {
+                                        if(row.rollerNo == scope.res[i].rollerNo){
+                                          return typeof scope.res[i].reserveNum != "undefined" ? scope.res[i].reserveNum : row.reserveNum;
+                                        }
+                                      }
+                                    }
+                                  }
+                                },{
+                                  name: "useNum",
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage: true,
+                                },
+                                options: []
+                              }
+                            }
+                          },{//可修复件
+                            type: "table-form",
+                            key: "maintainObj.repairableParts",
+                            config: {
+                              attributes: {
+                                "rollerType" : ["类型","dict"],
+                                "reserveNum": ["可更换库存", "text"],
+                              },
+                              grid: {
+                                body: [{
+                                  name : "rollerType",
+                                  bind: function (row) {
+                                    return row
+                                  }
+                                },{
+                                  name : "reserveNum",
+                                  bind: function (row) {
+                                    if(scope.d && scope.d.length !=0){
+                                      if(row != "" && typeof row != "undefined"){
+                                        for (let i = 0; i < scope.d.length; i++) {
+                                          if(scope.d[i].rollerType == row){
+                                            return scope.d[i].count ? scope.d[i].count : 0;
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage : true,
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        },{//挂牌准备
+                          label: "挂牌准备",
+                          type: "panel",
+                          children: [{
+                            type: "table-form",
+                            key : "maintainObj.listDeviceList",
+                            config: {
+                              attributes: {
+                                "safeNature" : ["安全牌性质","text"],
+                                "listPosition": ["挂牌位置", "text"],
+                                "deviceName" : ["挂牌设备","text"],
+                                "state" : ["挂牌确认", "dict"]
+                              },
+                              grid: {
+                                body: [{
+                                  name : "safeNature",
+                                },{
+                                  name : "listPosition",
+                                },{
+                                  name : "deviceName",
+                                  bind: function (row) {
+                                    return row.deviceName.includes("////")? row.deviceName.split("////")[0] : row.deviceName;
+                                  }
+                                },{
+                                  name : "state",
+                                  gridType: "select",
+                                  value: 1,
+                                  options: [{
+                                    id : 0,
+                                    label : "否",
+                                    selected: true
+                                  },{
+                                    id : 1,
+                                    label : "是",
+                                  }]
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: true,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage : true,
+                                  inlineAdd: {
+                                    safeNature: {
+                                      type: 'input',
+                                      composory : true,
+                                      isNumber : true
+                                    },
+                                    listPosition: {
+                                      type: 'input',
+                                      composory : true
+                                    },
+                                    number: {
+                                      type: 'input',
+                                      composory : true
+                                    },
+                                    deviceName: {
+                                      type: 'input',
+                                      composory : true
+                                      // type: 'select',
+                                      // url: 'resourceUIService.getDevicesByCondition',
+                                      // parameter: {domains: resource.domains},
+                                    },
+                                    submit: function (a, b, refreshGrid, allData) {
+                                      // var listObj = b["deviceName"];
+                                      // b["deviceName"] = listObj["label"];
+                                      // b["deviceId"] = listObj["id"];
+                                      fillTables("listDeviceList",refreshGrid,b,allData);
+                                    }
+                                  },
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        },{//施工步骤
+                          label: "施工步骤",
+                          type: "panel",
+                          children: [{
+                            type: "table-form",
+                            key : "maintainObj.stepsList",
+                            config: {
+                              attributes: {
+                                "stepsNo": ["步骤", "text"],
+                                "content" : ["作业内容","text"],
+                                "planNeedTime": ["预计作业时间", "text"],
+                                "dataType": ["数据类别", "dict"],
+                                "technicalPoints": ["技术要点", "text"],
+                                "safetyMeasures" : ["安全措施","text"],
+                                "unit": ["单位", "text"],
+                                "upperLimit": ["上限", "dict"],
+                                "lowerLimit": ["下限", "dict"],
+                                "stepsResult": ["* 作业确认", "dict"],
+                                "remark" : ["备注","text"],
+                                "resultFiles" : ["附件","dict"],
+                              },
+                              grid: {
+                                body: [{
+                                  name : "stepsNo",
+                                },{
+                                  name : "content",
+                                },{
+                                  name : "planNeedTime",
+                                },{
+                                  name: "dataType",
+                                },{
+                                  name : "technicalPoints",
+                                },{
+                                  name : "safetyMeasures",
+                                },{
+                                  name: "unit",
+                                }, {
+                                  name: "upperLimit",
+                                }, {
+                                  name: "lowerLimit",
+                                },{
+                                  name : "stepsResult",
+                                  composory: true,
+                                  // gridType: "select",
+                                  gridType: function(e) {
+                                    if(e.dataType == "定性"){
+                                      return "select"
+                                    }else {
+                                      return "input"
+                                    }
+                                  },
+                                  options: function (e) {
+                                    if(e.dataType == "定性"){
+                                      return [{
+                                        id : 0,
+                                        label : "否",
+                                      },{
+                                        id : 1,
+                                        label : "是",
+                                      }]
+                                    }else {
+                                      return [];
+                                    }
+                                  }
+                                },{
+                                  name : "remark",
+                                  gridType: "input"
+                                },{
+                                  name : "resultFiles",
+                                  gridType : "filelinks",
+                                }],
+                                buttons: {
+                                  inGrid: bool == false ? [] : [{
+                                    label: "附件",
+                                    class : "primary",
+                                    symbol: "upload",
+                                    param: {
+                                      url: 'resourceFileUIService.uploadResourceFile',
+                                      before: function (files) {
+                                        let obj = { resourceId: 2 };
+                                        [].slice.apply(files).forEach( ( f, i) => {
+                                          obj[`file${i}`] = f;
+                                        });
+                                        return obj
+
+                                      },
+                                      after: function (d) {
+                                        let files = d.files,
+                                          row = d.$row;
+                                        if (d.code == 0) {
+                                          row["resultFiles"] = (angular.isArray(d.data) ? d.data : [d.data])
+                                            .map((d, i) => {
+                                              return {
+                                                src : d.qualifiedName,
+                                                label : files[i]
+                                              }
+                                            });
+                                          growl.success('上传成功！');
+                                        } else {
+                                          growl.warning(d.message || d);
+                                        }
+                                      }
+                                    },
+                                  }],
+                                  outGrid: []
+                                },
+                                config: {
+                                  rowclass : function(row){
+                                    // row.dataType == "定量" && (row.stepsResult != null || typeof row.stepsResult != "undefined" || row.stepsResult != "")
+                                    if (row.stepsResult === null || typeof row.stepsResult === "undefined" || row.stepsResult === "" || row.stepsResult === "-" ){
+                                      return ""
+                                    }else {
+                                      if (row.dataType == "定量") {
+                                        if(row.upperLimit === null && row.lowerLimit === null || row.upperLimit === "" && row.lowerLimit === "" ) {
+                                          return "";
+                                        }else if( (row.upperLimit === null || row.upperLimit === "") && (row.lowerLimit !== null ||row.lowerLimit !== "") ){
+                                          if(Number(row.stepsResult) < Number(row.lowerLimit) || Number(row.stepsResult) > Number.MAX_VALUE ){
+                                            return "red";
+                                          }else {
+                                            return ""
+                                          }
+                                        }else if((row.upperLimit !== null || row.upperLimit !== "") && (row.lowerLimit === null ||row.lowerLimit === "")){
+                                          if(Number(row.stepsResult) < Number.MIN_VALUE || Number(row.stepsResult) > Number(row.upperLimit)  ){
+                                            return "red";
+                                          }else {
+                                            return ""
+                                          }
+                                        }else if((row.upperLimit !== null || row.upperLimit !== "") && (row.lowerLimit !== null ||row.lowerLimit !== "")){
+                                          if(Number(row.stepsResult) < Number(row.lowerLimit) || Number(row.stepsResult) > Number(row.upperLimit)  ){
+                                            return "red";
+                                          }else {
+                                            return ""
+                                          }
+                                        }
+                                      }else {
+                                        return "";
+                                      }
+                                    }
+
+                                  },
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage : true,
+                                },
+                                options: []
+                              }
+                            }
+                          }]
+                        },{//备件更换
+                          label: "备件更换",
+                          type: "panel",
+                          children: [{
+                            type: "new-grid",
+                            key: "maintainObj.repairablePartsBak",
+                            config: {
+                              columns: [{
+                                key: 'rollerType',
+                                label: "类型",
+                                type: "text",
+                                add: {
+                                  type: 'select',
+                                  config: {
+                                    format: {
+                                      id: 'rollerType',
+                                      label: "rollerType",
+                                      value: '$this'
+                                    }
+                                  },
+                                  options: allRollerTypes
+                                },
+                                bind: function (row,value) {
+                                  return row.values ? row.values.rollerType : row.rollerType;
+                                }
+                              },{
+                                key: 'fatherRollerId',
+                                label: '在线备件身份ID',
+                                type: 'text',
+                                add: {
+                                  type: 'select',
+                                  config: {
+                                    format: {
+                                      label: "rollerName"
+                                    }
+                                  },
+                                  watch: {
+                                    key: "rollerType",
+                                    handler: function (d, next) {
+                                      next({
+                                        $options: d && d.onlinePartList ? d.onlinePartList : [],
+                                        $value: null
+                                      });
+                                    }
+                                  }
+                                },
+                                edit: {
+                                  type: 'select',
+                                  config: {
+                                    format: {
+                                      label: "rollerName"
+                                    }
+                                  },
+                                  options: function (row) {
+                                    return row.fatherRollerIdOptions || [];
+                                  }
+                                },
+                                bind: function (row, value) {
+                                  let type = row.rollerType? row.rollerType : "",fatherRollerName;
+                                  maintainObj.repairablePartActionLogs.find(v => {
+                                    if(v.values.rollerType == type){
+                                      fatherRollerName = v.values.fatherRollerName;
+                                      return true;
+                                    }
+                                  });
+                                  return  row.values ? row.values.fatherRollerName : allRollerTypes.find(r => {
+                                    return r.rollerType == row['rollerType'];
+                                  })['fatherRollerIdOptions'].find(d => {
+                                    return d.id == value;
+                                  })? allRollerTypes.find(r => {
+                                    return r.rollerType == row['rollerType'];
+                                  })['fatherRollerIdOptions'].find(d => {
+                                    return d.id == value;
+                                  })['rollerName'] : fatherRollerName ? fatherRollerName : "";
+                                }
+                              },{
+                                key: 'rollerId',
+                                label: '更换备件身份ID',
+                                type: 'text',
+                                add: {
+                                  type: 'select',
+                                  config: {
+                                    format: {
+                                      label: "rollerName"
+                                    }
+                                  },
+                                  watch: {
+                                    key: "rollerType",
+                                    handler: function (d, next) {
+                                      next({
+                                        $options: d && d.storePartList ? d.storePartList : [],
+                                        $value: null
+                                      });
+                                    }
+                                  }
+                                },
+                                edit: {
+                                  type: 'select',
+                                  config: {
+                                    format: {
+                                      label: "rollerName"
+                                    }
+                                  },
+                                  options: function (row) {
+                                    return row.rollerIdOptions || [];
+                                  }
+                                },
+                                bind: function (row, value) {
+                                  let type = row.rollerType? row.rollerType : "",rollerName;
+                                  maintainObj.repairablePartActionLogs.find(v => {
+                                    if(v.values.rollerType == type){
+                                      rollerName = v.values.rollerName;
+                                      return true;
+                                    }
+                                  });
+                                  return   row.values ? row.values.rollerName : allRollerTypes.find(r => {
+                                    return r.rollerType == row['rollerType'];
+                                  })['rollerIdOptions'].find(d => {
+                                    return d.id == value;
+                                  })?  allRollerTypes.find(r => {
+                                    return r.rollerType == row['rollerType'];
+                                  })['rollerIdOptions'].find(d => {
+                                    return d.id == value;
+                                  })['rollerName'] : rollerName ? rollerName : "";
+                                }
+                              }],
+                            }
+                          }]
+                        },{//施工总结
+                          label: "施工总结",
+                          type: "panel",
+                          children: [{
+                            type : "form-grid",
+                            children : [{
+                              type : "date2",
+                              label : "项目开始时间：",
+                              key : "maintainObj.projectBeginDate",
+                              composory: true,
+                              col: 4
+                            },{
+                              type : "date2",
+                              label : "项目结束时间：",
+                              key : "maintainObj.projectEndDate",
+                              composory: true,
+                              col: 4
+                            },{
+                              type : "input",
+                              label : "施工用时(H)",
+                              key : "maintainObj.realUseTime",
+                              watch: {
+                                key: ["maintainObj.projectEndDate","maintainObj.projectBeginDate"],
+                                handler: function (e) {
+                                  let dtE =  new Date(e.$value[0]).getTime(),
+                                    dtS = new Date(e.$value[1]).getTime(),
+                                    ds = dtE - dtS;
+                                  if(dtE && dtS && ds > 0){
+                                    e.update({
+                                      value: ds = (ds / 1000/3600).toFixed(2)
+                                    });
+                                  }else if(!dtS || !dtE){
+                                    e.update({
+                                      value: 0
+                                    });
+                                  }else {
+                                    e.update({
+                                      value: 0
+                                    });
+                                    growl.info("请正确输入开始结束时间");
+                                  }
+                                }
+                              },
+                              composory: true,
+                              config: {
+                                disabled:  "disabled",
+                                type: 'number'
+                              },
+                              col: 4
+                            }]
+                          },{
+                            type: "table-form",
+                            key : "maintainObj.personList",
+                            config: {
+                              attributes: {
+                                "personType" : ["人员类型","text"],
+                                "personNum": ["实际投入人数", "text"],
+                              },
+                              grid: {
+                                body: [{
+                                  name : "personType",
+                                },{
+                                  name : "personNum",
+                                  gridType: 'input',
+                                }],
+                                buttons: {
+                                  inGrid: [],
+                                  outGrid: []
+                                },
+                                config: {
+                                  showIndex: false,
+                                  showSelector: false,
+                                  showSearch: false,
+                                  showPage : true,
+                                },
+                                options: []
+                              }
+                            }
+                          },{
+                            type : "form-grid",
+                            children : [{
+                              type : "input",
+                              label : "总人数：",
+                              key : "maintainObj.totalUseNum",
+                              composory: true,
+                              watch: {
+                                key: "maintainObj.personList",
+                                deep: true,
+                                handler: function (e) {//求和
+                                  let rs = e.$value && e.$value.reduce( (a,b) => {
+                                    return a - 0 + (b.personNum - 0);
+                                  }, 0)
+                                  e.update({
+                                    value: rs
+                                  })
+                                }
+                              },
+                              config: {
+                                disabled:  "disabled",
+                                type: 'number'
+                              },
+                            },{
+                              type : "input",
+                              label : "总工时(H)：",
+                              key : "maintainObj.totalUseTime",
+                              composory: true,
+                              config: {
+                                type: 'number',
+                                min: 0
+                              }
+
+                            },{
+                              type : "input",
+                              label : "异常判断结果处理说明：",
+                              key : "maintainObj.resultDesc",
+                              composory: true,
+                              config: {
+                              },
+                              col: 12
+                            }]
+                          }]
+                        },{//检修验收
+                          label: "检修验收",
+                          type: "panel",
+                          children: [{
+                            type: "form-grid",
+                            scope: "maintainObj",
+                            children: [{
+                              type: "input",
+                              label: "任务名称",
+                              key: "standardName",
+                              col: 6,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "date2",
+                              label: "完工时间",
+                              key: "projectEndDate",
+                              col: 4,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "checklist",
+                              label: "验收结果",
+                              key: "maintainBasis",
+                              composory: true,
+                              col: 12,
+                              config: {
+                                // disabled: "disabled"
+                              },
+                            }, {
+                              type: "textarea",
+                              label: "验收说明",
+                              key: "workContent",
+                              col: 12,
+                              config: {
+                                disabled: "disabled",
+                                height: "60px",
+                                lineHeight: "26px"
+                              },
+                            }]
+                          }]
+                        },{//状态判断评价
+                          label: "状态判断评价",
+                          type: "panel",
+                          children: [{
+                            type: "form-grid",
+                            scope: "maintainObj",
+                            children: [{
+                              type: "checkbox",
+                              label: "评价等级",
+                              key: "maintainBasis",
+                              composory: true,
+                              col: 12,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "textarea",
+                              label: "评价说明",
+                              key: "workContent",
+                              col: 12,
+                              config: {
+                                disabled: "disabled",
+                                height: "60px",
+                                'lineHeight': "26px"
+                              },
+                            }]
+                          }]
+                        },{//异常处理评价
+                          label: "异常处理评价",
+                          type: "panel",
+                          children: [{
+                            type: "form-grid",
+                            scope: "maintainObj",
+                            children: [{
+                              type: "checkbox",
+                              label: "异常处理等级",
+                              key: "maintainBasis",
+                              composory: true,
+                              col: 12,
+                              config: {
+                                disabled: "disabled"
+                              },
+                            }, {
+                              type: "textarea",
+                              label: "备注",
+                              key: "workContent",
+                              col: 12,
+                              config: {
+                                disabled: "disabled",
+                                height: "60px",
+                                'lineHeight': "26px"
+                              },
+                            }]
+                          }]
+                        },{
+                          type: "form-inline",
+                          children: [{
+                            type: "button",
+                            width: 10,
+                            config: {
+                              class: "btn-primary btn-100",
+                              validCheck: true,
+                              label: "确 定",
+                              show: bool == false ? false : true,
+                              // validCheck: ["maintainObj.resultDesc"],
+                              on: {
+                                click: function (e) {
+                                  psLoading.showLoading();
+                                  var maintainPlan =angular.extend(target.getValue("maintainListData"),  e.getData().maintainObj)
+                                  var params = {
+                                    ticketNo: target.getValue("ticketNo"),
+                                    maintainPlan:maintainPlan,
+                                    actionLog: null,
+                                  };
+                                  var stepListArr = maintainPlan.stepsList;
+                                  if(stepListArr && stepListArr.length){
+                                    let flag =  stepListArr.some((v,i) => {
+                                      if(v.stepsResult === null || v.stepsResult === ""){
+                                        return true;
+                                      }
+                                      return false;
+                                    })
+                                    if(flag){
+                                      psLoading.closeLoading();
+                                      growl.info("作业确认不能为空！");
+                                    }else {
+                                      if(  !maintainPlan.projectBeginDate ) {
+                                        psLoading.closeLoading();
+                                        growl.info("请输入项目开始时间");
+                                      }else if(!maintainPlan.projectEndDate){
+                                        psLoading.closeLoading();
+                                        growl.info("请输入项目结束时间");
+                                      } else if( maintainPlan.resultDesc == null || maintainPlan.resultDesc == ""   ){
+                                        psLoading.closeLoading();
+                                        growl.info("请输入异常判断结果处理说明");
+                                      }else {
+                                        if(params && params.maintainPlan){
+                                          if(params.maintainPlan.hasOwnProperty("repairablePartsBak")){
+                                            delete params.maintainPlan.repairablePartsBak;
+                                          }
+                                        }
+                                        // 调用接口
+                                        ajax.post("baogangTicketService.doMaintainTask", params).then((d) => {
+                                          psLoading.closeLoading();
+                                          growl.info("录入实绩成功");
+                                          target.trigger("queryTable1");
+                                          target.trigger("queryTable2");
+                                          target.trigger("queryTable3");
+                                          target.close();
+                                        }).catch(function () {
+                                          psLoading.closeLoading();
+                                        })
+                                      }
+                                    }
+                                  }
+
+                                }
+                              }
+                            },
+                            key: "save"
+                          }, {
+                            type: "button",
+                            width: 10,
+                            config: {
+                              label: "取 消",
+                              class: "btn btn-default btn-100",
+                              show: bool == false ? false : true,
+                              click: function () {
+                                target.close();
+
+                              }
+
+                            },
+
+                          }]
+                        }],
+                      }
+                    })
+                  })
+                });
+            }
+        }
+    }
+</script>
+<style type="less" scoped="true">
+
+</style>

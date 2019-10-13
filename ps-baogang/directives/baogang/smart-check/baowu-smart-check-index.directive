@@ -1,0 +1,188 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService, psRouter"
+></config>
+<template>
+  <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+    <ps-table config="config"></ps-table>
+  </div>
+</template>
+<script type="text/javascript">
+    export default function ( q, ajax, psDialog,routeParams,psUltility,location,growl,commonMethodService, psRouter){
+        var target = commonMethodService(),resource,
+            mode = target.getValue("mode") || "";
+        return {
+          link(scope, element, attr) {
+              target.on("tree_resourceChange", function (e){
+                  resource = e.resource;
+                  scope.config = {
+                      // title: "智能检修标准",
+                      attributes: {
+                          "standardProjectId": ["标准项目编号", "text"],
+                          "standardProjectName": {
+                              label:"标准项目名称",
+                              type:"dict",
+                          },
+                          "constructionType":  {
+                              label:"施工类别",
+                              type:"dict",
+                          },
+                          "projectCategory": ["项目类别", "dict"],
+                          "highDangerLevel": {
+                              label:"高危等级",
+                              type:"dict",
+                          },
+                          "executionCycle": ["周期单位", "text"],
+                          "cycleNum": ["周期间隔", "text"],
+                          "taskStatus": ["是否启用", "dict"],
+                          "executionerName": ["产线工程师", "date"],
+                          "suggesTeamName": ["建议施工班组", "text"]
+                      },
+                      search: {
+                          body: [{
+                              name: "standardProjectId",
+                              searchType: "input",
+                              label: "标准项目编号"
+                          }, {
+                              name: "constructionType",
+                              label: "施工类别",
+                              searchType: "select",
+                              options: target.getRootScope("myDicts")["constructionType"],
+                              format: {
+                                  id:"valueCode",
+                                  label:"label"
+                              },
+                          },{
+                              name: "projectCategory",
+                              searchType: "select",
+                              label: "项目类别",
+                              options: target.getRootScope("myDicts")["baowuProjectCategory"],
+                              format: {
+                                  id:"valueCode",
+                                  label:"label"
+                              },
+                          } , {
+                              name: "taskStatus",
+                              label:"是否启用",
+                              searchType: 'select',
+                              options: [{
+                                  id: 0,
+                                  label: "已启用",
+                              },{
+                                  id: 1,
+                                  label: "已停用",
+                              }],
+                              format: {
+                                  id:"id",
+                                  label:"label"
+                              },
+                          }],
+                      },
+                      grid: {
+                          body: ["standardProjectId","standardProjectName", "constructionType", "projectCategory",{
+                              name: "highDangerLevel",
+                              bind :function (row) {
+                                  if(row.highDangerLevel == 0) {
+                                      return "无"
+                                  }else if(row.highDangerLevel == 1){
+                                      return "一级高危项目"
+                                  }else if(row.highDangerLevel == 2){
+                                      return "二级高危项目"
+                                  }else if(row.highDangerLevel == 3){
+                                      return "三级高危项目"
+                                  }
+
+                              }
+                          }, { name : "executionCycle",
+                              bind: function (row) {
+                                  if(row.executionCycle == "day") {
+                                      return "日"
+                                  }else if(row.executionCycle == "week") {
+                                      return "周"
+                                  }else if(row.executionCycle == "month") {
+                                      return "月"
+                                  }else if(row.executionCycle == "year") {
+                                      return "年"
+                                  }else {
+                                      return "非周期";
+                                  }
+                              }
+                          } , {
+                              name: "cycleNum",
+                          }, {
+                              name: "taskStatus",
+                              bind :function (row) {
+                                  return row.taskStatus == 0  ? "已启用" : "已停用";
+                              }
+                          },"executionerName","suggesTeamName"],
+                          buttons: {
+                              outGrid: [{
+                                  label: "新增检修标准",
+                                  class: "primary",
+                                  on: {
+                                      click: function () {
+                                         /* psRouter.set({
+                                              obj : null,
+                                              currentPage : null,
+                                              mode: "add"
+                                          });*/
+                                         if(resource.category == "Domain"){
+                                           growl.info('请选中具体设备！');
+                                           return;
+                                         }
+                                          target.setValue("obj", {});
+                                          target.setValue("currentPage", {});
+                                          target.setValue("mode", "add");
+                                          target.navigateTo("index", {
+                                              main : 6,
+                                              sub : [1,"viewId:baowu-check-standard-operation"],
+                                          });
+                                      }
+                                  }
+                              }],
+                              inGrid: [["详情",
+                                  function (e) {
+                                      target.setValue("obj", e.$row);
+                                      target.setValue("mode", "detail");
+                                      target.navigateTo("index",{
+                                          main: 6,
+                                          sub: [1,"viewId:baowu-check-standard-operation"],
+                                      });
+                                  }], ["编辑",
+                                  function (e) {
+                                      target.setValue("obj", e.$row);
+                                      target.setValue("mode", "edit");
+                                      target.navigateTo("index",{
+                                          main: 6,
+                                          sub: [1,"viewId:baowu-check-standard-operation"],
+                                      })
+                                  }], ["删除",
+                                  function (e) {
+                                      e.remove({
+                                          message:"是否删除此项",
+                                          url:"maintenanceTaskUIService.deleteMaintainIntelligentStandard",
+                                          before:function(){
+                                              return e.$row.id;
+                                          }
+                                      });
+                                  }]]
+
+                          },
+                          config: {
+                              url: "maintenanceTaskUIService.getTaskBySimpleConditionWithPage",
+                              parameter: {"deviceId":resource.id,"ticketCategory" : "320"},
+                              showIndex: false,
+                              showSelector: false,
+                              showSearch: false,
+                              showPage: true,
+                          },
+                          options: []
+                      }
+                  };
+              })
+
+          }
+        }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

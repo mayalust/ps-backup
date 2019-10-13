@@ -1,0 +1,579 @@
+<config injector="$rootScope,$q,$state,ajax,growl,psStore,commonMethodService,psRouter,psBtnClick"></config>
+<script>
+/** mock **/
+import { dateparser, extend, isArray, isObject } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  $state,
+  ajax,
+  growl,
+  psStore,
+  cms,
+  psRouter,
+  psBtnClick
+) {
+  function isNotEmpty(d) {
+    if (typeof d == "number") {
+      return true;
+    }
+    return !!d;
+  }
+  function isEmpty(d) {
+    return typeof d == "undefined" || d === null || d === "";
+  }
+  function resolve(d) {
+    let defer = q.defer();
+    defer.resolve(d);
+    return defer.promise;
+  }
+  function attr(cell, attr, val) {
+    let attrs = attr.split("/").filter(isNotEmpty),
+      item;
+    if (typeof val === "undefined") {
+      rs = cell;
+      while ((item = attrs.shift()) && rs) {
+        rs = rs[item];
+      }
+      return rs;
+    }
+    let last = attrs.pop(),
+      rs = cell;
+    while ((item = attrs.shift()) && rs) {
+      rs = rs[item];
+    }
+    if (typeof rs === "object") {
+      rs[last] = val;
+    }
+  }
+  function findValue(data, attr) {
+    class LoopItem {
+      constructor(data, parents, path) {
+         
+        this.data = data;
+        this.parents = parents || [];
+        this.path = path || [];
+      }
+      hasParent(parent) {
+        return this.parents.some(p => p == parent);
+      }
+    }
+    let queue = [new LoopItem(data)],
+      item;
+    while ((item = queue.shift())) {
+      let { data, parents, path } = item;
+      if (data.hasOwnProperty(attr)) {
+        return {
+          value: data[attr],
+          path: path.concat([attr]).join("/")
+        };
+      }
+      for (let i in data) {
+        if (
+          data.hasOwnProperty(i) &&
+          isObject(data[i]) &&
+          !item.hasParent(data[i])
+        ) {
+          queue.push(
+            new LoopItem(data[i], parents.concat([data]), path.concat([i]))
+          );
+        }
+      }
+    }
+  }
+  function tracker(trackersListData) {
+    const _attrsMap = new Map(),
+      target = cms(undefined, rootScope);
+    class TrackersList {
+      constructor(trackersList, createTrust) {
+        trackersList[1].createTrust = createTrust;
+        this._normalTrackersMap = new Map();
+        this._firstTracker = new AlertTracker(trackersList[1]);
+        let checkName = name => {
+          let i = "";
+          while (this._normalTrackersMap.has(name + "" + i)) {
+            i = i - 0 + 1;
+          }
+          return name + "" + i;
+        };
+        this._normalTrackers = trackersList
+          .filter(({ logType }) => logType === "userTask")
+          .map((tracker, i) => {
+            tracker.createTrust = createTrust;
+            let d = new NormalTracker(tracker, i);
+            this._normalTrackersMap.set(checkName(d.__taskConfigName), d);
+            return d;
+          });
+      }
+    }
+    class NormalTracker {
+      constructor(data, i) {
+        this._data = data;
+        this._index = i;
+        this.createTrust = data.createTrust;
+        this._directive = this.getDirective();
+        this._attrsMap = _attrsMap;
+        this.setTicketTask();
+        this.setTicketTaskVariables();
+        this.setTicketTaskValues();
+        this.setTicketValues();
+
+        /** 拼接组合一些基本属性 **/
+
+        this.setTaskConfigName();
+        this.setTicketNo();
+        this.setTime();
+        this.setSpecailName();
+        this.setAlertTitle();
+        this.setTaskCategory();
+        this.setHandlerName();
+        this.setMultipleConclusion();
+        this.setCessingScheme();
+        this.setStandardProjectId();
+        this.setStandardProjectName();
+        this.setRecallExplain();
+        this.setTheCreateUserName();
+        this.setTicketTitle();
+        this.setDealType();
+        this.setTallyCheck();
+        this.setKeyAttrs();
+        this.__dicsloaded__ = psStore
+          .get("getAllDicts")
+          .then(dics => {
+            this.setAppName(dics);
+            this.setStatusGrades(dics);
+            this.setSeverity(dics);
+            return resolve(dics);
+          })
+          .catch(e => {
+            let dics = {};
+            console.warn(e);
+            this.setAppName(dics);
+            this.setStatusGrades(dics);
+            this.setSeverity(dics);
+            return resolve(dics);
+          });
+      }
+      getDirective() {
+        let data = this._data;
+        let category = attr(data, "/ticketTask/variables/ticket/category");
+        let tickeTaskStatus = attr(
+          data,
+          "/ticketTask/variables/ticket/values/tickeTaskStatus"
+        );
+        if (category == 200) {
+          this.setIcon("fa fa-user bg-aqua");
+        } else {
+          this.setIcon("fa fa-user bg-aqua bg-orange");
+        }
+        this.__category = category;
+        this.__tickeTaskStatus = tickeTaskStatus;
+        return `process-${tickeTaskStatus}`;
+      }
+      setTaskConfigName() {
+        let taskConfigName = attr(this._data, "ticketTask/taskConfigName");
+        this.__taskConfigName = taskConfigName;
+      }
+      setTicketTask() {
+        let ticketTask = attr(this._data, "ticketTask");
+        this._ticketTask = ticketTask;
+      }
+      setTicketTaskValues() {
+        let ticketTaskValues = attr(this._data, "ticketTask/values");
+        this._ticketTaskValues = ticketTaskValues || {};
+      }
+      setTicketTaskVariables() {
+        let ticketTaskVariables = attr(this._data, "ticketTask/variables");
+        this._ticketTaskVariables = ticketTaskVariables || {};
+      }
+      setTicketValues() {
+        let ticketValues = attr(
+          this._data,
+          "ticketTask/variables/ticket/values"
+        );
+        this._ticketValues = ticketValues;
+      }
+      setKeyAttrs() {
+        let creatorName = attr(
+          this._data,
+          "ticketTask/variables/ticket/creatorName"
+        );
+        let category = attr(this._data, "ticketTask/variables/ticket/category");
+        this._creatorName = creatorName;
+        this._category = category;
+      }
+      setAlertTitle() {
+        /** 报警描述 [ ticketTitle ] **/
+        let alertTitle = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/alertTitle"
+        );
+        this._attrsMap.set("报警描述", alertTitle);
+        this._alertTitle = alertTitle;
+      }
+
+      setTallyEvaluateCheckboxlist() {
+        /** 评价等级 [ tallyEvaluateCheckboxlist ] **/
+        let tallyEvaluateCheckboxlist = attr(
+          this._data,
+          "ticketTask/values/tallyEvaluateCheckboxlist"
+        );
+        tallyEvaluateCheckboxlist =
+          tallyEvaluateCheckboxlist == 0
+            ? "通过"
+            : tallyEvaluateCheckboxlist == 0
+            ? "基本通过"
+            : "不通过";
+        this._attrsMap.set("评价等级", tallyEvaluateCheckboxlist);
+        this._tallyEvaluateCheckboxlist = tallyEvaluateCheckboxlist;
+      }
+
+      setTallyCheck() {
+        /** 验收结果 [ _tallyCheck ] **/
+        let tallyCheck =
+          attr(this._data, "ticketTask/variables/tallyCheck") == "0"
+            ? "通过"
+            : "不通过";
+        let isAccord =
+          attr(this._data, "ticketTask/variables/isAccord") == "1"
+            ? "按时完工"
+            : "没按时完工";
+        let isQuality =
+          attr(this._data, "ticketTask/variables/isQuality") == "1"
+            ? "符合质量标准"
+            : "不符合质量标准";
+        this._attrsMap.set(
+          "验收结果",
+          `${tallyCheck}(${isAccord},${isQuality})`
+        );
+        this._tallyCheck = `${tallyCheck}(${isAccord},${isQuality})`;
+      }
+
+      setTicketTitle() {
+        /** 异常描述 [ _ticketTitle ] **/
+        let ticketTitle = attr(this._data, "ticketTask/ticketTitle");
+        this._attrsMap.set("异常描述", ticketTitle);
+        this._ticketTitle = ticketTitle;
+      }
+
+      setTaskCategory() {
+        /** 任务分类 [ _taskCategory ] **/
+        let taskCategory = "综合处理";
+        this._attrsMap.set("任务分类", taskCategory);
+        this._taskCategory = taskCategory;
+      }
+
+      setTheCreateUserName() {
+        /** 任务来源 [ _theCreateUserName ] **/
+        let theCreateUserName = attr(
+          this._data,
+          "ticketTask/variables/theCreateUserName"
+        );
+        this._attrsMap.set("任务来源", theCreateUserName);
+        this._theCreateUserName = theCreateUserName;
+      }
+
+      setRecallExplain() {
+        /** 退回说明 [ recallExplain ] **/
+        let recallExplain = attr(this._data, "ticketTask/values/recallExplain");
+        this._attrsMap.set("退回说明", recallExplain);
+        this._recallExplain = recallExplain;
+      }
+
+      setTicketNo() {
+        /** 工单号 [ ticketNo ] **/
+        let ticketNo = attr(this._data, "ticketNo");
+        this._attrsMap.set("工单号", ticketNo);
+        this._ticketNo = ticketNo;
+      }
+
+      setRecallExplain() {
+        /** 退回说明 [_recallExplain] **/
+        let recallExplain = attr(this._data, "ticketTask/values/recallExplain");
+        this._attrsMap.set("退回说明", recallExplain);
+        this._recallExplain = recallExplain;
+      }
+
+      setHandlerName() {
+        /** 委托人 [ _handlerName ] **/
+        let senderName = attr(this._data, "ticketTask/senderName");
+        this._attrsMap.set("委托人", senderName);
+        this._senderName = senderName;
+      }
+
+      setHandlerName() {
+        /** 处理人 [ _handlerName ] **/
+        let handlerName = attr(this._data, "ticketTask/handlerName");
+        this._attrsMap.set("处理人", handlerName);
+        this._attrsMap.set("检修人", handlerName);
+        this._attrsMap.set("诊断人", handlerName);
+        this._handlerName = handlerName;
+      }
+
+      setMultipleConclusion() {
+        /** 综合判断结论 [ _multipleConclusion ] **/
+        let multipleConclusion = attr(
+          this._data,
+          "ticketTask/variables/multipleConclusion"
+        );
+        this._attrsMap.set("综合判断结论", multipleConclusion);
+        this._multipleConclusion = multipleConclusion;
+      }
+
+      setCessingScheme() {
+        /** 处理方案建议 [ _cessingScheme ] **/
+        let cessingScheme = attr(
+          this._data,
+          "ticketTask/variables/cessingScheme"
+        );
+        this._attrsMap.set("处理方案建议", cessingScheme);
+        this._cessingScheme = cessingScheme;
+      }
+
+      setStandardProjectId() {
+        /** 标准项目编号 [ _standardProjectId ] **/
+        let standardProjectId = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/standardProjectId"
+        );
+        this._attrsMap.set("标准项目编号", standardProjectId);
+        this._standardProjectId = standardProjectId;
+      }
+
+      setStandardProjectName() {
+        /** 工程项目名称 [ _standardProjectName ] **/
+        let standardProjectName = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/standardProjectName"
+        );
+        this._attrsMap.set("工程项目名称", standardProjectName);
+        this._standardProjectName = standardProjectName;
+      }
+
+      setDealType() {
+        /** 处理方式 [ _dealType ] **/
+        function getDealType(dealType) {
+          let obj = {
+            "1": "暂不处理",
+            "2": "自行处理",
+            "3": "发起委托"
+          };
+          return obj[dealType];
+        }
+        let dealType = attr(this._data, "ticketTask/variables/dealType");
+        this._attrsMap.set("工程项目名称", getDealType(dealType));
+        this.__dealType = this._dealType = dealType;
+      }
+
+      setStatusGrades(dics) {
+        /** 综合状态等级 [ _statusGrade ] **/
+        let statusGradesList = dics["statusGrade"] || [];
+        let statusGradesMap = statusGradesList.reduce((a, b) => {
+          a.set(b.valueCode, b.label);
+          return a;
+        }, new Map());
+        let statusGrade = attr(this._data, "ticketTask/variables/statusGrade");
+        this.statusGrade = statusGrade;
+        this._attrsMap.set("综合状态等级", statusGrade);
+        this._statusGrade = statusGradesMap.get(statusGrade + "");
+      }
+
+      setSeverity(dics) {
+        let alertSeverityList = dics["alertSeverity"] || [];
+        let alertSeverity = alertSeverityList.reduce((a, b) => {
+          a.set(b.valueCode, b.label);
+          return a;
+        }, new Map());
+        let severity = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/severity"
+        );
+        this.severity = severity;
+        this._severity = alertSeverity.get(severity + "");
+      }
+
+      setTime() {
+        let alertArisingTime = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/alertArisingTime"
+        );
+        let sendTime = attr(this._data, "ticketTask/sendTime");
+        alertArisingTime = dateparser(alertArisingTime);
+        sendTime = dateparser(sendTime);
+        this._alertArisingTime = alertArisingTime.getDateString(
+          "yyyy-MM-dd,hh:mm:ss"
+        );
+        this._sendTime = sendTime.getDateString("yyyy-MM-dd,hh:mm:ss");
+      }
+
+      setSpecailName() {
+        /** 报警类型 [ _specialtyName ] **/
+        let specialtyName = attr(
+          this._data,
+          "ticketTask/variables/alertItemList/0/specialtyName"
+        );
+        this._attrsMap.set("报警类型", specialtyName);
+        this._specialtyName = specialtyName || "无";
+      }
+
+      setAppName(dics) {
+        /** 告警来源/任务来源 [ _appName ] **/
+        let appNameList = dics["appName"] || [];
+        let appName = attr(
+          this._data,
+          "ticketTask/variables/ticket/values/appName"
+        );
+        let appNameMap = appNameList.reduce((a, b) => {
+          a.set(b.valueCode, b.label);
+          return a;
+        }, new Map());
+        this._attrsMap.set("告警来源", appNameMap.get(appName + ""));
+        this._attrsMap.set("任务来源", appNameMap.get(appName + ""));
+        this._appName = appNameMap.get(appName + "");
+      }
+      setIcon(icon) {
+        this._icon = icon;
+      }
+      mergetValues() {
+        let { devName, deviceCode } = this._ticketTaskVariables;
+        let { id, ticketNo } = this._data;
+        let values = [devName, deviceCode, id, ticketNo].join(",");
+        return values;
+      }
+      createButton(text, handler) {
+        let fn = psBtnClick[handler];
+        return {
+          type: "button",
+          cls: "btn btn-primary btn-sm",
+          label: text,
+          click: () => {
+            if (fn) {
+              fn.call(this, text);
+            } else {
+               
+            }
+          }
+        };
+      }
+      createTitle(title) {
+        return {
+          type: "title",
+          value: title,
+          style: {
+            color: "#2997bb"
+          }
+        };
+      }
+      createAttr(name) {
+        if (typeof name == "string") {
+          return {
+            key: name,
+            value: _attrsMap.get(name)
+          };
+        }
+        if (isArray(name)) {
+          return {
+            key: name[0],
+            value: name[1]
+          };
+        }
+      }
+    }
+    class AlertTracker extends NormalTracker {
+      constructor(data) {
+        super(data, 1);
+      }
+      getDirective() {
+        let data = this._data;
+        let category = attr(data, "/ticketTask/variables/ticket/category");
+        if (isEmpty(category)) {
+          console.warn(`category[ ${category} ] this is not a valid process.`);
+        }
+        return "process-category-dir";
+      }
+    }
+
+    return new TrackersList(trackersListData);
+  }
+  extend(tracker, {
+    getDealType(dealType) {
+      const dealTypeObj = {
+        "1": "暂不处理",
+        "2": "自行处理",
+        "3": "发起委托"
+      };
+      return dealTypeObj[dealType];
+    },
+    noNodeFound(tracker) {
+      let { _ticketNo } = tracker;
+      let data = tracker._data;
+      let category = attr(data, "/ticketTask/variables/ticket/category");
+      let tickeTaskStatus = attr(
+        data,
+        "/ticketTask/variables/ticket/values/tickeTaskStatus"
+      );
+      return [
+        {
+          time: "-",
+          icon: "glyphicon glyphicon-remove bg-red",
+          title: `Error : 任务节点 [ ${_ticketNo} ] 没找到对应的处理信息`,
+          data: [
+            {
+              key: "ticketNo",
+              value: _ticketNo
+            },
+            {
+              key: "category",
+              value: category
+            },
+            {
+              key: "tickeTaskStatus",
+              value: tickeTaskStatus
+            },
+            {
+              key: "解决方法",
+              value: `打开ps-baogang/directives/tracker/process-${tickeTaskStatus}.directive调试对应信息。`
+            }
+          ]
+        }
+      ];
+    },
+    renderGenerateAlert(tracker) {
+      let {
+        _specialtyName,
+        _appName,
+        _alertArisingTime,
+        _severity,
+        _alertTitle
+      } = tracker;
+      return {
+        time: _alertArisingTime,
+        icon: "fa fa-user fa-fw fa-circle-o bg-green",
+        title: "报警产生",
+        data: [
+          {
+            key: "报警类型",
+            value: _specialtyName ? _specialtyName : "无"
+          },
+          {
+            key: "报警级别",
+            value: _severity
+          },
+          {
+            key: "报警描述",
+            value: _alertTitle
+          },
+          {
+            key: "报警来源",
+            value: _appName,
+            style: {
+              color: "red"
+            }
+          }
+        ]
+      };
+    }
+  });
+  return tracker;
+}
+</script>

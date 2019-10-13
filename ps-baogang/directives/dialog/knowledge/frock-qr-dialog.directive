@@ -1,0 +1,93 @@
+<config injector="$q,$rootScope,growl,commonMethodService,commonMethodService2"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-5">
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">工装代码:</span>
+          </td>
+          <td>
+            <span ng-bind="params.fCode"></span>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-6 margin-bottom-5">
+        <table class="item">
+          <td class="title">
+            <span class="title pull-right">工装设备名称:</span>
+          </td>
+          <td>
+            <span ng-bind="params.fName"></span>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <table>
+          <td>
+            <div style="border: none;background:#fff;width: 100%;height: 2px;"></div>
+          </td>
+        </table>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          <img src="../../../../images/baogang/xingang.jpg" alt="" style="width: 50%;text-align: center"/>
+        </div>
+        <div class="col-md-4"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary" ng-click="submitFn()" >下载</button>
+      </div>
+      <div class="col-md-5">
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(q,rootScope,growl,commonMethodService,cms2){
+    return {
+      link(scope, element, attr) {
+        scope.mode = scope.params.mode;
+        scope.params = extend({}, scope.params.data);
+        scope.submitFn = function(){
+          let promise = cms2.validate({
+            // "params.dimension" : "维度不可为空",
+           /* "params.knowledgeType1" : "知识库类型1不可为空",
+            "params.knowledgeType2" : "知识库类型2不可为空",
+            "params.deviceUserType" : "（设备/人员）类型不可为空",
+            "params.caseType" : "方案类型不可为空"*/
+          }, scope);
+          promise.then(() => {
+            scope.submit(scope.params);
+          }).catch(e => {
+            growl.error( e );
+          })
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  table.item{
+    width : 100%;
+    td.title{
+      width : 130px;
+    }
+  }
+  .wrap{
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 5px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

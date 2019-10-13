@@ -1,0 +1,66 @@
+<config injector="ajax"></config>
+<template>
+  <div>
+    <input type="checkbox" ng-diabled="config.diabled">
+  </div>
+</template>
+<script type="text/javascript">
+  export default function (ajax) {
+    return {
+      scope: {
+        config: '=?'
+      },
+      replace: true,
+      require: '?ngModel',
+      link (scope, element, attr, ngModel) {
+        let checkbox = element[0].children[0],
+          change = attr['change'],
+          defaultConfig ={};
+        scope.config = angular.extend({},defaultConfig,scope.config||{});
+        let format = Object.assign({
+          true: true,
+          false: false
+        }, (scope.config || {}).format || {});
+        if(scope.config.disabled){
+          checkbox.setAttribute("disabled",true);
+        }
+        checkbox.onchange = function (e) {
+          if(scope.$$phase !== "$digest" && scope.$$phase !== "$apply"){
+            scope.$apply(() => {
+              ngModel.$setViewValue(format[e.target.checked]);
+              if(change){
+                exec( change );
+              }
+               
+            });
+          } else {
+            ngModel.$setViewValue(format[e.target.checked]);
+          };
+        };
+        ngModel.$render = function(){
+          let flag = ngModel.$viewValue;
+          checkbox.checked = flag === format.true;
+        }
+        Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+          return n;
+        });
+        Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+          if (typeof n === 'undefined') {
+            return;
+          }
+          return n;
+        });
+        function exec( command ){
+          let regex = /([a-zA-Z\.\_\$\[\]"'][a-zA-Z\.\_\$\d\[\]"']*)/g;
+          command = command.replace(regex, "scope.$parent.$1");
+          eval( command );
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  input[type="checkbox"] {
+    margin-top: 9px !important;
+  }
+</style>

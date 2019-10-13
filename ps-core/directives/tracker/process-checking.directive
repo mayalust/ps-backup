@@ -1,0 +1,81 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-checking -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item" >
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border"><a>{{ item.title }}</a></h3>
+      <process-common-dir class="timeline-header no-border"
+                          data-process="elem"
+                          ng-repeat="elem in item.data">
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+  export default function(rootScope,psTracker){
+    return {
+      scope : {
+        tracker : "="
+      },
+      link(scope, element, attr) {
+        let {
+          _icon,
+          _alertArisingTime,
+          _taskValues,
+          _ticketTaskValues,
+          _senderTime,
+          createAttr,
+          createTitle,
+          createButton
+        } = scope.tracker;
+        let {
+          message
+        } = scope.tracker._data;
+        let {
+          multipleConclusion
+        } = _ticketTaskValues;
+        class Handler {
+          defaultHandler(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : message,
+              data : [
+                createAttr("诊断人"),
+                createAttr("综合状态等级"),
+                createAttr(["综合判断结论", multipleConclusion]),
+                createAttr("处理方案建议"),
+                createButton("详情", "checking")
+              ]
+            }]
+          }
+          hasTaskValues(){
+            return [{
+              time : _alertArisingTime,
+              icon: _icon,
+              title : message,
+              data : [
+                createAttr("诊断人")
+              ]
+            }]
+          }
+        }
+        function createRenderList(){
+          let handler = new Handler;
+          if( _taskValues ){
+            return handler.hasTaskValues();
+          }
+          return handler.defaultHandler();
+        }
+        scope.tracker.__dicsloaded__.then(() => {
+          scope.renderList = createRenderList();
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

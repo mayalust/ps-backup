@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("ticketCategoryService",["serviceProxy",function(c){var i="ticketCategoryService",e={getTicketCategorys:function(e){c.get(i,"getTicketCategorys",[],e)},saveTicketCategory:function(e,t){c.get(i,"saveTicketCategory",[e],t)},getTicketCategoryById:function(e,t){c.get(i,"getTicketCategoryById",[e],t)},deleteTicketCategoryById:function(e,t){c.get(i,"deleteTicketCategoryById",e,t)}};return e}])});
+//# sourceMappingURL=../../map/js/services/ticket-category-service.js.map

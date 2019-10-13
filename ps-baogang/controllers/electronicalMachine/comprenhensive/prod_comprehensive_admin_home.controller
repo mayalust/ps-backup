@@ -1,0 +1,518 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,growl,commonMethodService,psLoading"
+        deps="dialogTempProjectList,dialogProjectFinishManage,dialogBuildProjectList2"
+></config>
+<template>
+  <div class="wrap" style="overflow-y:auto;height:calc(100vh - 180px);">
+    <div class="row margin-bottom-10">
+      <div class="col-md-3" ng-repeat="tabs in statusTabs">
+        <div class="status-tabs" ng-style="{'background-color':tabs.color,'border-color':tabs.border}">
+          <div>
+            <table>
+              <tbody>
+              <tr>
+                <td class="title col-md-12">
+                  <span>{{tabs.value}}</span>
+                </td>
+                <td class="icon col-md-12" rowspan="2">
+                  <span class="proudsmart" ng-class="tabs.icon"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="desc col-md-12">
+                  <span>{{tabs.text}}</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block padding-10">
+          <div class="margin-bottom-5">
+            <span class="padding-right-10">委托单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="entrustOrderNo0" class="form-control"/>
+            </div>
+            <button class="btn btn-primary" ng-click="searchFn0()">查询</button>
+            <button class="btn btn-primary" ng-click="clearFn0()">清空</button>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block">
+          <div class="wrap">
+            <div class="table-title">
+              待处理委托单
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>委托单位</th>
+                <th>委托单号</th>
+                <th>项目等级</th>
+                <th>工程名称</th>
+                <th>点检</th>
+                <th>数量</th>
+                <th>质量层级</th>
+                <th>委托日期</th>
+                <th>状态</th>
+                <th class="option" ng-if="currentRoleID != 347707751118731">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{Number(key)<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="item.entrustDepartments"></td>
+                <td ng-bind="item.entrustOrderNo" ng-attr-title="{{item.entrustOrderNo}}"></td>
+                <td ng-bind="item.projectLevel"></td>
+                <td ng-bind="item.projectName"></td>
+                <td ng-bind="item.examine"></td>
+                <td ng-bind="item.count"></td>
+                <td ng-bind="item.qualityLevel"></td>
+                <!--  <td ng-bind="item.entrustDate"></td>-->
+                <td>{{item.entrustDate | date:'yyyy-MM-dd HH:mm:ss '}}</td>
+                <!--  <td ng-bind="item.getModifyTime()"></td>-->
+                <td ng-bind="item.state == 10 ? '待确认'
+                              : item.state == 100 ? '处理中'
+                              : item.state == 200 ? '已确认'
+                              :  '-'"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-default" ng-click="item.buildProList()"
+                            ng-if="currentRoleID != 347707751118731">建立工程单
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block padding-10">
+          <div class="margin-bottom-5">
+            <span class="padding-right-10">委托单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="entrustOrderNo" class="form-control"/>
+            </div>
+            <span class="padding-right-10">工程单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="implementOrderNo" class="form-control"/>
+            </div>
+            <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+            <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block">
+          <div class="wrap">
+            <div class="table-title">
+              未结束工程单
+              <button ng-click="addTempProList()"
+                      ng-if="currentRoleID != 347707751118731"
+                      class="btn btn-primary pull-right">新增临时工程单
+              </button>
+
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources1"
+                   data-filter="filter1"
+                   data-sort="sort1"
+                   data-page="page1">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>委托单位</th>
+                <th>委托单号</th>
+                <th>项目等级</th>
+                <th>工程名称</th>
+                <th>工程单号</th>
+                <th>设备类型</th>
+                <th>修理方式</th>
+                <th>宝钢号</th>
+                <th>设备型号</th>
+                <th>委托日期</th>
+                <th>状态</th>
+                <th class="option" style="width:15%">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{Number(key)<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="item.entrustDepartments"></td>
+                <td ng-bind="item.entrustOrderNo" ng-attr-title="{{item.entrustOrderNo}}"></td>
+                <td ng-bind="item.projectLevel"></td>
+                <td ng-bind="item.projectName"></td>
+                <td ng-bind="item.implementOrderNo" ng-attr-title="{{item.implementOrderNo}}"></td>
+                <td ng-bind="item.motorType == 'AC_MOTOR' ? '交流电机'
+                             : item.motorType == 'DC_MOTOR' ? '直流电机'
+                             : item.motorType == 'TRANSFORMER'? '变压器'
+                             : '-'"></td>
+                <td ng-bind="item.repairWay == 'DDJNCWX_REPAIR' ? '大电机内场维修'
+                             : item.repairWay == 'DJBX_REPAIR' ? '电机备修'
+                             : item.repairWay == 'XCDDJ_REPAIR'? '现场大电机维修'
+                             : '-'"></td>
+                <td ng-bind="item.baogangNo" ng-attr-title="{{item.baogangNo}}"></td>
+                <td ng-bind="item.motorModel"></td>
+                <!--<td ng-bind="item.getModifyTime()"></td>-->
+                <td>{{item.entrustDate | date:'yyyy-MM-dd HH:mm:ss '}}</td>
+                <td ng-bind="item.status == 10 ? '待处理'
+                              : item.status == 100 ? '处理中'
+                              : item.status == 200 ? '已完成'
+                              :  '-'"></td>
+                <td style="width:15%">
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.totalDealFn()"
+                            ng-if="currentRoleID != 347707751118731">综合处理
+                    </button>
+                    <button class="btn btn-default" ng-click="item.finishFn()">完工管理</button>
+                    <button class="btn btn-default" ng-click="item.sceneInfoFn()">现场信息</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import {dateparser} from 'ps-ultility';
+
+export default function (scope, timeout, $state, registerService, cms2, ajax, growl, commonMethodService, psLoading) {
+  var target = commonMethodService(),
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToMonth = date.trimmToMonth().date;
+  scope.currentRoleID = target.getCurrentUser().currentRoleID;
+
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+
+    getModifyTime() {
+      return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString('yyyy-MM-dd,hh:mm:ss')
+          : '-';
+    }
+
+    totalDealFn() {
+      target.setValue('maintainObj', this);
+      target.setValue('mode', 'deal');
+      if (this.motorType == 'AC_MOTOR') {
+        cms2.navigateTo([3, 0, 0]);
+      } else if (this.motorType == 'DC_MOTOR') {
+        cms2.navigateTo([3, 1, 0]);
+      } else if (this.motorType == 'TRANSFORMER') {
+        cms2.navigateTo([3, 2, 0]);
+      }
+
+    }
+
+    finishFn() {
+      cms2.modal({
+        title: '完工管理',
+        directive: 'dialog-project-finish-manage',
+        width: '80%',
+        params: {
+          mode: 'edit',
+          data: {'implementOrderNo': this.implementOrderNo}
+        }
+      }).then(d => {
+        if (typeof (d && d.clone) != 'undefined') {
+          function getFiles(data) {
+            let keys = Object.keys(data);
+            let values = Object.values(data);
+            let temp = [];
+            let ret = [];
+            keys.forEach((key, index) => {
+              let obj = {};
+              obj.key = key;
+              obj.files = values[index];
+              temp.push(obj);
+            });
+
+            let index = 0;
+            temp.forEach(item => {
+              if (item.files.length > 0) {
+                item.files.forEach(file => {
+                  ret.push({
+                    name: file.name,
+                    key: item.key,
+                    file: file,
+                    index: index
+                  });
+                  index++;
+                });
+              }
+            });
+
+            return ret;
+          }
+
+          function setValueEmpty(data) {
+            for (let key in data) {
+              d.clone[key] = [];
+            }
+          }
+
+          let formData = new FormData();
+          let obj = {
+            'attachmentListDelivery': d.clone.attachmentListDelivery || [],
+            'attachmentListHandover': d.clone.attachmentListHandover || [],
+            'attachmentListWarehouse': d.clone.attachmentListWarehouse || []
+          };
+          let files = getFiles(obj);
+          setValueEmpty(obj);
+          formData.append('resourceId', 2);
+          if (files.length > 0) {
+            files.forEach((v, i) => {
+              formData.append(`file${v.index}`, v.file);
+            });
+          }
+          if (files.length !== 0) {
+            // d.clone.attachmentList = [];
+            ajax.upload('resourceFileUIService.uploadResourceFile', formData).then(function (s) {
+              if (s.code == '0') {
+                growl.info('附件上传成功');
+                let obj = {};
+                if (isArray(s.data)) {
+                  s.data.forEach((v, i) => {
+                    obj = {};
+                    obj['fileName'] = files[i].name;
+                    obj['filePath'] = v.qualifiedName;
+                    d.clone[files[i].key].push(obj);
+                  });
+                } else {
+                  obj['fileName'] = files[0].name;
+                  obj['filePath'] = s.data.qualifiedName;
+                  d.clone[files[0].key].push(obj);
+                }
+                return cms2.success(d);
+              }
+            }).then(function (d) {
+              psLoading.showLoading();
+              ajax.post('motorRepairUIService.saveCompletionManagement', d.clone).then(function (d) {
+                if (d != null) {
+                  psLoading.closeLoading();
+                  growl.info('完工管理成功！');
+                }
+              });
+            });
+          } else {
+            psLoading.showLoading();
+            ajax.post('motorRepairUIService.saveCompletionManagement', d.clone).then(function (d) {
+              if (d != null) {
+                psLoading.closeLoading();
+                growl.info('完工管理成功！');
+              }
+
+            });
+          }
+        }
+      });
+    }
+
+    sceneInfoFn() {
+      cms2.navigateTo(2, 0);
+    }
+
+    buildProList() {
+      target.setValue('entrustObj', this);
+      cms2.refresh('prod_comprehensive_build_project');
+    }
+  }
+
+  function timer() {//待处理委托单
+    ajax.post('motorRepairUIService.findPendingEntrustOrders',{start:0,length:100,sort:'entrustDate',sortType:'DESC',statCount:true}).then(d => {
+      scope.resources = d.data.map(a => new tableCell(a));
+    });
+  }
+
+  function timer1() {//未结束工程单
+    ajax.post('motorRepairUIService.findImplementOrder', {status: 100}).then(d => {
+      scope.resources1 = d.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime()).map(a => new tableCell(a));
+    });
+  }
+
+  timer();
+  timer1();
+  scope.addTempProList = function () {
+    cms2.modal({
+      title: '新增临时工程单',
+      directive: 'dialog-build-project-list2',
+      width: '80%',
+      params: {
+        mode: 'edit',
+        type: 'tempAdd',
+        data: {}
+      }
+    }).then(d => {
+      if (typeof (d && d.clone) != 'undefined') {
+
+        let formData = new FormData(), files = d.clone.attachmentList || [];
+        formData.append('resourceId', 2);
+        if (files.length > 0) {
+          files.forEach((v, i) => {
+            formData.append(`file${i}`, v);
+          });
+        }
+        if (files.length !== 0) {
+          d.clone.attachmentList = [];
+          ajax.upload('resourceFileUIService.uploadResourceFile', formData).then(function (s) {
+            if (s.code == '0') {
+              // growl.info("附件上传成功");
+              let obj = {};
+              if (isArray(s.data)) {
+                s.data.forEach((v, i) => {
+                  obj = {};
+                  obj['fileName'] = files[i].name;
+                  obj['filePath'] = v.qualifiedName;
+                  d.clone.attachmentList.push(obj);
+                });
+              } else {
+                obj['fileName'] = files[0].name;
+                obj['filePath'] = s.data.qualifiedName;
+                d.clone.attachmentList.push(obj);
+              }
+              return cms2.success(d);
+            }
+          }).then(function (d) {
+            psLoading.showLoading();
+            d.clone['projectName'] = '临时工程单';
+            ajax.post('motorRepairUIService.saveImplementOrder', d.clone).then((d) => {
+              if (d !== null) {
+                psLoading.closeLoading();
+                growl.info('添加临时工程单成功');
+                timer1();
+              }
+            });
+          });
+        } else {
+          psLoading.showLoading();
+          d.clone['projectName'] = '临时工程单';
+          ajax.post('motorRepairUIService.saveImplementOrder', d.clone).then((d) => {
+            if (d !== null) {
+              psLoading.closeLoading();
+              growl.info('添加临时工程单成功');
+              timer1();
+            }
+          });
+        }
+      }
+    });
+  };
+  //关键指标
+  Promise.all([ajax.post('motorRepairUIService.findPendingEntrustOrders',{start:0,length:10,statCount:true}),
+    ajax.post('motorRepairUIService.findImplementOrder', {status: 100}),
+    ajax.post('motorRepairUIService.getFinishImplementOrderCount'),
+    ajax.post('motorRepairUIService.getHandleAndOverdueImplementOrderCount')]).then(ret => {
+    let undoTicket = ret[0];
+    let undoneTicket = ret[1];
+    let doneTicket = ret[2];
+    let timeoutTicket = ret[3];
+    scope.statusTabs = [{
+      value: undoTicket.total || 0,
+      color: 'rgb(12, 70, 109)',
+      border: '#21a6fb',
+      text: '待处理委托单',
+      icon: 'ps-bw_01',
+    }, {
+      value: undoneTicket.length || 0,
+      color: 'rgb(102, 72, 109)',
+      border: 'rgb(224, 162, 239)',
+      text: '未完成工程单',
+      icon: 'ps-bw_02',
+    }, {
+      value: doneTicket || 0,
+      color: 'rgb(72, 75, 47)',
+      border: 'rgb(231, 181, 43)',
+      text: '已完成工程单（当月内）',
+      icon: 'ps-bw_03',
+    }, {
+      value: timeoutTicket || 0,
+      color: 'rgb(153, 0, 0)',
+      border: 'rgb(219, 24, 24)',
+      text: '脱期工程单',
+      icon: 'ps-bw_05',
+    }];
+  });
+  scope.clearFn = function () {
+    scope.entrustOrderNo = '';
+    scope.implementOrderNo = '';
+    scope.filter1 = (d => true);
+  };
+  scope.clearFn0 = function () {
+    scope.entrustOrderNo0 = '';
+    timer();
+    /*scope.filter = (d => true);*/
+  };
+  scope.searchFn = function () {
+    scope.filter1 = ({entrustOrderNo, implementOrderNo}) => {
+      if ((typeof scope.entrustOrderNo !== 'undefined') && entrustOrderNo !== null && entrustOrderNo.indexOf(scope.entrustOrderNo) == -1) {
+        return false;
+      } else if (typeof scope.entrustOrderNo !== 'undefined'
+          && (entrustOrderNo == null || entrustOrderNo == '')
+          && (typeof scope.implementOrderNo == 'undefined' || scope.implementOrderNo == '')
+
+      ) {
+        return false;
+      }
+      if (typeof scope.implementOrderNo !== 'undefined' && implementOrderNo.indexOf(scope.implementOrderNo) == -1) {
+        return false;
+      }
+      if (typeof scope.implementOrderNo !== 'undefined'
+          && typeof scope.entrustOrderNo !== 'undefined'
+          && scope.implementOrderNo !== ''
+          && scope.entrustOrderNo !== '') {
+        if (entrustOrderNo == null) {
+          return false;
+        } else if (implementOrderNo.indexOf(scope.implementOrderNo) !== -1 && entrustOrderNo.indexOf(scope.entrustOrderNo) !== -1) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    };
+  };
+  scope.searchFn0 = function () {
+    ajax.post("motorRepairUIService.fuzzyQueryEntrustOrder",[{applyNum :scope.entrustOrderNo0},{start:0,sort:'entrustDate',sortType:'DESC',statCount:true}]).then(d => {
+      scope.resources = d.data.map(a => new tableCell(a));
+    })
+    /*scope.filter = ({entrustOrderNo}) => {
+      if ((typeof scope.entrustOrderNo0 !== 'undefined') && entrustOrderNo !== null && entrustOrderNo.indexOf(scope.entrustOrderNo0) == -1) {
+        return false;
+      }
+      return true;
+    };*/
+  };
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  padding: 5px 10px !important;
+  .option {
+    width: 160px;
+  }
+}
+</style>

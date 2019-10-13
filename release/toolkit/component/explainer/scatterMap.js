@@ -1,0 +1,2 @@
+define([],function(){return function(e,a,d){var l,n,t=[{name:"highlight",data:[]},{name:"level0",data:[]},{name:"level1",data:[],searchable:!0}],i=function(){return t};for(var u in e)l=e[u],n=void 0,(n={}).label=l.label,n.name=l.values.standardAddress,n.value=[l.values.longitude,l.values.latitude],300==l.modelId||301==l.modelId?(301==l.modelId&&(n.id=l.id),t[1].data.push(n)):302==l.modelId&&(n.id=l.id,t[2].data.push(n));d({getLegend:function(){return[]},getSeries:i,data:{series:i()}})}});
+//# sourceMappingURL=../../../map/toolkit/component/explainer/scatterMap.js.map

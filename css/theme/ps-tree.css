@@ -1,0 +1,39 @@
+.ps-tree-drop-content {
+  /*width: 180px;*/
+  max-height: 300px;
+  border: 1px solid #d2d6de;
+  position: fixed;
+  z-index: 10050;
+  left: 0;
+  top: 0;
+  color: #666;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #ffffff;
+}
+.ps-tree-drop-content .item {
+  display: block;
+  border-bottom: 1px solid #d2d6de;
+  position: relative;
+  padding: 6px;
+  height: auto;
+  cursor: pointer;
+}
+.ps-tree-drop-content .item.active {
+  background-color: #3c8dbc;
+  color: #fff;
+}
+.ps-tree-drop-content .item.active:hover {
+  background-color: #3c8dbc;
+}
+.ps-tree-drop-content .level {
+  margin-left: 20px;
+}
+.ps-tree-drop-content .item:hover {
+  background: #f4f4f4;
+}
+.ps-tree-drop-content i {
+  position: absolute !important;
+  line-height: 32px !important;
+  margin-left: 2px;
+}

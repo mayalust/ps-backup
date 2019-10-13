@@ -1,0 +1,146 @@
+<config injector="$scope,ajax,$location,psDialog,psRouter">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+  export default function (scope, ajax,location,psDialog,psRouter) {
+    scope.layout = {
+      modals : {
+        editModel : {
+          label : "设备类型",
+          type : "layout",
+          children : [{
+            type : "form-dialog",
+            data : null,
+            children : [{
+              type : "input",
+              label : "名称",
+              composory: true,
+              key : "label",
+            },{
+              type : "input",
+              label : "描述",
+              composory: false,
+              key : "desc"
+            }]
+          }],
+          buttons : [{
+            label : "确定",
+            class : "btn btn-primary",
+            click : function(e){
+              this.submit();
+            }
+          },{
+            label : "取消",
+            click : function(){
+              this.close();
+            }
+          }]
+        }
+      },
+      label: "设备类型",
+      children:[{
+        type: "form-inline",
+        children: [{
+          type: "label",
+          value: "设备类型"
+        },{
+          type : "input",
+          label : "设备类型",
+          key: "searchKey",
+          config : {
+            updateOn : "submitted"
+          }
+        },{
+          type: "button",
+          config: {
+            label: "查询",
+            class: "btn btn-sm btn-primary",
+            click: function (e) {
+              e.emit("submitted")
+            }
+          }
+        },{
+          type: "button",
+          config: {
+            label: "重置",
+            class: "btn btn-sm btn-default",
+            click: function (e) {
+              e.setData({
+                searchKey : ""
+              })
+            }
+          }
+        }]
+      },{
+        type : "tree-view2",
+        options : "resourceUIService.getModelsTree",
+        parameter : [0],
+        parentId : "parentModelId",
+        config : {
+          search : "searchKey"
+        },
+        buttons: [{
+          label:"",
+          class: "glyphicon glyphicon-trash",
+          tit: "刪除",
+          icon: "",
+          on: {
+            click: function (e) {
+              e.remove({
+                url : "resourceUIService.deleteModel"
+              });
+            }
+          }
+        },{
+          label:"",
+          class: "proudsmart ps-edit",
+          tit: "编辑",
+          icon: "",
+          on: {
+            click: function (e) {
+              e.update({
+                template : "editModel",
+                before : function(source){
+                  return source;
+                },
+                url : "resourceUIService.updateModel"
+              });
+            }
+          }
+        },{
+          label:"",
+          class: "glyphicon glyphicon-plus",
+          tit: "添加",
+          icon: "",
+          rootShow: true,
+          on: {
+            click: function (e) {
+              e.add({
+                template : "editModel",
+                url : "resourceUIService.addModel"
+              });
+            }
+          }
+        },{
+          label:"管理",
+          class: "",
+          icon: "",
+          tit: "管理",
+          on: {
+            click: function (e) {
+                psRouter.go("/prod_propertyinfo/"+e.$row.id, {
+                    resource : e.$row
+                });
+            }
+          }
+        }]
+      }]
+    }
+  };
+</script>
+<style type="less">
+</style>

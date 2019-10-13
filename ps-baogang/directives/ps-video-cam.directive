@@ -1,0 +1,70 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<template>
+  <div class="wrap"></div>
+</template>
+<script type="text/javascript">
+import { dateparse } from "ps-ultility";
+export default function(
+  rootScope,
+  q,
+  ajax,
+  $state,
+  SwSocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTopo
+) {
+  return {
+    scope: {
+      index: "="
+    },
+    link(scope, element, attr) {
+      let videoPlugin = element[0];
+      let szIP = "192.168.1.122:2000" + scope.index,
+        szPort = "80",
+        szUserName = "admin",
+        szPassword = "admin12345";
+      window["require"](["webVideoCtrl"], function(webVideoCtrl) {
+        webVideoCtrl.I_InitPlugin(videoPlugin.clientWidth - 2, 200, {
+          bWndFull: true,
+          iPackageType: 2,
+          bNoPlugin: true,
+          cbInitPluginComplete: function() {
+            WebVideoCtrl.I_InsertOBJECTPlugin(videoPlugin);
+            if (-1 == WebVideoCtrl.I_CheckPluginVersion()) {
+              glow.error(
+                "检测到新的插件版本，双击开发包目录里的WebComponentsKit.exe升级！"
+              );
+              return;
+            }
+            let szDeviceIdentify = szIP + "_" + szPort;
+            WebVideoCtrl.I_Login(szIP, 1, szPort, szUserName, szPassword, {
+              success: function() {
+                console.info("WebVideoCtrl success!");
+                WebVideoCtrl.I_StartRealPlay(szDeviceIdentify);
+              },
+              error: function() {
+                //失败的回调函数
+                console.error("WebVideoCtrl fail!");
+              }
+            });
+          }
+        });
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.title {
+  margin: 5px;
+  height: 200px;
+  padding: 0px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  color: rgb(255, 255, 255);
+}
+</style>

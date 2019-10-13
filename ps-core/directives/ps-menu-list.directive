@@ -1,0 +1,107 @@
+<config injector="$rootScope"></config>
+<template>
+  <ul class="ps-menu-list">
+  </ul>
+</template>
+<script type="text/javascript">
+export default function (rootScope) {
+  return {
+    scope: {
+      index: '=?'
+    },
+    link (scope, element, attr) {
+      const ulDom = element[0];
+      const bodyDom = document.body;
+      scope.$on('PS_MENU_BUTTON_CLICKED_DONE', function (e, data) {
+        if (bodyDom.clickHandlerFn) {
+          bodyDom.removeEventListener('click', bodyDom.clickHandlerFn);
+        }
+        if (data.index == scope.index) {
+          if (ulDom.style.display === 'block') {
+            ulDom.style.display = 'none';
+          } else {
+            let children = data.children;
+            /* 临时性代码，为解决风机集中监控放在首位而加 */
+            let ind = -1;
+            children.forEach((child, index) => {
+              if (child.name === '风机集中监控') {
+                ind = index;
+              }
+            });
+            if (ind > -1) {
+              let spliceChildren = children.splice(ind, 1);
+              children.unshift(spliceChildren[0]);
+            }
+            /* 临时性代码，为解决风机集中监控放在首位而加 */
+            let childrenDomArr = children.map(c => {
+              let parameter = JSON.stringify(c);
+              parameter = parameter.replace(/"/g, '\'');
+              return `<li class="ps-menu-list-item" parameter="${parameter}">${c.name}</li>`;
+            });
+            ulDom.innerHTML = childrenDomArr.join('');
+            ulDom.style.display = 'block';
+            bodyDom.addEventListener('click', function clickHandlerFn (e) {
+              bodyDom.clickHandlerFn = clickHandlerFn;
+              if (!ulDom.contains(e.target)) {
+                ulDom.style.display = 'none';
+                bodyDom.removeEventListener('click', bodyDom.clickHandlerFn);
+              }
+            });
+          }
+        } else {
+          ulDom.style.display = 'none';
+        }
+      });
+      ulDom.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (e.target.tagName === 'LI') {
+          ulDom.style.display = 'none';
+          let parameter = JSON.parse(e.target.getAttribute('parameter').replace(/'/g, '"'));
+          if (parameter.specialLink == 1) {
+            if (parameter.link) {
+              window.open(parameter.link, '_blank');
+            }
+          } else {
+            scope.$emit('PS_MENU_LIST_ITEM_CLICKED', {
+              parameter: parameter
+            });
+          }
+        }
+      });
+    }
+  };
+}
+</script>
+<style lang="less">
+.ps-menu-list {
+  display: none;
+  position: absolute;
+  padding: 0;
+  min-width: 100%;
+  color: #fff;
+  top: 101%;
+  left: 4px;
+
+  .ps-menu-list-item {
+    &:before {
+      content: '';
+      background: url("../../images/baogang/list-left.png");
+      position: absolute;
+      width: 20px;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 15px;
+    }
+
+    position: relative;
+    padding: 10px 15px 10px 25px;
+    background: -webkit-linear-gradient(top, rgb(8, 39, 65), rgb(57, 100, 135));
+
+    &:hover {
+      background: url("../../images/baogang/list-active-bg.png");
+      color: #a18b6e;
+    }
+  }
+}
+</style>

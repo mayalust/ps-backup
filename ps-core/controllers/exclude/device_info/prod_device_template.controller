@@ -1,0 +1,256 @@
+<config injector="$scope,ajax,$location,psDialog,$routeParams" params="/:id?">
+</config>
+<template>
+  <proudsmart-base>
+    <ps-layout data-option="layout"></ps-layout>
+  </proudsmart-base>
+</template>
+<script type="text/javascript">
+  import {list2Tree, clone, extend} from "ps-ultility";
+  export default function (scope, ajax, location, psDialog, routeParams) {
+     
+    scope.$watch("parts[0].data[0]", (n,o,s)=>{
+      if(typeof n === "object"){
+        throw new Error("错误的调用。");
+      }
+    })
+    let resource, allparts, partsOptions, allDataItems;
+    function sortId(a, b){
+      return a.id - b.id;
+    }
+    scope.layout = {
+      label: "数据项",
+      init: function (next) {
+        if (routeParams.id > 0) {
+          ajax.post("resourceUIService.getDevicePartInstanceByDeviceId", routeParams.id).then((d) => {
+            allparts = d;
+            allparts.sort(sortId);
+            return ajax.post("modelDefinitionService.findAllDataModels", {});
+          }).then(d => {
+            allDataItems = d;
+            allDataItems.sort(sortId);
+            return ajax.post("resourceUIService.getResourceById", routeParams.id)
+          }).then(res => {
+            let avalibleParts = [];
+            resource = res;
+            if (resource.dataTemplates && resource.dataTemplates.length > 0) {
+              let arrs = [];
+              let devicePartIds = [];
+              resource.dataTemplates.forEach(function (item) {
+                devicePartIds.push(item.devicePartId);
+              });
+              let deviceParts = Array.from(new Set(devicePartIds));
+              deviceParts.forEach(function (partId) {
+                let arr = {
+                  data: {
+                    dataModels: []
+                  }
+                };
+                resource.dataTemplates.forEach(function (item) {
+                  if (partId == item.devicePartId) {
+                    arr['id'] = item.devicePartId;
+                    arr['label'] = item.devicePartLabel;
+                    arr.data.dataModels.push({
+                      id: item.dataTemplateId,
+                      label: item.dataTemplateLabel
+                    })
+                  }
+                });
+                arrs.push(arr);
+              });
+              avalibleParts = allparts.filter((n) => {
+                return !arrs.some((m) => {
+                  return m.id === n.id;
+                })
+              });
+              next({
+                avalibleParts : avalibleParts,
+                parts: arrs
+              })
+            }
+          });
+        }
+      },
+      children: [{
+        label: "数据项",
+        type: "panel",
+        children: [{
+          type: "tabs-dynamic",
+          key: "parts",
+          children: [
+            {
+              type: "tabs-dynamic",
+              key: "dataModels",
+              children: [{
+                type: "table-form",
+                key: "attrtable",
+                config: {
+                  attributes: {
+                    "label": ["名称", "text"],
+                    "icon": ["图标", "text"],
+                    "name": ["数据项", "text"],
+                    "num": ["序号", "text"],
+                    "unit": ["单位", "text"],
+                    "number": ["是否数值", "text"],
+                    "type": ["数据分类", "text"],
+                    "range": ["取值范围", "text"],
+                  },
+                  grid: {
+                    showSelect: false,
+                    body: ["num", "name", "label", "unit", "number", "type", "range", "icon"],
+                    watch: {
+                      key: "parts.select.data.dataModels.select",
+                      before: function (d) {
+                        return d.id;
+                      },
+                      url: "resourceUIService.getDataItemsByDataModelId",
+                      after: function (d) {
+                        return d;
+                      },
+                      value: routeParams.id
+                    },
+                    config: {
+                      showIndex: false,
+                      showSelector: false
+                    }
+                  }
+                }
+              }],
+              config: {
+                showname: "label",
+                title : "{关联数据模版,关联数据模版,解除数据模版关联}",
+                add: function (d, next) {
+                  let fd = allDataItems.find(n => {
+                    return n.id == d.id;
+                  })
+                  resource['dataTemplates'].push({
+                    id : 0,
+                    devicePartId :scope.parts.select['id'],
+                    devicePartLabel : scope.parts.select['label'],
+                    dataTemplateId : fd.id,
+                    dataTemplateLabel : fd.label,
+                  });
+                  ajax.post("resourceUIService.updateDevice", resource).then((r) => {
+                    next(fd);
+                  });
+                },
+                edit : function(d, next, evt){
+                  let itm = allDataItems.find(n => {
+                    return n.id == d.id;
+                  }), fd = resource['dataTemplates'].find(n => {
+                    return n.dataTemplateId == evt.$oldValue.id;
+                  });
+                  fd.dataTemplateId = itm.id;
+                  fd.dataTemplateLabel = itm.label;
+                  ajax.post("resourceUIService.updateDevice", resource).then((r) => {
+                    next(itm);
+                  });
+                },
+                remove : function(next, evt){
+                  resource['dataTemplates'] = resource['dataTemplates'].filter(n => {
+                    return n.dataTemplateId !== evt.$oldValue.id || n.devicePartId !== scope.parts.select.id;
+                  });
+                  ajax.post("resourceUIService.updateDevice", resource).then((r) => {
+                    next(evt.$oldValue);
+                  });
+                },
+                items: [{
+                  type: "select",
+                  label: "数据模版名称",
+                  key: "id",
+                  composory : true,
+                  options: {
+                    watch : "$.parts.select.data.dataModels",
+                    includeUndefined : true,
+                    handler : function(d, next, evt){
+                      let id = evt.$value,
+                        rest = allDataItems.filter(n => {
+                          if(n.id ==id){  return true;  }
+                          return d ? d.every(m => {
+                            return m.id !== n.id;
+                          }) : true;
+                        });
+                      return rest;
+                    }
+                  },
+                  format: {
+                    id: "id",
+                    label: "label"
+                  }
+                }]
+              },
+              value: [{
+                label: "基本属性",
+                after: function (d) {
+                  return d;
+                }
+              }]
+            }
+          ],
+          config: {
+            showname: "label",
+            add : function(d){
+              let fd;
+              scope.avalibleParts = partsOptions.filter((n) => {
+                if( d.id != n.id ){
+                  return true;
+                } else {
+                  fd = n;
+                  return false;
+                }
+              });
+              return fd;
+            },
+            edit : function(d){
+              let fd;
+              scope.avalibleParts = partsOptions.filter((n) => {
+                if( d.id != n.id ){
+                  return true;
+                } else {
+                  fd = n;
+                  return false;
+                }
+              });
+              return fd;
+            },
+            title : "{新建,编辑,删除}部位",
+            remove : function(next, evt){
+              resource['dataTemplates'] = resource['dataTemplates'].filter(n => {
+                return n.devicePartId !== evt.$oldValue.id;
+              });
+              ajax.post("resourceUIService.updateDevice", resource).then((r) => {
+                next(evt.$oldValue);
+              });
+            },
+            items: [{
+              type: "select",
+              label: "部位名称",
+              key: "id",
+              composory : true,
+              options: {
+                watch : "$.avalibleParts",
+                handler : function(d, next, evt){
+                  var fd = allparts.find(n => { return n.id == evt.$value;  });
+                  partsOptions = fd ? scope.avalibleParts.concat([fd]) : scope.avalibleParts;
+                  return partsOptions;
+                }
+              },
+              format: {
+                id: "id",
+                label: "label"
+              }
+            }]
+          },
+          value: [{
+            label: "基本属性",
+            after: function (d) {
+              return d;
+            }
+          }]
+        }]
+      }]
+    }
+  };
+</script>
+<style type="less">
+</style>

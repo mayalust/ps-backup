@@ -1,0 +1,1998 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading"
+        deps="dialogBuildProjectList,dialogTempProjectList"
+></config>
+<template>
+    <div class="buttons" style="pointer-events: none">
+      <button ng-click="editResume()"
+              ng-if="currentRoleID == 59846674150228 && mode == 'resume'"
+              class="btn btn-primary  pull-right margin-right-10" style="pointer-events: all;height: 26px;">编辑</button>
+        <button class="btn btn-default pull-right margin-right-10" ng-click="back()" style="pointer-events: all;height: 26px;">返回</button>
+        <button class="btn btn-primary  pull-right margin-right-10" ng-click="sub()" ng-if="mode !='resume' && currentRoleID == 70153973788969 || mode == 'superAdmin'" style="pointer-events: all;height: 26px;">提交</button>
+    </div>
+
+  <div class="wrap">
+    <!--设备信息-->
+    <div class="row">
+      <div class="margin-bottom-5">
+        <div class="col-md-12 margin-bottom-5 margin-top-15">
+          <div class="table-title pull-left">设备信息</div>
+          <div class="pull-right">
+            <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#disassembly_check" aria-haspopup="false" aria-expanded="true"></span>
+          </div>
+        </div>
+          <div class="col-md-12 margin-bottom-10">
+              <div class="buttons" style="pointer-events: none">
+                  <button class="btn btn-primary  pull-right margin-right-10" ng-click="printR()" ng-if="currentRoleID == 70153973788969 || mode == 'superAdmin'" style="pointer-events: all;height: 26px;">打印</button>
+                  <button class="btn btn-primary  pull-right margin-right-10" ng-click="updateR()" ng-if="mode !='resume' && currentRoleID == 70153973788969 || mode == 'superAdmin'" style="pointer-events: all;height: 26px;">同步</button>
+              </div>
+          </div>
+        <div class="col-md-12 margin-bottom-10">
+          <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+        </div>
+        <div class="" id="disassembly_check" class="collapse in">
+          <div class="row margin-bottom-5">
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                     <!-- <span class="text-red">*</span>-->
+                    电机铭牌:
+                  </div>
+                  <div class="tbl-cell">
+                   <!-- <input type="text" ng-model="motorNameplate" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>-->
+                    <ps-select ng-model="motorNameplate"
+                               data-config="{disabled:false}"
+                               data-change = "modelChange(motorNameplate + motorNameplate.length)"
+                               data-options="motorNameplate.id as motorNameplate.label  for motorNameplate in motorNameplates"></ps-select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    工程编号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="projectNumber" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl" style="vertical-align: middle">
+                      <span class="text-red">*</span>
+                    宝钢号:
+                  </div>
+                  <div class="tbl-cell">
+                    <ps-auto ng-model="baogangNo"
+                             data-change = "modelChange(baogangNo)"
+                             data-config="{disabled:false}"
+                             data-options="baogangNo.id as baogangNo.label for baogangNo in baogangNos"></ps-auto>
+                   <!-- <input type="text" ng-model="baogangNo"  class="form-control" ng-disabled="false"/>-->
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                      <!--<span class="text-red" ng-if="ifGood">*</span>-->
+                    容量:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="capacity" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                     <!-- <span class="text-red" ng-if="ifGood">*</span>-->
+                    电机型号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="motorModel" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    制造编号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="manufacturingSerialNumber" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                     <!-- <span class="text-red" ng-if="ifGood">*</span>-->
+                    定子电压:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="statorVoltage" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                      <!--<span class="text-red" ng-if="ifGood">*</span>-->
+                    定子电流:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="statorCurrent" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    转子电压:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="rotorVoltage" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    转子电流:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="rotorCurrent" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    功率:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="power" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    转速:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="rotateSpeed" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                      <!--<span class="text-red" ng-if="ifGood">*</span>-->
+                    绝缘等级:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="insulationGrade" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    制造厂:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="manufacturers" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    制造时间:
+                  </div>
+                  <div class="tbl-cell">
+                      <ps-date2 ng-model="manufacturingDate" style="width:100%" data-config="{disabled:true}"></ps-date2>
+                    <!--<input type="text" ng-model="manufacturingDate" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>-->
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    重量:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="weight" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 margin-bottom-5">
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    负荷侧轴承型号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-model="loadSideBearingType" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    非负荷侧轴承型号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-bind="nonLoadSideBearingType" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="tbl">
+                  <div class="radio-lbl">
+                    油脂牌号:
+                  </div>
+                  <div class="tbl-cell">
+                    <input type="text" ng-bind="oilBrand" class="form-control" ng-disabled="true"/>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!--第二部分1-->
+            <div class="col-md-6 margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                    <div class="table-title pull-left">直流电阻</div>
+                </div>
+                <div class="col-md-11 margin-bottom-10">
+                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                </div>
+                <div class="col-md-12 margin-bottom-5">
+                    <div class="col-md-1">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell tbl-center">
+                                UV
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell tbl-center">
+                                VW
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell tbl-center">
+                                WU
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 margin-bottom-5">
+                    <div class="col-md-1">
+                        <div class="tbl">
+                            <div class="radio-lbl">
+                                定子1:
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-5">
+                    <div class="col-md-1">
+                        <div class="tbl">
+                            <div class="radio-lbl">
+                                定子2:
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz4" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz5" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz6" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-5">
+                <div class="col-md-1">
+                  <div class="tbl">
+                    <div class="radio-lbl">
+                      定子3:
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="tbl">
+                    <div class="tbl-cell">
+                      <input type="text" ng-model="dcResistanceCoilThreeUV" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                    </div>
+                    <div class="radio-unit">
+                      <span>Ω</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="tbl">
+                    <div class="tbl-cell">
+                      <input type="text" ng-model="dcResistanceCoilThreeVW" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                    </div>
+                    <div class="radio-unit">
+                      <span>Ω</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="tbl">
+                    <div class="tbl-cell">
+                      <input type="text" ng-model="dcResistanceCoilThreeWU" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                    </div>
+                    <div class="radio-unit">
+                      <span>Ω</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <div class="col-md-12 margin-bottom-5">
+                    <div class="col-md-1">
+                        <div class="tbl">
+                            <div class="radio-lbl">
+                                转子:
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz7" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz8" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="tbl">
+                            <div class="tbl-cell">
+                                <input type="text" ng-model="dz9" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                            </div>
+                            <div class="radio-unit">
+                                <span>Ω</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+              <!--第二部分2-->
+              <div class="col-md-2 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">绝缘</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  温度:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="t1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>℃</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  定子绝缘:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="jy1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>MΩ</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  转子绝缘:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="jy2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>MΩ</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <!--第二部分3-->
+              <div class="col-md-2 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">抱闸</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  绝缘电阻:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="contractingBrakeInsulation" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>MΩ</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  直流电阻:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="contractingBrakeResistance" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>Ω</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  电压/电流:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="contractingBrakeVoltage" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V/A</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <!--第二部分4-->
+              <div class="col-md-2 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">加热器</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  绝缘电阻:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="heaterInsulationResistance" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>MΩ</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  直流电阻:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="heaterDcResistance" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>℃</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+
+              <!--第三部分1-->
+              <div class="col-md-8 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">转子开路试验</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  定子电压:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kdy" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  定子电流UV:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kdl1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  VW:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kdl2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  WU:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kdl3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  开路损耗:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kw" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>W</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  最大电压UV:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kzdy1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  VW:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kzdy2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  WU:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="kzdy3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+              <!--第三部分2-->
+              <div class="col-md-4 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">测温元件</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-10">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="temperatureSensor1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-10">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="temperatureSensor2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!--第四部分1-->
+              <div class="col-md-7 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">耐压</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  时间:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="withstandVoltageTime" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>分钟</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  定子对地:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ny1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  转子对地:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ny2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <!--第四部分2-->
+              <div class="col-md-5 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">电机振动</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-2">
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  V
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  H
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  A
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  负荷侧1:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdv" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdh" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zda" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  非负荷侧1:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="fzdv" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="fzdh" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="fzda" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>mm</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!--第五部分1-->
+              <div class="col-md-7 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">试验数据</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                    .
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  .
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  iuk
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  ivk
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  iwk
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  损耗
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  频率
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell tbl-center">
+                                  转速
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  短路 1U:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddy1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="dw1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>W</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  短路 2:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddy2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl4" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl5" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ddl6" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="dw2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>W</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                  <div class="col-md-1">
+                    <div class="tbl">
+                      <div class="radio-lbl">
+                        短路 3:
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="ddy3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>V</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="ddl7" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="ddl8" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="ddl9" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="dw3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>W</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  空载 1U0:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdy1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="noLoadLoss1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>W</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zw1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>Hz</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zs1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>rpm</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  空载 2:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdy2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>V</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl4" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl5" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zdl6" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>A</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="noLoadLoss2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>W</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zw2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>Hz</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="zs2" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                  <span>rpm</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                  <div class="col-md-1">
+                    <div class="tbl">
+                      <div class="radio-lbl">
+                        空载 3:
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zdy3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>V</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zdl7" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zdl8" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zdl9" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>A</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="noLoadLoss3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>W</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zw3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>Hz</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-n">
+                    <div class="tbl">
+                      <div class="tbl-cell">
+                        <input type="text" ng-model="zs3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                      <div class="radio-unit">
+                        <span>rpm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--第五部分2-->
+              <div class="col-md-5 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">试验温升</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  负荷侧轴承:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ws1" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                <span>℃</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  非负荷侧轴承:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ws3" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                <span>℃</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-2">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  电机机壳:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="ws4" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                              <div class="radio-unit">
+                                <span>℃</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!--第六部分-->
+              <div class="col-md-12 margin-bottom-5">
+                  <div class="col-md-12 margin-bottom-5 margin-top-15">
+                      <div class="table-title pull-left">试验结论</div>
+                  </div>
+                  <div class="col-md-11 margin-bottom-10">
+                      <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                    <div class="col-md-1">
+                      <div class="tbl">
+                        <div class="radio-lbl">
+                          备注:
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-10">
+                      <div class="tbl-cell col-md-12">
+                        <input type="text" ng-model="descr" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                      </div>
+                    </div>
+
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  试验意见:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="testTheOpinion" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  计量器具名称:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="measuringInstrumentName" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  计量器具编号:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="measuringInstrumentNumber" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  试验日期:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <!--<input type="text" ng-model="testDate" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>-->
+                                  <ps-date2 ng-model="testDate" style="width:100%" ng-disabled="disableFn(mode,currentRoleID)"></ps-date2>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  试验人:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="testPerson" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  审核员:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="auditPerson" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  检修内容:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="text" ng-model="overhaulContent" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-1">
+                          <div class="tbl">
+                              <div class="radio-lbl">
+                                  试验一次合格:
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-n">
+                          <div class="tbl">
+                              <div class="tbl-cell">
+                                  <input type="checkbox" ng-model="onePassTest" ng-click="checks(d)" ng-disabled="disableFn(mode,currentRoleID)"/>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <!--提交 取消-->
+              <div class="row margin-top-10">
+                  <div class="col-md-5">
+                  </div>
+                  <div class="col-md-7">
+                      <button class="btn btn-primary btn-100" ng-click="submitFn()" ng-if="mode !='resume' && currentRoleID == 70153973788969 || mode == 'superAdmin'">保存</button>
+                      <button class="btn btn-default btn-100" ng-click="clearFn()" ng-if="mode !='resume' && currentRoleID == 70153973788969 || mode == 'superAdmin'">取消</button>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psLoading){
+    let saveFactoryTestAC = "motorRepairUIService.saveFactoryTestAC",
+            findOneFactoryTestAC = "motorRepairUIService.findOneFactoryTestAC";
+      var target = commonMethodService();
+      var params88 = target.getValue("maintainObj");
+      var params89 = params88.implementOrderNo;
+      var param99 = [];
+      param99.push(params89);
+      scope.mode = target.getValue('mode');
+      scope.currentRoleID = target.getCurrentUser().currentRoleID;
+     /* scope.ifDis3 = true;
+      if(scope.currentRoleID == 70153973788969 && scope.mode != 'resume'){
+        scope.ifDis3 = false;
+      }else {
+        scope.ifDis3 = true;
+      }*/
+      scope.editResume = function (){
+        scope.mode = 'superAdmin';
+        if(scope.currentRoleID == '59846674150228'){
+          scope.ifDis3 = false;
+          // scope.$apply();
+        }
+      };
+      scope.disableFn = function (mode,currentRoleID){
+        return mode === 'resume'
+            || (currentRoleID == 59846674150228 && mode != 'superAdmin')
+            || (currentRoleID != 70153973788969 && currentRoleID != 59846674150228);
+      };
+      scope.ifDis = scope.disableFn(scope.mode,scope.currentRoleID);
+    scope.disableFn2 = function (mode,currentRoleID){
+      return mode === 'resume'
+          || (currentRoleID == 59846674150228)
+          || (currentRoleID != 70153973788969 && currentRoleID != 59846674150228);
+    };
+    scope.ifDis2 = scope.disableFn2(scope.mode,scope.currentRoleID);
+    scope.disableFn3 = function (mode,currentRoleID){
+      return mode === 'resume'
+          || (currentRoleID == 59846674150228 && mode != 'superAdmin')
+          || (currentRoleID != 70153973788969);
+    };
+    scope.ifDis3 = scope.disableFn3(scope.mode,scope.currentRoleID);
+   /* scope.ifDis3 = (scope.mode === 'resume'  && scope.currentRoleID != 70153973788969)
+        || (scope.currentRoleID == 59846674150228 && scope.mode != 'superAdmin')
+        || (scope.currentRoleID == 70153973788969 && scope.mode == 'resume'); //宝钢号履历可以选*/
+      scope.motorNameplates = [{
+        id: '完好',
+        label:'完好'
+      },{
+        id: '残缺',
+        label:'残缺'
+      }];
+      scope.ifGood = false;
+      scope.$watch("motorNameplate",function (v) {
+        if(v == '完好'){
+          scope.ifGood = true;
+        }else{
+          scope.ifGood = false;
+        }
+      });
+      //监听在加载时页面会频繁变化，弃用
+     /* scope.$watch("baogangNo",function (val) {
+        val = val && val.id || val;
+        ajax.post("motorRepairUIService.findMotorInfo",{"baogangNo":val}).then(d => {
+          if(d && d[0]){
+            for(var k in d[0])
+              scope[k] = d[0][k] || '';
+          }
+          return scope;
+        })
+      });*/
+    ajax.post("motorRepairUIService.findBaogangNoList").then(d =>{
+      function toObject(v) {
+        let obj = {};
+        obj.id = obj.label = v;
+        return obj;
+      }
+      scope.baogangNosArr = [].slice.call(d) || [];
+      scope.baogangNos = ([].slice.call(d)).map(toObject);
+    });
+    scope.ifBaogangNo = true;
+    scope.submitFn = function() {
+      /*if (!scope.motorNameplate) {
+        growl.warning("电机铭牌不可为空");
+        return
+      }*/
+      if (!scope.baogangNo) {
+        growl.warning("宝钢号不可为空");
+        scope.ifBaogangNo = false;
+        return;
+      } else {
+          scope.baogangNo = scope.baogangNo.id || scope.baogangNo || "";
+          if (!scope.baogangNosArr.includes(scope.baogangNo)) {
+            growl.warning('请维护设备信息库！');
+            scope.ifBaogangNo = false;
+            return;
+          }else {
+            scope.ifBaogangNo = true;
+          }
+      };
+     /* if(scope.ifGood && !scope.capacity){
+        growl.warning("容量不可为空");
+        return
+      }
+      if(scope.ifGood && !scope.motorModel){
+        growl.warning("电机型号不可为空");
+        return
+      }
+      if(scope.ifGood && !scope.statorVoltage){
+        growl.warning("定子电压不可为空");
+        return
+      }
+      if(scope.ifGood &&!scope.statorCurrent){
+        growl.warning("定子电流不可为空");
+        return
+      }
+      if(scope.ifGood && !scope.insulationGrade){
+        growl.warning("绝缘等级不可为空");
+        return
+      }*/
+      var params ={};
+      params.implementOrderNo = params89;
+      if(scope.id){
+        params.id = scope.id;
+      }
+
+//            特殊处理1
+      if(scope.testDate){
+        params.testDate = scope.testDate;
+      }
+      //            特殊处理2
+      if(scope.onePassTest){
+        params.onePassTest = scope.onePassTest;
+      }
+      for(var key in scope){
+        if(scope.hasOwnProperty(key) === true){
+          if(key == 'baogangNo'){
+            params[key] = scope[key].label || scope[key] || "";
+          }
+          if(typeof(scope[key]) == "string"){
+            params[key] = scope[key];
+          }
+        }
+      }
+      // scope.submitFn();
+      //删除多余字段  接口有问题 先应急这么处理 ~~~///(^v^)\\\~~~
+      delete params.conditionField;
+      delete params.armatureCurrent;
+      delete params.connectionGroup;
+      delete params.connectionMethon;
+      delete params.domainPath;
+      delete params.excitationMethod;
+      delete params.excitingCurrent;
+      delete params.excitingMode;
+      delete params.excitingCurrent;
+      delete params.excitingVoltage;
+      delete params.label;
+      delete params.excitingCurrent;
+      delete params.excitingCurrent;
+
+      ajax.post(saveFactoryTestAC,params).then(datas =>{
+        growl.success("出厂试验成功");
+      })
+    };
+    scope.clearFn = function(){
+        //特殊处理1
+        if(scope.testDate){
+            delete  scope.testDate;
+        }
+        //特殊处理2
+        if(scope.onePassTest){
+            scope.onePassTest = false;
+        }
+        for(var key in scope){
+            if(scope.hasOwnProperty(key) === true){
+                if(typeof(scope[key]) == "string"){
+                    scope[key] = "";
+                }
+            }
+        }
+    }
+      //        展示数据
+      ajax.post(findOneFactoryTestAC, param99).then( test => {
+        let implementOrderNo = params89;
+        test = test || {projectNumber:implementOrderNo};
+          for(var key in test){
+        if(test.hasOwnProperty(key) === true){
+                 if(key === 'baogangNo'){
+                   let obj = {id: test[key],label:test[key]};
+                   scope[key] = obj;
+                 }
+                  scope[key] = test[key];
+              }
+          }
+      });
+
+      scope.sub = function () {
+        if(!scope.baogangNo){
+          growl.warning("请检查宝钢号");
+        }else{
+          ajax.post("motorRepairUIService.synthesizeProcess",param99).then(d => {
+            growl.info("提交成功");
+            // cms2.navigateTo(3);
+            cms2.refresh("prod_comprehensive_project_list_mangage");
+            timeout(function () {
+              $('.block .nav-tabs').hide();
+            },600);
+
+          })
+        }
+      }
+      scope.back = function () {
+        cms2.refresh("prod_comprehensive_project_list_mangage");
+      };
+
+      var url = window.location.protocol + "//" + window.location.host;
+      scope.modelChange = function (baogangNo){
+        if(typeof baogangNo == 'object'){
+          baogangNo = baogangNo.id;
+        }else {
+          baogangNo = baogangNo || "";
+        }
+        ajax.post("motorRepairUIService.findMotorInfo",{"baogangNo":baogangNo}).then(d => {
+          if(d && d[0]){
+            for(var k in d[0])
+              scope[k] = d[0][k] || '';
+          }
+          return scope;
+        })
+
+      };
+      scope.printR = function () {
+          ajax.post("motorRepairUIService.getPdfReportByFactoryTestAC",param99).then(d => {
+                var urd= d;// var urd = "/psiot/app/webfile/report/201904/08/report-129362145468688-20190408-155407258.pdf";
+              var c = urd.split("/");
+              c.splice(0,4);
+              var dd = c.join("/");
+               window.open(url+ "/" + dd,"_blank");
+          })
+      };
+      scope.updateR = function () {
+        ajax.post("motorRepairUIService.synOriginalFactoryTest",target.getValue("maintainObj").implementOrderNo).then(d =>{
+          if(d){
+            for(var k in d){
+              scope[k] = d[k];
+            }
+          }
+        })
+      }
+
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+  .title{
+    line-height : 26px;
+    padding-right : 20px;
+  }
+  .value {
+    line-height : 26px;
+  }
+  .option{
+    width : 160px;
+  }
+  .arrow {
+    font-size: 18px;
+  }
+  .tbl {
+    width: 100%;
+    display: table;
+  }
+  .tbl-cell {
+    display: table-cell;
+  }
+  .tbl-center {
+    text-align: center;
+  }
+  .radio-lbl {
+    display: table-cell;
+    width: 100px;
+    text-align:right;
+    padding-right: 12px;
+    line-height: 26px;
+  }
+  .radio-inp {
+    vertical-align:-2px;
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+  }
+  .radio-spa {
+    padding: 0 15px 0 2px;
+  }
+  .radio-unit {
+    display: table-cell;
+    padding-left: 2px;
+    width: 40px;
+  }
+  .chx {
+    vertical-align: -2px;
+    margin-left: 40px;
+  }
+  .col-md-n {
+      width: 12.5% !important;
+  }
+  }
+</style>

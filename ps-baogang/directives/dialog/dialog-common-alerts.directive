@@ -1,0 +1,91 @@
+<config injector="$rootScope"></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-20 border-bottom" ng-if="clone.hasHead">
+      <div class="col-md-6">
+        名称：<span class="title" ng-bind="rollerNameBack"></span>
+      </div>
+      <div class="col-md-6">
+        编号：
+        <span ng-bind="rollerNoBack" class="title"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+
+        <span class="title pull-right">
+          <span style="color: red">*</span>
+          <span ng-bind="clone.commonKey"></span>
+        </span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.label" class="form-control" ng-if="clone.mode=='edit'"/>
+        <span ng-bind="clone.label" ng-if="clone.mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5" ng-if="clone.problem">
+      <div class="col-md-3">
+
+        <span class="title pull-right">
+          备注
+        </span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.remarks" class="form-control" ng-if="clone.mode=='edit'"/>
+        <span ng-bind="clone.remarks" ng-if="clone.mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+
+      </div>
+      <div class="col-md-9" ng-if="btnShow">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope){
+    return {
+      link(scope, element, attr) {
+        scope.clone = extend({}, scope.params);
+        scope.btnShow = scope.params.btnShow;
+        scope.cloneData = extend({}, scope.params.data);
+        if(scope.cloneData.variables && scope.cloneData.variables.feedback){
+            scope.clone.label = scope.cloneData.variables.feedback.content;
+            scope.clone.remarks = scope.cloneData.variables.feedback.remarks;
+        }
+        if(scope.clone.baofei){
+            scope.clone.label = "";
+        }
+        if(scope.clone.scrappedReason){
+            scope.clone.label = scope.cloneData.values ? scope.cloneData.values.scrappedReason : "";
+        }
+        scope.rollerNameBack = scope.cloneData.variables.ticket.values.repairPartsStandard.rollerName;
+        scope.rollerNoBack = scope.cloneData.variables.ticket.values.repairPartsStandard.rollerNo;
+        scope.submitFn = function(d){
+          scope.submit(d);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .border-bottom{
+      border-bottom: 1px solid;
+    }
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .value {
+      line-height : 26px;
+    }
+  }
+</style>

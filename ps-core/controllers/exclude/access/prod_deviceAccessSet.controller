@@ -1,0 +1,290 @@
+<config injector="$scope,$q,ajax, psDialog,$routeParams,psUltility,growl,psRouter"
+        params="/:info?"
+></config>
+<template>
+    <proudsmart-base>
+        <div class="wrap">
+            <ps-layout data-option="option">
+            </ps-layout>
+        </div>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+    export default function (scope, q, ajax, psDialog,routeParams,psUltility,growl,psRouter) {
+        scope.option = {
+            title: "协议设置",
+            type : "layout",
+            init : {
+                post : function(){
+                    if(routeParams.id == 0){
+                        return;
+                    } else {
+                        return {
+                            url : "devicePartConfigUIService.getPhysicalConfig",
+                            param : psRouter.params("access")
+                        }
+                    }
+                },
+
+                after : function(d){
+
+                    return {
+                        access : d
+                    };
+                }
+            },
+            children: [{
+                type : "form-inline",
+                children : [{
+                    type : "button",
+                    width :10,
+                    config : {
+                        class: "btn-primary",label : "保存协议设置",
+                        on : {
+                            click : function () {
+                                let accessData = psUltility.getData(scope).access;
+                                ajax.post("devicePartConfigUIService.getPhysicalConfig", psRouter.params("access")).then((d) => {
+                                    resource = d;
+                                    resource.deviceId = accessData.deviceId;
+                                    resource.deviceAddress = accessData.deviceAddress;
+                                    resource.gatewayId = accessData.gatewayId;
+                                    resource.physicalConfig["analysisProtocol"] = accessData.physicalConfig["analysisProtocol"];
+                                    resource.physicalConfig["analysisProtocolVersion"] = accessData.physicalConfig["analysisProtocolVersion"];
+                                    resource.physicalConfig["protocolType"] = accessData.physicalConfig["protocolType"];
+                                    return ajax.post("devicePartConfigUIService.updateDevicePartConfg", resource)
+                                }).then((d) => {
+                                     
+                                    growl.info("保存接入协议成功")
+
+                                })
+                            }
+                        }
+                    },
+                    key : "save"
+                },{
+                    type : "button",
+                    width :10,
+                    config : {
+                        class: "btn-primary",label : "修改解析协议",
+                        on : {
+                            click : function () {
+                                let accessData = scope.access;
+                                ajax.post("resourceUIService.getAllDataTypes")
+                                    .then((AllDataTypes)=>{
+                                        psDialog.modal({
+                                            label : "解析协议",
+                                            type : "layout",
+                                            children : [{
+                                                type : "form-grid",
+                                                children : [{
+                                                    type : "select",
+                                                    label : "协议类型",
+                                                    key : "physicalConfig.protocolType",
+                                                    options : [{
+                                                        id : "normal",
+                                                        label : "标准"
+                                                    },{
+                                                        id : "flexem",
+                                                        label : "繁易"
+                                                    },{
+                                                        id : "null",
+                                                        label : "请选择"
+                                                    }],
+                                                    config : {
+                                                        disabled : "disabled"
+                                                    }
+                                                },{
+                                                    type : "select",
+                                                    label : "解析协议",
+                                                    key : "physicalConfig.accessProtocol",
+                                                    options : [{
+                                                        id : "Modbus-TCP",
+                                                        label : "Modbus-TCP"
+                                                    },{
+                                                        id : "modbus",
+                                                        label : "modbus"
+                                                    },{
+                                                        id : "无",
+                                                        label : "无"
+                                                    }],
+                                                    config : {
+                                                        disabled : "disabled"
+                                                    }
+                                                },{
+                                                    type : "select",
+                                                    label : "协议版本",
+                                                    key : "physicalConfig.accessProtocolVersion",
+                                                    options : [{
+                                                        id : "1.1b3",
+                                                        label : "1.1b3"
+                                                    },{
+                                                        id : "TCP1.0.0",
+                                                        label : "TCP1.0.0"
+                                                    },{
+                                                        id : "无",
+                                                        label : "无"
+                                                    }],
+                                                    config : {
+                                                        disabled : "disabled"
+                                                    }
+                                                }]
+                                            },{
+                                                type: "table-form",
+                                                key : "physicalConfig.accessConfigs",
+                                                config: {
+                                                    attributes: {
+                                                        "kpiName": ["数据名称", "text"],
+                                                        "type" : ["数据类型","text"],
+                                                        "readExpression" : ["读表达式","text"],
+                                                        "writeExpression" : ["写表达式","text"]
+                                                    },
+                                                    grid: {
+                                                        body: ["kpiName",{
+                                                            name : "type",
+                                                            gridType : function (e) {
+                                                                return "select"
+                                                            },
+                                                            options : AllDataTypes,
+                                                            format :{
+                                                                id : "id",
+                                                                label :"name"
+                                                            }
+                                                        },{
+                                                            name : "readExpression",
+                                                            gridType : function (e) {
+                                                                return "input"
+                                                            }
+                                                        },{
+                                                            name : "writeExpression",
+                                                            gridType : function (e) {
+                                                                return "input"
+                                                            }
+                                                        }],
+                                                        buttons: {
+                                                            inGrid: []
+                                                        },
+                                                        config: {
+                                                            showIndex: false,
+                                                            showSelector: false,
+                                                            showSearch: false
+                                                        },
+                                                        options: []
+                                                    }
+                                                }
+                                            }],
+                                            buttons : [{
+                                                label : "确定",
+                                                class : "btn btn-primary",
+                                                click : function(e){
+                                                     
+                                                     
+                                                    ajax.post("devicePartConfigUIService.updateDevicePartConfg",scope.access).then((d) => {
+                                                        growl.info("修改解析协议成功")
+                                                        this.close();
+                                                    })
+//                                            this.submit();
+                                                }
+                                            },{
+                                                label : "取消",
+                                                click : function(){
+                                                    this.close();
+                                                }
+                                            }]
+                                        },accessData)
+                                    })
+                            }
+                        }
+                    }
+                },{
+                    type : "button",
+                    width :10,
+                    config : {
+                        class: "btn-primary",label : "立即生效",
+                        on : {
+                            click : function () {
+                                let accessData = scope.access;
+                                delete accessData["protocolType"]
+//                                devicePartConfigUIService.activePartConfig
+                                ajax.post("devicePartConfigUIService.activePartConfig",accessData)
+                                    .then((data)=>{
+                                        growl.info("立即生效成功")
+                                })
+                            }
+                        }
+                    }
+                }]
+            },{
+                label: "设备属性",
+                type: "panel",
+                children : [{
+                    type : "form",
+                    scope : "access",
+                    attributes: {
+                        gatewayId: ["所属网关", "number", {
+                            name: "gateway",
+                            label:"name"
+
+                        }]
+                    },
+                    children : ["gatewayId",{
+                        type : "select",
+                        label : "所属设备",
+                        key : "deviceId",
+                        options : {
+                            url : "resourceUIService.getDevicesByCondition",
+                            param : {}
+                        }
+                    },{
+                        type : "input",
+                        label : "设备地址",
+                        key : "deviceAddress"
+                    },{
+                        type : "select",
+                        label : "协议类型",
+                        key : "physicalConfig.protocolType",
+                        options : [{
+                            id : "normal",
+                            label : "标准"
+                        },{
+                            id : "flexem",
+                            label : "繁易"
+                        },{
+                            id : "null",
+                            label : "请选择"
+                        }]
+                    },{
+                        type : "select",
+                        label : "解析协议",
+                        key : "physicalConfig.analysisProtocol",
+                        options : [{
+                            id : "Modbus-TCP",
+                            label : "Modbus-TCP"
+                        },{
+                            id : "modbus",
+                            label : "modbus"
+                        },{
+                            id : "无",
+                            label : "无"
+                        }]
+                    },{
+                        type : "select",
+                        label : "协议版本",
+                        key : "physicalConfig.analysisProtocolVersion",
+                        options : [{
+                            id : "1.1b3",
+                            label : "1.1b3"
+                        },{
+                            id : "TCP1.0.0",
+                            label : "TCP1.0.0"
+                        },{
+                            id : "无",
+                            label : "无"
+                        }]
+                    }]
+                }]
+            }]
+        }
+    }
+</script>
+<style type="less" scoped="true">
+</style>

@@ -1,0 +1,429 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,$rootScope"
+        deps=""
+></config>
+<template>
+  <div class="row padding-5 wrap">
+
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <span class="padding-right-10">关注程度:</span>
+        <div class="horizontal width-200">
+          <ps-select ng-model="guanzhu" data-options="model.id as model.label for model in guanzhus"></ps-select>
+        </div>
+        <span class="padding-right-10">状态:</span>
+        <div class="horizontal width-200">
+          <ps-select ng-model="state" data-options="model.id as model.label for model in states"></ps-select>
+        </div>
+        <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+      </div>
+    </div>
+    <div class="col-md-12 margin-bottom-20">
+      <div class="block">
+        <div class="">
+          <div class="table-title">设备实时状态</div>
+          <table ps-table-sync
+                 data-paginate="all"
+                 data-source="deviceDic"
+                 data-filter="filter1"
+                 data-sort="sort1"
+                 data-page="page1"
+          style="overflow-x: scroll">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>类别</th>
+              <th>厂区</th>
+              <th>设备名称</th>
+              <th>设备编码</th>
+              <th>关注程度</th>
+              <th>状态</th>
+              <th>数据时间</th>
+              <th>最后通讯时间</th>
+              <th>烟尘</th>
+              <th>二氧化硫</th>
+              <th>氢氧化物</th>
+              <th>O2含量</th>
+              <th>烟气温度</th>
+              <th>烟气压力</th>
+              <th>烟气流速</th>
+              <th>烟气湿度</th>
+              <th>氨</th>
+              <th>非甲烷总烃</th>
+              <!--<th>HCL</th>-->
+              <th>氯化氢</th>
+              <th>化学需氧量（CODcr）</th>
+              <th>PH值</th>
+              <th>氨氮</th>
+              <th>污水流量</th>
+              <th>总铬</th>
+              <th>六价铬</th>
+              <th>总有机碳</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key" ng-click="goKpi(this)">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic1[item.id].customerLabel"></td>
+              <td ng-bind="deviceDic1[item.id].projectLabel"></td>
+              <td ng-bind="deviceDic1[item.id].label"></td>
+              <td ng-bind="deviceDic1[item.id].sn"></td>
+              <td ng-bind="deviceDic1[item.id].values.Focus == 'country_control' ? '国控' : '市控'"></td>
+              <td ng-bind="item['online'] ? item['online'] : '离线' "></td>
+              <td ng-bind="item.getArisingTime()"></td>
+              <td ng-bind="item.getInsertTime()"></td>
+              <td ng-bind="item['烟尘-Avg'] ? item['烟尘-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['二氧化硫-Avg'] ? item['二氧化硫-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['氮氧化物-Avg'] ? item['氮氧化物-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['O2含量-Avg'] ? item['O2含量-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['烟气温度-Avg'] ? item['烟气温度-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['烟气压力-Avg'] ? item['烟气压力-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['烟气流速-Avg'] ? item['烟气流速-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['烟气湿度-Avg'] ? item['烟气湿度-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['氨-Avg'] ? item['氨-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['非甲烷总烃-Avg'] ? item['非甲烷总烃-Avg'] : '-' " ng-click="herfToa()"></td>
+              <!--<td ng-bind="item['HCL-Avg'] ? item['HCL-Avg'] : '-' " ng-click="herfToa()"></td>-->
+              <td ng-bind="item['氯化氢-Avg'] ? item['氯化氢-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['化学需氧量（CODcr）-Avg'] ? item['化学需氧量（CODcr）-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['PH值-Avg'] ? item['PH值-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['氨氮-Avg'] ? item['氨氮-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['污水流量-Avg'] ? item['污水流量-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['总铬-Avg'] ? item['总铬-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['六价铬-Avg'] ? item['六价铬-Avg'] : '-' " ng-click="herfToa()"></td>
+              <td ng-bind="item['TOC-Avg'] ? item['TOC-Avg'] : '-' " ng-click="herfToa()"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-md-12">
+      <div class="block">
+        <div class="">
+          <div class="table-title">报警记录</div>
+          <table ps-table-sync = "false"
+                 data-paginate="all"
+                 data-source="getAlertByPage"
+                 data-filter="filter"
+                 data-sort="sort2"
+                 data-page="page2">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>类别</th>
+              <th>厂区</th>
+              <th>设备名称</th>
+              <th>设备编码</th>
+              <th>关注程度</th>
+              <th>报警信息</th>
+              <th>报警级别</th>
+              <th>首次报警时间</th>
+              <th>报警次数</th>
+              <th>最近报警时间</th>
+              <th>状态</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="deviceDic1[item.nodeId].customerLabel"></td>
+              <td ng-bind="deviceDic1[item.nodeId].projectLabel"></td>
+              <td ng-bind="deviceDic1[item.nodeId].label"></td>
+              <td ng-bind="deviceDic1[item.nodeId].sn"></td>
+              <td ng-bind="deviceDic1[item.nodeId].values.Focus == 'country_control' ? '国控' : '市控'"></td>
+              <td ng-bind="item.message"></td>
+              <td ng-bind="item.severity ==2 ? '注意'
+              : item.severity ==3 ? '警告'
+              : item.severity ==4 ? '危险'
+              : '-'"></td>
+              <td ng-bind="item.getFirstArisingTime()"></td>
+              <td ng-bind="item.count"></td>
+              <td ng-bind="item.geTreceiveTime()"></td>
+              <td ng-bind="item.state ? '新产生' : '-'"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-default" ng-click="item.confirm()">确认</button>
+                  <button class="btn btn-default" ng-click="item.neglect()">忽略</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,rootScope){
+       
+    scope.deviceDic1 = rootScope.deviceDic;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getFirstArisingTime(){
+        return this.firstArisingTime
+          ? dateparser(this.firstArisingTime).getDateString("yyyy-MM-dd hh:mm:ss")
+          : "-";
+      }
+      getInsertTime(){
+          return this.insertTime
+              ? dateparser(this.insertTime).getDateString("yyyy-MM-dd hh:mm:ss")
+              : "-";
+      }
+      getArisingTime(){
+          return this.arisingTime
+              ? dateparser(this.arisingTime).getDateString("yyyy-MM-dd hh:mm:ss")
+              : "-";
+      }
+      geTreceiveTime(){
+          return this.receiveTime
+              ? dateparser(this.receiveTime).getDateString("yyyy-MM-dd hh:mm:ss")
+              : "-";
+      }
+      confirm(){
+
+      }
+      neglect(){
+
+      }
+      getCustomer(){
+          if(scope.treeData){
+              var customer = scope.treeData.filter(e=>{
+                  return e.id == (this.customerId ? this.customerId : this.domainList[4]);
+              })
+              return customer[0] && customer[0].label;
+          }else {
+              return "-"
+          }
+      }
+      getProject(){
+          if(scope.treeData){
+              var project = scope.treeData.filter(e=>{
+                 return e.id == (this.projectId ? this.projectId : this.domainList[5]);
+              })
+              return project[0] && project[0].label;
+          }else {
+              return "-"
+          }
+      }
+      getDevNo(){
+          if(scope.treeData){
+              var dev = scope.treeData.filter(e=>{
+                  return e.id == this.nodeId;
+              })
+              return dev[0] ? dev[0].externalDevId : "-";
+          }else {
+              return "-"
+          }
+      }
+      getFocus(){
+          if(scope.treeData){
+              var dev = scope.treeData.filter(e=>{
+                  return e.id == this.nodeId;
+              })
+              return dev[0] ? dev[0].values.Focus : "-";
+          }else {
+              return "-"
+          }
+      }
+    }
+    scope.goKpi = function(e){
+         
+    }
+    // ajax.post("resourceUIService.getResourceByModelId", 300).then( domains => {
+    //   return ajax.post("resourceUIService.getResourceByModelId", 301).then( customers => {
+    //     return ajax.post("resourceUIService.getResourceByModelId", 302).then( projects => {
+    //       return cms2.success((domains || [])
+    //         .concat(customers || []).concat(projects || []));
+    //     })
+    //   });
+    // }).then( domains => {
+    //   scope.resources = domains.map( d => new tableCell(d));
+    // });
+    scope.states = [{
+        id : 0,
+        label : "全部"
+    },{
+        id : "在线",
+        label : "在线"
+    },{
+        id : "离线",
+        label : "离线"
+    }];
+    scope.guanzhus = [{
+        id : 0,
+        label : "全部"
+    },{
+        id : "country_control",
+        label : "国控"
+    },{
+        id : "city_control",
+        label : "市控"
+    }];
+    scope.herfToa = function(){
+        cms2.refresh("prod_enviroment_anaylsis");
+    }
+    cms2.getCurrentParents().then( parents => {
+         
+        scope.treeData = parents;
+        initAlert()
+    }).catch(e => {
+        growl.error( e.message );
+    });
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+      scope.filter1 = ({ id ,online}) => {
+        if( scope.guanzhu && scope.deviceDic1[id].values.Focus !== scope.guanzhu){
+          return false;
+        }
+        if( scope.state && online !== scope.state){
+            return false;
+        }
+        return true;
+      }
+    };
+    function createRenderFunction(domins){
+        return function( page, pageSize ){
+            let params = [{
+                "domain":domins,
+                "nodeType":"",
+                // "pageSize":1000,
+                "severities":"1,2,3,4",
+                "states":"0,10,-100"
+            },{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("alertQueryFlexService.getAlertByPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+    // ajax.post("resourceUIService.getResourceByModelId", 300).then( domains => {
+    //     scope.ops = domains;
+    //
+    // });
+      function initAlert() {
+          let nodeObjs = [],
+              domins = "";
+          if(scope.treeData.length == 1){
+              domins = scope.treeData[0].domainPath;
+              nodeObjs = rootScope.deviceDicArr.filter(d => {
+                  return d.domainPath == scope.treeData[0].domainPath
+              })
+          }else if(scope.treeData.length == 2){
+              domins = scope.treeData[1].domainPath;
+              nodeObjs = rootScope.deviceDicArr.filter(d => {
+                  return d.customerId == scope.treeData[1].id
+              })
+          }else if(scope.treeData.length == 3){
+              domins = scope.treeData[2].domainPath;
+              nodeObjs = rootScope.deviceDicArr.filter(d => {
+                  return d.projectId == scope.treeData[2].id
+              })
+          }else if(scope.treeData.length == 4){
+              domins = scope.treeData[3].domains;
+              nodeObjs = rootScope.deviceDicArr.filter(d => {
+                  return d.id == scope.treeData[3].id
+              })
+          }
+           
+          var nodeIds = [];
+          nodeObjs.forEach(d => {
+              nodeIds.push(d.id);
+          })
+           
+          initDevDic(nodeIds,nodeObjs)
+          scope.getAlertByPage = createRenderFunction(domins);
+      }
+    var obj = {
+        45005:"烟尘-Avg",
+        45015:"二氧化硫-Avg",
+        45025:"氮氧化物-Avg",
+        45035:"O2含量-Avg",
+        45045:"烟气温度-Avg",
+        45055:"烟气压力-Avg",
+        45065:"烟气流速-Avg",
+        45075:"烟气湿度-Avg",
+        45085:"氨-Avg",
+        45095:"非甲烷总烃-Avg",
+        45105:"HCL-Avg",
+        45115:"氯化氢-Avg",
+        45125:"化学需氧量（CODcr）-Avg",
+        45135:"PH值-Avg",
+        45145:"氨氮-Avg",
+        45155:"污水流量-Avg",
+        45165:"总铬-Avg",
+        45175:"六价铬-Avg",
+        45185:"总有机碳-Avg",
+        99998:"在线状态"
+    }
+    var kpiCodeArr = [45005,45015,45025,45035,45045,45055,45065,45075,45085,45095,45105,45115,45125,45135,45145,45155,45165,45175,45185];
+    function initDevDic (nodeIds,nodeObjs){
+         
+        let parms = ["kpi",
+            {"category":"time","isRealTimeData":true,"timePeriod":0,
+            "nodeIds":nodeIds,
+            "queryInstances":"05",
+            "includeInstance":true,
+            "kpiCodes":kpiCodeArr,"startTime":null,"endTime":null,"timeRange":"","statisticType":"psiot","condList":[]}];
+
+        ajax.post("kpiDataFlexService.getKpiValueList?includeFields=arisingTime,insertTime,kpiCode,value,nodeId",parms).then(kpiData => {
+            for(let i=0;i<nodeObjs.length;i++){
+                for(let j=0;j<kpiData.length;j++){
+                  if(nodeObjs[i].id == kpiData[j].nodeId){
+                      nodeObjs[i][obj[kpiData[j].kpiCode]] = kpiData[j].value ? kpiData[j].value : "-";
+                      nodeObjs[i]["arisingTime"] = kpiData[j].arisingTime ? kpiData[j].arisingTime : "-";
+                      nodeObjs[i]["insertTime"] = kpiData[j].insertTime ? kpiData[j].insertTime : "-";
+                  }
+                }
+                nodeObjs[i]["online"] = "在线";
+            }
+             
+            scope.deviceDic = nodeObjs.map( d => new tableCell(d));
+        });
+    }
+    //之前单个设备的模式，不适用于厂区
+    // ajax.post("resourceUIService.getDevicesByCondition", [{resourceId : $state.params.id}]).then( dt => {
+    //     let parms = ["kpi",
+    //         {"category":"time","isRealTimeData":true,"timePeriod":0,
+    //         "nodeIds":[$state.params.id],
+    //         "queryInstances":"05",
+    //         "includeInstance":true,
+    //         "kpiCodes":kpiCodeArr,"startTime":null,"endTime":null,"timeRange":"","statisticType":"psiot","condList":[]}]
+    //     return ajax.post("kpiDataFlexService.getKpiValueList?includeFields=arisingTime,insertTime,kpiCode,value,nodeId",parms).then(kpiData => {
+    //         var decObj = kpiData.forEach(b => {
+    //             dt[0][obj[b.kpiCode]] = b.value ? b.value : "-";
+    //             dt[0]["arisingTime"] = b.arisingTime ? b.arisingTime : "-";
+    //             dt[0]["insertTime"] = b.insertTime ? b.insertTime : "-";
+    //         })
+    //         return dt;
+    //     })
+    // }).then(e => {
+    //     scope.deviceDic = e.map( d => new tableCell(d));
+    // });
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

@@ -1,0 +1,189 @@
+<config injector="$q,$timeout,$compile,ajax,psUltility,psEvent"
+></config>
+<template>
+  <div>
+  </div>
+</template>
+<script type="text/javascript">
+
+    /****** 此文件不允许修改，此文件不允许修改，此文件不允许修改 ******/
+
+    import {isString, isArray, isObject} from "ps-ultility";
+    export default function (q, timeout, compile, ajax, psUltility, psEvent) {
+        return {
+            scope: {
+                option: `=`,
+            },
+            link (scope, element, attr) {
+                let dom, init = false,
+                    getFormatId = getFormat("id"),
+                    getFormatLabel = getFormat("label");
+                function getFormat(_val){
+                    return function(str){
+                        if(!str) {
+                            return `item.${_val}`;
+                        }
+                        if(/\$this/g.test(str)){
+                            return str.replace("$this", "item")
+                        } else {
+                            return "item." + str;
+                        }
+                    }
+                }
+                const format = function (t) {
+                    switch (t) {
+                        case "datelabel":
+                            return ['ng-model', 'data-config', 'data-value'];
+                            break;
+                        case "label":
+                            return ['ng-model', 'data-config', 'data-value'];
+                            break;
+                        case "date2": case "date":
+                        return ['ng-model', 'data-config'];
+                        break;
+                        case "status": case "address": case "checklist":
+                        return ['ng-model', 'data-config', 'data-options'];
+                        break;
+                        case "multi-select":
+                        case "select" : case "auto" : case "tree":
+                        return ['ng-model', 'data-config', {
+                            name: 'data-options',
+                            formatter: function (str, option) {
+                                let obj = option[str];
+                                if( !isArray(obj) && !isObject(obj)){
+                                    obj = [];
+                                }
+                                if (isArray(obj)) {
+                                    if (isArray(obj[0])) {
+                                        return `item[0] as item[1] for item in option.${str}`
+                                    } else {
+                                        let idFmt = getFormatId(option.format && option.format.id),
+                                            labelFmt = getFormatLabel(option.format && option.format.label);
+                                        return `${idFmt} as ${labelFmt} for item in option.${str}`
+                                    }
+                                } else if (isObject(obj)) {
+                                    let fmt = obj.format;
+                                    return `item.${fmt[0]} as item.${fmt[1]} for item in option['${str}']['value']`
+                                }
+                            }
+                        }];
+                        break;
+                        default :
+                            return ['ng-model', 'data-config'];
+                            break;
+                    }
+                };
+
+                function extend (a, b) {
+                    for (var i in b) {
+                        a[i] = b[i];
+                    }
+                    return a;
+                }
+
+                function $append (target, dom) {
+                    target[0].appendChild(dom);
+                    compile(target[0])(scope);
+                }
+
+                function render (renderObj, option) {
+                    let dom = document.createElement(`ps-${renderObj['type']}`),
+                        fmt = format(renderObj['type']);
+                    element[0].innerHTML = "";
+                    for (let i = 0; i < fmt.length; i++) {
+                        if (typeof fmt[i] == "object") {
+                            dom.setAttribute(`${fmt[i].name}`, fmt[i].formatter(renderObj[fmt[i].name], option));
+                        } else {
+                            dom.setAttribute(`${fmt[i]}`, `option.${renderObj[fmt[i]]}`);
+                        }
+                    }
+                    dom.setAttribute(`data-validate`, `option.${renderObj["data-validate"]}`);
+                    dom.setAttribute(`data-composory`, `option.${renderObj["data-composory"]}`);
+                    dom.setAttribute(`data-show`, `option.${renderObj["data-show"]}`);
+                    $append(element, dom);
+                }
+                function preparation () {
+                    let dic = { "label" : "label" }, tp = scope.option["type"], k = scope.option["key"],
+                        _key = psUltility.keyPattern( k || dic[tp] ),
+                        evt = psEvent(event),
+                        rs = psUltility.loadDefaultValue(scope.option, "options", scope, (d) => {
+                            evt.$value = scope.option[psUltility.keyPattern(scope.option.key)];
+                            let handler = scope.option.options.handler,
+                                obj = typeof handler === "function" && handler(d, function(){}, evt);
+                            scope.option[psUltility.keyPattern("options")] = obj ? obj : [];
+                        });
+                    scope.option[_key] = typeof scope.option[_key] !== "undefined"
+                        ? scope.option[_key] : scope.option.value;
+                    if(typeof rs === "undefined"){
+                        console.error("preparation is undefined!");
+                    }
+                    return rs;
+                }
+
+                function setValue(target, obj){
+                    let handler = {
+                        "options" : psUltility.keyPattern("options"),
+                        "value" : psUltility.keyPattern(scope.option.key)
+                    }
+                    for(var i in obj){
+                        let attr = handler[i] || i;
+                        target[attr] = obj[i];
+                    }
+                }
+                function setCustomWatch (watcher) {
+                    if (typeof watcher !== "object") {  return; }
+                    let evt = psEvent(event), handler = watcher.handler;
+                    psUltility.createLoadWatch(watcher, scope, (d) => {
+                        evt.$scope = scope;
+                        evt.$value = d;
+                        evt.update = function (d) {
+                            setValue(scope.option, d);
+                            destroy();
+                            createTool(scope.option);
+                        };
+                        typeof handler === "function" && handler(evt);
+                    });
+                }
+
+                function destroy () {
+                    element.innerHTML == "";
+                }
+
+                function createTool (n) {
+                    let renderObj = {};
+                    renderObj['type'] = n['type'];
+                    renderObj['ng-model'] = (n['key'] ? psUltility.keyPattern(n["key"]) : n['key']) || psUltility.keyPattern(n['type']);
+                    renderObj['data-config'] = 'config';
+                    renderObj['data-options'] = psUltility.keyPattern("options");
+                    renderObj['data-value'] = 'value';
+                    renderObj['data-validate'] = psUltility.keyPattern(n["key"]) + "_valid";
+                    renderObj['data-composory'] = "composory";
+                    renderObj['data-show'] = psUltility.keyPattern("show");
+                    render(renderObj, n);
+                }
+
+                setCustomWatch(scope.option.watch);
+                psUltility.createLoadWatch(scope.option.show, scope, (d) => {
+                    let handler = scope.option.show.handler;
+                    scope.option[psUltility.keyPattern("show")] = typeof handler === "function" && handler(d);
+                });
+                scope.$on(`$destroy`, () => {
+                     
+                });
+                scope.$watch(`option`, (n, o, s) => {
+                    if (typeof n !== 'undefined') {
+                        preparation().then(() => {
+                            createTool(n);
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    /****** 此文件不允许修改，此文件不允许修改，此文件不允许修改 ******/
+
+</script>
+<style type="less" scoped="true">
+
+</style>

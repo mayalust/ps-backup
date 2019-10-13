@@ -1,0 +1,58 @@
+<config injector="$timeout, psScope, ajax, $routeParams, psUltility"
+></config>
+<template>
+  <div class="bk-scope">
+    <form class="form-horizontal ng-pristine ng-valid ng-valid-maxlength">
+      <div class="simple-form-field row">
+        <ps-form-dialog-content data-option="op" ng-repeat="op in option.children">
+        </ps-form-dialog-content>
+      </div>
+    </form>
+  </div>
+</template>
+<script type="text/javascript">
+  import { each, attribute } from "ps-ultility";
+  export default function(timeout, psScope, ajax, routeParams, psUltility){
+    return {
+      restrict: 'E',
+      scope: {
+        option : "="
+      },
+      replace: true,
+      link: function (scope, element) {
+        let url, data;
+        psScope(scope);
+        if(url = scope.option.url){
+          ajax.post(url, routeParams["id"]).then(function(d){
+            each(scope.option.children, (n)=>{
+              n[psUltility.keyPattern(n["key"])] = typeof attribute(data, n["key"]) === "undefined" ? n[psUltility.keyPattern(n["key"])] : attribute(data, n["key"]);
+            })
+          })
+        } else if(data = scope.option.data) {
+          each(scope.option.children, (n)=>{
+            n[psUltility.keyPattern(n["key"])] = typeof attribute(data, n["key"]) === "undefined" ? n[psUltility.keyPattern(n["key"])] : attribute(data, n["key"]);
+          })
+        }
+        /**
+         each(scope.option.children, (n) => {
+        let dic = "(?:input)|(?:date)|(?:date2)";
+        if (new RegExp(dic, 'g').test(n.type) !== -1) {
+          n.config = n.config || {};
+          n.config.class = "bk-form-input"
+        }
+      })**/
+        scope.formcls = function(option){
+          return option.class || "";
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scope="true">
+  .form-center{
+    margin : auto;
+  }
+  .box {
+    border-top: none!important;
+  }
+</style>

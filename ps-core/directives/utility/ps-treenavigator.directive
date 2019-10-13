@@ -1,0 +1,209 @@
+<config injector="$rootScope,$timeout,$state,psTreeData,commonMethodService,commonMethodService2,psUiRouterHandler"></config>
+<template>
+  <div class="wrap">
+    <div class="tree-loading" ng-if="!loaded"></div>
+    <div class="bg">
+      <table style="width: 100%; table-layout: fixed;">
+        <tbody>
+          <tr>
+            <td class="col-md-6" style="padding: 3px;">
+              <input
+                class="form-control"
+                ng-keydown="keydown($event)"
+                ng-model="searchKey"
+              />
+            </td>
+            <td class="col-md-5" style="padding: 3px;">
+              <button class="btn btn-primary" ng-click="search()">
+                <span class="glyphicon glyphicon-search"></span>
+                <span>搜索</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tree-menu"></div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(
+  rootScope,
+  timeout,
+  $state,
+  psTreeData,
+  cms,
+  cms2,
+  psUiRouterHandler
+) {
+  return {
+    restrict: "E",
+    replace: true,
+    template: "<div></div>",
+    link: (scope, elem, attr) => {
+      let treeIns,
+        treenavigator = elem.find(".tree-menu"),
+        id = $state.params.id,
+        clears = [],
+        colors = ["green", "green", "yellow", "orange", "red"],
+        target = new cms();
+      function loadPstree() {
+        window.__pstree =
+          typeof window.__pstree === "undefined"
+            ? cms2.promise((res, rej) => {
+                window["require"](
+                  ["pstree"],
+                  pstree => {
+                    res(pstree);
+                  },
+                  rej
+                );
+              })
+            : window.__pstree;
+        return window.__pstree.then(pstree => {
+          return cms2.success(pstree);
+        });
+      }
+      function debounce(fn, fn2, time) {
+        let timer = null;
+        return function() {
+          let args = [].slice.call(arguments);
+          if (timer != null) {
+            clearTimeout(timer);
+            timer = null;
+            fn2.apply(this, args);
+            return;
+          }
+          timer = setTimeout(() => {
+            fn.apply(this, args);
+            timer = null;
+          }, time);
+        };
+      }
+      function removeSpace(str) {
+        let match = /\s*([^\s](?:.*[^\s])*)\s*/.exec(str);
+        return match ? match[1] : "";
+      }
+      function getOffsetTop(n, target) {
+        let top = 0;
+        do {
+          if (n === target) {
+            return top;
+          }
+          top += n.offsetTop;
+        } while ((n = n.offsetParent));
+        return top;
+      }
+      function changeHighlight(id) {
+        if (!treeIns) {
+          return;
+        }
+        let node = treeIns.find(n => n.id == id);
+        if (!node) {
+          return;
+        }
+        let parents = node ? node.getParents() : [];
+        parents.forEach(function(n) {
+          !n.open ? n.toggle() : null;
+        });
+        node ? node.highlight() : null;
+        timeout(() => {
+          let tm = elem.find(".tree-menu"),
+            scrollTop = tm.scrollTop(),
+            clientHeight = tm[0].clientHeight,
+            scrollBottom = scrollTop + clientHeight,
+            offsetTop = getOffsetTop(node.item, tm[0]);
+          if (offsetTop < scrollTop || offsetTop > scrollBottom) {
+            tm.scrollTop(offsetTop);
+          }
+        });
+      }
+      window.onhashchange = function(e) {
+        changeHighlight($state.params.id);
+      };
+      scope.search = function() {
+        let key = typeof scope.searchKey === "string" ? scope.searchKey : "";
+        treeIns.search(removeSpace(key));
+      };
+      scope.keydown = function(e) {
+        if (e.keyCode === 13) {
+          e.preventDefault();
+          treeIns.search(scope.searchKey || "");
+        }
+      };
+      loadPstree()
+        .then(pstree => {
+          return psTreeData.getAlertState().then(root => {
+            scope.loaded = true;
+            treeIns = pstree(treenavigator[0], {
+              data: JSON.parse(JSON.stringify(root)),
+              animate: false,
+              themes: "show-line folder-pull-right steel-industry condense",
+              on: {
+                init(event) {
+                  let id = this.id,
+                    fn = value => {
+                      this.state = value;
+                      this.icon = "tag tag-" + colors[value || 0];
+                      this.iconDom.setAttribute("class", this.icon);
+                    },
+                    labelArr = [this.label];
+                  this.icon = "tag tag-" + colors[this.state || 0];
+                  this.open = this.depth < 1;
+                  this.externalDevId ? labelArr.push(this.externalDevId) : null;
+                  this.label = labelArr.join(" - ");
+                  fn.$name = this.label;
+                  clears.push(psTreeData(id).$on("alertStateChange", fn));
+                },
+                click: debounce(
+                  function click(node) {
+                    let id = this.id,
+                      deviceOnly = $state.params.deviceOnly != 0,
+                      self = this,
+                      main_active_index = $state.params.main_active_index;
+                    node.preventDefault();
+                    cms2.treeNavigateTo(id, 0, node);
+                  },
+                  function doubleClick(node) {
+                    let id = this.id,
+                      deviceOnly = $state.params.deviceOnly != 0,
+                      self = this,
+                      main_active_index = $state.params.main_active_index;
+                    node.preventDefault();
+                    cms2.treeNavigateTo(id, 1, node);
+                  },
+                  300
+                )
+              }
+            });
+            changeHighlight(id);
+            return cms2.success(treeIns);
+          });
+        })
+        .then(treeIns => {
+          scope.$on("$destroy", e => {
+            for (let i = 0; i < clears.length; i++) {
+              clears[i]();
+            }
+            //psTreeData.endLoop();
+            treeIns.destroy();
+          });
+        })
+        .catch(e => {
+          console.error(e);
+        });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.tree-menu {
+  overflow-x: hidden;
+  position: relative;
+}
+.bg {
+  width: 100%;
+  height: ~"calc( 100vh - 120px )";
+  background-color: rgba(0, 0, 0, 0.5);
+}
+</style>

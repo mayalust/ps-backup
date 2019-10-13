@@ -1,0 +1,2 @@
+define(["app"],function(e){e.config(["$routeProvider","growlProvider",function(e,r){e.when("/editor/solution/:solutionId/:groupId/:modelId",{templateUrl:"partials/graphEditor.html",controller:"graphEditorCtrl"}).when("/editor/view/:viewId?/:saveToManagement?",{templateUrl:"partials/graphEditor.html",controller:"graphEditorCtrl"}).otherwise({redirectTo:"/editor/view"}),r.globalTimeToLive({success:3e3,error:5e3,warning:5e3,info:5e3})}])});
+//# sourceMappingURL=../../map/app-editor2/js/config.js.map

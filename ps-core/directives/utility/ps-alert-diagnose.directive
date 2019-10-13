@@ -1,0 +1,421 @@
+<config injector="$rootScope,$q,ajax,$state,commonMethodService2,commonMethodService,growl,$state"></config>
+<template>
+  <div>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="block margin-5 padding-5">
+          <h5 style="margin-bottom: 10px;">报警通知</h5>
+          <div class="low">
+            <table
+                    ps-table-sync
+                    data-paginate="pageonly"
+                    data-source="resources1"
+                    data-filter="filter1"
+                    data-sort="sort1"
+                    data-page="page1"
+            >
+              <thead>
+              <tr>
+                <th>产线</th>
+                <th>设备信息</th>
+                <th>报警来源</th>
+                <th>报警消息</th>
+                <th>报警级别</th>
+                <th>报警时间</th>
+                <th>报警状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr
+                      ng-repeat="(key,item) in items track by key"
+                      ng-click="showInfo(item)"
+              >
+                <!--<td ng-bind="item.customerName"></td>-->
+                <td>
+                  <span ng-bind="item.customerName"></span>
+                </td>
+                <td>
+                  <span ng-bind="item.devName"></span>
+                </td>
+                <td>
+                  <!-- //1  "采集系统";-->
+                  <span
+                          ng-bind="item.getAppName()"
+                  ></span>
+                </td>
+                <td>
+                  <span ng-bind="item.message"></span>
+                </td>
+                <td>
+                <span
+                        class="label"
+                        ng-class="item.getClass()"
+                        ng-bind="item.getSeverity()"
+                ></span>
+                </td>
+                <td>
+                  <span ng-bind="item.getFirstArisingTime()"></span>
+                </td>
+                <td>
+                <span
+                        ng-bind="item.state == 0 ? '新产生'
+                           :item.state == 5 ? '已确认'
+                           :item.state == 10 ? '待处理'
+                           :item.state == 20 ? '已解决'
+                           :item.state == 30 ? '已忽略'
+                           :'-'
+              "
+                ></span>
+                </td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.tracker()">
+                      <span class="glyphicon glyphicon-cog">过程跟踪</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="block margin-5 padding-5">
+          <h5 style="margin-bottom: 10px;">智能诊断</h5>
+          <div class="low">
+            <div class="row font-white back-color">
+              <div class="col-md-12 margin-bottom-5">
+                <span>报警消息:</span>
+                <span
+                        ng-bind="diagInfo ? diagInfo.message : ''"
+                        class="font-ellipse"
+                ></span>
+              </div>
+              <div class="col-md-12 margin-bottom-5">
+                <span>报警级别: </span>
+                <span
+                        ng-bind="diagInfo ? (diagInfo.severity == -1 ? '正常'
+                                                           :diagInfo.severity == 2 ? '注意'
+                                                           :diagInfo.severity == 3 ? '异常'
+                                                           :diagInfo.severity == 4 ? '警告'
+                                                           :'-'): ''"
+                        class="font-ellipse"
+                ></span>
+              </div>
+              <div class="col-md-12 margin-bottom-5">
+                <span>报警时间: </span>
+                <span
+                        ng-bind="diagInfo ? getTime2(diagInfo.firstArisingTime) : ''"
+                        class="font-ellipse"
+                ></span>
+              </div>
+              <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.diagnoseDesc">
+                <span>诊断结论: </span>
+                <ul ng-repeat="(k,item) in diagDesArr" style="margin-left: 24px;">
+                  <li>
+                    <span ng-if="diagDesArr.length !== 0">{{ k + 1 }}.</span>
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
+              <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.dealOption">
+                <span>处理建议:</span>
+                <span
+                        ng-bind="diagInfo ? diagInfo.dealOption : ''"
+                        class="font-ellipse"
+                ></span>
+              </div>
+              <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.relatedFile" >
+                <span>附件: </span>
+                <ul ng-repeat="(f,item2) in fileArr" style="margin-left: 24px;">
+                  <li>
+                    <span ng-if="fileArr.length !== 0">{{ f + 1 }}.</span>
+                    <a ng-attr-href="{{item2}}" target="_blank"><span>{{item2.slice(item2.lastIndexOf('/')+1)}}</span></a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(rootScope, q, ajax, $state, cms2, cms, growl,state) {
+  return {
+    scope: {},
+    link(scope, element, attr) {
+      let id = $state.params.id,
+        alertInfo,
+        target = cms(null, scope),
+        kpisMap = {},
+        valueListMap = {};
+      scope.getAlertByPage = function() {};
+      scope.showInfo = function(item) {
+        scope.diagInfo = item;
+        scope.fileArr = (item.relatedFile ? item.relatedFile : "").split(",");
+        scope.diagDesArr = (item.diagnoseDesc ? item.diagnoseDesc : "").split(",");
+      };
+      scope.getTime2 = function(time){
+        return dateparser(time).getDateString("yy/MM/dd hh:mm:ss");
+      };
+      class TableCell {
+        constructor(d) {
+          for (let i in d) {
+            this[i] = d[i];
+          }
+        }
+        getClass() {
+          return (
+            [
+              "alerts-normal",
+              "alerts-minor",
+              "alerts-major",
+              "alerts-critical",
+              "alerts-black"
+            ][this.severity] || "alerts-normal"
+          );
+        }
+        getSeverity() {
+          return (
+            ["正常", "正常", "注意", "异常", "警告"][this.severity] || "正常"
+          );
+        }
+        getAppName() {
+          return (
+            ["离线诊断", "在线预警", "智能诊断", "大数据分析"][this.appName] ||
+            "离线诊断"
+          );
+        }
+        getFirstArisingTime() {
+          return this.getTime(this.firstArisingTime);
+        }
+        getArisingTime() {
+          return this.getTime(this.arisingTime);
+        }
+        getTime(time) {
+          return dateparser(time).getDateString("yy/MM/dd hh:mm:ss");
+        }
+        tracker() {
+          let param = [
+            {
+              attrs: {
+                origId: this.alertId
+              },
+              categorys: "50,90,260"
+            },
+            {
+              start: 0,
+              length: 10
+            }
+          ];
+          ajax
+            .post("ticketTaskService.getDealTicketListByPage", param)
+            .then(({ data }) => {
+              if (data.length > 0) {
+                cms2.refresh("prod_tracker", {
+                  ticketNo: data[0].ticketNo
+                });
+              } else {
+                growl.warning("告警未转工单", "warning");
+              }
+            });
+        }
+      }
+      class AlertInfo {
+        constructor() {
+          this._getAlertByPage = "alertQueryFlexService.getAlertByPage";
+        }
+        init() {
+          this.getAlertByPage().then(d => {
+            let nodeIds = d.data.map(b => b.nodeId);
+            let alerts = [];
+            //用设备id查找 customerId
+            ajax
+              .post("resourceUIService.getResourceByIds", [nodeIds])
+              .then(customers => {
+                let customerIds = customers.map(customer => customer.customerId);
+                customers.forEach(customer => {
+                  d.data = d.data.map(v => {
+                    v["customerId"] = customer.customerId;
+                    return v;
+                  });
+                });
+                //用customerId 查找 customerName
+                ajax
+                  .post("resourceUIService.getResourceByIds", [customerIds])
+                  .then(customerNames => {
+                    let customerObj = {},
+                      customerArr = [];
+                    customerNames.forEach(customerName => {
+                      customerObj.customerId = customerName.id;
+                      customerObj.customerName = customerName.name;
+                      customerArr.push(customerObj);
+                    });
+                    customerArr.forEach(c => {
+                      d.data.map(vid => {
+                        if (vid.customerId == c.customerId) {
+                          vid["customerName"] = c["customerName"];
+                          return vid;
+                        }
+                      });
+                    });
+                    alerts = d.data.filter(
+                      alert => alert.state == 0 || alert.state == 5 || alert.state == 10 || alert.state == 20 || alert.state == 30
+                    );
+                    scope.resources1 = d.data.map(b => new TableCell(b));
+                  });
+              });
+          /*  let alerts = d.data.filter(
+              alert => alert.state == 0 || alert.state == 5 || alert.state == 10 || alert.state == 20 || alert.state == 30
+            );*/
+            // scope.alerts = alerts.map(d => new TableCell(d));
+            target.setValue(
+              "device/alerts",
+              alerts.map(alert => {
+                alert.label = alert.devName + "(" + alert.message + ")";
+                alert.valueStr = target.getAlertWord(alert.severity);
+                alert.status = alert.severity;
+                return alert;
+              })
+            );
+          });
+        }
+        destroy() {}
+        getAlertByPage() {
+          let params = [
+            {
+              domain: "",
+              nodeType: "",
+              pageSize: 1000,
+              severities: "1,2,3,4",
+              states: "0,5,10,20",
+              nodeIds: state.params.id,
+            },
+            {
+              start: 0,
+              length: "",
+              sort: "createTime",
+              sortType: "desc",
+              statCount: true,
+              total: 0
+            }
+          ];
+          return ajax.post(this._getAlertByPage, params);
+        }
+      }
+      alertInfo = new AlertInfo();
+      alertInfo.init();
+      scope.$on("$destroy", () => {
+        alertInfo.destroy();
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.center {
+  text-align: center;
+}
+.item {
+  min-height: 560px;
+  position: relative;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+  height: 125px;
+}
+.art {
+  height: 483px;
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+
+.with-border {
+  border: 1px solid #25729d;
+}
+
+.font-white {
+  color: #fff;
+  font-size: 75%;
+  font-weight: 700;
+}
+.font-ellipse {
+  width: calc(100% - 80px);
+  word-break: normal;
+  display: inline-block;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow: hidden;
+  vertical-align: top;
+  padding-left: 10px;
+}
+.back-color {
+  div {
+    padding: 4px !important;
+    &:nth-child(1) {
+      background-color: #214867 !important;
+    }
+    padding: 4px;
+  }
+}
+.art-title {
+  margin: 5px;
+  padding: 0px;
+  font-size: 16px;
+  font-weight: normal;
+  text-align: left;
+  color: rgb(255, 255, 255);
+  border-bottom: 1px solid rgb(102, 102, 102);
+  line-height: 30px;
+}
+.t-table {
+  width: 100%;
+  table-layout: fixed;
+  tr {
+    line-height: 0.42857143;
+    .t-td {
+      padding: 3px;
+      white-space: pre-wrap;
+      border-bottom: 1px solid rgb(102, 102, 102);
+      height: 41px;
+      width: 33.33%;
+      position: relative;
+      .t-span {
+        display: none;
+        width: 10px;
+        .t_star {
+          font-size: 20px;
+          top: 5px;
+          position: absolute;
+        }
+      }
+      .t_fl {
+        float: left;
+      }
+    }
+  }
+}
+.art-content {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  background-color: rgba(250, 250, 250, 0);
+  max-height: 500px;
+  overflow-y: auto;
+}
+</style>

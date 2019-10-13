@@ -1,0 +1,134 @@
+<config injector="$scope,$q,$state,$registerService,ajax,psTreeData,commonMethodService2,psTrackerChart,growl"
+        deps="dialogProjectMaintain,dialogProjectRule,historyTracker,historyTrackerChart,troubleshootDialog,psOldHistory,psAlertExceptionResumePlan,baowuPlanConfirm2,dialogGlobalRule,dialogCommonAlerts,dialogDetailAlert,dialogDetailPerformance,dialogDetailPerformancess,dialogDetailPlan,dialogAddTicket,dialogOnlineMaintainrule"
+        params="/:ticketNo"
+></config>
+<template>
+  <div id="free-board" class="steel">
+    <div class="title-wrap">
+      <button class="btn btn-primary" ng-click="back()">
+        <span class="glyphicon glyphicon-chevron-left"></span>返回
+      </button>
+      <label ng-if="deviceInfo.init">设备名称:</label>
+      <span
+        class="flow-chart"
+        ng-bind="deviceInfo.devName"
+        ng-if="deviceInfo.init"
+      ></span>
+      <label ng-if="deviceInfo.init">设备编码:</label>
+      <span
+        class="flow-chart"
+        ng-bind="deviceInfo.deviceCode"
+        ng-if="deviceInfo.init"
+      ></span>
+      <label ng-if="newMode">任务流程图:</label>
+      <span
+        class="flow-chart"
+        ng-bind="flowchart.id"
+        ng-repeat="flowchart in flowCharts"
+      ></span>
+      <h3
+        ng-bind="hash.label + '[' + hash.category + ']'"
+        ng-if="hash && hash.label && hash.category"
+      ></h3>
+    </div>
+
+    <div class="wrap">
+      <ps-old-history
+        ng-if="!newMode"
+        data-options="trackersList"
+      ></ps-old-history>
+      <history-tracker-chart
+        ng-if="newMode"
+        data-options="trackersList"
+      ></history-tracker-chart>
+    </div>
+  </div>
+</template>
+<script>
+import service from "../../../js/services/service_factory.js";
+import psTracker from "proudsmart-tracker";
+
+export default function(
+  scope,
+  q,
+  $state,
+  registerService,
+  ajax,
+  psTreeData,
+  cms2,
+  psTrackerChart,
+  growl
+) {
+  function parse(str) {
+    let json;
+    try {
+      json = JSON.parse(str);
+    } catch (e) {
+      return;
+    }
+    return json;
+  }
+
+  function saveApply(scope, fn) {
+    if (scope.$phase == "$digest" || scope.$phase == "$apply") {
+      return;
+    }
+    scope.$apply(fn);
+  }
+
+  let ticketNo = $state.params.ticketNo,
+    trackerCreator = psTracker(service),
+    tracker = trackerCreator(ticketNo);
+  scope.hash = parse($state.params["#"]);
+  scope.deviceInfo = {
+    init: false
+  };
+  tracker.getAllTasks(taskList => {
+    saveApply(scope, () => {
+      scope.newMode = taskList && taskList.length > 0;
+      if (scope.newMode) {
+        scope.flowCharts = Array.from(
+          taskList.reduce((a, b) => {
+            return a.add(b.flow);
+          }, new Set())
+        );
+        scope.trackersList = psTrackerChart(taskList);
+      } else {
+        scope.trackersList = ticketNo;
+      }
+    });
+  });
+  ajax.post("ticketTaskService.getTicket", [ticketNo]).then(ret => {
+    scope.deviceInfo.init = true;
+    scope.deviceInfo.devName = ret.values && ret.values.devName;
+    scope.deviceInfo.deviceCode = ret.values && ret.values.deviceCode;
+  });
+  //http://localhost:8080/api/rest/post/ticketTaskService/getTicket
+  scope.back = function() {
+    window.history.back();
+  };
+}
+</script>
+<style lang="less" scoped>
+h3 {
+  text-align: center;
+  margin: 0;
+  line-height: 100px;
+}
+
+.flow-chart {
+  display: inline-block;
+  padding: 0 10px;
+}
+
+.title-wrap {
+  overflow: hidden;
+  padding: 5px;
+}
+
+.wrap {
+  .item {
+    padding: 10px;
+  }
+}
+</style>

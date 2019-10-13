@@ -1,0 +1,266 @@
+<config injector="$rootScope,psTracker" deps = "processCommonDir"></config>
+<template>
+  <li ng-repeat="item in renderList">
+    <!-- process-dealing -->
+    <i ng-class="item.icon"></i>
+    <div class="timeline-item">
+      <span class="time">{{ item.time }}</span>
+      <h3 class="timeline-header no-border">
+        <a>{{ item.title }}</a>
+      </h3>
+      <process-common-dir
+        class="timeline-header no-border"
+        data-process="elem"
+        ng-repeat="elem in item.data"
+      >
+      </process-common-dir>
+    </div>
+  </li>
+</template>
+<script type="text/javascript">
+export default function(rootScope, psTracker) {
+  return {
+    scope: {
+      tracker: "="
+    },
+    link(scope, element, attr) {
+      let {
+        _icon,
+        _alertArisingTime,
+        _handlerName,
+        _taskValues,
+        _category,
+        _ticketTaskValues,
+        _standardProjectId,
+        _standardProjectName,
+        _ticketTaskVariables,
+        _senderTime,
+        createAttr,
+        createTitle,
+        createButton,
+        _data: { message, ticketTask },
+        _ticketTaskValues: { multipleConclusion, tempDealType }
+      } = scope.tracker;
+      class Handler {
+        defaultHandler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "综合诊断",
+              data: [
+                createAttr("处理人"),
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr(["综合判断结论", multipleConclusion]),
+                createAttr("处理方案建议"),
+                createButton.call(scope.tracker, "方案履历", "dealing260"),
+                createTitle("状态处理"),
+                createAttr(["处理人", _handlerName])
+              ]
+            }
+          ];
+        }
+        c260_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "综合诊断",
+              data: [
+                createAttr("处理人"),
+                createTitle("状态诊断"),
+                createAttr("综合状态等级"),
+                createAttr(["综合判断结论", multipleConclusion]),
+                createAttr("处理方案建议"),
+                createButton.call(scope.tracker, "方案履历", "dealing260"),
+                createTitle("状态处理"),
+                createAttr(["处理人", _handlerName])
+              ]
+            }
+          ];
+        }
+        c310_temp1_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "智能决策",
+              data: [
+                createAttr("实施依据"),
+                createAttr(["维护项目编号", _standardProjectId]),
+                createAttr(["维护项目名称", _standardProjectName]),
+                createButton.call(scope.tracker, "规则详情", "dealing260")
+              ]
+            }
+          ];
+        }
+        c310_temp2_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "状态维护",
+              data: [
+                createAttr("工单号"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr(["维护项目编号", _standardProjectId]),
+                createAttr(["维护项目名称", _standardProjectName]),
+                createAttr("实施依据"),
+                createAttr("处理人"),
+                createButton.call(scope.tracker, "维护实绩", "keepResult")
+              ]
+            }
+          ];
+        }
+        c320_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "状态维护",
+              data: [
+                createAttr("工单号"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr(["维护项目编号", _standardProjectId]),
+                createAttr(["维护项目名称", _standardProjectName]),
+                createAttr("实施依据"),
+                createAttr("处理人"),
+                createButton.call(scope.tracker, "维护实绩", "keepResult")
+              ]
+            },
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "智能运维决策",
+              data: [
+                createAttr("实施依据"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr(["标准项目编号", _standardProjectId]),
+                createAttr(["工程项目名称", _standardProjectName]),
+                createAttr("质量层级"),
+                createAttr("高危等级"),
+                createButton.call(
+                  scope.tracker,
+                  "方案详情",
+                  "maintainingProject"
+                )
+              ]
+            }
+          ];
+        }
+        c280_handler() {
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "综合处理",
+              data: [
+                createAttr("工单号"),
+                createAttr("处理人"),
+                createAttr("处理方式"),
+                createAttr(["标准项目编号", _standardProjectId]),
+                createAttr(["工程项目名称", _standardProjectName]),
+                createAttr("定年修主控重点"),
+                createAttr("质量层级"),
+                createButton.call(
+                  scope.tracker,
+                  "方案详情",
+                  "maintainingProject"
+                )
+              ]
+            }
+          ];
+        }
+        c340_handler() {
+          let {
+            deviceExcavationTask: {
+              accidentName,
+              accidentLevel,
+              deviceExcavationBook: { excavationBookName },
+              responsiblePersonName
+            }
+          } = _ticketTaskVariables;
+          let {
+            ticketTitle,
+            values: {
+              faultBookResult: { standardName, standardNo }
+            }
+          } = ticketTask;
+          return [
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "故障处理",
+              data: [
+                createAttr("工单号"),
+                createAttr("任务分类"),
+                createAttr("任务来源"),
+                createAttr(["故障/事故名称", accidentName]),
+                createAttr(["事故级别", accidentLevel]),
+                createAttr(["排故手顺书", excavationBookName]),
+                createAttr(["处理人", responsiblePersonName]),
+                createButton.call(
+                  scope.tracker,
+                  "排故履历",
+                  "probSolvingHistory"
+                ),
+                createButton.call(
+                  scope.tracker,
+                  "故障总结",
+                  "probSolvingSummary"
+                )
+              ]
+            },
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "智能决策",
+              data: [createAttr(["异常名称", ticketTitle])]
+            },
+            {
+              time: _alertArisingTime,
+              icon: _icon,
+              title: "智能方案",
+              data: [
+                createAttr(["解决方案", "状态维护"]),
+                createAttr(["维护项目编号", standardName]),
+                createAttr(["维护项目名称", standardNo]),
+                createButton.call(scope.tracker, "规则详情", "ruleDetail")
+              ]
+            }
+          ];
+        }
+      }
+      function createRenderList() {
+        let handler = new Handler();
+        if (_category == 260) {
+          return handler.c260_handler();
+        }
+        if (_category == 320) {
+          return handler.c320_handler();
+        }
+        if (_category == 340) {
+          return handler.c340_handler();
+        }
+        if (_category == 310) {
+          if (tempDealType == 1) {
+            return handler.c310_temp1_handler();
+          } else if ((tempDealType = 2)) {
+            return handler.c310_temp2_handler();
+          }
+        }
+        return handler.defaultHandler();
+      }
+      scope.tracker.__dicsloaded__.then(() => {
+        scope.renderList = createRenderList();
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

@@ -1,0 +1,64 @@
+<config injector="$rootScope,$compile"
+></config>
+<template>
+  <ul class="timeline">
+    <li ng-repeat="item in options.list track by $index">
+      <i ng-class="getIcon(item, item._data, $index, options.list.length)"></i>
+      <div class="timeline-item">
+        <span class="time" ng-bind="item.time"></span>
+        <h3 class="timeline-header no-border"><a ng-bind="item.title"></a></h3>
+        <!--<span
+          class="device"
+          ng-bind="item._data.extra.device.label + ' ( ' + item._data.extra.device.externalDevId + ' ) '"
+        ></span>-->
+        <process-common-dir
+          class="timeline-header no-border"
+          data-process="elem"
+          ng-repeat="elem in item.data track by $index"
+        >
+        </process-common-dir>
+      </div>
+    </li>
+  </ul>
+</template>
+<script type="text/javascript">
+export default function(rootScope, compile) {
+  return {
+    scope: {
+      options: "="
+    },
+    link(scope, element, attr) {
+      scope.getIcon = function(item, data, index, len) {
+        let taskStatus = data.ticketTask.taskStatus;
+        if (item.icon == false) {
+          return "";
+        }
+        if (index == 0) {
+          return "fa fa-user fa-fw fa-circle-o bg-green";
+        }
+        if (index == len - 1 && taskStatus == 10) {
+          return "fa fa-user bg-orange";
+        }
+        if (index == len - 1 && taskStatus == 200) {
+          return "fa fa-user bg-aqua";
+        }
+        return "fa fa-user bg-aqua";
+      };
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.time {
+  position: absolute;
+  right: 10px;
+}
+
+.device {
+  color: white;
+  z-index: 999;
+  font-weight: bold;
+  padding-top: 8px;
+  float: right;
+}
+</style>

@@ -1,0 +1,353 @@
+<config injector="$rootScope,ajax"></config>
+<template>
+  <div class="wrap">
+    <div ng-if="type" class="titleHead">
+      <div class="col-md-6">
+        设备名称: <span ng-bind="deviceObj.label"></span>
+      </div>
+      <div class="col-md-6">
+        设备编号: <span ng-bind="deviceObj.id"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  报警规则名称：</span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.title" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.title" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5" ng-if="!type">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  设备模板：</span>
+      </div>
+      <div class="col-md-9">
+        <!--<input ng-model="clone.modelId" class="form-control" ng-if="mode=='edit'"/>-->
+        <!--<span ng-bind="clone.modelId" ng-if="mode=='view'" class="value"></span>-->
+        <div class="horizontal">
+          <ps-select ng-model="clone.modelId" data-options="model.id as model.label for model in modelDic" ng-display="mode=='edit'" ng-change = "changeFn(clone.modelId)"></ps-select>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  测点名称：</span>
+      </div>
+      <div class="col-md-9">
+        <!--<input ng-model="clone.instanceName" class="form-control" ng-if="mode=='edit'"/>-->
+        <!--<span ng-bind="clone.instanceName" ng-if="mode=='view'" class="value"></span>-->
+        <div class="horizontal">
+          <ps-select ng-model="clone.instance" data-options="instance.id as instance.label for instance in MeasurePointLocateList" ng-display="mode=='edit'"></ps-select>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  指标参数：</span>
+      </div>
+      <div class="col-md-9">
+        <!--<input ng-model="clone.kpiCode" class="form-control" ng-if="mode=='edit'"/>-->
+        <!--<span ng-bind="clone.kpiCode" ng-if="mode=='view'" class="value"></span>-->
+        <div class="horizontal">
+          <ps-select ng-model="clone.kpiCode" data-options="kpiCode.id as kpiCode.label for kpiCode in kpiCodeList" ng-display="mode=='edit'"></ps-select>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  数据类型：</span>
+      </div>
+      <div class="col-md-9">
+        <!--<input ng-model="clone.ruleType" class="form-control" ng-if="mode=='edit'"/>-->
+        <!--<span ng-bind="clone.ruleType" ng-if="mode=='view'" class="value"></span>-->
+        <div class="horizontal">
+          <ps-select ng-model="clone.thresholdType" data-options="type.id as type.label for type in typeList" ng-display="mode=='edit'"></ps-select>
+        </div>
+    </div>
+      </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right"><span style="color: red;">*</span>  条      件：</span>
+      </div>
+      <div class="col-md-9">
+        <!--<input ng-model="clone.condition" class="form-control" ng-if="mode=='edit'"/>-->
+        <!--<span ng-bind="clone.condition" ng-if="mode=='view'" class="value"></span>-->
+        <div class="horizontal">
+          <ps-select ng-model="clone.condition" data-options="condition.id as condition.label for condition in conditionList" ng-display="mode=='edit'"></ps-select>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">持续时间：</span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.time" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.time? clone.time : '-'" ng-if="mode=='view'" class="value"></span>
+      </div>
+      （小时）
+    </div>
+    <div class="row margin-bottom-5">
+    <div class="col-md-3">
+      <span class="title pull-right">阈      值：</span>
+    </div>
+    <div class="col-md-9">
+      <input ng-model="clone.refValue" class="form-control" ng-if="mode=='edit'"/>
+      <span ng-bind="clone.refValue" ng-if="mode=='view'" class="value"></span>
+    </div>
+  </div>
+    <div class="row margin-bottom-5">
+    <div class="col-md-3">
+      <span class="title pull-right"><span style="color: red;">*</span>  报警级别：</span>
+    </div>
+    <div class="col-md-9">
+      <!--<input ng-model="clone.severity" class="form-control" ng-if="mode=='edit'"/>-->
+      <!--<span ng-bind="clone.severity" ng-if="mode=='view'" class="value"></span>-->
+      <div class="horizontal">
+        <ps-select ng-model="clone.severity" data-options="severity.id as severity.label for severity in severityList" ng-display="mode=='edit'"></ps-select>
+      </div>
+    </div>
+  </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">规则描述：</span>
+      </div>
+      <div class="col-md-9">
+        <input ng-model="clone.desc" class="form-control" ng-if="mode=='edit'"/>
+        <span ng-bind="clone.desc" ng-if="mode=='view'" class="value"></span>
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">是否启用：</span>
+      </div>
+      <div class="col-md-9">
+        <input type="checkbox" ng-checked="clone.enabled" ng-model="clone.enabled">
+      </div>
+    </div>
+    <div class="row margin-bottom-5">
+      <div class="col-md-3">
+        <span class="title pull-right">是否统计异常超标：</span>
+      </div>
+      <div class="col-md-9">
+        <input type="checkbox" ng-checked="clone.statistics" ng-model="clone.statistics">
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-md-3">
+
+      </div>
+      <div class="col-md-9">
+        <button class="btn btn-primary" ng-click="submitFn(clone)">提交</button>
+        <button class="btn btn-default" ng-click="close()">取消</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend } from "ps-ultility";
+  export default function(rootScope,ajax){
+    return {
+      link(scope, element, attr) {
+        scope.mode = scope.params.mode;
+        scope.type = scope.params.type ? scope.params.type : ""
+        scope.clone = extend({}, scope.params.data);
+        // scope.clone.type= "num"
+        scope.isRow = scope.params.isRow;
+        scope.isAdd = scope.params.isAdd;
+        var devicesId = scope.isRow ? scope.clone.nodeIds : scope.clone.id;
+        scope.cos = false;
+        scope.changeFn = function(modelId){
+            ajax.post("resourceUIService.getAttrsByModelId",modelId).then( d => {
+                var sourceValue = d ? d.filter(function (ele) {
+                    return ele.name == "MeasurePointLocate"
+                }) : undefined;
+                if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                    return [];
+                }
+                // 查找测点MeasurePointLocateList
+                var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                    return [];
+                }
+                var MeasurePointLocateList = [];
+                for (var i = 0; i < MeasurePointLocate.length; i++) {
+                    for (var k in MeasurePointLocate[i]) {
+                        for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                            if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                var item = {
+                                    id: MeasurePointLocate[i][k][j].name,
+                                    label: MeasurePointLocate[i][k][j].label
+                                }
+                                MeasurePointLocateList.push(item);
+                            }
+                        }
+                    }
+                }
+                return MeasurePointLocateList;
+            }).then(MeasurePointLocateList=>{
+                scope.MeasurePointLocateList = MeasurePointLocateList;
+            })
+            ajax.post("resourceUIService.getDataItemsByModelId", modelId).then( kpiCodeList => {
+                scope.kpiCodeList = kpiCodeList;
+            });
+        }
+          //条件选项
+          scope.conditionList = [{
+              id: "compare(value,refValue)>0",
+              label: "大于"
+          }, {
+              id: "compare(value,refValue)>=0",
+              label: "大于等于"
+          }, {
+              id: "compare(value,refValue)=0",
+              label: "等于"
+          }, {
+              id: "compare(value,refValue)<0",
+              label: "小于"
+          }, {
+              id: "compare(value,refValue)<=0",
+              label: "小于等于"
+              // }, {
+              //     id: "",
+              //     label: "表达式"
+          }];
+          //类型选项
+          scope.typeList = [{
+              id: "num",
+              label: "数值"
+              },{
+                  id:"deviation",
+                  label:"偏差率"
+          }];
+          //类型选项
+          scope.severityList = [{
+              id: 2,
+              label: "注意"
+          },{
+              id: 3,
+              label: "警告"
+          },{
+              id: 4,
+              label: "危险"
+          }];
+        if(scope.isAdd){
+            ajax.post("resourceUIService.getDevicesByCondition", [{resourceId : devicesId}]).then( deviceObj => {
+                 
+                scope.clone["customerId"] = deviceObj[0].customerId;
+                scope.clone["domain"] = deviceObj[0].domainPath;
+                scope.clone["projectId"] = deviceObj[0].projectId;
+                scope.clone["modelId"] = deviceObj[0].modelId;
+                scope.deviceObj = deviceObj[0];
+                ajax.post("resourceUIService.getAttrsByModelId", deviceObj[0].modelId).then( d => {
+                    var sourceValue = d ? d.filter(function (ele) {
+                        return ele.name == "MeasurePointLocate"
+                    }) : undefined;
+                    if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                        return [];
+                    }
+                    // 查找测点MeasurePointLocateList
+                    var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                    if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                        return [];
+                    }
+                    var MeasurePointLocateList = [];
+                    for (var i = 0; i < MeasurePointLocate.length; i++) {
+                        for (var k in MeasurePointLocate[i]) {
+                            for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                                if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                    var item = {
+                                        id: MeasurePointLocate[i][k][j].name,
+                                        label: MeasurePointLocate[i][k][j].label
+                                    }
+                                    MeasurePointLocateList.push(item);
+                                }
+                            }
+                        }
+                    }
+                    return MeasurePointLocateList;
+                }).then(MeasurePointLocateList=>{
+                    scope.MeasurePointLocateList = MeasurePointLocateList;
+                })
+                ajax.post("resourceUIService.getModelsByCondition", [{}]).then( modelDic => {
+                    scope.modelDic = modelDic;
+                });
+                ajax.post("resourceUIService.getDataItemsByModelId", deviceObj[0].modelId).then( kpiCodeList => {
+                    scope.kpiCodeList = kpiCodeList;
+                });
+            });
+        }else{
+            ajax.post("resourceUIService.getAttrsByModelId", scope.clone.modelId).then( d => {
+                var sourceValue = d ? d.filter(function (ele) {
+                    return ele.name == "MeasurePointLocate"
+                }) : undefined;
+                if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+                    return [];
+                }
+                // 查找测点MeasurePointLocateList
+                var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+                if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+                    return [];
+                }
+                var MeasurePointLocateList = [];
+                for (var i = 0; i < MeasurePointLocate.length; i++) {
+                    for (var k in MeasurePointLocate[i]) {
+                        for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                            if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                                var item = {
+                                    id: MeasurePointLocate[i][k][j].name,
+                                    label: MeasurePointLocate[i][k][j].label
+                                }
+                                MeasurePointLocateList.push(item);
+                            }
+                        }
+                    }
+                }
+                return MeasurePointLocateList;
+            }).then(MeasurePointLocateList=>{
+                scope.MeasurePointLocateList = MeasurePointLocateList;
+            })
+            ajax.post("resourceUIService.getModelsByCondition", [{}]).then( modelDic => {
+                scope.modelDic = modelDic;
+            });
+            ajax.post("resourceUIService.getDataItemsByModelId", scope.clone.modelId).then( kpiCodeList => {
+                scope.kpiCodeList = kpiCodeList;
+            });
+        }
+        scope.submitFn = function(d){
+          var instanceName =  scope.MeasurePointLocateList.filter(e=>{
+              return e.id == scope.clone.instance
+          })
+          if(instanceName){
+              d.instanceName = instanceName[0].label;
+          }
+          scope.submit(d);
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .wrap{
+    width : 80%;
+    margin : auto;
+    .title{
+      line-height : 26px;
+      padding-right : 20px;
+    }
+    .titleHead{
+      border-bottom: 1px solid;
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+    }
+    .value {
+      line-height : 26px;
+    }
+    .horizontal{
+      width: 100%;
+    }
+  }
+</style>

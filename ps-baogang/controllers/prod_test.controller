@@ -1,0 +1,111 @@
+<config injector="$scope,$state,$registerService,psTreeData,commonMethodService2"
+        params="/:text"
+></config>
+<template>
+  <div class="wrap">
+    跳转链接方法测试页面
+    <div ng-bind="text"></div>
+    <ps-checkbox ng-model="check"></ps-checkbox>
+    <div class="item" ng-repeat="testcase in testcases">
+      <button class="btn btn-primary" ng-click="testcase.fn()">{{testcase.label}}</button>
+    </div>
+  </div>
+</template>
+<script>
+  import { random } from "ps-ultility";
+  export default function( scope,$state,registerService,psTreeData,commonMethodService2){
+    scope.text = $state.params.text;
+    commonMethodService2.promise((res,rej) => {
+      res("abc");
+    });
+    scope.check = true;
+    scope.testcases = [{
+      label : "navigateTo(1)",
+      fn : function(){
+        /** 后面参数可加可不加，页面传参用 **/
+        commonMethodService2.navigateTo( 1, {
+          starttime : new Date() - 0,
+          endtime : new Date() - 100000
+        });
+      }
+    },{
+      label : "navigateTo([1,0])",
+      fn : function(){
+        /** 后面参数可加可不加，页面传参用 **/
+        commonMethodService2.navigateTo([1,0], {
+          starttime : new Date() - 0,
+          endtime : new Date() - 100000
+        });
+      }
+    },{
+      label : "navigateTo({main:1,sub:0})",
+      fn : function(){
+        /** 后面参数可加可不加，页面传参用 **/
+        commonMethodService2.navigateTo({
+          main:1,
+          sub:0
+        }, {
+          starttime : new Date() - 0,
+          endtime : new Date() - 100000
+        });
+      }
+    },{
+      label : "navigateTo(\"综合趋势\")",
+      fn : function(){
+        /** 后面参数可加可不加，页面传参用 **/
+        commonMethodService2.navigateTo("综合趋势", {
+          starttime : new Date() - 0,
+          endtime : new Date() - 100000
+        });
+      }
+    },{
+      label : "navigateTo(function( d ){ d.name == \"综合趋势\" })",
+      fn : function(){
+        /** 后面参数可加可不加，页面传参用 **/
+        commonMethodService2.navigateTo(function( d ){
+          return d.name === "综合趋势"
+        }, {
+          starttime : new Date() - 0,
+          endtime : new Date() - 100000
+        });
+      }
+    },{
+      label : "本页刷新并更换参数(页面内容不换，只换参数)",
+      fn : function(){
+        commonMethodService2.refresh({
+          text : random( 16 )
+        });
+      }
+    },{
+      label : "本页内容切换成仪表板视图（页面内容彻底更换成其他视图）",
+      fn : function(){
+        commonMethodService2.refresh("dashboard", {
+          viewId : 177280852260000,
+          index : "device"
+        });
+      }
+    },{
+      label : "本页内容切换成仪表板视图（页面内容彻底更换成其他视图）",
+      fn : function(){
+        commonMethodService2.refresh("dashboard", {
+          viewId : "baowu-test",
+        });
+      }
+    },{
+      label : "本页内容切换成页面内容（页面内容彻底更换成其他页面内容）",
+      fn : function(){
+        commonMethodService2.refresh("prod_analysis");
+      }
+    }]
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    span {
+      color : red
+    }
+    .item{
+      padding : 10px;
+    }
+  }
+</style>

@@ -1,0 +1,99 @@
+<config injector="$rootScope,$q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo"></config>
+<template>
+  <div class="wrap">
+    <div class="col-md-12">
+      <div class="title">
+        报警通知
+      </div>
+      <div class="row block" style="margin: 5px; padding: 10px; height: 285px; overflow: hidden auto; border: 0px;">
+        <div class="col-md-12">
+          <div style="width: 100%; overflow: hidden auto;"><div class="btn-group" style="margin-bottom: 10px; display: none;"></div><div id="DataTables_Table_2_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer"></div>
+            <table class="table table-hover dataTable no-footer" id="DataTables_Table_2" style="width: 100%;">
+              <thead>
+              <tr role="row">
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 83px;">状态</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 84px;">专业</th>
+                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 84px;">报告文件</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr class="odd" ng-if="offlines.length == 0">
+                <td valign="top" colspan="7" class="dataTables_empty"><i class="fa fa-success text-danger"></i>没有符合条件的记录</td>
+              </tr>
+              <tr class="odd" ng-if="offlines.length > 0" ng-repeat="offline in offlines">
+                <td>
+                  <span ng-bind="offline.getState()"></span>
+                </td>
+                <td>
+                  <span ng-bind="offline.getSpecialty()"></span>
+                </td>
+                <td>
+                  <span >
+                    <a href="offline.reportFile.filePath" ng-bind="offline.reportFile.fileName"></a>
+                  </span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { dateparse } from "ps-ultility";
+  export default function(rootScope,q,ajax,$state,SwSocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTopo){
+    return {
+      scope : {},
+      link(scope, element, attr) {
+        let id = $state.params.id,
+          specialtyProps = rootScope.$$childHead["specialtyProps"].reduce((a,b)=>{
+
+          });
+        class tableCell{
+          constructor( d ){
+            for( let i in d ){
+              this[i] = d[i];
+            }
+          }
+          getSpecialty(){
+            this.specialty
+            specialtyProps.forEach(function (elem) {
+              if (elem.valueCode == ele) {
+                text = elem.label
+              }
+            })
+            return text;
+          }
+          getState(){
+            if (this.conclusion == "-1") {
+              return "正常";
+            } else if (this.appName == "2") {
+              return "注意";
+            } else if (this.appName == "3") {
+              return "异常";
+            } else if (this.appName == "4"){
+              return "警告";
+            }
+          }
+        }
+        psTreeData( id )
+          .getState()
+          .then( res => {
+            let externalDevId = find.externalDevId;
+            ajax.post("deviceResumeUIService.getDeviceOfflineReportListByCondition", {
+              devId : externalDevId
+            }).then( offlines => {
+              scope.offlines = offlines.map( alert => new tableCell );
+            })
+          })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  .title{
+    margin: 5px; padding: 0px; font-size: 14px; font-weight: bold; text-align: left; color: rgb(255, 255, 255);
+  }
+</style>

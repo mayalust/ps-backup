@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-baogang/js/services/base.js"],"names":["angular","module"],"mappings":"AAAAA,QAAQC,OAAO,iBAAkB","file":"app-baogang/js/services/base.js","sourcesContent":["angular.module('myApp.services', []);"],"sourceRoot":"/source/"}

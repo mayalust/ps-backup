@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-oc/js/controllers/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,uCAAwC","file":"app-oc/js/controllers/index.js","sourcesContent":["define(['../../js/controllers/appnav-ctrl.js'], function () {});"],"sourceRoot":"/source/"}

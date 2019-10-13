@@ -1,0 +1,230 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,commonMethodService,$rootScope,resourceUIService,growl"
+        deps="dialogGlobalRule,dialogCommonAlerts,dialogDetailAlert"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+
+      <div class="col-md-12">
+        <div class="block">
+          <div class="">
+            <div>
+              <span class="padding-right-10">类型:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="rollerTypeId"
+                           data-options="rollerType.label as rollerType.label for rollerType in rollerTypeList"></ps-select>
+              </div>
+              <span class="padding-right-10">状态:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="rollerPartStateId"
+                           data-options="rollerPartState.valueCode as rollerPartState.label for rollerPartState in rollerPartStateList"></ps-select>
+              </div>
+              <span class="padding-right-10">备件名称:</span>
+              <div class="horizontal width-200">
+                <input ng-model="rollName" class="form-control"/>
+              </div>
+              <span class="padding-right-10">备件编码:</span>
+              <div class="horizontal width-200">
+                <input ng-model="rollSn" class="form-control"/>
+              </div>
+              <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+              <button class="btn btn-primary" ng-click="cleanFn()">清除</button>
+            </div>
+            <h4 class="margin-10">辊道</h4>
+            <table ps-table-sync = "false"
+                   data-paginate="all"
+                   data-source="alertOk"
+                   data-filter="filter2"
+                   data-sort="sort2"
+                   data-page="page2">
+              <thead>
+              <tr>
+                <th>类型</th>
+                <th>备件名称</th>
+                <th>备件编码</th>
+                <th>物料代码</th>
+                <th>规格型号</th>
+                <th>生产厂家</th>
+                <th>创建日期</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td ng-bind="item.rollerType"></td>
+                <td ng-bind="item.rollerName"></td>
+                <td ng-bind="item.rollerNo"></td>
+                <td ng-bind="item.materialCode"></td>
+                <td ng-bind="item.format"></td>
+                <td ng-bind="item.manufacturer"></td>
+                <td ng-bind="formatTime(item.createDate)"></td>
+                <td ng-bind="stateFormat(item.state)"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.next()">详情</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,cms,rootScope,rcus,growl){
+    let target = cms(),
+      currentTime = new Date(),
+      date = dateparser(currentTime),
+      trimToDate = date.trimmToDate().date,
+      trimToWeek = date.trimmToWeek().date,
+      trimToMonth = date.trimmToMonth().date,
+      // rollerType = [].slice.call(target.getRootScope("myDicts")["rollerType"] || []),
+      rollerPartState = [].slice.call(target.getRootScope("myDicts")["rollerPartState"]);
+    ajax.post("dictionaryService.getDictValuesByDictCodeAndValueCode",["rollerType",2]).then(rollerType => {
+      scope.rollerTypeList = rollerType;
+      scope.rollerPartStateList = rollerPartState;
+      //   rcus.deviceObjLoader().then(d => {
+      //     scope.deviceDic = d;
+      //
+      //     timer();
+      // })
+      scope.stateFormat = function(e){
+        if(e){
+          let a = rollerPartState.filter(d => {
+            return d.valueCode == e;
+          })
+          return a[0].label;
+        }else {
+          return '-'
+        }
+      }
+      scope.timeSels = [{
+        label : "当日",
+        click(){
+          scope.starttime = trimToDate;
+          scope.endtime = currentTime;
+        },
+        class(){
+          return scope.starttime - trimToDate == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+        }
+      },{
+        label : "本周",
+        click(){
+          scope.starttime = trimToWeek;
+          scope.endtime = currentTime;
+        },
+        class(){
+          return scope.starttime - trimToWeek == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+        }
+      },{
+        label : "本月",
+        click(){
+          scope.starttime = trimToMonth;
+          scope.endtime = currentTime;
+        },
+        class(){
+          return scope.starttime - trimToMonth == 0
+          && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+        }
+      }];
+
+      scope.formatTime = function (d) {
+        return d
+          ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss")
+          : "-";
+      }
+
+      class tableCell{
+        constructor(data){
+          for(var i in data){
+            this[i] = data[i];
+          }
+        }
+        detail(){
+          cms2.modal({
+            title : "详情",
+            directive : "dialog-detail-alert",
+            width : "50%",
+            params : {
+              mode : "view",
+              type : "",
+              data :this
+            }
+          }).then( d => {
+
+
+          });
+        }
+        next(){
+          rootScope["rowData"] = this;
+          cms2.refresh("prod_repair_business_bjfyll_detail");
+        }
+      }
+
+
+      scope.statusTabs = [{
+        value : "3",
+        color : "rgb(12, 70, 109)",
+        border : "#21a6fb",
+        text : "待处理备修委托数",
+        icon : "ps-bw_01",
+        kpi : 3017
+      },{
+        value : "2",
+        color : "rgb(102, 72, 109)",
+        border : "rgb(224, 162, 239)",
+        text : "完成备修项目数（当年内）",
+        icon : "ps-bw_02",
+        kpi : 3045
+      }]
+
+      function createRenderFunction(states){
+
+        return function( page, pageSize ){
+          let params = [states,{
+            "start":page * pageSize,
+            "length":pageSize,
+            "statCount":true
+          }];
+          return ajax.post("rollerPartUIService.getRollerPartByConditionWithPage", params).then( dt => {
+            dt.data = dt.data.map( d => new tableCell(d))
+            return cms2.success( dt );
+          });
+        }
+      }
+
+      function timer(){
+        scope.alertOk = createRenderFunction({"type":2,"rollerType":"","state":"","rollerNo":"","rollerName":""});
+      }
+
+      timer();
+
+      scope.searchFn = function(){
+        scope.alertOk = createRenderFunction({"type":2,"rollerType":scope.rollerTypeId,"state":scope.rollerPartStateId?scope.rollerPartStateId-0:null,"rollerNo":scope.rollSn,"rollerName":scope.rollName});
+      };
+      scope.cleanFn = function () {
+        scope.rollerTypeId = "";
+        scope.rollerPartStateId = "";
+        scope.rollSn = "";
+        scope.rollName = "";
+      }
+    })
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    height: ~'calc( 100vh - 110px)';
+    overflow-y: auto;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

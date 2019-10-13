@@ -1,0 +1,237 @@
+<config injector="$q,$rootScope"></config>
+<script>
+import factory from "./../../js/services/service_factory.js";
+import { random } from "ps-ultility";
+export default function(q, rootScope) {
+  let getId = obj => (typeof obj == "object" ? obj.id : obj);
+  function toArr(obj) {
+    let rs = [];
+    for (let i in obj) {
+      for (let j in obj[i]) {
+        for (let k in obj[i][j]) {
+          rs.push(obj[i][j][k]);
+        }
+      }
+    }
+    return rs;
+  }
+  function stringify(str) {
+    let a;
+    try {
+      a = JSON.stringify(str);
+    } catch (e) {
+      throw new Error(e);
+      return;
+    }
+    return a;
+  }
+  function parse(str) {
+    let rs;
+    try {
+      rs = JSON.parse(str);
+    } catch (e) {
+      return;
+    }
+    return rs;
+  }
+  class Service {
+    constructor(obj) {
+      this.protocol = obj.protocol;
+      this.host = obj.host;
+      this.origin = this.origin;
+    }
+    getURL() {
+      if (location == null) {
+        return `${this.protocol}//${this.host}/websocket/message`;
+      }
+      return location.hostname == "localhost" ||
+        location.hostname == "127.0.0.1"
+        ? `${this.protocol}//${this.host}/websocket/message`
+        : `${this.protocol}//${location.host}/websocket/message`;
+    }
+  }
+  class Observer {
+    constructor() {
+      this.events = {};
+    }
+    on(name, callback) {
+      this.events[name] = this.events[name] || [];
+      this.events[name].push(callback);
+    }
+    emit(name, data) {
+      let functionLIst = this.events[name] || [];
+      functionLIst.forEach(fn => {
+        fn && fn.call(this, data);
+      });
+    }
+  }
+  class Params {
+    constructor(str) {
+      let d = parse(str);
+      if (d == null) {
+        return;
+      }
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    getData() {
+      return this.data;
+    }
+  }
+  class WebSocketCls {
+    constructor(url, time) {
+      this.ws = null;
+      this.time = time; /** time为截流时间，单位ms,默认值为undefined,表示不进行截流，收到推送立即发送，当ms设置为数字时，会对收集的数据进行截流处理，以一个数组形式返回给回掉函数 */
+      this._state = null;
+      this.url = url;
+      this.uuid = random();
+      this.observer = new Observer();
+      this.connect();
+    }
+    throttle(callback, time) {
+      let timer,
+        obj = {};
+      return function(val, data) {
+        let { nodeId, kpiCode, instance } = data;
+        instance = instance || "_";
+        if (timer == null) {
+          console.log(time);
+          timer = setTimeout(() => {
+            callback.call(this, toArr(obj));
+            timer = null;
+            obj = {};
+          }, time);
+        } else {
+          obj[nodeId] = obj[nodeId] || {};
+          obj[nodeId][kpiCode] = obj[nodeId][kpiCode] || {};
+          obj[nodeId][kpiCode][instance] = data;
+        }
+      };
+    }
+    connect() {
+      this._state = null;
+      this.ws = new WebSocket(this.url);
+      this.ws.onopen = () => {
+        this._state = "onopen";
+        this.observer.emit("onopen");
+      };
+      this.ws.onmessage = ({ data }) => {
+        let param = new Params(data);
+        this.observer.emit("onmessage", param.getData());
+      };
+      this.ws.onclose = e => {
+        this._state = "onclose";
+        this.observer.emit("onclose");
+        this.reconnect();
+      };
+      this.ws.onerror = e => {
+        this._state = "onerror";
+        this.observer.emit("onerror");
+        //this.reconnect();
+      };
+    }
+    reconnect() {
+      setTimeout(() => {
+        console.warn(`链接 [ ${this.url} ] 不成功重试链接`);
+        this.connect();
+      }, 5000);
+    }
+    on(ci, kpi, instance, callback) {
+      if (ci == null) {
+        throw new Error("nodeId is a must");
+      }
+      if (
+        typeof ci == "function" &&
+        kpi == null &&
+        instance == null &&
+        callback == null
+      ) {
+        callback = ci;
+        ci = null;
+      }
+      if (typeof instance == "function" && callback == null) {
+        callback = instance;
+        instance = null;
+      }
+      if (typeof kpi == "function" && instance == null && callback == null) {
+        callback = kpi;
+        kpi = null;
+      }
+      callback = this.time ? this.throttle(callback, this.time) : callback;
+      this.onmessage(d => {
+        if (instance != null && instance != d.instance) {
+          return;
+        }
+        if (kpi != null && kpi != d.kpiCode) {
+          return;
+        }
+        if (ci != null && ci != d.nodeId) {
+          return;
+        }
+        callback && callback.call(this, d.value, d);
+      });
+      return () => this.destroy();
+    }
+    doSthWhileOpen(callback) {
+      this._state == "onopen"
+        ? callback()
+        : this.addEventListener("onopen", callback);
+    }
+    send(ci, kpi, instances) {
+      this.doSthWhileOpen(() => {
+        let param = {
+          ciid: ci.map(getId).join(","),
+          kpi: kpi.map(getId).join(",")
+        };
+        if (instances != null) {
+          param["instances"] = instances.join(",");
+        }
+        this.sendData({
+          uuid: this.uuid,
+          operation: "register",
+          type: "kpi",
+          param: param
+        });
+      });
+    }
+    unregister() {
+      this.doSthWhileOpen(() => {
+        this.sendData({
+          uuid: this.uuid,
+          operation: "unregister"
+        });
+      });
+    }
+    destroy() {
+      this.unregister();
+      this.ws.close();
+    }
+    sendData(obj) {
+      this.ws.send(stringify(obj));
+    }
+    addEventListener(name, callback) {
+      this.observer.on(name, callback);
+    }
+    onmessage(callback) {
+      this.addEventListener("onmessage", callback);
+    }
+  }
+  function createInstance(service) {
+    let wsMap = new Map(),
+      ser = new Service(service);
+    return function(name, time, isDebug = false) {
+      if (wsMap.get(name)) {
+        return wsMap.get(name);
+      } else {
+        let url = isDebug
+          ? "ws://localhost:8081/websocket/message"
+          : ser.getURL();
+        wsMap.set(name, new WebSocketCls(url, time));
+        return wsMap.get(name);
+      }
+    };
+  }
+  return createInstance(factory);
+}
+</script>

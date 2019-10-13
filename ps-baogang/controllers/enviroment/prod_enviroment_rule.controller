@@ -1,0 +1,368 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,$rootScope"
+        deps="dialogGlobalRule,dialogCommonRemove"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5">
+        <span class="padding-right-10">报警规则名称:</span>
+        <div class="horizontal width-200">
+          <input ng-model="ruleTitle" class="form-control"/>
+        </div>
+        <span class="padding-right-10">测点名称:</span>
+        <div class="horizontal width-200">
+          <ps-select ng-model="MeasurePointLocate" data-options="model.id as model.label for model in MeasurePointLocateList"></ps-select>
+        </div>
+        <span class="padding-right-10">指标参数:</span>
+        <div class="horizontal width-200">
+          <ps-select ng-model="kpiItemId" data-options="model.id as model.label for model in kpiDataItems"></ps-select>
+        </div>
+        <span class="padding-right-10">报警级别:</span>
+        <div class="horizontal width-200">
+          <ps-select ng-model="level" data-options="model.id as model.label for model in levels"></ps-select>
+        </div>
+        <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+        <button class="btn btn-primary" ng-click="clearFn()">清除</button>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            报警规则管理
+            <button ng-click="addLocalRule()"
+                    class="btn btn-default pull-right">添加局部报警规则</button>
+            <button ng-click="addGlobalRule()"
+                    class="btn btn-primary pull-right margin-right-5">添加全局报警规则</button>
+          </div>
+          <table ps-table-sync = "false"
+                 data-paginate="all"
+                 data-source="alertRule"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>报警规则名称</th>
+              <th>设备名称</th>
+              <th>设备编码</th>
+              <th>测点名称</th>
+              <th>指标参数</th>
+              <th>报警级别</th>
+              <th>是否启用</th>
+              <th>制定时间</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td ng-bind="key<9 ? '0'+(key+1): key+1"></td>
+              <td ng-bind="item.title"></td>
+              <td ng-bind="item.getDev()"></td>
+              <td ng-bind="item.getExternalDevId()"></td>
+              <td ng-bind="item.instanceName"></td>
+              <td ng-bind="getKpiLabel(item.kpiCode)"></td>
+              <td ng-bind="item.severity ==2 ? '注意'
+              : item.severity ==3 ? '警告'
+              : item.severity ==4 ? '危险'
+              : '-'"></td>
+              <td ng-bind="item.enabled ? '是' : '否'"></td>
+              <td ng-bind="item.getModifyTime()"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-default" ng-click="item.view()">查看</button>
+                  <button class="btn btn-default" ng-click="item.edit()">编辑</button>
+                  <button class="btn btn-default" ng-click="item.remove()">删除</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,ajax,$state,registerService,cms2,growl,rootScope){
+    let getResourceByModelId = "resourceUIService.getResourceByModelId";
+       
+      var ids = $state.params.id;
+      scope.idsss = ids;
+      scope.rootModelsDic = rootScope.rootModelsDic;
+      var modelIds = rootScope.deviceDic[ids].modelId;
+      //  
+      scope.getKpiLabel = function (kpiCode) {
+          return rootScope.rootModelsDic[modelIds]["kpiDic"][kpiCode].label;
+      }
+      scope.levels = [{
+          id : 2,
+          label : "注意"
+      },{
+          id : 3,
+          label : "警告"
+      },{
+          id : 4,
+          label : "危险"
+      }];
+      ajax.post("resourceUIService.getDataItemsByModelId",modelIds).then(d => {
+          scope.kpiDataItems = d;
+      })
+      ajax.post("resourceUIService.getAttrsByModelId",modelIds).then(d =>{
+          var sourceValue = d ? d.filter(function (ele) {
+              return ele.name == "MeasurePointLocate"
+          }) : undefined;
+          if (typeof sourceValue == "undefined" || sourceValue.length == 0) {
+              return [];
+          }
+          // 查找测点MeasurePointLocateList
+          var MeasurePointLocate = eval(sourceValue[0].sourceValue);
+          if (MeasurePointLocate == null || MeasurePointLocate.length == 0) {
+              return [];
+          }
+          var MeasurePointLocateList = [];
+          for (var i = 0; i < MeasurePointLocate.length; i++) {
+              for (var k in MeasurePointLocate[i]) {
+                  for (var j = 0; j < MeasurePointLocate[i][k].length; j++) {
+                      if (parseFloat(MeasurePointLocate[i][k][j].name) < 1000) {
+                          var item = {
+                              id: MeasurePointLocate[i][k][j].name,
+                              label: MeasurePointLocate[i][k][j].label
+                          }
+                          MeasurePointLocateList.push(item);
+                      }
+                  }
+              }
+          }
+          scope.MeasurePointLocateList = MeasurePointLocateList;
+      })
+
+      class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.createTime
+          ? dateparser(this.createTime).getDateString("yyyy-MM-dd hh:mm:ss")
+          : "-";
+      }
+      getExternalDevId(){
+          if(this.nodeIds && scope.deviceDic){
+              var d = scope.deviceDic.filter((e)=>{
+                  return e.id == this.nodeIds;
+              })
+              return d[0] && d[0].externalDevId;
+          }else {
+              return "-"
+          }
+      }
+      getDev(){
+          if(this.nodeIds && scope.deviceDic){
+             var d = scope.deviceDic.filter((e)=>{
+                  return e.id == this.nodeIds;
+              })
+              return d[0] && d[0].label;
+          }else {
+              return "-"
+          }
+      }
+      getSeverity(){
+          return this.severity
+            ? this.severity ==1 ? "注意"
+                  : this.severity ==2 ? "警告"
+                      : this.severity ==3 ? "危险"
+                          : "-"
+                          : "-" ;
+      }
+      view(){
+        cms2.modal({
+          title : "预览报警规则",
+          directive : "dialog-global-rule",
+          width : "50%",
+          params : {
+            mode : "view",
+            isRow : "is",
+            data : this
+          }
+        }).then( d => {
+
+        });
+      }
+      edit(){
+        cms2.modal({
+          title : "编辑报警规则",
+          directive : "dialog-global-rule",
+          width : "50%",
+          params : {
+            mode : "edit",
+            isRow : "is",
+            data : this
+          }
+        }).then( d => {
+            if(d){
+                ajax.post("resourceUIService.saveKpiThreshold",[d]).then(d=>{
+                    growl.success("编辑完成")
+                    init(true);
+                })
+            }
+        });
+      }
+      remove(){
+          if(this.enabled == false){
+              cms2.modal({
+                  title : "确认",
+                  directive : "dialog-common-remove",
+                  width : "50%",
+                  params : {}
+              }).then( d => {
+                  if(d){
+                       
+                      ajax.post("resourceUIService.deleteKpiThresholds",[[this.id]]).then(d=>{
+                           
+                          growl.success("删除报警规则完成")
+                          init(true);
+                      })
+                  }
+              });
+          }else {
+              growl.warning("先停用告警规则")
+          }
+
+
+      }
+    }
+    scope.addGlobalRule = function(){
+      cms2.modal({
+        title : "添加全局报警规则",
+        directive : "dialog-global-rule",
+        width : "50%",
+        params : {
+          mode : "edit",
+          type : false,
+          isAdd : "is",
+          data : {}
+        }
+      }).then( d => {
+          if(d){
+              d.enabled ? d.enabled : false;
+               
+              ajax.post("resourceUIService.saveKpiThreshold",[d]).then(d=>{
+                   
+                  growl.success("添加全局报警规则完成")
+                  init(true);
+              })
+          }
+      });
+    }
+    scope.kpiObjDic = {
+        45005:"烟尘-Avg",
+        45015:"二氧化硫-Avg",
+        45025:"氮氧化物-Avg",
+        45035:"O2含量-Avg",
+        45045:"烟气温度-Avg",
+        45055:"烟气压力-Avg",
+        45065:"烟气流速-Avg",
+        45075:"烟气湿度-Avg",
+        45085:"氨-Avg",
+        45095:"非甲烷总烃-Avg",
+        45105:"HCL-Avg",
+        45115:"氯化氢-Avg",
+        45125:"化学需氧量（CODcr）-Avg",
+        45135:"PH值-Avg",
+        45145:"氨氮-Avg",
+        45155:"污水流量-Avg",
+        45165:"总铬-Avg",
+        45175:"六价铬-Avg",
+        45185:"总有机碳-Avg",
+    }
+    scope.addLocalRule = function(){
+      cms2.modal({
+        title : "添加局部报警规则",
+        directive : "dialog-global-rule",
+        width : "50%",
+        params : {
+          mode : "edit",
+          type : true,
+          isAdd : "is",
+          data : {
+              id : ids
+          }
+        }
+      }).then( d => {
+          if(d){
+              let obj =d;
+              obj.enabled = d.enabled ? d.enabled : false;
+              obj.nodeIds  = d.id ? d.id : ids;
+              delete obj.id;
+               
+              ajax.post("resourceUIService.saveKpiThreshold",[obj]).then(d=>{
+                   
+                  growl.success("添加局部报警规则完成")
+                  init(true);
+              })
+          }
+      });
+    };
+    scope.clearFn = function(){
+        scope.ruleTitle = "";
+        scope.level = "";
+        scope.kpiItemId = "";
+        scope.MeasurePointLocate = "";
+    }
+    scope.searchFn = function(){
+        var params = {
+            title : scope.ruleTitle,
+            severity :scope.level ,
+            kpiCode : scope.kpiItemId,
+            instance : scope.MeasurePointLocate,
+            nodeIds : $state.params.id,
+            modelId : modelIds
+        }
+        scope.alertRule = createRenderFunction(params);
+    };
+    function init(d) {
+        if(d){
+            var params = {
+                title : scope.ruleTitle,
+                severity :scope.level ,
+                kpiCode : scope.kpiItemId,
+                instance : scope.MeasurePointLocate,
+                nodeIds : $state.params.id,
+                modelId : modelIds
+            }
+            scope.alertRule = createRenderFunction(params);
+        }else {
+            ajax.post("resourceUIService.getDevicesByCondition", [{}]).then( dt => {
+                scope.deviceDic = dt;
+                scope.alertRule = createRenderFunction({nodeIds : $state.params.id,modelId : modelIds});
+            });
+        }
+    }
+    init()
+    function createRenderFunction(param){
+        return function( page, pageSize ){
+            let params = [param,{
+                "start":page * pageSize,
+                "length":pageSize,
+                "statCount":true
+            }];
+            return ajax.post("resourceUIService.getKpiThresholdListByConditionWithPage", params).then( dt => {
+                dt.data = dt.data.map( d => new tableCell(d))
+                return cms2.success( dt );
+            });
+        }
+    }
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

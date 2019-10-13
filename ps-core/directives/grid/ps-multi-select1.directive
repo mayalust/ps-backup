@@ -1,0 +1,121 @@
+<config injector="$q,$timeout"></config>
+<template>
+  <div class="wrap">
+    <select></select>
+  </div>
+</template>
+<script type="text/javascript">
+export default function (q, timeout) {
+  return {
+    scope: {
+      ngModel: "=?",
+      config: "=?",
+      options: '=?'
+    },
+    require: '?ngModel',
+    link (scope, element, attr, ngModel) {
+      let $dom = element.find('select');
+      let dom = $dom[0];
+      let dataOptions = scope.options || [];
+      let select2InitDefer = q.defer();
+      let defaultConfig = {
+        placeholder: '---请选择---',
+        search: true,
+        multiple: true,
+        width: '100%'
+      };
+      let defaultFormat = {
+        id: 'id',
+        label: 'label',
+        value: 'id'
+      };
+      let config = Object.assign({}, defaultConfig, scope.config || {});
+      let format = Object.assign({}, defaultFormat, config.format);
+      $dom.css({
+        width: config.width,
+        height: config.height
+      });
+
+      function findIdex (arr, fn) {
+        let ret = [];
+        for (let i = 0; i < arr.length; i++) {
+          if (fn(arr[i], i)) {
+            ret.push(i + '');
+          }
+        }
+        return ret;
+      }
+
+      function changeSelect (dom, options, fmt) {
+        let inxes = dom.val();
+        if (inxes) {
+          let ret = [];
+          inxes.forEach(inx => {
+            ret.push(options[inx]);
+          });
+          let value = null;
+          if (fmt.value === '$this') {
+            value = ret;
+          } else {
+            value = ret.map(r => {
+              return r[fmt.value];
+            });
+          }
+          return value;
+        }
+        return null;
+      }
+
+      function render (options) {
+        let str1 = '';
+        options.forEach((op, index) => {
+          str1 += `<option value="${index}">${op[format.label]}</option>`;
+        });
+        $dom.html(str1);
+        window['require'](['select2'], () => {
+          $dom.select2(config);
+          $dom.off("select2:select");
+          $dom.off("select2:unselect");
+          $dom.on("select2:select", function (e) {
+            ngModel.$setViewValue(changeSelect($dom, dataOptions, format));
+          });
+          $dom.on("select2:unselect", function (e) {
+            ngModel.$setViewValue(changeSelect($dom, dataOptions, format));
+          });
+          select2InitDefer.resolve();
+        });
+      }
+
+      render(dataOptions);
+      Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+        if (!n) {
+          return;
+        }
+        return n;
+      });
+      Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+        let indexes = findIdex(dataOptions, function (item) {
+          return n && n.includes(item[format.value]);
+        });
+        select2InitDefer.promise.then(() => {
+          if (indexes.length < 1) {
+            $dom.val(null).trigger('change');
+          } else {
+            $dom.val(indexes).trigger('change');
+          }
+        });
+        return n;
+      });
+      scope.$on('destroy', function () {
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+  color: #333;
+  background-color: #eee;
+  border: none;
+}
+</style>

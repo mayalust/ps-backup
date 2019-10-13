@@ -1,0 +1,784 @@
+<config injector="$scope,$timeout,$state,$registerService,psTreeData,ajax,commonMethodService2,commonMethodService,growl,resourceUIService"
+        params="/:sensor/:startdate/:enddate/:dataItems"
+
+></config>
+<template>
+  <div class="row">
+    <div class="col-md-12 padding5">
+      <div class="row block padding5">
+        <span class="text">聚合周期</span>
+        <div class="horizontal width150 vertical-top">
+          <ps-select
+            style="width: 100%"
+            ng-model="aggregatePeriod"
+            data-change="changeAggregatePeriod( aggregatePeriod )"
+            data-options="aggregatePeriod as aggregatePeriod.label for aggregatePeriod in aggregatePeriods"
+          >
+          </ps-select>
+        </div>
+        <span class="text">聚合方式</span>
+        <div class="horizontal width150 vertical-top">
+          <ps-select
+            style="width: 100%"
+            ng-model="aggregateFunc"
+            data-change="changeAggregateFunc( aggregateFunc )"
+            data-options="aggregateFunc as aggregateFunc.label for aggregateFunc in aggregateFuncs"
+          >
+          </ps-select>
+        </div>
+
+        <span class="text">时间</span>
+        <div class="horizontal width150 vertical-top">
+          <ps-date2 ng-model="startDate" data-change="updateDate()"></ps-date2>
+        </div>
+        <span class="text">至</span>
+        <div class="horizontal width150 vertical-top">
+          <ps-date2 ng-model="endDate" data-change="updateDate()"></ps-date2>
+        </div>
+
+        <button
+          class="btn btn-primary vertical-top margin-right-5"
+          ng-repeat="button in buttons"
+          ng-bind="button.label"
+          ng-click="button.click( button )"
+        ></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-10 padding5">
+        <div class="row block">
+          <div class="col-md-12">
+            <ps-echart ng-model="options1"></ps-echart>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 padding5">
+        <div class="row block">
+          <div class="col-md-12">
+            <div class="title">
+              <span>测点选择</span>
+            </div>
+            <div id="sensorwrap1" class="sensor">
+              <table class="sensor-table">
+                <tbody>
+                  <!--选择测点-->
+                  <ps-select
+                    style="width: 80%;margin: 0 auto"
+                    ng-model="sensorObj"
+                    data-change="changeSensor( sensorObj )"
+                    data-options="sensor as sensor.label for sensor in sensors"
+                  >
+                  </ps-select>
+                  <div class="kpi-selector">
+                    <button
+                      ng-click="saveSensors(sensors)"
+                      class="btn-sm btn-primary search"
+                    >
+                      更新默认数据项
+                    </button>
+                  </div>
+                  <div class="checkboxlist" ng-repeat="kpi in sensorObj.kpis">
+                    <input
+                      type="checkbox"
+                      ng-model="kpi.checked"
+                      ng-change="changeKpi( sensorObj.kpis )"
+                    />
+                    <span ng-bind="kpi.kpiName"></span>
+                  </div>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-10 padding5">
+        <div class="row block">
+          <div class="col-md-12">
+            <ps-echart ng-model="options2"></ps-echart>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 padding5">
+        <div class="row block">
+          <div class="col-md-12">
+            <div class="title">
+              <span>工艺参数</span>
+            </div>
+            <div id="sensorwrap2" class="sensor">
+              <table class="sensor-table">
+                <tbody>
+                  <tr ng-repeat="wkpi in whole.kpis">
+                    <td>
+                      <div
+                        class="checkboxlist"
+                        ng-click="wkpiClick(whole.kpis,$index)"
+                        ng-class="{true:'checked'}[wkpi.checked]"
+                        style="width: 100%;"
+                      >
+                        <div class="checkbox">
+                          <span class="glyphicon glyphicon-ok"></span>
+                        </div>
+                        <span ng-bind="wkpi.kpiName"></span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { dateparser } from "ps-ultility";
+export default function(
+  scope,
+  timeout,
+  $state,
+  registerService,
+  psTreeData,
+  ajax,
+  commonMethodService2,
+  cms,
+  growl,
+  resourceUIService
+) {
+  let id = $state.params.id,
+    target = cms(),
+    sensorwrap1 = document.getElementById("sensorwrap1"),
+    sensorwrap2 = document.getElementById("sensorwrap2"),
+    param2Number = d => d - 0,
+    startDate = getParam($state.params.startdate, param2Number),
+    endDate = getParam($state.params.enddate, param2Number),
+    sensorname = getParam($state.params.sensor),
+    kpiquery = [],
+    gkpiquery = [],
+    topSelectedNo = 0,
+    kpiCode = $state.params.dataItems,
+    isChecked = d => d.checked;
+  /**
+   * 把用户选择的信息暂时储存起来
+   *  resourceUIService.saveDataDictInfo(DataDictInfo
+   *  resourceUIService.getDataDictInfosByConditionWidthPage
+   */
+  scope.saveSensors = function(sensors) {
+    var params = {
+      id: scope._id,
+      dataValues: {
+        type: "analysis",
+        userId: target.getCurrentUser().userId,
+        userName: target.getCurrentUser().userName,
+        sensorData: sensors,
+        deviceId: id
+      }
+    };
+    ajax.post("resourceUIService.saveDataDictInfo", params).then(d => {
+      if (d) {
+        growl.success("数据项保存成功");
+      }
+    });
+  };
+
+  /**
+   * 需求2：聚合周期 聚合方式 根据选取的时间段采用不同的聚合方式
+   */
+  // 从字典表获取聚合的周期
+  /* scope.aggregatePeriods = target
+    .getRootScope("myDicts")
+    ["DefaultAggregatePeriod"].slice(7); */
+  scope.aggregatePeriods = [
+    {
+      label: "不聚合",
+      valueCode: "0s"
+    }
+  ];
+
+  scope.aggregatePeriod = scope.aggregatePeriods[0];
+  scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+  scope.changeAggregatePeriod = function(e) {
+    scope.aggregatePeriodData = e.valueCode;
+  };
+
+  scope.aggregateFuncs = (target.getRootScope("myDicts") &&
+    target.getRootScope("myDicts")["DefaultAggregateFunc"]) || [
+    {
+      id: 0,
+      label: "当前点",
+      valueCode: 0
+    }
+  ];
+  scope.aggregateFunc = scope.aggregateFuncs[0];
+  scope.aggregateFuncData = scope.aggregateFunc.valueCode - 0;
+  scope.changeAggregateFunc = function(e) {
+    scope.aggregateFuncData = e.valueCode - 0;
+  };
+
+  scope.updateDate = function(e) {
+    // 更新聚合周期和聚合方式的下拉框选项
+    return;
+    var time = scope.endDate.getTime() - scope.startDate.getTime();
+    if (time > 365 * 24 * 60 * 60 * 1000) {
+      scope.aggregatePeriod = scope.aggregatePeriods[6]; //"一年的数据"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (
+      time > 60 * 24 * 60 * 60 * 1000 &&
+      time <= 365 * 24 * 60 * 60 * 1000
+    ) {
+      scope.aggregatePeriod = scope.aggregatePeriods[5]; //"6h 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (
+      time > 30 * 24 * 60 * 60 * 1000 &&
+      time <= 60 * 24 * 60 * 60 * 1000
+    ) {
+      scope.aggregatePeriod = scope.aggregatePeriods[4]; //"1h 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (
+      time > 10 * 24 * 60 * 60 * 1000 &&
+      time <= 30 * 24 * 60 * 60 * 1000
+    ) {
+      scope.aggregatePeriod = scope.aggregatePeriods[3]; //"30m 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (time > 24 * 60 * 60 * 1000 && time <= 10 * 24 * 60 * 60 * 1000) {
+      scope.aggregatePeriod = scope.aggregatePeriods[2]; //"10m 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (time > 12 * 60 * 60 * 1000 && time <= 24 * 60 * 60 * 1000) {
+      scope.aggregatePeriod = scope.aggregatePeriods[1]; //"1m 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (time > 2 * 60 * 60 * 1000 && time <= 12 * 60 * 60 * 1000) {
+      scope.aggregatePeriod = scope.aggregatePeriods[0]; //"30s 来计算"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    } else if (time > 0 && time <= 2 * 60 * 60 * 1000) {
+      scope.aggregatePeriod = scope.aggregatePeriods[7]; //不聚合"
+      scope.aggregatePeriodData = scope.aggregatePeriod.valueCode;
+    }
+
+    //红香让改成怎么修改都展示为不聚合，QH修改
+    scope.aggregatePeriod = scope.aggregatePeriods[7]; //不聚合"
+  };
+
+  // 用来纪录保存的值、
+  class sensorData {
+    constructor(data) {
+      extend(this, data);
+    }
+  }
+  class kpiData {
+    constructor(data) {
+      extend(this, data);
+    }
+  }
+  function getParam(str, after) {
+    after = after || (d => d);
+    if (str == null) {
+      return null;
+    }
+    return str == "null" ? null : after(str);
+  }
+
+  function extend(a, b) {
+    for (let i in b) {
+      a[i] = b[i];
+    }
+    return a;
+  }
+  function makeEchartOption(title, option) {
+    return extend(
+      {
+        animation: false,
+        toolbox: {
+          feature: {
+            dataZoom: {},
+            restore: {},
+            saveAsImage: {
+              type: "png",
+              name: title,
+              backgroundColor: "#0b2232"
+            }
+          },
+          iconStyle: {
+            normal: {
+              borderColor: "#fff"
+            },
+            emphasis: {
+              borderColor: "#fff"
+            }
+          }
+        },
+        yAxis: {
+          type: "value"
+        }
+      },
+      option
+    );
+  }
+
+  // 时间
+  scope.endDate = !endDate ? dateparser().date : dateparser(endDate).date;
+
+  scope.buttons = [
+    {
+      label: "查询",
+      click: d => {
+        if (scope.endDate.getTime() - scope.startDate.getTime() < 0) {
+          target.growl("开始时间不能大于结束时间", "warning");
+          return;
+        }
+
+        // 加一个默认聚合的数据
+        var dateRange = [
+          dateparser(scope.startDate).getUTCDateString(),
+          dateparser(scope.endDate).getUTCDateString()
+        ];
+
+        var params = {
+          nodeIds: [id - 0],
+          kpiCodes: kpiquery.length > 0 ? kpiquery : [],
+          time: dateRange
+        };
+        if (scope.aggregatePeriodData != "0s") {
+          params["dataType"] = scope.aggregatePeriodData;
+          params["aggregateFunc"] = scope.aggregatePeriodData;
+          params["aggregatePeriod"] = scope.aggregatePeriodData;
+        }
+        scope.options1 = undefined;
+        commonMethodService2.getDataItemValuelist(params).then(options => {
+          scope.options1 = options
+            ? makeEchartOption("综合趋势-测点图", options)
+            : null;
+        });
+
+        // 更新测点的数据
+        if (scope.whole.kpis) {
+          var params1 = {
+            nodeIds: [id - 0],
+            kpiCodes:
+              scope.whole.kpis.length > 0
+                ? scope.whole.kpis.filter(isChecked)
+                : [],
+            time: dateRange
+          };
+          scope.options2 = undefined;
+          commonMethodService2.getDataItemValuelist(params1).then(options => {
+            scope.options2 = options
+              ? makeEchartOption("综合趋势-工艺参数图", options)
+              : null;
+            return commonMethodService2.success("视图渲染完成");
+          });
+        }
+      }
+    },
+    {
+      label: "设备信息",
+      click: d => {
+        target.createPopupByViewIdPath(
+          24422675210005,
+          "page1",
+          {
+            width: "600px",
+            title: "设备信息"
+          },
+          id
+        );
+      }
+    },
+    {
+      label: "求助知识库",
+      click: d => {
+        target.createSystemPopupByViewId(
+          "174283678280002",
+          {
+            width: "80%",
+            top: "140px",
+            title: "知识库"
+          },
+          ["", id]
+        );
+      }
+    },
+    {
+      label: "报警",
+      click: d => {
+        target.createPopupByViewIdPath(
+          24422675210005,
+          "page2",
+          {
+            width: "800px",
+            title: "报警记录"
+          },
+          id
+        );
+      }
+    },
+    {
+      label: "远程支持",
+      click: d => {
+        var link =
+          "https://rtc.ronghub.com/video.html?convId=2332&isCameraClose=false&resolution=1280*720&" +
+          "userId=cc3c-26e6-1cc3-cb7e-42d9-d2d6-0f95-2a48&appId=x4vkb1qpxfrzk&userType=1";
+        window.open(link, "_blank");
+      }
+    }
+  ];
+
+  // 选择测点
+  scope.changeSensor = function(sensor) {
+    sensorname = sensor.name;
+    kpiquery = sensor.kpis.filter(isChecked).map((d, i) => d);
+    // 更新echart的数据
+    var dateRange = [
+      dateparser(scope.startDate).getUTCDateString(),
+      dateparser(scope.endDate).getUTCDateString()
+    ];
+
+    var params = {
+      nodeIds: [id - 0],
+      kpiCodes: kpiquery.length > 0 ? kpiquery : [],
+      time: dateRange,
+      dataType: scope.aggregatePeriodData == "0s" ? 0 : 11,
+      aggregateFunc:
+        scope.aggregatePeriodData == "0s" ? null : scope.aggregateFuncData,
+      aggregatePeriod:
+        scope.aggregatePeriodData == "0s" ? null : scope.aggregatePeriodData
+    };
+    scope.options1 = undefined;
+    commonMethodService2.getDataItemValuelist(params).then(options => {
+      scope.options1 = options
+        ? makeEchartOption("综合趋势-测点图", options)
+        : null;
+    });
+  };
+  // 更改kpi 渲染echart图
+  scope.changeKpi = function(kpis) {
+    let maxNum = 5;
+    if (!kpis.some(isChecked)) {
+      this.kpi.checked = true;
+      growl.warning("不可不选数据项");
+      return;
+    }
+    if (kpis.filter(isChecked).length > maxNum) {
+      this.checked = false;
+      growl.warning(`不可选择超过${maxNum}个数据项`);
+      return;
+    }
+    // 更新echart的数据
+    kpiquery = kpis.filter(isChecked).map((d, i) => d);
+    var dateRange = [
+      dateparser(scope.startDate).getUTCDateString(),
+      dateparser(scope.endDate).getUTCDateString()
+    ];
+
+    var params = {
+      nodeIds: [id - 0],
+      kpiCodes: kpiquery.length > 0 ? kpiquery : [],
+      time: dateRange,
+      dataType: scope.aggregatePeriodData == "0s" ? 0 : 11,
+      aggregateFunc:
+        scope.aggregatePeriodData == "0s" ? null : scope.aggregateFuncData,
+      aggregatePeriod:
+        scope.aggregatePeriodData == "0s" ? null : scope.aggregatePeriodData
+    };
+    scope.options1 = undefined;
+    commonMethodService2.getDataItemValuelist(params).then(options => {
+      scope.options1 = options
+        ? makeEchartOption("综合趋势-测点图", options)
+        : null;
+    });
+  };
+  // 公艺参数
+  scope.wkpiClick = function(kpis, index) {
+    scope.whole.kpis[index].checked = !scope.whole.kpis[index].checked;
+    gkpiquery = scope.whole.kpis.filter(isChecked).map((d, i) => d);
+    // 更新echart的数据
+    var dateRange = [
+      dateparser(scope.startDate).getUTCDateString(),
+      dateparser(scope.endDate).getUTCDateString()
+    ];
+
+    var params1 = {
+      nodeIds: [id - 0],
+      kpiCodes: gkpiquery.length > 0 ? gkpiquery : [],
+      time: dateRange
+    };
+    scope.options2 = undefined;
+    commonMethodService2.getDataItemValuelist(params1).then(options => {
+      scope.options2 = options
+        ? makeEchartOption("综合趋势-工艺参数图", options)
+        : null;
+      return commonMethodService2.success("视图渲染完成");
+    });
+  };
+
+  // 第1组辊道电机、第2组辊道电机...第7组辊道电机
+  // 这7个域下的设备，默认的开始时间为1天
+  const filterDomains = [
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/14942234389038/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/14942234389039/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/14942234389040/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/14942234389041/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/14942234389042/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/97903963990160/",
+    "/0/515445641576227/515445641576264/515445641576272/554925002946064/554925002946086/97966743730022/97903963990162/"
+  ];
+
+  psTreeData(id)
+    .getState()
+    .then(resource => {
+      if (!startDate) {
+        scope.startDate = dateparser().addHour(-2).date;
+        if (filterDomains.includes(resource.domains)) {
+          scope.startDate = dateparser().addHour(-24).date;
+        }
+      } else {
+        scope.startDate = dateparser(startDate).date;
+      }
+
+      psTreeData
+        .getGeneral()
+        .then(whole => {
+          scope.whole = new sensorData(whole);
+          if (scope.whole.kpis) {
+            let hasSelectCode = false;
+            scope.whole.kpis = whole.kpis.map((kpi, i) => {
+              let d = new kpiData(kpi);
+              d.checked = false;
+              if (kpi.dataItemId == kpiCode) {
+                topSelectedNo = i;
+                d.checked = hasSelectCode = true;
+              }
+              return d;
+            });
+            if (!hasSelectCode) {
+              scope.whole.kpis && scope.whole.kpis[0]
+                ? (scope.whole.kpis[0].checked = true)
+                : null;
+            }
+          }
+          return psTreeData.getSensors();
+        })
+        .then(sensors => {
+          let hasSensor,
+            dateRange = [
+              dateparser(scope.startDate).getUTCDateString(),
+              dateparser(scope.endDate).getUTCDateString()
+            ];
+          /**
+           * 判断此用户、此设备是否在库里面有存储保存的信息
+           * 如果有直接获取保存的数据来展示
+           * 没有的话就是默认用数据项的第一个来展示
+           */
+          var condition = {
+            "dataValues.userId": target.getCurrentUser().userId,
+            "dataValues.deviceId": id,
+            "dataValues.type": "analysis"
+          };
+          var pageRequest = {
+            start: 0,
+            length: 1
+          };
+          ajax
+            .post("resourceUIService.getDataDictInfosByConditionWidthPage", [
+              condition,
+              pageRequest
+            ])
+            .then(d => {
+              /** 以下代码不符合编写规范过于混乱，之后要重构 */
+
+              scope.sensors = sensors;
+
+              // 默认下拉框的选中第一项
+
+              scope.sensorObj =
+                scope.sensors.filter(function(ele) {
+                  return ele.name == sensorname;
+                })[0] || scope.sensors[0];
+
+              // 找出数据项的选中情况
+              if (d.data.length > 0) {
+                scope._id = d.data[0].id;
+                var sensorDatas = d.data[0].dataValues.sensorData || [];
+                var saveKpiCodes = sensorDatas.filter(function(ele) {
+                  return ele.name == sensorname;
+                });
+                if (sensorDatas[0]) {
+                  if (saveKpiCodes) {
+                    saveKpiCodes = sensorDatas[0].kpis;
+                  } else {
+                    saveKpiCodes = saveKpiCodes[0].kpis;
+                  }
+                }
+                for (var i = 0; i < saveKpiCodes.length; i++) {
+                  scope.sensorObj.kpis[i].checked = saveKpiCodes[i].checked;
+                }
+              }
+              // 从区域态势跳转到专业分析页面需要带测点和数据项
+              if (
+                kpiCode != "null" &&
+                scope.sensorObj &&
+                scope.sensorObj.kpis
+              ) {
+                for (var i = 0; i < scope.sensorObj.kpis.length; i++) {
+                  if (i == 0) {
+                    scope.sensorObj.kpis[0].checked = false;
+                  }
+                  scope.sensorObj.kpis[i].checked =
+                    scope.sensorObj.kpis[i].dataItemId == kpiCode;
+                }
+              } else {
+                if (
+                  scope.sensorObj &&
+                  scope.sensorObj.kpis &&
+                  scope.sensorObj.kpis[0]
+                ) {
+                  scope.sensorObj.kpis[0].checked = true;
+                }
+              }
+              kpiquery =
+                scope.sensorObj && scope.sensorObj.kpis
+                  ? scope.sensorObj.kpis.filter(isChecked)
+                  : [];
+
+              timeout(d => {
+                sensorwrap1 ? (sensorwrap1.scrollTop = hasSensor * 41) : null;
+              });
+              var params = {
+                nodeIds: [id - 0],
+                kpiCodes: kpiquery.length > 0 ? kpiquery : [],
+                time: dateRange,
+                dataType: scope.aggregatePeriodData == "0s" ? 0 : 11,
+                aggregateFunc:
+                  scope.aggregatePeriodData == "0s"
+                    ? null
+                    : scope.aggregateFuncData,
+                aggregatePeriod:
+                  scope.aggregatePeriodData == "0s"
+                    ? null
+                    : scope.aggregatePeriodData
+              };
+              return commonMethodService2
+                .getDataItemValuelist(params)
+                .then(options => {
+                  if (options) {
+                    scope.options1 = makeEchartOption(
+                      "综合趋势-测点图",
+                      options || null
+                    );
+                  } else {
+                    scope.options1 = null;
+                  }
+                  var params1 = {
+                    nodeIds: [id - 0],
+                    kpiCodes: scope.whole.kpis
+                      ? scope.whole.kpis.filter(isChecked)
+                      : [],
+                    time: dateRange
+                  };
+                  return commonMethodService2
+                    .getDataItemValuelist(params1)
+                    .then(options => {
+                      if (options) {
+                        scope.options2 = makeEchartOption(
+                          "综合趋势-工艺参数图",
+                          options || null
+                        );
+                      } else {
+                        scope.options2 = null;
+                      }
+                      return commonMethodService2.success("视图渲染完成");
+                    });
+                });
+            });
+        })
+        .then(d => {
+          timeout(d => {
+            sensorwrap2 ? (sensorwrap2.scrollTop = topSelectedNo * 41) : null;
+          });
+          //growl.success("视图渲染完成");
+        })
+        .catch(e => {
+          console.error(e);
+          //growl.error(e.message);
+        });
+    });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  padding: 5px !important;
+  height: ~"calc( 100vh - 200px)";
+  font-size: 0;
+  * {
+    font-size: 12px;
+  }
+  .btn {
+    font-size: 14px;
+  }
+}
+
+table.sensor-table {
+  width: 100%;
+  table-layout: fixed;
+  td {
+    padding: 0;
+  }
+}
+
+.title {
+  color: white;
+  padding: 10px;
+  position: relative;
+}
+
+.kpi-selector {
+  float: left;
+  padding: 5px 20px;
+  width: 100%;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.4);
+  background-color: rgba(0, 0, 0, 0.2);
+  button.search {
+    margin: 10px 0;
+    padding: 5px !important;
+  }
+}
+
+.sensor {
+  height: 363px;
+  overflow-y: auto;
+}
+
+.text {
+  padding: 5px;
+  line-height: 26px;
+}
+
+.vertical-top {
+  vertical-align: top !important;
+}
+
+.vertical-middle {
+  vertical-align: middle !important;
+}
+
+.width-20 {
+  width: 20px;
+}
+
+.width200 {
+  width: 200px;
+}
+
+.horizontal {
+  display: inline-block;
+}
+
+.margin5 {
+  margin: 5px !important;
+}
+
+.padding5 {
+  padding: 5px !important;
+}
+</style>

@@ -1,0 +1,218 @@
+<config injector="$compile, $timeout, psScope, psUi, psDialog, psUltility, ajax, psEvent"
+></config>
+<template>
+  <div>
+    <div class="nav-tabs-custom margin-bottom-20">
+      <ul class="nav nav-tabs">
+        <li ng-repeat="op in navigates track by $index"
+            ng-click="navClick($event,op)"
+            ng-class="{true : 'active'}[selected === op]"
+            class="li-custom">
+          <a role="button" ng-bind="displayname(op)"></a>
+          <a ng-click="dropClick($event, op, $index)"
+             ng-show="op.showDrop !== false"
+             class="dropdown-toggle"><span class="caret"></span></a>
+        </li>
+        <li ng-if="option.config.enableAppend !== false">
+          <a style="color: #000;" ng-click="add()" title="添加分类" class="btn btn-sm bg-e8 btn-flat pull-left  margin-right-10">
+            <i class="fa fa-plus bk-message-row-icon"></i>
+          </a>
+        </li>
+      </ul>
+      <div class="tab-content" style="min-height : 100px;"></div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+  import { extend, attribute, isString, isObject, each, deepClone, isArray } from "ps-ultility";
+  export default function(compile, timeout, psScope, psUi, psDialog, psUltility, ajax, psEvent){
+    return {
+      restrict: 'E',
+      scope: {
+        option : "="
+      },
+      replace: true,
+      link: function (scope, element) {
+         
+        let key = scope.option["key"], watchers = [], newScope,
+          _wrap = element[0].children[0].children[1],
+          _root = psUltility.getRootScope(scope), _depth,
+          _key = isString(key) ? psUltility.keyPattern(key) : null,
+          _dialogForm = function(){
+            return deepClone({
+              type : "form-dialog",
+              children : scope.option.config.items || scope.option.config.buttons
+            })
+          };
+        scope.displayname = function(op){
+            return typeof scope.showname == "function" ? scope.showname(op) : op[scope.showname];
+        }
+        scope.option._scoped = true;
+        scope.option._key = "[0][\"data\"]";
+        function createNavigates(n){
+          scope.navigates = n.map(od => {
+            od.showDrop = scope.option.config.showDrop;
+            return od;
+          });
+          scope.selected = scope.navigates.some((n) => {
+            return n === scope.selected;
+          }) ? scope.selected : scope.navigates[0];
+        }
+        psScope(scope, function(){
+          scope.$watch(`option.${_key}`, (n, o, s)=>{
+            if(isArray(n)){
+              attribute(s.$$customParentScope, key, n);
+              createNavigates(n);
+            } else {
+              attribute(scope, `option.${_key}`, []);
+            }
+          });
+        });
+        scope.showname = scope.option.config.showname || "label";
+        scope.navClick = function(e,tab){
+          let parent = e.target;
+          while(parent !== e.currentTarget){
+            if(parent === e.currentTarget.children[1]){
+              return;
+            }
+            parent = parent.parentElement;
+          }
+          scope.selected = tab;
+        };
+        psUltility.createLoadWatch(scope.option.relateTo, scope, function(d){
+            attribute(scope, `option.${_key}`, d);
+        });
+        function renderTitle(str, type){
+          let char = "([\\u4e00-\\u9fa5\\w_]*)",
+            regex = `\\{${char},${char},${char}\\}${char}`,
+            match = str ? new RegExp(regex).exec(str) : undefined,
+            obj = {
+              "add" : str ? ( match ? match[1] : "" ) : "新建",
+              "edit" : str ? ( match ? match[2] : "" ) : "编辑",
+              "remove" : str ? ( match ? match[3] : "" ) : "删除"
+            },
+            attr = match ? match[4] : "组"
+            return attr + obj[type];
+        }
+        function dropClick(e, op, inx){
+          scope.dropClick = null;
+          let dropOptions = [{
+            label : "编辑",
+            show : function(){
+              return attribute(scope, ".option.config.edit");
+            },
+            click : function(row, i){
+              let ins = psDialog.popup({
+                label : renderTitle(scope.option.config.title, "edit"),
+                type : "layout",
+                children : [_dialogForm()]
+              }, op);
+              ins.on("submit", function(d){
+                let fn = attribute(scope, ".option.config.edit"),
+                evt = psEvent({
+                  $oldValue : op
+                }, scope);
+                psUltility.createPromise(fn, d, evt)
+                  .then((d) => {
+                   scope.navigates[inx] = d;
+                  });
+              })
+            }
+          },{
+            label : "删除",
+            show : function(){
+              return attribute(scope, ".option.config.remove");
+            },
+            click : function(row, i){
+              let ins = psDialog.confirm(`是否${renderTitle(scope.option.config.title, "remove")}`),
+                evt = psEvent({
+                  $oldValue : op
+                }, scope);
+              ins.on("submit", function(d){
+                let fn = attribute(scope, ".option.config.remove"),
+                  evt = psEvent({
+                    $oldValue : op
+                  }, scope);
+                psUltility.createPromise(fn, d, evt)
+                  .then((d) => {
+                    scope["option"][_key].slice( i, 1 );
+                    createNavigates(scope["option"][_key]);
+                  });
+              })
+            }
+          }];
+          let ins = psUi.createDrop(e.currentTarget, dropOptions);
+          ins.on("close", ()=>{
+            timeout(()=>{
+              scope.dropClick = dropClick;
+            })
+          })
+        };
+        scope.dropClick = dropClick;
+        function renderDom(){
+          var recur = document.createElement("ps-recursive");
+          newScope && newScope.$destroy();
+          newScope = scope.$new();
+          recur.setAttribute("data-option", "op");
+          recur.setAttribute("ng-repeat", "op in $parent.option.children");
+          each(_wrap.children, (n) => {
+            n.remove();
+          });
+          _wrap.appendChild(recur);
+          compile(_wrap)(newScope);
+
+        }
+        watchers.push(scope.$watch("selected", (n, o, s) => {
+          if(o){
+            let data = psUltility.getScopeData(s.option);
+            o.data = typeof o.data == "undefined" ? {} : o.data;
+            for(var i in data){
+              if(i !== scope.option.key){
+                o.data[i] = data[i];
+              }
+            }
+          }
+          if(n){
+            scope.option._key = `[${s.navigates.indexOf(n)}]["data"]`;
+            n.data = typeof n.data == "undefined" ? {} : n.data;
+            each(scope.option.children, (m) => {
+              psUltility.commitData(m, n.data, true);
+            });
+            _depth = psUltility.getCurrentDepth(scope);
+            let arr = _depth.split(/\[\d+\]\[\"data\"\]/g);
+            arr.pop();
+            attribute(_root, arr.join(".select.data.") + "[\"select\"]", n);
+            renderDom();
+          }
+        }))
+        scope.add = function(){
+          psDialog.popup({
+            label : renderTitle(scope.option.config.title, "add"),
+            type : "layout",
+            children : [_dialogForm()]
+          }).on("submit", function(d){
+            let fn = attribute(scope, ".option.config.add");
+            psUltility.createPromise(fn, d)
+              .then((d) => {
+                scope["option"][_key].push(d);
+                createNavigates(scope["option"][_key]);
+              })
+          })
+        };
+        scope.$on("$destroy", ()=>{
+          each(watchers, (n)=>{
+             n();
+          })
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+  div {
+    user-select: none;
+  }
+  a.dropdown-toggle{
+    cursor : pointer;
+  }
+</style>

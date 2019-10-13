@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("faultKnowledgeUIService",["serviceProxy",function(l){var n="faultKnowledgeUIService",e={saveFaultKnowledge:function(e,t){l.get(n,"saveFaultKnowledge",e,t)},deleteFaultKnowledge:function(e,t){l.get(n,"deleteFaultKnowledge",e,t)},getAllFaultKnowledges:function(e){l.get(n,"getAllFaultKnowledges","",e)},getByFaultNo:function(e,t){l.get(n,"getByFaultNo",e,t)}};return e}])});
+//# sourceMappingURL=../../map/js/services/fault-knowledge-ui-service.js.map

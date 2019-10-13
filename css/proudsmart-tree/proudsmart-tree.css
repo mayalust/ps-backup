@@ -1,0 +1,34 @@
+.proud-smart-tree {
+  background-color: rgba(0, 0, 0, 0) !important;
+}
+.proud-smart-tree .tree-element .ps {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border: 0;
+  margin-right: 5px;
+}
+.proud-smart-tree .tree-element .ps.ps-fold:before {
+  left: 0;
+  opacity: 0.3;
+}
+.proud-smart-tree .tree-element .ps.ps-fold:after {
+  display: none;
+}
+.proud-smart-tree .tree-element .ps.ps-unfold:before {
+  left: 0;
+  opacity: 0.3;
+}
+.proud-smart-tree .tree-wrap {
+  position: relative;
+}
+.proud-smart-tree .tree-wrap.hide {
+  display: none;
+}
+.proud-smart-tree .tree-item {
+  position: relative;
+}
+.proud-smart-tree .tree-item.searched > .tree-element {
+  transition: 1s background-color #fff;
+  background-color: #e1f1f4;
+}

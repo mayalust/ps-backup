@@ -1,0 +1,175 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row margin-bottom-10">
+      <div class="col-md-4" ng-repeat="tabs in statusTabs">
+        <div class="status-tabs" ng-style="{'background-color':tabs.color,'border-color':tabs.border}">
+          <div>
+            <table>
+              <tbody>
+              <tr>
+                <td class="title col-md-12">
+                  <span>{{tabs.value}}</span>
+                </td>
+                <td class="icon col-md-12" rowspan="2">
+                  <span class="proudsmart" ng-class="tabs.icon"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="desc col-md-12">
+                  <span>{{tabs.text}}</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="wrap">
+            <div>
+              <span class="padding-right-10">模型:</span>
+              <div class="horizontal width-200">
+                <ps-select ng-model="modelId" data-options="model.id as model.label for model in models"></ps-select>
+              </div>
+              <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+              <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>名称</th>
+                <th>修改时间</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="item in items">
+                <td ng-bind="item.label"></td>
+                <td ng-bind="item.getModifyTime()"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.analysis()">分析</button>
+                    <button class="btn btn-default" ng-click="item.confirm()">确认</button>
+                    <button class="btn btn-default" ng-click="item.neglect()">忽略</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax){
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      analysis(){
+        cms2.navigateTo(2);
+      }
+      confirm(){
+
+      }
+      neglect(){
+
+      }
+    }
+
+    cms2.getRoot().then( root => {
+      let id = root[0].id,
+        statusTabs = [{
+          value : "-",
+          color : "rgb(12, 70, 109)",
+          border : "#21a6fb",
+          text : "待处理任务",
+          icon : "ps-bw_01",
+          kpi : 3017
+        },{
+          value : "-",
+          color : "rgb(102, 72, 109)",
+          border : "rgb(224, 162, 239)",
+          text : "待处理任务",
+          icon : "ps-bw_02",
+          kpi : 3045
+        },{
+          value : "-",
+          color : "rgb(72, 75, 47)",
+          border : "rgb(231, 181, 43)",
+          text : "其他任务",
+          icon : "ps-bw_03",
+          kpi : 3046
+        }],
+        statusTabsIds = statusTabs.map(({kpi}) => kpi );
+      return cms2.getKpiValue( id, statusTabsIds ).then( vals => {
+        return cms2.success(statusTabs.map( d => {
+          d.value = vals[d.kpi];
+        }));
+      })
+    }).then( d => {
+      scope.statusTabs = d;
+      return ajax.post("resourceUIService.getResourceByModelId", 300).then( domains => {
+        return ajax.post("resourceUIService.getResourceByModelId", 301).then( customers => {
+          return ajax.post("resourceUIService.getResourceByModelId", 302).then( projects => {
+            return cms2.success((domains || [])
+              .concat(customers || []).concat(projects || []));
+          })
+        });
+      })
+    }).then( domains => {
+      scope.resources = domains.map( d => new tableCell(d));
+      scope.models = [{
+        id : 300,
+        label : "管理域"
+      },{
+        id : 301,
+        label : "客户"
+      },{
+        id : 302,
+        label : "项目"
+      }];
+    });
+
+
+    scope.clearFn = function(){
+      scope.filter = ( d => true );
+    }
+    scope.searchFn = function(){
+      scope.filter = ({ modelId }) => {
+        if( scope.modelId && modelId !== scope.modelId){
+          return false;
+        }
+        return true;
+      }
+    };
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

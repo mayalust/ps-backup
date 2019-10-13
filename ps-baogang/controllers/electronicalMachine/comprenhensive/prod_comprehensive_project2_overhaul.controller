@@ -1,0 +1,1116 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psLoading"
+        deps="dialogBuildProjectList,dialogTempProjectList"
+></config>
+<template>
+    <div class="wrap">
+        <!--机械部分记录-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                    <div class="table-title pull-left">机械部分记录</div>
+                    <div class="pull-right">
+                        <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#down_lead1" aria-haspopup="false" aria-expanded="true"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-5">
+                    <button ng-click="editResume()"
+                            ng-if="currentRoleID == 59846674150228 && mode == 'resume'"
+                            class="btn btn-primary pull-right">编辑</button>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                </div>
+                <div class="" id="down_lead1" class="collapse in">
+                    <div class="row margin-bottom-5">
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        定子铁芯外径:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.outerDiameterOfStatorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)" />
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        定子铁芯内径:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.internalDiameterOfStatorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)" />
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        转子铁芯外径:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.outerDiameterOfRotorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)" />
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        转子铁芯内径:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.innerDiameterOfRotorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)" />
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        定子铁芯总长:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.totalLengthOfStatorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        定子通风沟数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfStatorVentilationDitche" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        转子铁芯总长:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.totalLengthOfRotorCore" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        转子通风沟数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfRotorVentilationChannel" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    备注:
+                                </div>
+                                <div class="tbl-cell">
+                                    <input type="text" ng-model="maintainObj.remarkMechanicalPart" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                </div>
+                                <div class="radio-unit">
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    附件:
+                                </div>
+                                <div class="tbl-cell">
+                                    <ps-file2  ng-model="maintainObj.accessoriesMechanicalPart"></ps-file2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--定子部分-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                    <div class="table-title pull-left">定子部分</div>
+                    <div class="pull-right">
+                        <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#down_lead2" aria-haspopup="false" aria-expanded="true"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                </div>
+                <div class="" id="down_lead2" class="collapse in">
+                    <div class="row margin-bottom-5">
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线长度:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.lengthOfLeadOutLineStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线截面:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.sectionOfLeadOutLineStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        绕组端部长度:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.endLengthOfWindingStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        绕组型式:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.windingTypeStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        实际接法:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.actualConnectionStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        极数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.poleNumberStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        槽数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.slotNumberStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线圈匝数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.coilTurnsStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        节距:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.pitchStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        并联支路数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfParallelBrancheStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge1StatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge2StatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge3StatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        极相组数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.polarPhaseGroupNumberStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        铜线型号:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.copperWireModelStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfLeadOutLinesStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        并绕根数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfParallelRadicalStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>根</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        通风沟宽:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.ventilationTrenchWidthStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        出现位置:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.locationOfOccurrenceStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>路</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        槽衬绝缘:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.slotLiningInsulationStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        每极相组线圈数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfCoilPerPolarPhaseGroupStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>组</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    备注:
+                                </div>
+                                <div class="tbl-cell">
+                                    <input type="text" ng-model="maintainObj.remarksStatorOne" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                </div>
+                                <div class="radio-unit">
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    附件:
+                                </div>
+                                <div class="tbl-cell">
+                                    <ps-file2  ng-model="maintainObj.accessoriesStatorOne"></ps-file2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--定子部分2-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                    <div class="table-title pull-left">定子部分</div>
+                    <div class="pull-right">
+                        <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#down_lead3" aria-haspopup="false" aria-expanded="true"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                </div>
+                <div class="" id="down_lead3" class="collapse in">
+                    <div class="row margin-bottom-5">
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线长度:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.lengthOfLeadOutLineStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线截面:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.sectionOfLeadOutLineStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        绕组端部长度:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.endLengthOfWindingStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        绕组型式:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.windingTypeStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        实际接法:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.actualConnectionStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        极数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.poleNumberStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        槽数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.slotNumberStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线圈匝数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.coilTurnsStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        节距:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.pitchStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        并联支路数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfParallelBrancheStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge1StatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge2StatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        线规（ф）:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.wireGauge3StatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        极相组数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.polarPhaseGroupNumberStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        铜线型号:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.copperWireModelStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        引出线数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfLeadOutLinesStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        并绕根数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfParallelRadicalStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>根</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        通风沟宽:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.ventilationTrenchWidthStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        出现位置:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.locationOfOccurrenceStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>路</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        槽衬绝缘:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.slotLiningInsulationStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tbl">
+                                    <div class="radio-lbl">
+                                        每极相组线圈数:
+                                    </div>
+                                    <div class="tbl-cell">
+                                        <input type="text" ng-model="maintainObj.numberOfCoilPerPolarPhaseGroupStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                    </div>
+                                    <div class="radio-unit">
+                                        <span>组</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    备注:
+                                </div>
+                                <div class="tbl-cell">
+                                    <input type="text" ng-model="maintainObj.remarksStatorTwo" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                </div>
+                                <div class="radio-unit">
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    附件:
+                                </div>
+                                <div class="tbl-cell">
+                                    <ps-file2  ng-model="maintainObj.accessoriesStatorTwo"></ps-file2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--转子部分-->
+        <div class="row">
+            <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                    <div class="table-title pull-left">转子部分</div>
+                    <div class="pull-right">
+                        <span class="glyphicon glyphicon-chevron-down" style="font-size: 26px" data-toggle="collapse"  data-target="#down_lead4" aria-haspopup="false" aria-expanded="true"></span>
+                    </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                    <div style=" height:2px;border:none;border-top:2px solid cornflowerblue;"></div>
+                </div>
+                <div class="" id="down_lead4" class="collapse in">
+                    <div class="row margin-bottom-5">
+                        <div class="col-md-12 margin-bottom-5">
+                            <div class="tbl">
+                                <div class="radio-lbl">
+                                    笼条处理:
+                                </div>
+                                <div class="tbl-cell">
+                                    <input type="text" ng-model="maintainObj.cageBarTreatment" class="form-control" ng-disabled="disableFn(mode,currentRoleID)"/>
+                                </div>
+                                <div class="radio-unit">
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--提交 取消-->
+        <div class="row margin-top-10">
+            <div class="col-md-5">
+            </div>
+            <div class="col-md-7">
+                <button class="btn btn-primary btn-100" ng-click="submitFn()" ng-if="mode !='resume' && currentRoleID == 70153973788970 || mode == 'superAdmin'">保存</button>
+                <button class="btn btn-default btn-100" ng-click="close()" ng-if="mode !='resume' && currentRoleID == 70153973788970 || mode == 'superAdmin'">取消</button>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psLoading){
+        let saveWindingOverhaulAC = "motorRepairUIService.saveWindingOverhaulAC",
+                findOneWindingOverhaulAC = "motorRepairUIService.findOneWindingOverhaulAC";
+
+        var target = commonMethodService();
+        var params88 = target.getValue("maintainObj");
+        var params89 = params88.implementOrderNo;
+        var param99 = [];
+        param99.push(params89);
+        scope.mode = target.getValue('mode');
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.editResume = function (){
+          scope.mode = 'superAdmin';
+        };
+        scope.disableFn = function (mode,currentRoleID){
+            return mode === 'resume'
+                || (currentRoleID == 59846674150228 && mode != 'superAdmin')
+                || (currentRoleID != 70153973788970 && currentRoleID != 59846674150228);
+        };
+        //        展示数据
+        ajax.post(findOneWindingOverhaulAC, param99).then( overhaul => {
+            scope.maintainObj = overhaul || {};
+            for(var key in overhaul){
+                if(overhaul.hasOwnProperty(key) === true){
+                    scope[key] = overhaul[key];
+                }
+            }
+        });
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                        ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                        : "-";
+            }
+        }
+        scope.submitFn = function(){
+            let promise = cms2.validate({}, scope);
+            promise.then(() => {
+                if( typeof (scope && scope.maintainObj) != "undefined"){
+                    scope.maintainObj.implementOrderNo = target.getValue("maintainObj").implementOrderNo;//根据implementOrderNo查询
+                    function getFiles(data) {
+                        let keys = Object.keys(data);
+                        let values = Object.values(data);
+                        let temp = [];
+                        let ret = [];
+                        keys.forEach((key, index) => {
+                            let obj = {};
+                            obj.key = key;
+                            obj.files = values[index];
+                            temp.push(obj);
+                        });
+
+                        let index = 0;
+                        temp.forEach(item => {
+                            if (item.files.length > 0) {
+                                item.files.forEach(file => {
+                                    ret.push({
+                                        name: file.name,
+                                        key: item.key,
+                                        file: file,
+                                        index: index
+                                    });
+                                    index ++ ;
+                                });
+                            }
+                        });
+
+                        return ret;
+                    }
+                    function setValueEmpty(data) {
+                        for(let key in data) {
+                            scope.maintainObj[key] = [];
+                        }
+                    }
+                    let formData = new FormData();
+                    let hasFileObj = {};
+                    hasFileObj.accessoriesMechanicalPart = scope.maintainObj.accessoriesMechanicalPart&&scope.maintainObj.accessoriesMechanicalPart.map(v=>{
+                        if(v.hasOwnProperty('filePath'))
+                        {return v;}
+                    }) || [];
+                    hasFileObj.accessoriesStatorOne = scope.maintainObj.accessoriesStatorOne&&scope.maintainObj.accessoriesStatorOne.map(v=>{
+                        if(v.hasOwnProperty('filePath'))
+                        {return v;}
+                    }) || [];
+                    hasFileObj.accessoriesStatorTwo = scope.maintainObj.accessoriesStatorTwo&&scope.maintainObj.accessoriesStatorTwo.map(v=>{
+                        if(v.hasOwnProperty('filePath'))
+                        {return v;}
+                    }) || [];
+                    let obj = {
+                        'accessoriesMechanicalPart':  scope.maintainObj.accessoriesMechanicalPart&&scope.maintainObj.accessoriesMechanicalPart.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                        'accessoriesStatorOne':  scope.maintainObj.accessoriesStatorOne&&scope.maintainObj.accessoriesStatorOne.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                        'accessoriesStatorTwo':  scope.maintainObj.accessoriesStatorTwo&&scope.maintainObj.accessoriesStatorTwo.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                    };
+                    let files = getFiles(obj);
+                    setValueEmpty(obj);
+                    formData.append("resourceId",2);
+                    if(files.length >0){
+                        files.forEach((v,i) => {
+                            formData.append(`file${v.index}`,v.file);
+                        })
+                    }
+                    if(files.length !== 0){
+                        psLoading.showLoadingTip();
+                        ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                            if(s.code == "0"){
+                                psLoading.closeLoading();
+                                let obj = {},sArr = s.data || [];
+                                if(isArray(s.data)){
+                                    s.data.forEach((v,i)=>{
+                                        obj = {};
+                                        obj["fileName"] = files[i].name;
+                                        // obj["filePath"] = v.qualifiedName;
+                                        obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                                        scope.maintainObj[files[i].key].push(obj);
+                                    })
+                                }else {
+                                    obj["fileName"] = files[0].name;
+                                    obj["filePath"] = s.data.qualifiedName;
+                                    scope.maintainObj[files[0].key].push(obj);
+                                }
+                                return cms2.success( scope);
+                            }
+                        }).then(function (scope) {
+                            psLoading.showLoading();
+                            scope.maintainObj.accessoriesMechanicalPart = scope.maintainObj.accessoriesMechanicalPart.concat(hasFileObj.accessoriesMechanicalPart&&hasFileObj.accessoriesMechanicalPart.filter(v=>v));
+                            scope.maintainObj.accessoriesStatorOne = scope.maintainObj.accessoriesStatorOne.concat(hasFileObj.accessoriesStatorOne&&hasFileObj.accessoriesStatorOne.filter(v=>v));
+                            scope.maintainObj.accessoriesStatorTwo = scope.maintainObj.accessoriesStatorTwo.concat(hasFileObj.accessoriesStatorTwo&&hasFileObj.accessoriesStatorTwo.filter(v=>v));
+                            delete scope.maintainObj.label;
+                            delete scope.maintainObj.domainPath;
+                            delete scope.maintainObj.conditionField;
+                            delete scope.maintainObj.createTime;
+                            delete scope.maintainObj.modifyTime;
+                            ajax.post(saveWindingOverhaulAC,scope.maintainObj).then( d => {
+                                if(d != null){
+                                    psLoading.closeLoading();
+                                    growl.info("绕组大修成功！");
+                                }
+                            });
+
+
+                        })
+                    }else {
+                        psLoading.showLoading();
+                        scope.maintainObj.accessoriesMechanicalPart = scope.maintainObj.accessoriesMechanicalPart.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.accessoriesMechanicalPart&&hasFileObj.accessoriesMechanicalPart.filter(v=>v));
+                        scope.maintainObj.accessoriesStatorOne = scope.maintainObj.accessoriesStatorOne.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.accessoriesStatorOne&&hasFileObj.accessoriesStatorOne.filter(v=>v));
+                        scope.maintainObj.accessoriesStatorTwo = scope.maintainObj.accessoriesStatorTwo.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.accessoriesStatorTwo&&hasFileObj.accessoriesStatorTwo.filter(v=>v));
+                        delete scope.maintainObj.label;
+                        delete scope.maintainObj.domainPath;
+                        delete scope.maintainObj.conditionField;
+                        delete scope.maintainObj.createTime;
+                        delete scope.maintainObj.modifyTime;
+                        ajax.post(saveWindingOverhaulAC,scope.maintainObj).then( d => {
+                            if(d != null){
+                                psLoading.closeLoading();
+                                growl.info("绕组大修成功！");
+                            }
+                        });
+
+                    }
+                }
+
+            }).catch(e => {
+                growl.warning( e);
+            });
+        };
+       //绑定时用maintainObj 然后 再根据hasown 给param 接口不会多余参数
+        scope.close = function(){
+            //            特殊处理1
+            if(scope.accessoriesMechanicalPart){
+                scope.accessoriesMechanicalPart = [];
+            }
+            //特殊处理2
+            if(scope.accessoriesStatorOne){
+                scope.accessoriesStatorOne = [];
+            }
+            //特殊处理3
+            if(scope.accessoriesStatorTwo){
+                delete scope.accessoriesStatorTwo;
+            }
+            for(var key in scope){
+                if(scope.hasOwnProperty(key) === true){
+                    if(typeof(scope[key]) == "string"){
+                        scope[key] = "";
+                    }
+                }
+            }
+        }
+
+
+
+    }
+</script>
+<style lang="less" scoped>
+    .wrap {
+        padding : 5px 10px !important;
+    .title{
+        line-height : 26px;
+        padding-right : 20px;
+    }
+    .value {
+        line-height : 26px;
+    }
+    .option{
+        width : 160px;
+    }
+    .arrow {
+        font-size: 18px;
+    }
+    .tbl {
+        width: 100%;
+        display: table;
+    }
+    .tbl-cell {
+        display: table-cell;
+    }
+    .radio-lbl {
+        display: table-cell;
+        width: 150px;
+        text-align:right;
+        padding-right: 5px;
+    }
+    .radio-inp {
+        vertical-align:-2px;
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+    }
+    .radio-spa {
+        padding: 0 15px 0 2px;
+    }
+    .radio-unit {
+        display: table-cell;
+        padding-left: 2px;
+        width: 40px;
+    }
+    .chx {
+        vertical-align: -2px;
+        margin-left: 40px;
+    }
+    }
+</style>

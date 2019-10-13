@@ -1,0 +1,297 @@
+<config injector="$rootScope,$timeout,$q,ajax,$state,psWebsocket,resourceUIService,serviceCenterService,kpiDataService,unitService,psTreeData"></config>
+<template>
+  <div class="row block art-content">
+    <div class="tree-loading ng-scope" ng-if="!loaded"></div>
+    <div class="col-md-12">
+      <div>
+        <table class="t-table">
+          <thead>
+            <tr>
+              <th class="col-xs-4 t-td">
+                <span class="t-span">
+                  <span></span>
+                  <div class="t_star">*</div>
+                </span>
+                <span class="t_fl">名称</span>
+              </th>
+              <th class="col-xs-4 t-td">
+                <span class="t-span">
+                  <span></span>
+                  <div class="t_star">*</div>
+                </span>
+                <span class="t_fl">数值</span>
+              </th>
+              <th class="col-xs-4 t-td">
+                <span class="t-span">
+                  <span></span>
+                  <div class="t_star">*</div>
+                </span>
+                <span class="t_fl">更新时间</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody ng-if="dataItems && dataItems.length == 0">
+            <tr>
+              <td
+                colspan="3"
+                class="t-td"
+                style="text-align:center;white-space:normal;"
+              >
+                没有符合条件的记录
+              </td>
+            </tr>
+          </tbody>
+          <tbody ng-if="dataItems && dataItems.length > 0">
+            <tr ng-repeat="item in dataItems">
+              <td class="col-xs-4 t-td">
+                <span class="t_fl" ng-bind="item.kpiName"></span>
+              </td>
+              <td class="col-xs-4 t-td">
+                <span class="t_fl" ng-bind="item.getValue()"></span>
+              </td>
+              <td class="col-xs-4 t-td">
+                <span class="t_fl" ng-bind="item.getTime()"></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+import { dateparser } from "ps-ultility";
+export default function(
+  rootScope,
+  timeout,
+  q,
+  ajax,
+  $state,
+  psWebsocket,
+  resourceUIService,
+  serviceCenterService,
+  kpiDataService,
+  unitService,
+  psTreeData
+) {
+  return {
+    scope: {},
+    link(scope, element, attr) {
+      let id = $state.params.id,
+        artParams,
+        kpisMap = {},
+        valueListMap = {};
+      scope.loaded = false;
+      function bind(target, fn) {
+        return function() {
+          return fn.apply(target, arguments);
+        };
+      }
+      class TabelCell {
+        constructor(d) {
+          for (let i in d) {
+            this[i] = d[i];
+          }
+        }
+        toFixed(val) {
+          return Math.round((val - 0) * 100) / 100;
+        }
+        getValue() {
+          if (valueListMap[this.dataItemId] == null) {
+            return "-";
+          }
+          return (
+            (this.toFixed(valueListMap[this.dataItemId].value) || "-") +
+            this.getUnit()
+          );
+        }
+        getUnit() {
+          let unit = kpisMap[this.dataItemId] || {};
+          unit = unit.unit ? unit.unit : null;
+          return unit && unit != "NA" ? unit : "";
+        }
+        getTime() {
+          if (valueListMap[this.dataItemId] == null) {
+            return "-";
+          }
+          return dateparser(
+            valueListMap[this.dataItemId].arisingTime
+          ).getDateString("yy/MM/dd hh:mm:ss");
+        }
+      }
+      class ArtParameter {
+        constructor() {
+          //this.ws = psWebsocket("artParameter");
+          this.timer = null;
+          this._getKpiValueList = "kpiDataFlexService.getKpiValueList";
+        }
+        init() {
+          this.getKpisByModelId().then(kpis => {
+            kpisMap = kpis.reduce((a, b) => {
+              a[b.id] = b;
+              return a;
+            }, {});
+            scope.loaded = true;
+            this.renderValue();
+          });
+        }
+        renderValue() {
+          this.getKpiValueList(
+            valueList => {
+              this.saveApply(() => {
+                valueListMap = valueList.reduce((a, b) => {
+                  a[b.kpiCode] = b;
+                  return a;
+                }, {});
+                this.timer = setTimeout(bind(this, this.renderValue), 6000);
+                /* this.ws.on(({ kpiCode, value }) => {
+                this.saveApply(() => {
+                  valueListMap[kpiCode] = value;
+                });
+              }); */
+              });
+            },
+            error => {
+              this.timer = setTimeout(bind(this, this.renderValue), 1000);
+            }
+          );
+        }
+        destroy() {
+          kpisMap = null;
+          valueListMap = null;
+          clearTimeout(this.timer);
+          delete this.timer;
+          delete this.getKpiValueListCallback;
+        }
+        saveApply(fn) {
+          if (rootScope.$$phase == "$apply" || rootScope.$$phase == "$digest") {
+            fn && fn.call(this);
+            return;
+          }
+          scope.$apply(fn);
+        }
+        getKpiValueList(callback, error) {
+          var params = [
+            "kpi",
+            {
+              category: "ci",
+              isRealTimeData: true,
+              timePeriod: 0,
+              nodeIds: [$state.params.id * 1],
+              kpiCodes: this.dataItems.map(d => d.dataItemId),
+              startTime: null,
+              endTime: null,
+              timeRange: "",
+              statisticType: "psiot",
+              condList: [],
+              includeInstance: true,
+              queryInstances: "00"
+            }
+          ];
+          this.getKpiValueListCallback = callback;
+          return ajax
+            .post("kpiDataFlexService.getKpiValueList", params)
+            .then(v => {
+              this.getKpiValueListCallback && this.getKpiValueListCallback(v);
+            });
+          /* 
+          kpiDataService.getRealTimeKpiData(
+            [$state.params.id * 1],
+            this.dataItems.map(d => d.dataItemId),
+            e => {
+              if (e.code == 0) {
+                callback(e.data);
+              } else {
+                error(e);
+              }
+            },
+            true,
+            {},
+            error
+          ); */
+          //return ajax.post(this._getKpiValueList, params);
+        }
+        getKpisByModelId() {
+          return this.getDataItems().then(() => {
+            return ajax.post(
+              "resourceUIService.getKpisByModelId",
+              this.resource.modelId
+            );
+          });
+        }
+        getDataItems() {
+          return this.getSensors().then(sensors => {
+            let fd =
+              sensors.find(sensor => sensor.label.trim() == "整体") || {};
+            fd = fd.kpis ? fd.kpis : [];
+            this.dataItems = scope.dataItems = fd.map(d => new TabelCell(d));
+          });
+        }
+        getSensors() {
+          return psTreeData(id)
+            .getState()
+            .then(resource => {
+              this.resource = resource;
+              return resource.getMeasureLocate();
+            });
+        }
+      }
+      artParams = new ArtParameter();
+      artParams.init();
+      scope.$on("$destroy", () => {
+        artParams.destroy();
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.art-title {
+  margin: 5px;
+  padding: 0px;
+  font-size: 16px;
+  font-weight: normal;
+  text-align: left;
+  color: rgb(255, 255, 255);
+  border-bottom: 1px solid rgb(102, 102, 102);
+  line-height: 30px;
+}
+.t-table {
+  width: 100%;
+  table-layout: fixed;
+  tr {
+    line-height: 0.42857143;
+    .t-td {
+      padding: 3px;
+      white-space: pre-wrap;
+      border-bottom: 1px solid rgb(102, 102, 102);
+      height: 41px;
+      width: 33.33%;
+      position: relative;
+      .t-span {
+        display: none;
+        width: 10px;
+        .t_star {
+          font-size: 20px;
+          top: 5px;
+          position: absolute;
+        }
+      }
+      .t_fl {
+        float: left;
+        line-height: 12px
+      }
+    }
+  }
+}
+.art-content {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  background-color: rgba(250, 250, 250, 0);
+  /*max-height: 500px;*/
+  overflow-y: auto;
+  height: 483px;
+}
+</style>

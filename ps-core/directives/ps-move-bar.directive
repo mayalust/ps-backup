@@ -1,0 +1,164 @@
+<config injector="$rootScope,$timeout,psNavigators, $location,psRouter,$stateParams,commonMethodService2"
+></config>
+<template>
+  <div class="move-bar">
+    <div class="bar-mark">
+      <span class="glyphicon glyphicon-chevron-right"></span>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+import { each } from "ps-ultility";
+export default function(
+  rootScope,
+  timeout,
+  psNavigators,
+  location,
+  psRouter,
+  stateParams,
+  cms2
+) {
+  return {
+    scope: true,
+    link(scope, element, attr, ngModel) {
+      let moveBar;
+      function bind(target, fn) {
+        return function() {
+          return fn.apply(target, arguments);
+        };
+      }
+      function throttle(fn, time) {
+        let timer = null,
+          args;
+        return function() {
+          if (timer == null) {
+            timer = setTimeout(() => {
+              timer = null;
+              fn.apply(this, args || arguments);
+            }, time);
+          } else {
+            args = arguments;
+          }
+        };
+      }
+      class Cover {
+        constructor() {
+          this.dom = document.createElement("div");
+          this.style({
+            width: "100%",
+            height: "100%",
+            position: "fixed",
+            top: "0",
+            left: "0",
+            cursor: "col-resize",
+            zIndex: 9999
+          });
+        }
+        style(config) {
+          for (let i in config) {
+            this.dom.style[i] = config[i];
+          }
+        }
+        add() {
+          document.body.appendChild(this.dom);
+        }
+        remove() {
+          this.dom.remove();
+        }
+        destroy() {
+          this.remove();
+          this.dom = null;
+        }
+      }
+      class MoveBar {
+        constructor(dom) {
+          this.dom = dom;
+          this.parent = dom.parentNode;
+          this.cover = new Cover();
+          this.parentSibling = this.parent.nextElementSibling;
+          this.mousedownFn = bind(this, this.mousedown);
+          this.mouseupFn = bind(this, this.mouseup);
+          this.mousemoveFn = bind(this, throttle(this.mousemove, 20));
+          dom.addEventListener("mousedown", this.mousedownFn);
+        }
+        mousedown(e) {
+          this.cover.add();
+          this.startMouseX = e.clientX;
+          window.addEventListener("mousemove", this.mousemoveFn);
+          window.addEventListener("mouseup", this.mouseupFn);
+        }
+        mouseup(e) {
+          this.cover.remove();
+          window.removeEventListener("mousemove", this.mousemoveFn);
+          window.removeEventListener("mouseup", this.mouseupFn);
+          scope.$broadcast("resize");
+        }
+        getMax() {
+          let screenWidth =
+            document.body.clientWidth || document.documentElement.clientWidth;
+          return [screenWidth / 6 - 20, screenWidth / 6 + 200];
+        }
+        mousemove(e) {
+          let movementX = e.clientX - this.startMouseX,
+            range = this.getMax();
+          if (e.clientX < range[0]) {
+            this.startMouseX = range[0];
+            return;
+          }
+          if (e.clientX > range[1]) {
+            this.startMouseX = range[1];
+            return;
+          }
+          let width = this.parent.clientWidth + movementX;
+          this.startMouseX = e.clientX;
+          this.parent.style.width =
+            ((width / document.body.clientWidth) * 100).toFixed(2) + "%";
+          this.parentSibling.style.width =
+            ((1 - width / document.body.clientWidth) * 100).toFixed(2) + "%";
+        }
+        destroy() {
+          this.dom.addEventListener("mousedown", this.mousedownFn);
+          window.removeEventListener("mousemove", this.mousemoveFn);
+          window.removeEventListener("mouseup", this.mouseupFn);
+          this.cover.destroy();
+          this.parentSibling.style.width = "";
+          this.parent.style.width = "";
+          this.parentSibling = null;
+          this.parent = null;
+          this.cover = null;
+          this.dom = null;
+          this.mousedownFn = null;
+          this.mousemoveFn = null;
+          this.mouseupFn = null;
+        }
+      }
+      timeout(() => {
+        moveBar = new MoveBar(element[0]);
+        scope.$on("$destroy", () => {
+          moveBar.destroy();
+        });
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped>
+.move-bar {
+  .bar-mark {
+    top: 50%;
+    margin-top: -10px;
+    margin-left: -2px;
+    color: white;
+    position: absolute;
+  }
+  position: absolute;
+  top: 0px;
+  cursor: col-resize;
+  width: 10px;
+  height: 100%;
+  right: 0px;
+  border-left: 2px solid #093c5e;
+  border-right: 4px solid #093c5e;
+  background-color: #126296;
+}
+</style>

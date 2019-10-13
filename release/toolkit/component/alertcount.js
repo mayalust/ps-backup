@@ -1,0 +1,2 @@
+define([],function(){return function(e){var n=e.element,a=e.serviceCenterService,l=$("<ul></ul>").addClass("nav nav-pills nav-stacked");return a.getValuesByTimealert().then(function(e){var n,a,s,t;for(var i in e.series[0].data)l.append((n=e.series[0].data[i],a=void 0,a=$("<li></li>"),s=$("<span></span>").text(n.name).css("line-height","30px"),t=$("<span></span>").addClass("pull-right text-red ng-binding").css("line-height","30px").text(n.value+"条"),a.append(s).append(t),a))}),n.style&&l.css(n.style),l}});
+//# sourceMappingURL=../../map/toolkit/component/alertcount.js.map

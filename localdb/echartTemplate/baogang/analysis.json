@@ -1,0 +1,209 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+    {
+      "type": "row",
+      "source": "ROW",
+      "parameters": {
+        "alignment": "bootstrap"
+      },
+      "style": {},
+      "children": [
+      {
+        "type": "column",
+        "children": [
+        {
+          "label": "控制板1",
+          "type": "block",
+          "source": "BLOCK",
+          "style": {
+            "padding": "5px",
+            "overflow": "hidden",
+            "background-color": "#04131e",
+            "border": "0",
+            "height": "calc( 100vh - 115px)"
+          },
+          "advance": {
+            "expression": "{}"
+          },
+          "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+            {
+              "label": "控件组",
+              "type": "ctrlgroup",
+              "source": "CTRLGROUP",
+              "advance": {
+                "expression": "expression = {\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      var inp = \"\"\n      var render = function(){\n          var ctrlGroups = [\n           [{\n               type : \"input\",\n               value : inp,\n               class : \"col-md-6\",\n               on : {\n                change : function(elem){\n                  inp = elem.value;\n                }\n              }\n           },{\n              type : \"button\",\n              value : \"搜索\",\n              icon : \"glyphicon glyphicon-search\",\n              btnclass : \"btn btn-primary\",\n              class : \"col-md-5\",\n              on : {\n                click : function(elem){\n                  \n                  target.trigger(\"searchtree\", inp);\n                }\n              }\n            }]\n          ];\n          event.target.render(ctrlGroups);\n      }\n      render();\n    }\n  }\n}"
+              },
+              "style": {
+                "margin": "5px",
+                "font-size": "12px"
+              },
+              "help": "../pdf/ctrlgroup.pdf",
+              "parameters": {
+                "cgroupstyle": "table"
+              }
+            },
+            {
+              "label": "控制板1",
+              "type": "block",
+              "source": "BLOCK",
+              "style": {
+                "padding": "0px",
+                "margin": "0px",
+                "border": "0",
+                "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+                "background-color": "rgba(250,250,250,0)",
+                "height": "calc( 100vh - 135px)",
+                "overflow-y": "auto",
+                "overflow-x": "auto"
+              },
+              "advance": {
+                "expression": {}
+              },
+              "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                {
+                  "label": "左侧树选择器",
+                  "type": "treenavigator",
+                  "source": "TREENAVIGATOR",
+                  "advance": {
+                    "expression": ""
+                  },
+                  "parameters": {
+                    "navitype": "device"
+                  }
+                }]
+              }],
+              "url": "images/map/map1.png",
+              "parameters": {}
+            }]
+          }],
+          "url": "images/map/map1.png"
+        }],
+        "col": 2
+      },
+      {
+        "type": "column",
+        "children": [
+        {
+          "label": "控制板1",
+          "type": "block",
+          "source": "BLOCK",
+          "style": {
+            "padding": "5px 15px",
+            "margin": "0px",
+            "border": "0",
+            "box-shadow": "0px 0px 0px 0px rgba(0,0,0,0)",
+            "background-color": "rgba(250,250,250,0)",
+            "height": "calc(100vh - 115px)",
+            "overflow-y": "auto"
+          },
+          "advance": {
+            "expression": "{}"
+          },
+          "children": [
+          {
+            "type": "column",
+            "col": 12,
+            "children": [
+            {
+              "label": "控件组",
+              "type": "ctrlgroup",
+              "source": "CTRLGROUP",
+              "advance": {
+                "expression": "expression = {\n  on : {\n    init : function(event){\n      var target = event.target;\n      var global = event.global;\n      var render = function(str){\n          var ctrlGroups = [\n           [{\n              type : \"label\",\n              value : str || \"普通标签\",\n              style : {\n                  \"font-weight\" : \"bold\",\n                  \"color\" : \"#72b3d7\",\n                  \"line-height\" : \"20px\"\n              },\n              class : \"col-md-12\"\n            }]\n          ];\n          event.target.render(ctrlGroups);\n      }\n      var naviString = target.getValue(\"global/navistring\");\n      render(naviString || \"读取中请稍后。。。\");\n      target.off(\"changeNavString\");\n      target.on(\"changeNavString\", function(str){\n          render(str);\n      });;\n      \n    }\n  }\n}"
+              },
+              "style": {
+                "margin": "0 5px",
+                "font-size": "12px",
+                "color": "#72b3d7"
+              },
+              "help": "../pdf/ctrlgroup.pdf",
+              "url": "images/map/map1.png",
+              "parameters": {
+                "cgroupstyle": "table"
+              }
+            },
+            {
+              "label": "伪TAB样式",
+              "type": "faketab",
+              "source": "FAKETAB",
+              "advance": {
+                "getfunction": "kpiDataService.getValueList",
+                "category": "ci",
+                "condition": [
+                  "kpi",
+                  "{object:kpiQueryModel}"
+                ],
+                "expression": "expression = {\n  \"on\" : {\n    \"init\" : function(event){\n\n      // -------------- 初始化内容在这里设置;\n      var ANAL = [{\n        id : 7,\n        label : \"综合趋势\",\n        default : \"baogang/analysis/general\",\n        icon : \"proudsmart ps-bw_zonghequshi\",\n      },{\n        id : 2,\n        label : \"寿命预测\",\n        default : \"baogang/analysis/lifetime\",\n        icon : \"proudsmart ps-bw_shoumingyuce\",\n      },{\n        id : 5,\n        label : \"大数据分析\",\n        default : \"baogang/analysis/analyzeData\",\n        icon : \"proudsmart ps-bw_dashujufenxi\",\n      },{\n        id : 6,\n        label : \"模型分析\",\n        default : \"baogang/analysis/analyzeModel\",\n        icon : \"proudsmart ps-bw_moxingfenxi\",\n      }];\n      var TOOLS = {\n        \"ELEC\" : {\n          id : 1,\n          label : \"电气分析\",\n          default : \"baogang/analysis/electric\",\n          icon : \"proudsmart ps-bw_dianqifenxi\",\n        },\n        \"VIBE\" : {\n          id : 0,\n          label : \"振动分析\",\n          default : \"baogang/analysis/shaking\",\n          icon : \"proudsmart ps-bw_zhendongfenxi\",\n        }\n      }\n      var TYPE = \"analysis\";\n      if(TYPE == \"analysis\"){\n        var tabs = [];\n        for(var i in ANAL){\n          tabs.push(ANAL[i]);\n        }\n        var NAVIGATETO = \"analysisNavigateTo\";\n        var CACHEDVALUENAME = \"controlPanelAnalysisNavigation\";\n        var CHANGENAVEEVENT = \"analysisviewchange\";\n        var MOVETOEVENT = \"analysismoveTo\";\n        /**\n         var tabs = [{\n          id : 0,\n          label : \"振动分析\",\n          default : \"baogang/analysis/shaking\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 1,\n          label : \"电器分析\",\n          default : \"baogang/analysis/elec\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 2,\n          label : \"寿命预测\",\n          default : \"baogang/analysis/estima\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 3,\n          label : \"大数据分析\",\n          default : \"baogang/analysis/analyzeData\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 6,\n          label : \"模型分析\",\n          default : \"baogang/analysis/analyzeModel\",\n          icon : \"glyphicon glyphicon-home\",\n        }];\n         var NAVIGATETO = \"analysisNavigateTo\";\n         var CACHEDVALUENAME = \"controlPanelAnalysisNavigation\";\n         var CHANGENAVEEVENT = \"analysisviewchange\";\n         var MOVETOEVENT = \"analysismoveTo\";*/\n      } else if(TYPE == \"diagnose\"){\n        var tabs = [{\n          id : 0,\n          label : \"多专业诊断\",\n          default : \"baogang/diagnose/multiArea\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 1,\n          label : \"协同诊断\",\n          default : \"baogang/diagnose/corporation\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 2,\n          label : \"视频诊断\",\n          default : \"baogang/diagnose/video\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 3,\n          label : \"报告编制\",\n          default : \"baogang/diagnose/report\",\n          icon : \"glyphicon glyphicon-home\",\n        }];\n        var NAVIGATETO =  \"diagnoseNavigateTo\";\n        var CACHEDVALUENAME = \"controlPanelDiagnoseNavigation\";\n        var CHANGENAVEEVENT = \"diagnoseviewchange\";\n        var MOVETOEVENT = \"diagnosemoveto\";\n      } else if(TYPE == \"history\"){\n        var tabs = [{\n          id : 0,\n          label : \"诊断履历\",\n          default : \"baogang/history/diagnosehistory\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 1,\n          label : \"故障履历\",\n          default : \"baogang/history/malfunctionhistory\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 2,\n          label : \"检测履历\",\n          default : \"baogang/history/checkhistory\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 3,\n          label : \"点检异常\",\n          default : \"baogang/history/detailcheckhistory\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 4,\n          label : \"报警记录\",\n          default : \"baogang/history/warninglist\",\n          icon : \"glyphicon glyphicon-home\",\n        },{\n          id : 5,\n          label : \"诊断报告\",\n          default : \"baogang/history/diagnosereport\",\n          icon : \"glyphicon glyphicon-home\",\n        }];\n        var NAVIGATETO =  \"historyNavigateTo\";\n        var CACHEDVALUENAME = \"controlPanelHistoryNavigation\";\n        var CHANGENAVEEVENT = \"historyviewchange\";\n        var MOVETOEVENT = \"historymoveto\";\n      }\n      // ------------------- 初始化内容在这里设置\n      var target = event.target;\n      var main = target.getParameter(\"main\") || 0;\n      var param = target.getParameter(\"sub\");\n      var main, path;\n      if(param instanceof Array){\n        sub = param[0];\n        path = param[1];\n      } else {\n        sub = param\n      }\n      target.setScopeValue(\"CACHEDVALUENAME\", CACHEDVALUENAME);\n      target.setScopeValue(\"CHANGENAVEEVENT\", CHANGENAVEEVENT);\n      target.setScopeValue(\"MOVETOEVENT\", MOVETOEVENT);\n      var editMode = true;\n      var subTabs = [];\n      var updateNaviList = function(){\n        var obj = {\n          tabs : tabs,\n          subTabs : subTabs,\n          editMode : editMode\n        };\n        target.saveEditorStatus(CACHEDVALUENAME, obj);\n      }\n      var select = function(item, path){\n        var viewId = item.viewId;\n        target.trigger(CHANGENAVEEVENT, {\n          item : item,\n          path : path\n        });\n      };\n      var saveView = function(item, callback){\n        var viewTitle = item.label;\n        var viewType = \"dashboard\";\n        var viewId = item.viewId;\n        if(viewId){\n          target.updateView({\n            viewId : viewId,\n            viewTitle : item.label,\n            viewType : \"dashboard\"\n          }, function(data){\n            callback(data);\n          })\n        } else {\n          var run = function(json){\n            // 
+                "customCategory": ""
+              },
+              "style": {
+                "color": "#fff",
+                "background-color": "#3c8dbc",
+                "margin": "5px"
+              },
+              "parameters": {},
+              "url": "images/map/map1.png"
+            },
+            {
+              "label": "控制板1",
+              "type": "block",
+              "source": "BLOCK",
+              "style": {
+                "padding": "5px",
+                "min-height": "calc(100vh - 200px)"
+              },
+              "advance": {
+                "expression": {}
+              },
+              "children": [
+              {
+                "type": "column",
+                "col": 12,
+                "children": [
+                {
+                  "label": "视图嵌入",
+                  "type": "injector",
+                  "source": "INJECTOR",
+                  "parameters": {
+                    "icon": {
+                      "id": 0,
+                      "perfix": "ion",
+                      "css": "ion-ios-gear-outline"
+                    }
+                  },
+                  "advance": {
+                    "getfunction": "",
+                    "expression": "expression = {\n  on : {\n    init : function(event){\n      var json;\n      var target = event.target;\n      var CHANGENAVEEVENT = target.getScopeValue(\"CHANGENAVEEVENT\");\n      var MOVETOEVENT = target.getScopeValue(\"MOVETOEVENT\");\n      target.off(MOVETOEVENT);\n      target.on(MOVETOEVENT, function(path){\n        var find = json.groups.find(function(elem){\n          return elem.path == path;\n        });\n        json.layout = find.layout;\n        target.render(json);\n      });\n      debugger;\n      target.off(CHANGENAVEEVENT);\n      target.on(CHANGENAVEEVENT, function(data){\n        var view = data.item;\n        var path = data.path;\n        var viewId = view.viewId;\n        if(viewId){\n          target.getViewById(viewId, function(view){\n            var content = view.content;\n            // 
+                  },
+                  "style": {},
+                  "children": []
+                }]
+              }],
+              "url": "images/map/map1.png",
+              "parameters": {}
+            }]
+          }]
+        }],
+        "col": 10
+      }],
+      "advance": {
+        "expression": "expression = {\n  \"on\" : {\n    \"init\" : function(event){\n      var target = event.target;\n      //target.setDimension([6,6]);\n    }\n  }\n};"
+      }
+    }],
+    "col": 12,
+    "CACHEDVALUENAME": "controlPanelAnalysisNavigation",
+    "CHANGENAVEEVENT": "analysisviewchange",
+    "MOVETOEVENT": "analysismoveTo"
+  },
+  "setting": "{\n  \"theme\": \"steel\"\n}"
+}

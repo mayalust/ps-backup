@@ -1,0 +1,89 @@
+<config route=""
+        injector="$rootScope,$timeout,$compile" type="factory"
+></config>
+<script type="text/javascript">
+  import ultiltiy from "ps-ultility";
+  export default function(rootScope,timeout,compile){
+    function get(){
+      return {
+        devices : {
+          prod_propertyinfo : { label : "设备属性", backhistory : true  },
+          prod_part : { label : "部位", backhistory : true  },
+          prod_spare : { label : "备件", backhistory : true  },
+          prod_datatemplate : { label : "数据模版", backhistory : true  },
+          prod_document : { label : "公共文档", backhistory : true  }
+        },
+          deviceType: {
+            prod_devicetype : "设备类型",
+          },
+        test : {
+            prod_test : "布局",
+            prod_layout : "abc"
+        },
+        device_info: {
+            prod_device_property : { label : "配置设备信息", backhistory : true  },
+            prod_device_part : { label : "部位", backhistory : true  },
+            prod_device_spare : { label : "备件", backhistory : true  },
+            prod_device_template : { label : "数据项", backhistory : true  },
+            prod_public_document : { label : "公共文档", backhistory : true  },
+            prod_device_document : { label : "设备文档", backhistory : true  },
+        },
+        device_look : {
+            prod_device_look : { label : "设备信息", backhistory : true  }
+        },
+        device_meter : {
+            meter_measure : "计量证书",
+            prod_period : "计量周期",
+        },
+        model : {
+          prod_addModel : { label : "基础属性", backhistory : true  },
+          prod_dataItem: { label : "数据项", backhistory : true  }
+        },
+        deviceAccessSet : {
+            prod_deviceAccessSet :"接入协议",
+            prod_deviceAccessGroup : "配置组"
+        },
+        myTask: {
+            prod_wait: "待处理",
+            prod_process: "处理中",
+            prod_finish: "已完成"
+        },
+        userGroup:{
+            prod_addUserGroup:"用户组信息",
+            prod_groupuser:"用户信息"
+        },
+        baogang: {
+            prod_smart_check_detail : "智能检修标准详情",
+        },
+        authorize : {
+          prod_authorize_data : "域授权",
+          prod_authorize_device : "设备授权"
+        },
+        componentPermissions : {
+            menus : {
+                url : function(param){
+                    return "usermanager/permission/menus/" + param.roleID;
+                },
+                label : "菜单功能"
+            },
+            view : {
+                url : function(param){
+                    return "usermanager/permission/view/" + param.roleID;
+                },
+                label : "视图权限"
+            },
+            equipment : {
+                url : function(param){
+                    return "usermanager/permission/equipment/" + param.roleID;
+                },
+                label : "设备控制"
+            },
+            prod_componentpermiss : "新组件权限",
+        }
+      }
+    }
+    return {
+      get : get
+    }
+  }
+</script>

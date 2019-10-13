@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(t){"use strict";t.factory("reportUIService",["serviceProxy",function(o){var r="reportUIService",t={getReportInfo:function(t,e){o.get(r,"getReportInfo",t,e)},getReportCatalogList:function(t){o.get(r,"getReportCatalogList",[],t)},getDataSourceConfigList:function(t){o.get(r,"getDataSourceConfigList",[],t)}};return t}])});
+//# sourceMappingURL=../../map/js/services/report-ui-service.js.map

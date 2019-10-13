@@ -1,0 +1,64 @@
+<config injector="$q">
+</config>
+<template>
+  <div class="wrap">
+  </div>
+</template>
+<script type="text/javascript">
+import svgChart from './svg-chart';
+
+export default function ($q) {
+  return {
+    scope: {
+      option: '=?'
+    },
+    link ($scope, element) {
+      const loadD3Chart = () => {
+        let defer = $q.defer();
+        if (typeof d3 == "undefined") {
+          window.require(['d3'], d3js => {
+            defer.resolve(d3js);
+          }, e => {
+            defer.reject(e);
+          });
+        } else {
+          defer.resolve(d3);
+        }
+        return defer.promise;
+      }
+      const loadD3Promise = loadD3Chart();
+      const colorObj = {
+        notice: '#ece418',
+        warning: '#ee6b1c',
+        normal: '#00bc79'
+      };
+      $scope.$watch(`option`, (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          loadD3Promise.then(d3 => {
+            let newN = n.reverse();
+            let option = {
+              series: newN.map(item => {
+                return {
+                  type: '3dbar',
+                  data: [item.value],
+                  itemStyle: {
+                    normal: {
+                      color: colorObj[item.color] || item.color
+                    }
+                  }
+                }
+              })
+            };
+            svgChart(d3).init(element[0], option);
+          });
+        }
+      });
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+.wrap {
+  height: 100%;
+}
+</style>

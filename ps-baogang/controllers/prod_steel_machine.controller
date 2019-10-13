@@ -1,0 +1,370 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="element-row">
+      <div class="topo with-border">
+        <div class="col-md-8">
+          <ps-topo-common></ps-topo-common>
+        </div>
+        <!-- 工艺参数-->
+        <div class="col-md-4">
+          <div class="row block" style="padding: 5px;margin: 5px;">
+            <div class="col-md-12">
+              <div class="art-title">
+                工艺参数
+              </div>
+              <div class="row block art-content">
+                <ps-art-parameter></ps-art-parameter>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ps-alert-diagnose></ps-alert-diagnose>
+      <!--<div class="alarm with-border">
+        <h5 style="margin-bottom: 10px;">报警通知</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly"
+          data-source="resources1"
+          data-filter="filter1"
+          data-sort="sort1"
+          data-page="page1"
+        >
+          <thead>
+            <tr>
+              <th>产线</th>
+              <th>设备信息</th>
+              <th>报警来源</th>
+              <th>报警消息</th>
+              <th>报警级别</th>
+              <th>报警时间</th>
+              <th>报警状态</th>
+              <th class="option">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              ng-repeat="(key,item) in items track by key"
+              ng-click="showInfo(item)"
+            >
+              &lt;!&ndash;<td ng-bind="item.customerName"></td>&ndash;&gt;
+              <td>
+                <span ng-bind="item.customerName"></span>
+              </td>
+              <td>
+                <span ng-bind="item.devName"></span>
+              </td>
+              <td>
+                &lt;!&ndash; //1  "采集系统";&ndash;&gt;
+                <span
+                  ng-bind="item.appName == 1 ? '在线预警'
+                              :item.appName == 2 ? '智能诊断'
+                              :item.appName == 3 ? '大数据分析'
+                              :item.appName == 4 ? '离线诊断'
+                              :'-'
+                "
+                ></span>
+              </td>
+              <td>
+                <span ng-bind="item.message"></span>
+              </td>
+              <td>
+                <span
+                  ng-bind="item.severity == -1 ? '正常'
+                           :item.severity == 2 ? '注意'
+                           :item.severity == 3 ? '异常'
+                           :item.severity == 4 ? '警告'
+                           :'-'
+              "
+                  ng-class="{'alerts-normal':item.severity == -1,
+                           'alerts-minor':item.severity == 2,
+                           'alerts-black' :item.severity == 3,
+                           'alerts-critical':item.severity == 4,
+                          }"
+                  class="label"
+                ></span>
+              </td>
+              <td>
+                <span ng-bind="formatTime(item.firstArisingTime)"></span>
+              </td>
+              <td>
+                <span
+                  ng-bind="item.state == 0 ? '新产生'
+                           :item.state == 5 ? '已确认'
+                           :item.state == 10 ? '待处理'
+                           :item.state == 20 ? '已解决'
+                           :item.state == 30 ? '已忽略'
+                           :'-'
+              "
+                ></span>
+              </td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="progress(item)">
+                    <span class="glyphicon glyphicon-cog">过程跟踪</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="diagnosis-report with-border">
+        <h5 style="margin-bottom: 10px;">智能诊断</h5>
+        <div class="row font-white back-color">
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警消息:</span>
+            <span
+              ng-bind="diagInfo ? diagInfo.message : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警级别: </span>
+            <span
+              ng-bind="diagInfo ? (diagInfo.severity == -1 ? '正常'
+                                                           :diagInfo.severity == 2 ? '注意'
+                                                           :diagInfo.severity == 3 ? '异常'
+                                                           :diagInfo.severity == 4 ? '警告'
+                                                           :'-'): ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警时间: </span>
+            <span
+              ng-bind="diagInfo ?formatTime(diagInfo.firstArisingTime) : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.diagnoseDesc">
+            <span>诊断结论: </span>
+            <ul ng-repeat="(k,item) in diagDesArr" style="margin-left: 24px;">
+              <li>
+                <span ng-if="diagDesArr.length !== 0">{{ k + 1 }}.</span>
+                {{ item }}
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.dealOption">
+            <span>处理建议:</span>
+            <span
+              ng-bind="diagInfo ? diagInfo.dealOption : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+        </div>
+      </div>-->
+    </div>
+  </div>
+</template>
+<script>
+import { extend, dateparser } from "ps-ultility";
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  var target = cms();
+  let dataMap = new Map(),
+    ws = psWebsocket("prod_steel_machine");
+  class socektData {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    on() {
+      ws.on(state.params.id, this.kpiCode, d => {
+        scope.$apply(() => {
+          this.value = d;
+        });
+      });
+    }
+  }
+/*  //过程跟踪
+  scope.progress = function(elem) {
+    ajax
+      .post("ticketTaskService.getDealTicketListByPage", [
+        {
+          attrs: {
+            origId: elem.alertId
+          },
+          categorys: "50,90,260"
+        },
+        {
+          start: 0,
+          length: 10
+        }
+      ])
+      .then(dt => {
+        if (dt.data.length > 0) {
+          target.setValue("ticketNo", dt.data[0].ticketNo);
+          target.navigateTo("index", {
+            main: [0, "viewId:9246777620035"] //viewId???
+          });
+        } else {
+          target.growl("告警未转工单", "warning");
+        }
+      });
+  };
+
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+  }
+  scope.showInfo = function(item) {
+    scope.diagInfo = item;
+    scope.diagDesArr = (item.diagnoseDesc ? item.diagnoseDesc : "").split(",");
+  };
+
+  cms().getDomainAreaLineTree_alertStatus(function(find) {
+    let id = state.params.id;
+    ajax
+      .post("alertQueryFlexService.getAlertByPage", [
+        {
+          domain: "",
+          nodeType: "",
+          pageSize: 1000,
+          severities: "1,2,3,4",
+          states: "0,5,10,20",
+          nodeIds: id
+        },
+        {
+          start: 0,
+          length: "",
+          sort: "createTime",
+          sortType: "desc",
+          statCount: true,
+          total: 0
+        }
+      ])
+      .then(d => {
+        let nodeIds = d.data.map(b => b.nodeId);
+        //用设备id查找 customerId
+        ajax
+          .post("resourceUIService.getResourceByIds", [nodeIds])
+          .then(customers => {
+            let customerIds = customers.map(customer => customer.customerId);
+            customers.forEach(customer => {
+              d.data = d.data.map(v => {
+                v["customerId"] = customer.customerId;
+                return v;
+              });
+            });
+            //用customerId 查找 customerName
+            ajax
+              .post("resourceUIService.getResourceByIds", [customerIds])
+              .then(customerNames => {
+                let customerObj = {},
+                  customerArr = [];
+                customerNames.forEach(customerName => {
+                  customerObj.customerId = customerName.id;
+                  customerObj.customerName = customerName.name;
+                  customerArr.push(customerObj);
+                });
+                customerArr.forEach(c => {
+                  d.data.map(vid => {
+                    if (vid.customerId == c.customerId) {
+                      vid["customerName"] = c["customerName"];
+                      return vid;
+                    }
+                  });
+                });
+                scope.resources1 = d.data.map(b => new tableCell(b));
+              });
+          });
+      });
+  });*/
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+.with-border {
+  border: 1px solid #25729d;
+}
+
+.font-white {
+  color: #fff;
+  font-size: 75%;
+  font-weight: 700;
+}
+.font-ellipse {
+  width: calc(100% - 80px);
+  word-break: normal;
+  display: inline-block;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow: hidden;
+  vertical-align: top;
+  padding-left: 10px;
+}
+.back-color {
+  div {
+    padding: 4px !important;
+    &:nth-child(1) {
+      background-color: #214867 !important;
+    }
+    padding: 4px;
+  }
+}
+.art-title {
+  margin: 5px;
+  padding: 0px;
+  font-size: 16px;
+  font-weight: normal;
+  text-align: left;
+  color: rgb(255, 255, 255);
+  border-bottom: 1px solid rgb(102, 102, 102);
+  line-height: 30px;
+}
+.t-table {
+  width: 100%;
+  table-layout: fixed;
+  tr {
+    line-height: 0.42857143;
+    .t-td {
+      padding: 3px;
+      white-space: pre-wrap;
+      border-bottom: 1px solid rgb(102, 102, 102);
+      height: 41px;
+      width: 33.33%;
+      position: relative;
+      .t-span {
+        display: none;
+        width: 10px;
+        .t_star {
+          font-size: 20px;
+          top: 5px;
+          position: absolute;
+        }
+      }
+      .t_fl {
+        float: left;
+      }
+    }
+  }
+}
+.art-content {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  background-color: rgba(250, 250, 250, 0);
+  max-height: 500px;
+  overflow-y: auto;
+}
+</style>

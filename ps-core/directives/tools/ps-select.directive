@@ -1,0 +1,256 @@
+<config injector="$q,$timeout,$parse,psEvent"
+></config>
+<template>
+  <div class="wrap">
+    <select ng-disabled="config.disabled"></select>
+    <span style="color: red;font-size: 12px; margin-left: 10px;"
+          ng-if="error"
+          ng-bind="error"></span>
+  </div>
+</template>
+<script type="text/javascript">
+  import { attribute } from "ps-ultility";
+  export default function (q, timeout, $parse, psEvent) {
+    return {
+      scope: {
+        ngModel: "=?",
+        config: "=?",
+        validate : "=?",
+        composory : "=?",
+        options: '@'  //= 赋值 @字符格式  & 回调  不写也可以
+      },
+      require: '?ngModel',
+      link (scope, element, attr, ngModel) {
+        function isTypeof (type) {
+          return function (obj) {
+            return toString.call(obj) === "[object " + type + "]";
+          }
+        }
+        var toString = Object.prototype.toString,
+          change = attr['change'],
+          isArray = isTypeof("Array"),
+          isObject = isTypeof("Object"),
+          //reg = /(?:(?:([\w\[\]\d\.\"\']+)\s+as\s+)?([\w\[\]\d\.\"\']+)\s+for\s+)?(\w+)\s+in\s+(?:([()$\w\[\]\d\.\"\']+))/g,
+            reg = /(?:(?:([\w\[\]\d\.\"\']+)\s+as\s+)?([\w\[\]\d\.\"\']+)\s+for\s+)?(\w+)\s+in\s+(?:([^$]+))$/g,
+          match = reg.exec(attr["options"]), s2,
+          defer = q.defer(),
+          options = match[4],
+          item = match[3],
+          value = match[2] || item,
+          key = match[1] || value,
+          $dom = $(element[0]).find('select'),
+          dom = $dom[0],
+          dataOptions = getData(scope.$parent, options),
+          defaultConfig = {
+            placeholder: '---请选择---',
+            search: true,
+            multiple: false,
+            width: '100%',
+            language: {
+              noResults: function () {
+                return "没有该匹配项";
+              }
+            }
+          };
+        scope.config = $.extend({}, defaultConfig, scope.config || {});
+        $dom.css({'width': scope.config.width, 'height': scope.config.height});
+        // $dom.attr(scope.config.disabled ? scope.config.disabled : "")
+        var fn = new Function("scope", "options", "callback",
+          "for(var i in options){\n\
+              var " + item + "=options[i];\n\
+                        callback(" + key + ", " + value + "," + item + ",i)\n\
+                    }"
+        );
+        function keys( obj ){
+            let rs = [];
+            for(var i in obj){
+                rs.push(i);
+            }
+            return rs;
+        }
+        function getOptionName( options ){
+            let arr = options.split("|"), filter = {},
+                opstr = arr[0].trim();
+            return opstr;
+        }
+        function keyLike( key ){
+          return true //!/({.*})|([.*])|(".*")|('.*')/.test(key);
+        }
+        function getFilters( options ){
+          let arr = options.split(/filter\s*:/), match, keys = [],
+            filter = arr[1], kesExp = /:\s*([^{\s\:\}]+)/g, inx = 0;
+          if( !filter ){
+            return [];
+          }
+          while( match = kesExp.exec(filter) ){
+            keys.push( match[ 1 ] );
+            inx++;
+            if(inx > 10){
+              break;
+            }
+          }
+          return keys.filter( keyLike );
+        }
+        let watchGr = [getOptionName( options )].concat(getFilters( options ));
+        scope.$parent.$watchGroup(watchGr, (n, o, s) => {
+          if (!n) {
+            return;
+          }
+          render( getData(s, options), null );
+        });
+        function validate(n){
+          scope.validate = (function(){
+            if(scope.composory == true){
+              if(typeof n === "undefined" || n === "" || n === null){
+                return false
+              }
+            }
+            return true;
+          })();
+        }
+
+        function getData(scope, attr){
+          let exp = $parse(attr),
+              dt = exp(scope);
+          return dt;
+        }
+
+        function splitKeys( key ) {
+          return key.split( /[\.\[\]]+/g );
+        }
+
+        function getVal(obj){
+          let keyArr = splitKeys( key );
+          var fn = new Function(keyArr.shift(), `return ${ key } `);
+          return fn(obj);
+        }
+
+        function findIdex(arr, fn){
+          if(isArray(arr)){
+            for(var i = 0; i < arr.length; i++){
+              if(fn(arr[i], i)){
+                return i;
+              }
+            }
+          }
+          return -1;
+        }
+
+        function exec( command ){
+          let regex = /([a-zA-Z\.\_\$\[\]"'][a-zA-Z\.\_\$\d\[\]"']*)/g;
+          command = command.replace(regex, "scope.$parent.$1");
+          eval( command );
+        }
+
+        function render (n) {
+          dataOptions = n;
+          function fmtVal(value){
+            if(typeof value === "string"){
+              if(!/^\s*$/g.test(value)){
+                return value;
+              } else {
+                return "-";
+              }
+            } else {
+              return "-";
+            }
+          }
+          try {
+            scope.error = null;
+            var str1 = '';
+            fn(scope, n, function (key, value, item, i) {//注意创建删除节点时候回流 改变属性的时候不会
+              str1 += `<option value="${i}">${fmtVal(value)}</option>\n`;
+            });
+            if(typeof $ === "undefined"){
+              throw new Error("jQuery is not installed!!");
+            }
+          } catch (e) {
+            console.error(e);
+            scope.error = '*无效的表达式';
+          } finally {
+            window['require'](['select2'], () => {
+              if(typeof $.fn.select2 === "undefined"){
+                throw new Error("select2 is not correctly installed!!");
+              }
+              setTimeout(function(){
+                let evt = new psEvent(scope);
+                $dom.select2(scope.config);
+                $dom.off("select2:select");
+                $dom.on("select2:select", function(e){
+                  let inx = $dom.val(), item = getVal(dataOptions[inx]);
+                  evt.$render = function(d){
+                    render(d, null);
+                  }
+                  evt.$select = dataOptions.find((n, i) => {
+                    return i == $dom.val()
+                  });
+                  evt.$option = dataOptions;
+                  scope.config.on && scope.config.on.select && scope.config.on.select(evt);
+                  ngModel.$setViewValue(item);
+                  if(change){
+                      exec( change );
+                  }
+                  //scope.change && scope.change( evt.$select );
+                  ngModel.$render();
+                });
+                ngModel.$render();
+                defer.resolve("success");
+              },5);
+            });
+            $dom.html(str1);
+            $dom.css("display", "none");
+          }
+        }
+        ngModel.$render = function(){
+          var val = ngModel.$viewValue;
+          validate(val);
+          defer.promise.then(()=>{
+            let finx = findIdex(dataOptions, (m)=>{
+              return getItem(m, key) == val;
+            }), ins;
+            if(finx !== -1){
+              ins = $dom.val(finx);
+            } else {
+              ins = $dom.val(null);
+            };
+            if(typeof ins === "object" && typeof ins.trigger === "function"){
+              ins.trigger("change");
+            }
+          });
+        };
+        function getItem(obj, str){
+          let attr = str.split("."), rs;
+          attr.shift();
+          rs = attr.length > 0 ? attribute(obj, attr.join(".")) : obj
+          return rs;
+        }
+        render(dataOptions);
+        Array.prototype.push.call(ngModel.$parsers, function (n, o) {
+          return n;
+        });
+        Array.prototype.push.call(ngModel.$formatters, function (n, o) {
+          return n;
+        });
+        scope.$on('destroy', function () {
+          toString = null;
+          isArray = null;
+          isObject = null;
+          reg = null;
+          match = null;
+          s2 = null;
+          options = null;
+          item = null;
+          value = null;
+          key = null;
+          $dom = null;
+          dom = null;
+          dataOptions = null;
+          defaultConfig = null;
+          fn = null;
+        })
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+</style>

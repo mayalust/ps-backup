@@ -1,0 +1,20 @@
+<config injector="$rootScope,$q"></config>
+<script>
+  /** mock **/
+  export default function( rootScope,q ){
+    function Mock( factory ){
+      class MockData {}
+      for(let i in factory ){
+        Object.defineProperty(MockData.prototype, i, {
+          enumerable : false,
+          value : function( ...args ){
+            let fnStr = factory[i].toString();
+            fnStr = fnStr.replace(/serviceProxy\.get/, "serviceProxy.mock");
+            new Function( fnStr )( ...args );
+          }
+        })
+      }
+    }
+    return Mock;
+  }
+</script>

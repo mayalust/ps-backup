@@ -1,0 +1,29 @@
+<config injector="$compile">
+</config>
+<template>
+  <div id="free-board">
+    <div class="steel" style="padding : 20px;"></div>
+  </div>
+</template>
+<script type="text/javascript">
+import { attribute, isString } from "ps-ultility";
+export default function(compile) {
+  return {
+    scope: {
+      type: "="
+    },
+    link(scope, element, attr) {
+      var $el = element[0].children[0];
+      scope.$watch("type", (n, o, s) => {
+        if (n) {
+          var dom = document.createElement(n);
+          $el.appendChild(dom);
+          compile($el)(scope);
+        }
+      });
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

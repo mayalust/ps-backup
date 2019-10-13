@@ -1,0 +1,424 @@
+<config injector="$scope,$registerService,psDialog,userUIService,commonMethodService,ajax,growl"></config>
+<template>
+  <div class="wrap">
+    <!--<ps-table config="config"></ps-table>-->
+    <ps-layout data-option="option"></ps-layout>
+  </div>
+</template>
+<script>
+  export default function( scope,registerService,psDialog,userUIService,commonMethodService,ajax ,growl){
+      var target = commonMethodService();
+
+      scope.option = {
+          type: 'layout',
+          init: function () {
+          },
+          modals : {
+              editKnowledge : {
+                  label : "知识详情",
+                  type : "layout",
+                  children : [{
+                      type : "form-grid",
+                      data : null,
+                      children : [{
+                          type : "select",
+                          label : "维度",
+                          composory: true,
+                          key : "dimension",
+                          options: target.getRootScope("myDicts")["dimension"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          type : "select",
+                          label : "知识库类型1",
+                          composory: true,
+                          key : "knowledgeType1",
+                          options: target.getRootScope("myDicts")["knowledgeType1"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          type : "select",
+                          label : "知识库类型2",
+                          composory: true,
+                          key : "knowledgeType2",
+                          options: target.getRootScope("myDicts")["knowledgeType2"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          type : "select",
+                          label : "（设备/人员）类型",
+                          composory: false,
+                          key : "deviceUserType",
+                          options: target.getRootScope("myDicts")["deviceUserType"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          type : "select",
+                          label : "方案类型",
+                          composory: true,
+                          key : "caseType",
+                          options: target.getRootScope("myDicts")["caseType"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          type: "file2",
+                          label: "附件",
+                          composory: true,
+                          key:"fileList",
+                          col: 8,
+                      }]
+                  }],
+                  buttons : [{
+                      label : "保存",
+                      class : "btn btn-primary",
+                      click : function(e){
+                          this.submit();
+                      }
+                  },{
+                      label : "取消",
+                      click : function(){
+                          this.close();
+                      }
+                  }]
+              }
+          },
+          children: [{
+              type: "table",
+              config: {
+                  attributes: {
+                      "dimension": ["维度","dict"],
+                      "knowledgeType1": {
+                          label:"知识库类型1",
+                          type:"dict",
+                      },
+                      "knowledgeType2":  {
+                          label:"知识库类型2",
+                          type:"dict",
+                      },
+                      "deviceUserType": {
+                          label:"(设备/人员)类型",
+                          type:"dict",
+                      },
+                      "caseType": {
+                          label:"方案类型",
+                          type:"dict",
+                      },
+                      "name": ["知识名称", "text"],
+                      "updateDate": ["时间", "date"],
+                      "updateUserName": ["责任人", "text"],
+                  },
+                  search: {
+                      body: [{
+                          name: "dimension",
+                          label: "维度",
+                          searchType: "select",
+                          options: target.getRootScope("myDicts")["dimension"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+
+                      }, {
+                          name: "knowledgeType1",
+                          label:"知识库类型1",
+                          searchType: 'select',
+                          options: target.getRootScope("myDicts")["knowledgeType1"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          name: "knowledgeType2",
+                          label: "知识库类型2",
+                          searchType: "select",
+                          options: target.getRootScope("myDicts")["knowledgeType2"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          name: "deviceUserType",
+                          label: "(设备/人员)类型",
+                          searchType: "select",
+                          options: target.getRootScope("myDicts")["deviceUserType"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          name: "caseType",
+                          label: "方案类型",
+                          searchType: "select",
+                          options: target.getRootScope("myDicts")["caseType"],
+                          format: {
+                              id:"valueCode",
+                              label:"label"
+                          },
+                      },{
+                          name: "name",
+                          label: "知识名称",
+                          searchType: "input",
+                      }],
+                  },
+                  grid: {
+                      body: ["dimension","knowledgeType1", "knowledgeType2", "deviceUserType", "caseType", "name",
+                          {
+                              name:"updateDate",
+                              gridType: "date",
+                          },
+                          "updateUserName"],
+                      buttons: {
+                          outGrid: [{
+                              label: "新增知识",
+                              class: "primary",
+                              on: {
+                                  click: function (e) {
+                                      e.add({
+                                          template : "editKnowledge",
+                                          before: function (s){
+                                              var formData = new FormData();
+                                              formData.append("resourceId", 1 );
+                                              scope.fileObj = [];
+                                              if(s.fileList && s.fileList.length){
+                                                  s.fileList.forEach((v,i)=>{
+                                                      formData.append(`file${i}`,v);
+                                                      scope.fileObj.push(v);
+                                                  });
+                                                  s.fileList = [];
+                                                  ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+                                                      if(d.code == "0"){
+                                                          // growl.success("上传成功");
+                                                          let obj = {};
+                                                          if(angular.isArray(d.data)){
+                                                              d.data.forEach((v,i)=>{
+                                                                  obj = {};
+                                                                  obj["fileName"] = scope.fileObj[i].name;
+                                                                  obj["filePath"] = v.qualifiedName;
+                                                                  s.fileList.push(obj);
+                                                              })
+                                                          }else {
+                                                              obj["fileName"] = scope.fileObj[0].name;
+                                                              obj["filePath"] = d.data.qualifiedName;
+                                                              s.fileList.push(obj);
+                                                          }
+                                                          return s;
+                                                      }
+                                                  }).then(function (d) {
+                                                      if(d.fileList.length == 0){
+                                                          growl.info("附件不能为空！");
+                                                          this.open();
+                                                      }else {
+                                                          ajax.post("knowledgeUIService.addKnowledgeSimple",d).then(function (d) {
+                                                              if(d != null){
+                                                                  growl.success("新增成功！");
+                                                                  ajax.post("knowledgeUIService.getKnowledgeSimpleByConditionWithPage",[{}, {start: 0, length: 10, statCount: true}]).then((d)=>{
+                                                                      return d;
+                                                                  })
+                                                              }
+                                                          })
+                                                      }
+                                                  });
+                                              }else{
+                                                  growl.info("附件不能为空！");
+                                              }
+
+                                          },
+                                          after : function( d ){
+                                          },
+                                          url : "",
+                                      });
+                                  }
+                              }
+                          }],
+                          inGrid: [["下载",
+                              function (e) {
+                                  var url = userUIService.uploadFileUrl + e.$row.fileList[0].filePath;
+                                  window.open(url);
+                              }], ["编辑",
+                              function (e) {
+                                  e.update({
+                                      // template : "editKnowledge",
+                                      template: {
+                                          label : "知识详情",
+                                          type : "layout",
+                                          children : [{
+                                              type : "form-grid",
+                                              data : null,
+                                              children : [{
+                                                  type : "select",
+                                                  label : "维度",
+                                                  composory: true,
+                                                  key : "dimension",
+                                                  options: target.getRootScope("myDicts")["dimension"],
+                                                  format: {
+                                                      id:"valueCode",
+                                                      label:"label"
+                                                  },
+                                              },{
+                                                  type : "select",
+                                                  label : "知识库类型1",
+                                                  composory: true,
+                                                  key : "knowledgeType1",
+                                                  options: target.getRootScope("myDicts")["knowledgeType1"],
+                                                  format: {
+                                                      id:"valueCode",
+                                                      label:"label"
+                                                  },
+                                              },{
+                                                  type : "select",
+                                                  label : "知识库类型2",
+                                                  composory: true,
+                                                  key : "knowledgeType2",
+                                                  options: target.getRootScope("myDicts")["knowledgeType2"],
+                                                  format: {
+                                                      id:"valueCode",
+                                                      label:"label"
+                                                  },
+                                              },{
+                                                  type : "select",
+                                                  label : "（设备/人员）类型",
+                                                  composory: false,
+                                                  key : "deviceUserType",
+                                                  options: target.getRootScope("myDicts")["deviceUserType"],
+                                                  format: {
+                                                      id:"valueCode",
+                                                      label:"label"
+                                                  },
+                                              },{
+                                                  type : "select",
+                                                  label : "方案类型",
+                                                  composory: true,
+                                                  key : "caseType",
+                                                  options: target.getRootScope("myDicts")["caseType"],
+                                                  format: {
+                                                      id:"valueCode",
+                                                      label:"label"
+                                                  },
+                                              },{
+                                                  type: "file2",
+                                                  label: "附件",
+                                                  composory: true,
+                                                  key:"fileList",
+                                                  col:8,
+                                              }]
+                                          }],
+                                          buttons : [{
+                                              label : "保存",
+                                              class : "btn btn-primary",
+                                              click : function(e){
+                                                  this.submit();
+                                              }
+                                          },{
+                                              label : "取消",
+                                              click : function(){
+                                                  this.close();
+                                              }
+                                          }]
+                                      },
+                                      before: function (s){
+                                          //规避上传后的名字 防止接口错误
+                                          let fileL = s.fileList;
+                                          if(s.fileList.length == 1 && s.fileList[0] && s.fileList[0].hasOwnProperty("fileName")  ){
+                                              s.name = s.fileList[0].fileName.split(".")[0];
+                                              ajax.post("knowledgeUIService.addKnowledgeSimple",s).then(function (d) {
+                                                  if(d != null){
+                                                      growl.success("编辑成功！");
+                                                      ajax.post("knowledgeUIService.getKnowledgeSimpleByConditionWithPage",[{}, {start: 0, length: 10, statCount: true}]).then((d)=>{
+                                                          return d;
+                                                      })
+                                                  }
+                                              })
+                                          }else if(s.fileList.length == 0){
+                                              growl.info("附件不能为空！");
+                                          }
+                                          else {
+                                              var formData = new FormData();
+                                              formData.append("resourceId", 1 );
+                                              scope.fileObj = [];
+                                              s.fileList.forEach((v,i)=>{
+                                                  formData.append(`file${i}`,v);
+                                                  scope.fileObj.push(v);
+                                              });
+                                              s.fileList = [];
+                                              ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+                                                  if(d.code == "0"){
+                                                      // growl.success("上传成功");
+                                                      let obj = {};
+                                                      if(angular.isArray(d.data)){
+                                                          d.data.forEach((v,i)=>{
+                                                              obj = {};
+                                                              obj["fileName"] = scope.fileObj[i].name;
+                                                              obj["filePath"] = v.qualifiedName;
+                                                              s.fileList.push(obj);
+                                                          })
+                                                      }else {
+                                                          obj["fileName"] = scope.fileObj[0].name;
+                                                          obj["filePath"] = d.data.qualifiedName;
+                                                          s.fileList.push(obj);
+                                                      }
+                                                      s.name = obj["fileName"].split(".")[0];
+                                                      // return s;
+                                                      if(s.fileList.length == 0){
+                                                          growl.info("附件不能为空！");
+                                                      }else {
+                                                          ajax.post("knowledgeUIService.addKnowledgeSimple",s).then(function (d) {
+                                                              if(d != null){
+                                                                  growl.success("编辑成功！");
+                                                                  ajax.post("knowledgeUIService.getKnowledgeSimpleByConditionWithPage",[{}, {start: 0, length: 10, statCount: true}]).then((d)=>{
+                                                                      return d;
+                                                                  })
+                                                              }
+                                                          })
+                                                      }
+
+                                                  }
+                                              });
+                                          }
+
+                                      },
+                                      after : function( d ){
+                                      },
+                                      url: "",
+                                      // url : "knowledgeUIService.addKnowledgeSimple",
+                                  });
+                              }], ["删除",
+                              function (e) {
+                                  e.remove({
+                                      message:"是否删除此项",
+                                      url:"knowledgeUIService.deleteKnowledgeSimple",
+                                      before:function(){
+                                          return e.$row;
+                                      }
+                                  });
+                              }]]
+                      },
+                      config: {//172853940170125
+                          url: "knowledgeUIService.getKnowledgeSimpleByConditionWithPage",
+                          parameter: {},
+                          showIndex: false,
+                          showSelector: false,
+                          showSearch: false,
+                          showPage: true,
+                      },
+                      options: []
+                  }
+              }
+          }]
+      }
+  }
+</script>
+<style lang="scss" scoped>
+  .wrap {
+
+  }
+</style>

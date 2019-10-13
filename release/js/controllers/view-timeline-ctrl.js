@@ -1,0 +1,2 @@
+define(["controllers/controllers","bootstrap-dialog"],function(e,i){"use strict";e.initController("ViewTimeLineCtrl",["$scope","$routeParams","resourceUIService","alertService","SwSocket","Info","dataMiningService",function(i,e,o,t,r,c,n){console.info("切换到大事件"),i.videoUrl="images/timeline/V51124-174029.mp4";var a="",s=[];""!=(a=e.ciid)&&(a=0xd312c53d65ed,n.getDeviceHistory(a,function(e){"0"==e.code&&(s=e.data,i.$broadcast("deviceHistoryInit",s))}))}])});
+//# sourceMappingURL=../../map/js/controllers/view-timeline-ctrl.js.map

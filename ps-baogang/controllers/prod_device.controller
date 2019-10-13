@@ -1,0 +1,79 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="block margin-5 padding-20 item" id="from-height">
+          <div class="topo with-border">
+            <ps-topo-common data-complete="complete()"></ps-topo-common>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="block margin-5 padding-5 item" id="to-height">
+          <h5>工艺参数</h5>
+          <div class="art with-border">
+            <ps-art-parameter></ps-art-parameter>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="block margin-5 padding-5">
+          <h5>报警通知</h5>
+          <div class="low with-border">
+            <ps-alert-info></ps-alert-info>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="block margin-5 padding-5">
+          <h5>离线诊断</h5>
+          <div class="low with-border">
+            <ps-online-diagnose></ps-online-diagnose>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {
+  scope.complete = function() {
+    let fromEl = document.getElementById("from-height");
+    let toEl = document.getElementById("to-height");
+    toEl.style.height = fromEl.clientHeight + 2 + "px";
+  };
+}
+</script>
+<style lang="less" scoped>
+.item {
+  min-height: 560px;
+  position: relative;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.art {
+  height: 483px;
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

@@ -1,0 +1,755 @@
+<config injector="$scope,$q,ajax, psDialog,$routeParams,psUltility,growl,psRouter"
+        params="/:info?"
+></config>
+<template>
+    <proudsmart-base>
+        <div class="wrap">
+            <ps-layout data-option="option">
+            </ps-layout>
+        </div>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+    export default function (scope, q, ajax, psDialog,routeParams,psUltility,growl,psRouter) {
+         
+        scope.option = {
+            title: "协议设置",
+            type : "layout",
+            init : {
+                post : function(){
+                    if(routeParams.id == 0){
+                        return;
+                    } else {
+                        return {
+                            url : "devicePartConfigUIService.getPhysicalConfig",
+                            param : psRouter.params("access")
+                        }
+                    }
+                },
+
+                after : function(d){
+                    return {
+                        access : d
+                    };
+                }
+            },
+            children: [{
+                type : "form-inline",
+                children : [{
+                    type : "button",
+                    width :10,
+                    config : {
+                        class: "btn-primary",
+                        label : "保存协议设置",
+                        on : {
+                            click : function () {
+                                let accessData = psUltility.getData(scope).access;
+                                ajax.post("devicePartConfigUIService.getPhysicalConfig", psRouter.params("access")).then((d) => {
+                                    resource = d;
+                                    resource.deviceId = accessData.deviceId;
+                                    resource.deviceAddress = accessData.deviceAddress;
+                                    resource.gatewayId = accessData.gatewayId;
+                                    resource.physicalConfig["analysisProtocol"] = accessData.physicalConfig["analysisProtocol"];
+                                    resource.physicalConfig["analysisProtocolVersion"] = accessData.physicalConfig["analysisProtocolVersion"];
+                                    resource.physicalConfig["protocolType"] = accessData.physicalConfig["protocolType"];
+                                    return ajax.post("devicePartConfigUIService.updateDevicePartConfg", resource)
+                                }).then((d) => {
+                                    
+                                    growl.info("保存接入协议成功")
+
+                                })
+                            }
+                        }
+                    },
+                    key : "save"
+                }]
+            }, {
+                label: "采集组配置",
+                type: "panel",
+                children:[{
+                    type: "table-form",
+                    key : "access.physicalConfig.collectionTasks",
+                    config: {
+                        attributes: {
+                            "taskTime": ["采集周期", "text"],
+                            "description": ["分组描述","text"],
+                            "cycleUnit" : ["采集单位","text"],
+                            "taskCode" : ["分组编码","text"]
+                        },
+                        grid: {
+                            body: ["taskCode","description","taskTime","cycleUnit"],
+                            buttons: {
+                                outGrid: [{
+                                    label: "添加采集组",
+                                    class: "primary",
+                                    icon: "",
+                                    on: {
+                                        click : function(evt){
+                                            evt.add({
+                                                template : {
+                                                    label : "采集组",
+                                                    type : "layout",
+                                                    children : [{
+                                                        type : "form-grid",
+                                                        children : [{
+                                                            type : "input",
+                                                            label : "分组编码",
+                                                            composory: true,
+                                                            key : "taskCode"
+                                                        },{
+                                                            type : "input",
+                                                            key : "name",
+                                                            label : "分组名称",
+                                                        },{
+                                                            type : "input",
+                                                            label : "采集周期",
+                                                            composory: true,
+                                                            key : "taskCycle"
+                                                        },{
+                                                            type : "select",
+                                                            key : "cycleUnit",
+                                                            label : "周期单位",
+                                                            options : {
+                                                                url : "dictionaryService.getDictValues",
+                                                                params : "KqiGranularityUnit"
+                                                            },
+                                                            format : {
+                                                                id : "valueCode",
+                                                                label : "label"
+                                                            }
+                                                        },{
+                                                            type : "select",
+                                                            label : "上报模式",
+                                                            composory: true,
+                                                            key : "reportMode",
+                                                            options : [{
+                                                                id : "dataChanged",
+                                                                label : "变化上报"
+                                                            },{
+                                                                id : "period",
+                                                                label : "周期上报"
+                                                            }]
+                                                        },{
+                                                            type : "input",
+                                                            key :"description",
+                                                            label : "描述信息",
+                                                        },{
+                                                            type : "input",
+                                                            label : "是否缓存",
+                                                            composory: true,
+                                                            key : "cacheRequired"
+                                                        },{
+                                                            type : "input",
+                                                            key : "maxDeadCount",
+                                                            label : "连续未上报数",
+                                                        },{
+                                                            type : "input",
+                                                            label : "死区值",
+                                                            composory: true,
+                                                            key : "deadValue"
+                                                        },{
+                                                            type : "input",
+                                                            key : "deathPercent",
+                                                            label : "死区百分比",
+                                                        },{
+                                                            type : "select",
+                                                            label : "数据项",
+                                                            composory: true,
+                                                            key : "kpis",
+                                                            options : {
+                                                                url : "resourceUIService.getDataItemsByDataModelId",
+                                                                param : [psRouter.params("access").dataModelId]
+                                                            },
+                                                            format : {
+                                                                id : "$this",
+                                                                label : "label"
+                                                            }
+                                                        }]
+                                                    },{
+                                                        type: "table-form",
+                                                        key : "kpiConfigs",
+                                                        config: {
+                                                            attributes: {
+                                                                "label": ["数据项", "text"],
+                                                                "value": ["死区值","text"],
+                                                                "range" : ["死区范围","text"]
+                                                            },
+                                                            grid: {
+                                                                body: ["label","value","range"],
+                                                                buttons: {
+                                                                    inGrid: [{
+                                                                        label: "编辑",
+                                                                        class: "btn btn-primary"
+                                                                    },{
+                                                                        label: "删除",
+                                                                        class: "btn btn-primary"
+                                                                    }]
+                                                                },
+                                                                watch : {
+                                                                    key : "kpis",
+                                                                    handler : function(d, ori){
+                                                                       var arr =  ori.filter(function (ori) {
+                                                                            return ori.label == d.label;
+                                                                        })
+                                                                        if(arr.length == 0 ){
+                                                                            return ori.concat([d]);
+                                                                        }else {
+                                                                            return null;
+                                                                        }
+                                                                    }
+                                                                },
+                                                                config: {
+                                                                    showIndex: false,
+                                                                    showSelector: false,
+                                                                    showSearch: false
+                                                                },
+                                                                options: []
+                                                            }
+                                                        }
+                                                    }],
+                                                    buttons : [{
+                                                        label : "确定",
+                                                        class : "btn btn-primary",
+                                                        click : function(e){
+                                                            this.submit();
+                                                        }
+                                                    },{
+                                                        label : "取消",
+                                                        click : function(){
+                                                            this.close();
+                                                        }
+                                                    }]
+                                                },
+                                                before : function (d) {
+                                                    return [scope.access.id,d];
+                                                },
+                                                url : "devicePartConfigUIService.saveDeviceCollectionTask"
+                                            })
+                                        }
+                                    }
+                                }],
+                                inGrid: [{
+                                    label: "编辑",
+                                    class: "btn btn-primary",
+                                    on : {
+                                        click : function (e) {
+                                            var rowIndex = e.$index;
+                                            e.update(
+                                                {
+                                                    template : {
+                                                    label : "采集组",
+                                                    type : "layout",
+                                                    children : [{
+                                                        type : "form-grid",
+                                                        children : [{
+                                                            type : "input",
+                                                            label : "分组编码",
+                                                            composory: true,
+                                                            key : "taskCode"
+                                                        },{
+                                                            type : "input",
+                                                            key : "name",
+                                                            label : "分组名称",
+                                                        },{
+                                                            type : "input",
+                                                            label : "采集周期",
+                                                            composory: true,
+                                                            key : "taskCycle"
+                                                        },{
+                                                            type : "select",
+                                                            key : "cycleUnit",
+                                                            label : "周期单位",
+                                                            options : {
+                                                                url : "dictionaryService.getDictValues",
+                                                                params : "KqiGranularityUnit"
+                                                            },
+                                                            format : {
+                                                                id : "valueCode",
+                                                                label : "label"
+                                                            }
+                                                        },{
+                                                            type : "select",
+                                                            label : "上报模式",
+                                                            composory: true,
+                                                            key : "reportMode",
+                                                            options : [{
+                                                                id : "dataChanged",
+                                                                label : "变化上报"
+                                                            },{
+                                                                id : "period",
+                                                                label : "周期上报"
+                                                            }]
+                                                        },{
+                                                            type : "input",
+                                                            key :"description",
+                                                            label : "描述信息",
+                                                        },{
+                                                            type : "input",
+                                                            label : "是否缓存",
+                                                            composory: true,
+                                                            key : "cacheRequired"
+                                                        },{
+                                                            type : "input",
+                                                            key : "maxDeadCount",
+                                                            label : "连续未上报数",
+                                                        },{
+                                                            type : "input",
+                                                            label : "死区值",
+                                                            composory: true,
+                                                            key : "deadValue"
+                                                        },{
+                                                            type : "input",
+                                                            key : "deathPercent",
+                                                            label : "死区百分比",
+                                                        },{
+                                                            type : "select",
+                                                            label : "数据项",
+                                                            composory: true,
+                                                            key : "kpis",
+                                                            options : {
+                                                                url : "resourceUIService.getDataItemsByDataModelId",
+                                                                param : [psRouter.params("access").dataModelId]
+                                                            },
+                                                            config : {
+                                                                on : {
+                                                                    select : function (e) {
+                                                                        var arr = scope.access.physicalConfig.collectionTasks[rowIndex].kpiConfigs.filter(function (kpi) {
+                                                                            return kpi.kpiLabel == e.$select["label"];
+                                                                        })
+                                                                        if(arr.length == 0){
+                                                                            e.$select["kpiId"] = e.$select["id"];
+                                                                            e.$select["kpiName"] = e.$select["name"];
+                                                                            e.$select["kpiLabel"] = e.$select["label"];
+
+                                                                            scope.access.physicalConfig.collectionTasks[rowIndex].kpiConfigs.push(e.$select);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }]
+                                                    },{
+                                                        type: "table-form",
+                                                        key : "kpiConfigs",
+                                                        config: {
+                                                            attributes: {
+                                                                "label": ["数据项", "text"],
+                                                                "value": ["死区值","text"],
+                                                                "range" : ["死区范围","text"]
+                                                            },
+                                                            grid: {
+                                                                body: ["label","value","range"],
+                                                                buttons: {
+                                                                    inGrid: [{
+                                                                        label: "编辑",
+                                                                        class: "btn btn-primary"
+                                                                    },{
+                                                                        label: "删除",
+                                                                        class: "btn btn-primary"
+                                                                    }]
+                                                                },
+                                                                config: {
+                                                                    showIndex: false,
+                                                                    showSelector: false,
+                                                                    showSearch: false
+                                                                },
+                                                                options: []
+                                                            }
+                                                        }
+                                                    }],
+                                                    buttons : [{
+                                                        label : "确定",
+                                                        class : "btn btn-primary",
+                                                        click : function(e){
+//                                                         
+//                                                            var collectionTasksData  = e.getData().collectionTasks;
+//                                                            var kpiConfigs = collectionTasksData.kpiConfigs;
+//                                                            collectionTasksData.kpiConfigs = [{"kpiId" : kpiConfigs}]
+//                                                            ajax.post("devicePartConfigUIService.getPhysicalConfig", psRouter.params("access")).then((d) => {
+//                                                                resource = d;
+//                                                                resource.physicalConfig["collectionTasks"].push(collectionTasksData)
+////                                                                 
+//                                                                return ajax.post("devicePartConfigUIService.updateDevicePartConfg", resource)
+//                                                            }).then((d) => {
+//                                                                evt.$add(d.physicalConfig["collectionTasks"]);
+//                                                                growl.info("保存接入协议成功")
+//                                                                this.close();
+//
+//                                                            })
+                                                            this.submit();
+                                                        }
+                                                    },{
+                                                        label : "取消",
+                                                        click : function(){
+                                                            this.close();
+                                                        }
+                                                    }]
+                                                },
+                                                    before :function (d) {
+                                                        d["kpiConfigs"] = scope.access.physicalConfig.collectionTasks[rowIndex].kpiConfigs;
+                                                        return [scope.access.id,d];
+                                                    },
+                                                    url : "devicePartConfigUIService.saveDeviceCollectionTask"
+                                                }
+                                            )
+                                        }
+                                    }
+                                },{
+                                    label: "删除",
+                                    class: "btn btn-default",
+                                    on : {
+                                        click : function (e) {
+                                            e.remove({
+                                                url : "devicePartConfigUIService.deleteDeviceCollectionTask",
+                                                before : function (d) {
+                                                    return [scope.access.id,e.$row]
+                                                }
+                                            })
+                                        }
+                                    }
+                                }]
+                            },
+                            config: {
+//                                url: 'resourceUIService.findCollectionTaskDefinitionByModelId',
+//                                parameter: [routeParams.id],
+                                showIndex: false,
+                                showSelector: false,
+                                showSearch: false
+                            }
+                        }
+                    }
+                }]
+            }, {
+                label: "指令配置",
+                type: "panel",
+                children:[{
+                    type: "table-form",
+                    key : "access.physicalConfig.commands",
+                    config: {
+                        attributes: {
+                            "commandName": ["指令名称", "text"],
+                            "index": ["指令顺序","text"],
+                            "description" : ["指令描述","text"],
+                            "commandCode" : ["指令编码","text"],
+                            "commandType" : ["类型","text"]
+                        },
+                        grid: {
+                            body: ["commandCode","commandName",{
+                                name : "index",
+                                bind : function (e) {
+                                    return (e.values && e.values.index) ?  e.values.index : "";
+                                }
+                            },"description","commandType"],
+                            buttons: {
+                                outGrid: [{
+                                    label: "添加指令",
+                                    class: "primary",
+                                    icon: "",
+                                    on: {
+                                        click : function(evt){
+                                            evt.add ({
+                                                template : {
+                                                    label : "指令组",
+                                                    type : "layout",
+                                                    children : [{
+                                                        type : "form-grid",
+                                                        children : [{
+                                                            type : "input",
+                                                            label : "指令编码",
+                                                            composory: true,
+                                                            key : "commandCode"
+                                                        },{
+                                                            type : "input",
+                                                            key : "commandName",
+                                                            label : "指令名称",
+                                                        },{
+                                                            type : "select",
+                                                            label : "类型",
+                                                            key : "commandType",
+                                                            options : [{
+                                                                id : "dataChanged",
+                                                                label : "变化上报"
+                                                            },{
+                                                                id : "period",
+                                                                label : "周期上报"
+                                                            }]
+                                                        },{
+                                                            type : "input",
+                                                            label : "指令顺序",
+                                                            composory: true,
+                                                            key : "values.index"
+                                                        },{
+                                                            type : "input",
+                                                            label : "描述",
+                                                            col : 12,
+                                                            key : "description"
+                                                        },{
+                                                            type : "select",
+                                                            label : "数据项",
+                                                            col : 12,
+                                                            key : "kpiId",
+                                                            options : {
+                                                                url : "resourceUIService.getDataItemsByDataModelId",
+                                                                param : [psRouter.params("access").dataModelId]
+                                                            },
+                                                            format : {
+                                                                id : "$this"
+                                                            },
+                                                            config: {
+                                                                on: {
+                                                                    select: function select(e) {
+                                                                         
+                                                                    }
+                                                                }
+                                                            }
+                                                        }]
+                                                    },{
+                                                        type: "table-form",
+                                                        key :"kpiConfigs",
+                                                        config: {
+                                                            attributes: {
+                                                                "kpiName": ["数据名称", "text"],
+                                                                "number": ["是否数据项","text"],
+                                                                "type" : ["数据类型","text"],
+                                                                "code": ["数据编码", "text"],
+                                                                "decimalPlaces": ["小数位数","text"],
+                                                                "range" : ["取值范围","text"],
+                                                                "unit" : ["单位","text"]
+                                                            },
+                                                            grid: {
+                                                                body: ["kpiName","type","number","decimalPlaces","range"],
+                                                                buttons: {
+                                                                    inGrid: [{
+                                                                        label: "编辑",
+                                                                        class: "btn btn-primary"
+                                                                    },{
+                                                                        label: "删除",
+                                                                        class: "btn btn-primary"
+                                                                    }]
+                                                                },
+                                                                watch : {
+                                                                    key : "kpiId",
+                                                                    handler : function(d, ori){
+                                                                        d["kpiName"] = d.name;
+                                                                        d["kpiId"] = d.id;
+                                                                        d["kpiLabel"] = d.label;
+                                                                        var arr =  ori.filter(function (ori) {
+                                                                            return ori.label == d.label;
+                                                                        })
+                                                                        if(arr.length == 0 ){
+                                                                            return ori.concat([d]);
+                                                                        }else {
+                                                                            return null;
+                                                                        }
+                                                                    }
+                                                                },
+                                                                config: {
+//                                                                    url: 'devicePartConfigUIService.saveDeviceCommand',
+//                                                                    parameter: function (e) {
+//                                                                        return []
+//                                                                    },
+                                                                    showIndex: false,
+                                                                    showSelector: false,
+                                                                    showSearch: false
+                                                                },
+                                                                options: []
+                                                            }
+                                                        }
+                                                    }],
+                                                    buttons : [{
+                                                        label : "确定",
+                                                        class : "btn btn-primary",
+                                                        click : function(){
+
+                                                            this.submit();
+                                                        }
+                                                    },{
+                                                        label : "取消",
+                                                        click : function(){
+                                                            this.close();
+                                                        }
+                                                    }]
+                                                },
+                                                before : function (d) {
+                                                    return [scope.access.id,d];
+                                                },
+                                                url : "devicePartConfigUIService.saveDeviceCommand"
+                                            })
+                                        }
+                                    }
+                                }],
+                                inGrid: [{
+                                    label: "编辑",
+                                    class: "btn btn-primary",
+                                    on : {
+                                        click : function (e) {
+                                            var rowIndex = e.$index;
+                                            e.update ({
+                                                template : {
+                                                    label : "指令组",
+                                                    type : "layout",
+                                                    children : [{
+                                                        type : "form-grid",
+                                                        children : [{
+                                                            type : "input",
+                                                            label : "指令编码",
+                                                            composory: true,
+                                                            key : "commandCode"
+                                                        },{
+                                                            type : "input",
+                                                            key : "commandName",
+                                                            label : "指令名称",
+                                                        },{
+                                                            type : "select",
+                                                            label : "类型",
+                                                            key : "commandType",
+                                                            options : [{
+                                                                id : "dataChanged",
+                                                                label : "变化上报"
+                                                            },{
+                                                                id : "period",
+                                                                label : "周期上报"
+                                                            }]
+                                                        },{
+                                                            type : "input",
+                                                            label : "指令顺序",
+                                                            composory: true,
+                                                            key : "values.index",
+                                                            bind : function (e) {
+                                                                return values.index;
+                                                            }
+                                                        },{
+                                                            type : "input",
+                                                            label : "描述",
+                                                            col : 12,
+                                                            key : "description"
+                                                        },{
+                                                            type : "select",
+                                                            label : "数据项",
+                                                            col : 12,
+                                                            key : "kpiId",
+                                                            options : {
+                                                                url : "resourceUIService.getDataItemsByDataModelId",
+                                                                param : [psRouter.params("access").dataModelId]
+                                                            },
+                                                            format : {
+                                                                id : "$this"
+                                                            },
+                                                            config : {
+                                                                on : {
+                                                                    select : function (e) {
+                                                                         
+                                                                        var arr = scope.access.physicalConfig.commands[rowIndex].kpiConfigs.filter(function (kpi) {
+                                                                            return kpi.kpiLabel == e.$select["label"];
+                                                                        })
+                                                                        if(arr.length == 0){
+                                                                            e.$select["kpiId"] = e.$select["id"];
+                                                                            e.$select["kpiName"] = e.$select["name"];
+                                                                            e.$select["kpiLabel"] = e.$select["label"];
+
+                                                                            scope.access.physicalConfig.commands[rowIndex].kpiConfigs.push(e.$select);
+                                                                        }
+
+                                                                    }
+                                                                }
+                                                            }
+                                                        }]
+                                                    },{
+                                                        type: "table-form",
+                                                        key : "kpiConfigs",
+                                                        config: {
+                                                            attributes: {
+                                                                "kpiName": ["数据名称", "text"],
+                                                                "number": ["是否数据项","text"],
+                                                                "type" : ["数据类型","text"],
+                                                                "code": ["数据编码", "text"],
+                                                                "decimalPlaces": ["小数位数","text"],
+                                                                "range" : ["取值范围","text"],
+                                                                "unit" : ["单位","text"]
+                                                            },
+                                                            grid: {
+                                                                body: ["kpiName","type","number","decimalPlaces","range"],
+                                                                buttons: {
+                                                                    inGrid: [{
+                                                                        label: "编辑",
+                                                                        class: "btn btn-primary"
+                                                                    },{
+                                                                        label: "删除",
+                                                                        class: "btn btn-primary"
+                                                                    }]
+                                                                },
+                                                                config: {
+                                                                    showIndex: false,
+                                                                    showSelector: false,
+                                                                    showSearch: false
+                                                                },
+                                                                options: []
+                                                            }
+                                                        }
+                                                    }],
+                                                    buttons : [{
+                                                        label : "确定",
+                                                        class : "btn btn-primary",
+                                                        click : function(){
+
+                                                            this.submit();
+                                                        }
+                                                    },{
+                                                        label : "取消",
+                                                        click : function(){
+                                                            this.close();
+                                                        }
+                                                    }]
+                                                },
+                                                before : function (d) {
+                                                    d.kpiId["kpiId"] = d.kpiId["id"];
+                                                    d.kpiId["kpiName"] = d.kpiId["name"];
+                                                    d.kpiId["kpiLabel"] = d.kpiId["label"];
+                                                    d["kpiConfigs"] = scope.access.physicalConfig.commands[rowIndex].kpiConfigs;
+                                                    d.values["index"] = d.index;
+                                                    return [scope.access.id,d];
+                                                },
+                                                url : "devicePartConfigUIService.saveDeviceCommand",
+                                                after : function (d) {
+                                                     
+                                                    return d[e.$index];
+                                                }
+                                            })
+                                        }
+                                    }
+                                },{
+                                    label: "删除",
+                                    class: "btn btn-default",
+                                    on : {
+                                        click :function(e){
+                                            e.remove({
+                                                url : "devicePartConfigUIService.deleteDeviceCommand",
+                                                before : function (d) {
+                                                    return [scope.access.id,e.$row]
+                                                }
+                                            })
+                                        }
+                                    }
+                                }]
+                            },
+                            config: {
+//                                url: 'resourceUIService.getDirectivesByModelIdNotByRole',
+//                                parameter: [routeParams.id],
+                                showIndex: false,
+                                showSelector: false,
+                                showSearch: false
+                            },
+//                            options: {
+//                                watch : "access",
+//                                after : function(d){
+//                                    return d.physicalConfig.commands;
+//                                }
+//                            }
+                        }
+                    }
+                }]
+            }]
+        }
+    }
+</script>
+<style type="less" scoped="true">
+</style>

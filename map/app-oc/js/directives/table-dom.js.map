@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-oc/js/directives/table-dom.js"],"names":["define","directives"],"mappings":"AAAAA,OAAO,CAAC,yBAA0B,SAAUC","file":"app-oc/js/directives/table-dom.js","sourcesContent":["define(['directives/directives'], function (directives) {\n  'use strict';\n});"],"sourceRoot":"/source/"}

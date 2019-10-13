@@ -1,0 +1,487 @@
+<config injector="$scope,$q,$timeout,$state,$location,$registerService,ajax,commonMethodService,commonMethodService2,growl,userUIService,psLoading,psDialog"
+        params="/:userID"
+        deps="frockDialog,frockQrDialog"
+></config>
+<template>
+  <section class="content" id="alerts">
+    <div class="row" style="max-height: calc(100vh - 115px); overflow-y: auto;">
+      <div class="col-md-12">
+        <div>
+          <div class="block margin-5 padding-5">
+            <div class="row">
+              <div class="col-md-2 item">
+                <label class="form-label">分类：</label>
+                <ps-select
+                    ng-model="fCategory"
+                    data-options="item.valueCode as item.label for item in fCategorys"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">工装代码：</label>
+                <div>
+                  <input ng-model="fCode"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">工装设备名称：</label>
+                <div>
+                  <input ng-model="fName"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">尺寸型规：</label>
+                <div>
+                  <input ng-model="fSize"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">存放地点：</label>
+                <div>
+                  <input ng-model="fAdress"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">管理单位：</label>
+                <div>
+                  <input ng-model="manageUnit"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">适用范围：</label>
+                <div>
+                  <input ng-model="scope"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="pull-right padding-top-10">
+                <button class="btn btn-primary" ng-click="search()">查询</button>
+                <button class="btn btn-default" ng-click="reset()">清空</button>
+              </div>
+              <div class="col-md-12">
+
+              </div>
+            </div>
+          </div>
+          <div class="block margin-5 padding-5">
+            <button class="btn btn-primary" ng-click="addNewFrog()">新增智能工装</button>
+            <div class="wrap">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="wrap">
+                    <table ps-table-sync="false"
+                           data-current="current"
+                           data-source="getFixtureByConditionWithPage"
+                           data-page="page">
+                      <thead>
+                      <tr>
+                        <th>工装代码</th>
+                        <th>分类</th>
+                        <th>工装设备名称</th>
+                        <th>尺寸型规</th>
+                        <th>单重（Kg）</th>
+                        <th>存放地点</th>
+                        <th>创始人</th>
+                        <th>管理单位</th>
+                        <th>适用范围</th>
+                        <th>操作</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr ng-repeat="item in items">
+                        <td>
+                          <span ng-bind="item.fCode"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.fCategory == '1' ? '承运类'
+                                        :item.fCategory == '2' ? '吊具类'
+                                        :item.fCategory == '3' ? '顶升类'
+                                        :item.fCategory == '4' ? '压缩类'
+                                        :item.fCategory == '5' ? '拉拨类'
+                                        :item.fCategory == '6' ? '加工类'
+                                        :item.fCategory == '7' ? '支架类'
+                                        :item.fCategory == '8' ? '测试类'
+                                        : '-'"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.fName"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.fSize"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.fWeight"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.fAdress"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.originator"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.manageUnit"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.scope"></span>
+                        </td>
+                        <td style="width:160px">
+                          <div ps-option-group>
+                            <button class="btn btn-primary" ng-click="item.qr()">二维码</button>
+                            <button class="btn btn-primary" ng-click="item.detail()">详情</button>
+                            <button class="btn btn-default" ng-click="item.edit()">编辑</button>
+                            <button class="btn btn-default" ng-click="item.remove()">删除</button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+<script>
+  /*
+  *智能工装 根据计划安排暂停工作
+  * 目前完成状况： 只差添加，编辑上传图片的接口调试 2019.5.6
+  * */
+  import { dateparser, extend, isArray } from "ps-ultility"
+  export default function( scope,q,timeout,$state,location,registerService,ajax,commonMethodService,cms2,growl,userUIService,psLoading,psDialog){
+    let getFixtureByConditionWithPage = "rollerPartUIService.getFixtureByConditionWithPage",//查询
+        saveFixtures = "rollerPartUIService.saveFixtures",//添加，编辑
+        deleteFixture = "rollerPartUIService.deleteFixture",//删除
+        root = scope.$root.$$childHead,
+        target = commonMethodService();
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      qr(){
+        /*let url = userUIService.uploadFileUrl + this.fileList[0].filePath;
+        window.open(url);*/
+          cms2.modal({
+              title : "智能工装",
+              directive : "frock-qr-dialog",
+              width : "80%",
+              scope : scope,
+              params : {
+                  data : this
+              },
+          })
+      }
+      detail(){
+          // target.setValue("mode", "detail");
+          cms2.modal({
+              title : "智能工装",
+              directive : "frock-dialog",
+              width : "80%",
+              scope : scope,
+              params : {
+                  mode: "detail",
+                  data : this
+              },
+          }).then( s => {
+              /*let files = s ? s.fileList : [],
+                  newAdd = files.filter( d => d.name );
+              s.fileList = files.filter( d => d.fileName );
+              function uploadFile(){
+                  let formData = new FormData();
+                  formData.append("resourceId", 1 );
+                  newAdd.forEach((v,i)=>{
+                      formData.append(`file${i}`,v);
+                  });
+                  return ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+                      let rs = []
+                      if(d.code == "0"){
+                          let obj = {};
+                          if(isArray(d.data)){
+                              d.data.forEach((v,i)=>{
+                                  obj = {};
+                                  obj["fileName"] = newAdd[i].name;
+                                  obj["filePath"] = v.qualifiedName;
+                                  rs.push(obj);
+                              })
+                          }else {
+                              obj["fileName"] = newAdd[0].name;
+                              obj["filePath"] = d.data.qualifiedName;
+                              rs.push(obj);
+                          }
+                          return cms2.success(rs);
+                      }
+                  })
+              }
+              ( newAdd.length > 0 ? uploadFile() : cms2.success([])).then( d => {
+                  [].push.apply(s.fileList, d);
+                  if(s.fileList && s.fileList.length == 0){
+                      psLoading.closeLoading();
+                      growl.info("附件不能为空!");
+                  }else {
+                     /!* s.name = s.fileList[0].name || s.fileList[0].fileName;
+                      psLoading.showLoading();
+                      ajax.post("knowledgeUIService.addKnowledgeSimple",s).then(function (d) {
+                          if(d != null){
+                              psLoading.closeLoading();
+                              growl.success("编辑成功！");
+                              scope.reset();
+                          }
+                      });*!/
+                  }
+              })*/
+          })
+      }
+      remove(){
+          psDialog.confirm("确定要删除吗？",() => {
+            ajax.post(deleteFixture, this.id).then( d => {
+              if(d == null){
+                growl.success("删除成功");
+                scope.reset();
+              }
+            });
+          });
+      }
+      edit(){
+        cms2.modal({
+          title : "智能工装",
+          directive : "frock-dialog",
+          width : "80%",
+          scope : scope,
+          params : {
+              data: this
+          },
+        }).then( s => {
+          /*let files = s ? s.fileList : [],
+            newAdd = files.filter( d => d.name );
+          s.fileList = files.filter( d => d.fileName );
+          function uploadFile(){
+            let formData = new FormData();
+            formData.append("resourceId", 1 );
+            newAdd.forEach((v,i)=>{
+              formData.append(`file${i}`,v);
+            });
+            return ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+              let rs = []
+              if(d.code == "0"){
+                let obj = {};
+                if(isArray(d.data)){
+                  d.data.forEach((v,i)=>{
+                    obj = {};
+                    obj["fileName"] = newAdd[i].name;
+                    obj["filePath"] = v.qualifiedName;
+                    rs.push(obj);
+                  })
+                }else {
+                  obj["fileName"] = newAdd[0].name;
+                  obj["filePath"] = d.data.qualifiedName;
+                  rs.push(obj);
+                }
+                return cms2.success(rs);
+              }
+            })
+          }
+          ( newAdd.length > 0 ? uploadFile() : cms2.success([])).then( d => {
+            [].push.apply(s.fileList, d);
+            if(s.fileList && s.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空!");
+            }else {
+               /!* s.name = s.fileList[0].name || s.fileList[0].fileName;
+                psLoading.showLoading();
+                ajax.post("knowledgeUIService.addKnowledgeSimple",s).then(function (d) {
+                    if(d != null){
+                        psLoading.closeLoading();
+                        growl.success("编辑成功！");
+                        scope.reset();
+                    }
+                });*!/
+            }
+          })*/
+        })
+      }
+      getUpdateTime(){
+        return dateparser(this.updateDate).getDateString();
+      }
+    }
+    function getMyDicts(){
+      let defer = q.defer(),
+        clear = root.$watch("myDicts", d => {
+          if( typeof d !== "undefined"){
+            defer.resolve( d )
+            clear();
+          }
+        });
+      return defer.promise;
+    }
+    function createRenderFunction( ){
+      return function( page, pageSize ){
+        let query = function(){
+            let rs = {};
+            if( scope.fCategory ){
+              rs.fCategory = scope.fCategory;
+            }
+            if( scope.fCode ){
+              rs.fCode = scope.fCode;
+            }
+            if( scope.fName ){
+              rs.fName = scope.fName;
+            }
+            if( scope.fSize ){
+              rs.fSize = scope.fSize;
+            }
+            if( scope.fAdress ){
+              rs.fAdress = scope.fAdress;
+            }
+            if( scope.manageUnit ){
+              rs.manageUnit = scope.manageUnit;
+            }
+            if( scope.scope ){
+              rs.scope = scope.scope;
+            }
+            return rs;
+          },
+          params = [query(),{
+            "start":page * pageSize,
+            "length":pageSize,
+            "statCount":true
+          }];
+        return ajax.post(getFixtureByConditionWithPage, params).then( dt => {
+          dt.data = dt.data.map( d => new tableCell(d))
+          return cms2.success( dt );
+        });
+      }
+    }
+    getMyDicts().then( myDicts => {
+      function getDiction(attr){
+        return myDicts[attr];
+      }
+      scope.getFixtureByConditionWithPage = createRenderFunction();
+      scope.fCategorys = getDiction("fCategory");
+      scope.search = function(){
+        scope.getFixtureByConditionWithPage = createRenderFunction();
+      }
+      scope.reset = function(){
+        scope.fCategory
+          = scope.fCode
+          = scope.fName
+          = scope.fSize
+          = scope.fAdress
+          = scope.manageUnit
+          = scope.scope
+          = undefined;
+        scope.getFixtureByConditionWithPage = createRenderFunction();
+      }
+    })
+    scope.addNewFrog = function(){
+      cms2.modal({
+        title : "智能工装",
+        directive : "frock-dialog",
+        width : "80%",
+        scope : scope,
+        params : {},
+      }).then( s => {
+        if(s){
+          s.imagePath = s.imagePath || "";
+          s.specificationPath = s.specificationPath || "";
+          s.safetyManualPath = s.safetyManualPath || "";
+          ajax.post(saveFixtures,s).then(function (d) {
+            if(d != null){
+              // psLoading.closeLoading();
+              // growl.info("附件不能为空！");
+              growl.success("新增成功！");
+              scope.reset();
+            }
+          })
+        }
+        /*let formData = new FormData(), files = s ? s.fileList : [];
+        formData.append("resourceId", 1 );
+        if(typeof s !== "undefined"){
+          if(s.fileList && s.fileList.length){
+            s.fileList.forEach((v,i)=>{
+              formData.append(`file${i}`,v);
+            });
+            s.fileList = [];
+            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+              if(d.code == "0"){
+                let obj = {};
+                if(isArray(d.data)){
+                  d.data.forEach((v,i)=>{
+                    obj = {};
+                    obj["fileName"] = files[i].name;
+                    obj["filePath"] = v.qualifiedName;
+                    s.fileList.push(obj);
+                  })
+                }else {
+                  obj["fileName"] = files[0].name;
+                  obj["filePath"] = d.data.qualifiedName;
+                  s.fileList.push(obj);
+                }
+                return cms2.success( s );
+              }
+            }).then(function (d) {
+              if(d.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空！");
+              }else {
+               /!* psLoading.showLoading();
+                ajax.post("knowledgeUIService.addKnowledgeSimple",d).then(function (d) {
+                  if(d != null){
+                    psLoading.closeLoading();
+                    // growl.info("附件不能为空！");
+                    growl.success("新增成功！");
+                    scope.reset();
+                  }
+                })*!/
+              }
+            });
+          }else{
+            psLoading.closeLoading();
+            growl.info("附件不能为空！");
+          }
+        }*/
+      })
+    }
+  }
+</script>
+<style lang="less" scoped>
+  table{
+    td {
+      height : 28px !important;
+    }
+  }
+  .margin-5{
+    margin : 5px;
+  }
+  .item {
+    padding : 5px !important;
+  }
+  .padding-5{
+    padding : 5px;
+  }
+  label.form-label{
+    text-align: center;
+  }
+  .wrap {
+    padding : 10px 0px !important;
+    a {
+      cursor : pointer;
+      font-weigh : bold;
+    }
+    .drop{
+      float : left;
+      width : 200px;
+    }
+    .option{
+      width : 160px;
+    }
+  }
+</style>

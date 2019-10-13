@@ -1,0 +1,853 @@
+<config
+    injector="$rootScope,$parse,$timeout,$q,$compile,ajax,$state,psUiRouterHandler,psTreeData,resourceUIService,psLoading"></config>
+<script>
+import { extend, dateparser, isObject } from "ps-ultility";
+
+export default function(
+  rootScope,
+  parse,
+  timeout,
+  q,
+  compile,
+  ajax,
+  $state,
+  psUiRouterHandler,
+  psTreeData,
+  resourceUIService,
+  psLoading
+) {
+  const Explainer = {
+    isQuality(val) {
+      return ["", "符合质量标准"][val] || "";
+    },
+    tallyCheck(val) {
+      return ["通过", "不通过"][val] || "-";
+    },
+    statusGrade(val) {
+      return ["正常", "正常", "注意", "警告", "危险"][val] || "正常";
+    },
+    tallyEvaluateCheckboxlist(val) {
+      return ["正确", "基本正确", "不正确"][val] || "-";
+    },
+    abnormalEvaluateCheckboxlist(val) {
+      return ["有效", "无效"][val] || "-";
+    }
+  };
+  const dictionMap = new Map();
+  dictionMap.set("设备趋势", "专业分析");
+  dictionMap.set("专业分析", "专业分析");
+  dictionMap.set("区域态势", "实时状态");
+  dictionMap.set("实时状态", "实时状态");
+  const appSourceDictionary = new Map();
+  appSourceDictionary.set("智能诊断", "综合处理");
+  appSourceDictionary.set("在线预警", "综合处理");
+  appSourceDictionary.set("离线诊断", "综合处理");
+  appSourceDictionary.set("合并报警", "综合处理");
+  appSourceDictionary.set("智能决策", "综合处理");
+  appSourceDictionary.set("故障漏报", "故障分析");
+  appSourceDictionary.set("智能检修标准", "计划实施");
+  appSourceDictionary.set("突发停机", "故障处理");
+  appSourceDictionary.set("状态维护标准", "计划实施");
+  appSourceDictionary.set("临时检修委托", "计划实施");
+  appSourceDictionary.set("临时维护委托", "计划实施");
+  appSourceDictionary.set("智能备修", "综合处理");
+  appSourceDictionary.set("无", "无");
+  const checkType = routeName => {
+    let inx,
+      checkers = [
+        {
+          regex: "prod_dashboard",
+          checker: match => {
+            return "dashboard";
+          }
+        },
+        {
+          regex: "prod_sub_dashboard.subview",
+          checker: match => {
+            return "dashboard";
+          }
+        },
+        {
+          regex: "prod_sub_dashboard.minor_dashboard.minor_view",
+          checker: match => {
+            return "dashboard";
+          }
+        },
+        {
+          regex: "^prod_controller\\.(.*)$",
+          checker: match => {
+            return match[1];
+          }
+        },
+        {
+          regex: "^prod_sub_dashboard\\.sub_(.*)$",
+          checker: match => {
+            return match[1];
+          }
+        },
+        {
+          regex: "^prod_sub_dashboard\\.minor_dashboard\\.minor_(.*)$",
+          checker: match => {
+            return match[1];
+          }
+        }
+      ];
+    while (inx < checkers.length) {
+      let regex = new RegExp(checkers[i].regex),
+        match = regex.exec(routeName);
+      if (match) {
+        return checkers[i].checker(match);
+      }
+      inx++;
+    }
+    throw new Error(`wrong route ${routeName}`);
+  };
+  const getDics = ctrlname => {
+      return ctrlname == "dashboard"
+        ? [
+            "prod_dashboard",
+            "prod_sub_dashboard.subview",
+            "prod_sub_dashboard.minor_dashboard.minor_view"
+          ]
+        : [
+            `prod_controller.${ctrlname}`,
+            `prod_sub_dashboard.sub_${ctrlname}`,
+            `prod_sub_dashboard.minor_dashboard.minor_${ctrlname}`
+          ];
+    },
+    getCurrentLevel = params => {
+      return (
+        ["main_active_index", "sub_active_index", "minor_active_index"].reduce(
+          (a, b) => {
+            a += (typeof params[b] !== "undefined") - 0;
+            return a;
+          },
+          0
+        ) - 1
+      );
+    };
+
+  class commonMethodService {
+    constructor() {}
+    getAlertWord(val) {
+      return ["正常", "正常", "注意", "警告", "危险"][val] || "正常";
+    }
+    /**过程跟踪根据任务来源查询任务分类**/
+    getTaskJob(appSource /**任务来源 */) {
+      return appSourceDictionary.get(appSource);
+    }
+
+    getExplainerFromDiction(name) {
+      return Explainer[name] || (d => d);
+    }
+
+    /**过程跟踪查询任务来源**/
+    getAppSource(variables) {
+      let getValue = key => {
+          return this.$findValue(variables, key);
+        },
+        findV = key => {
+          return function() {
+            let args = [].slice.call(arguments),
+              v = getValue(key);
+            return args.some(arg => v == arg);
+          };
+        },
+        isNotSingleArray = a => {
+          return a instanceof Array && a.length > 1;
+        },
+        noCondition = () => true,
+        isTaskjob = findV("taskJob"),
+        isAppName = findV("appName"),
+        isOnlineRuleId = findV("onlineRuleId"),
+        isSourceTicketCategory = findV("sourceTicketCategory"),
+        isCategory = findV("category"),
+        isAlertItems = isNotSingleArray(getValue("alertItemList")),
+        Dispatch = function() {
+          let allOk = conditions => {
+            let j = 0;
+            while (j < conditions.length - 1) {
+              if (typeof conditions[j] == "function" && !conditions[j]()) {
+                return;
+              }
+              if (conditions[j] != true) {
+                return;
+              }
+              j++;
+            }
+            return conditions[j];
+          };
+          for (let i = 0; i < arguments.length; i++) {
+            let check = allOk(arguments[i]);
+            if (check != null) {
+              return check;
+            }
+          }
+        },
+        newRule = Dispatch(
+          [isCategory("280"), isAlertItems, "合并报警"],
+          [isCategory("280"), isAppName(2), "智能诊断"],
+          [isCategory("280"), isAppName(1), "在线预警"],
+          [isCategory("310"), isAlertItems, "智能决策"],
+          [isCategory("310"), isOnlineRuleId(1, 2, 3), "智能决策"],
+          [isCategory("310"), isSourceTicketCategory("310"), "智能决策"],
+          [isCategory("310"), isSourceTicketCategory("340"), "智能决策"],
+          [isCategory("310"), isTaskjob(1), "状态维护标准"],
+          [isCategory("310"), isTaskjob(2), "临时维护委托"],
+          [isCategory("320"), isSourceTicketCategory("310"), "智能决策"],
+          [isCategory("320"), isSourceTicketCategory("340"), "智能决策"],
+          [isCategory("280"), "离线诊断"],
+          [isCategory("290"), "智能决策"],
+          [isCategory("320"), "智能检修标准"],
+          [isCategory("310"), "状态维护标准"],
+          [isCategory("330"), "临时检修委托"],
+          [isCategory("340"), "突发停机"],
+          [isCategory("300"), "智能备修"]
+        );
+      if (newRule == null) {
+        console.error(this.$findValue(variables, "category"));
+      }
+      return newRule || "无";
+    }
+
+    /**遍历一个对象找个是否存在某个值，值是多少**/
+    $findValue(data, attr) {
+      let fd = this.findValue(data, attr);
+      if (fd) {
+        return fd.value;
+      }
+    }
+    findValue(data, attr) {
+      if (attr == null) {
+        return;
+      }
+      let attrs = attr.split(new RegExp("\\\\|\\.", "g")),
+        root = attrs.pop(),
+        fds = this.filterValues(data, root),
+        fd = fds.find(({ value, path, parents }) => {
+          if (attrs.length == 0) {
+            return true;
+          } else {
+            return new RegExp(`${attrs.join("/")}/${root}$`).test(path);
+          }
+        });
+      return fd;
+    }
+
+    treeNavigateTo(id, deviceOnly, node) {
+      psUiRouterHandler.getCurrentMainTab().then(tab => {
+        tab = tab || {};
+        let vid = $state.params.viewId || tab.viewId,
+          url = $state.params.index,
+          showt = $state.params.showTree - 0,
+          viewId = tab ? tab.viewId : vid,
+          changeLocation = () => {
+            let params = [];
+            psTreeData(id)
+              .getPathAndShowTreeLocation(tab)
+              .then(
+                ({
+                  location,
+                  showTree,
+                  defaultNav,
+                  controller,
+                  currentTab
+                }) => {
+                  psUiRouterHandler.getCurrentMainTab().then(mainTab => {
+                    if (dictionMap.get(mainTab.label) == "实时状态") {
+                      if (controller) {
+                        this.refresh(`prod_${controller}`, {
+                          showTree: showTree,
+                          id: id,
+                          viewId: null
+                        });
+                        return;
+                      }
+                      params.push("dashboard");
+                    }
+                    if (dictionMap.get(mainTab.label) == "专业分析") {
+                      $state.params.sub_active_index = 0;
+                      this.navigateTo(mainTab.label);
+                    }
+                    psUiRouterHandler.getCurrentTab().then(tab => {
+                      let param = {
+                        id: id,
+                        sensor: "null",
+                        viewId: vid,
+                        showTree:
+                          viewId == "177280852260000" ? showTree : showt,
+                        index:
+                          (viewId == "177280852260000" ? location : url) ||
+                          "index",
+                        startdate: "null",
+                        enddate: "null"
+                      };
+                      if (viewId == "177280852260000") {
+                        params.push(param);
+                        this.refresh.apply(this, params);
+                      } else {
+                        param.viewId = tab.viewId;
+                        this.navigateTo(tab.label, param);
+                      }
+                    });
+                  });
+                }
+              );
+          };
+        return psTreeData(id)
+          .getState()
+          .then(res => {
+            if (deviceOnly) {
+              if (res.modelId < 1000) {
+                node.node.toggle();
+              } else {
+                changeLocation();
+              }
+            } else {
+              changeLocation();
+            }
+          });
+      });
+    }
+
+    filterValues(data, attr) {
+      if (data == null) {
+        return [];
+      }
+      let rs = [];
+
+      class LoopItem {
+        constructor(data, parents, path) {
+          this.data = data;
+          this.parents = parents || [];
+          this.path = path || [];
+        }
+
+        hasParent(parent) {
+          return this.parents.some(p => p == parent);
+        }
+      }
+
+      let queue = [new LoopItem(data)],
+        item;
+      while ((item = queue.shift())) {
+        let { data, parents, path } = item;
+        if (data.hasOwnProperty(attr)) {
+          rs.push({
+            parents,
+            value: data[attr],
+            path: path.concat([attr]).join("/")
+          });
+        }
+        for (let i in data) {
+          if (
+            data.hasOwnProperty(i) &&
+            isObject(data[i]) &&
+            !item.hasParent(data[i])
+          ) {
+            queue.push(
+              new LoopItem(data[i], parents.concat([data]), path.concat([i]))
+            );
+          }
+        }
+      }
+      return rs;
+    }
+
+    /**验证scope下面对象的每个值都不为undefined**/
+
+    validate(obj, scope) {
+      let defer = q.defer();
+      for (var i in obj) {
+        var expression = parse(i),
+          val = expression(scope);
+        if (typeof val === "undefined" || val === null || val === "") {
+          defer.reject(obj[i]);
+          return defer.promise;
+        }
+      }
+      defer.resolve("success");
+      return defer.promise;
+    }
+
+    /**遍历对象找到符合名字的值，并返回是在对象哪个位置找到的**/
+
+    /**验证产生一个promise方法返回值为一个promise**/
+
+    promise(fn) {
+      let defer = q.defer();
+      fn(defer.resolve, defer.reject);
+      return defer.promise;
+    }
+
+    /**刷新当前页面的方法**/
+
+    refresh(type, params) {
+      if (typeof type === "undefined" && typeof params === "undefined") {
+        window.location.reload();
+        return;
+      }
+      if (typeof type === "object" && typeof params === "undefined") {
+        let name = $state.current.name,
+          p = $state.params;
+        p.count = p.count - 0 + 1;
+        $state.go(name, extend(p, type));
+      }
+      if (typeof type === "string") {
+        params = params || {};
+        let level = getCurrentLevel($state.params),
+          dics = getDics(type),
+          name = dics[level],
+          p = $state.params,
+          defaultParam =
+            type !== "dashboard"
+              ? psUiRouterHandler.getDefaultParamByName(type)
+              : {};
+        p.count = p.count - 0 + 1;
+        p = extend(p, defaultParam, params);
+        p.index = p.index || "index";
+        $state.go(name, p);
+      }
+    }
+
+    /** 弹出模态框的方法 **/
+
+    modal({ title, directive, scope, top, width, params }) {
+      return this.promise((res, rej) => {
+        top = typeof top === "number" ? top + "px" : top;
+        top = typeof top === "string" ? top : null;
+        width = typeof width === "number" ? width + "px" : width;
+        width = typeof width === "string" ? width : null;
+        let element = document.createElement("div"),
+          sc = (scope || rootScope).$new(),
+          root;
+        element.innerHTML = `<ps-modal><${directive}></${directive}></ps-modal>`;
+
+        function destroy() {
+          element.remove();
+          element = null;
+          sc.$destroy();
+        }
+
+        sc.style = function() {
+          return {
+            top: top || "40px",
+            width: width || "80%"
+          };
+        };
+        sc.title = title;
+        sc.params = params;
+        sc.close = function(promiseParameter) {
+          destroy();
+          res(promiseParameter);
+        };
+        sc.submit = function(data) {
+          destroy();
+          res(data);
+        };
+        document.body.appendChild(element);
+        compile(element)(sc);
+      });
+    }
+
+    /** 跳转到某个页面的方法 **/
+
+    navigateToTracker(ext, ticketNo) {
+      /** 兼容旧版本跳转到过程跟踪的适配方法 */
+      let regex = "9246777620035|539596902200000",
+        _self = this;
+      function navigateToProcessTracking() {
+        _self.refresh("prod_tracker", {
+          ticketNo: ticketNo
+        });
+      }
+      function isProcessTrackingExt(ext) {
+        return new RegExp(regex).test(ext.viewId);
+      }
+      if (isProcessTrackingExt(ext)) {
+        navigateToProcessTracking();
+        return false;
+      }
+      return true;
+      /** 兼容旧版本跳转到过程跟踪的适配方法 */
+    }
+    specialDeviceMove(parameter, ext) {
+      let specialty = ext && ext.specialty,
+        dic = {
+          D: "电气分析",
+          Z: "振动分析"
+        };
+      if (parameter == "专业分析" && specialty) {
+        var analType = dic[specialty] ? dic[specialty] : "综合趋势";
+        psUiRouterHandler.moveToNodeByCondition(function(node) {
+          return node.label == analType || node.name == analType;
+        }, ext);
+        return;
+      }
+      if (parameter == "综合趋势" || parameter == "实时状态") {
+        let { id } = ext;
+        psUiRouterHandler.moveToNodeByCondition(
+          function(node) {
+            return node.label == parameter || node.name == parameter;
+          },
+          { id }
+        );
+        return;
+        /*
+        psTreeData(id)
+          .getPathAndShowTreeLocation(node => {
+            return (
+              node.label == "综合趋势" ||
+              node.name == "综合趋势" ||
+              node.label == "实时状态" ||
+              node.name == "实时状态"
+            );
+          })
+          .then(
+            ({ location, showTree, defaultNav, controller, currentTab }) => {
+              if (controller) {
+                this.refresh(`prod_${controller}`, {
+                  showTree: showTree,
+                  id: id,
+                  viewId: null
+                });
+                return;
+              }
+            }
+          );
+        return; */
+      }
+      return true;
+    }
+    convertParam(str) {
+      let d = dictionMap.get(str);
+      return d || str;
+    }
+    navigateTo(parameter, ext = {}, url = "index", oldParameter = {}) {
+      let viewId;
+      function getViewIdNumber(str) {
+        let m = /viewId\:(.*)$/.exec(str);
+        return m && m[1];
+      }
+      function getParameter(parameter) {
+        let rs = ["main", "sub", "minor"].map((name, inx) => {
+          return typeof parameter[name] !== "undefined"
+            ? parameter[name]
+            : parameter[inx];
+        });
+        return rs.reduce((a, b) => {
+          if (typeof b == "number" || typeof b == "string") {
+            a.push(b - 0);
+          }
+          if (typeof b == "object") {
+            a.push(b[0]);
+            let viewId = getViewIdNumber(b[1]);
+            if (viewId) {
+              ext.viewId = viewId;
+            } else {
+              url = b[1];
+            }
+          }
+          return a;
+        }, []);
+      }
+      if (typeof parameter === "undefined") {
+        throw new Error("invalid parameter found");
+      }
+      if (typeof parameter === "string") {
+        if (/\d+/.test(parameter)) {
+          parameter = { main: parameter - 0 };
+        } else {
+          if (this.specialDeviceMove(parameter, ext)) {
+            psUiRouterHandler.moveToNodeByCondition(node => {
+              return (
+                node.label == parameter ||
+                this.convertParam(node.label) == parameter ||
+                this.convertParam(node.alias) == parameter
+              );
+            }, ext);
+          }
+          return;
+        }
+      }
+      if (typeof parameter === "function") {
+        psUiRouterHandler.moveToNodeByCondition(parameter, ext);
+        return;
+      }
+      if (typeof parameter === "number") {
+        parameter = { main: parameter };
+      }
+      if (typeof parameter === "object") {
+        parameter = getParameter(parameter);
+        if (this.navigateToTracker(ext, oldParameter.ticketNo)) {
+          psUiRouterHandler.moveToNodeByIndex(url, parameter, ext);
+        }
+      }
+    }
+
+    /** 获取树的根节点 **/
+    getRoot() {
+      return psTreeData.getRoot();
+    }
+
+    /** 获取当前节点的所有父节点 **/
+
+    getCurrentParents() {
+      return psTreeData($state.params.id)
+        .getState()
+        .then(d => {
+          return d.getParents().then(parents => {
+            return success(parents.concat(d));
+          });
+        });
+    }
+
+    /** 通过工单号获取流程图的内容 **/
+    findFlowByTicketNo(ticketNo) {
+      let ticketCategoryId, workflowId;
+      return ajax
+        .post("ticketTaskService.getTicket", [ticketNo])
+        .then(d => {
+          if (d == null) {
+            return error(
+              `服务器错误：根据工单号[${ticketNo}]查询不到工单内容，或工单已删除`
+            );
+          }
+          ticketCategoryId = d.ticketCategoryId;
+          return ajax.post("ticketCategoryService.getTicketCategoryById", [
+            ticketCategoryId
+          ]);
+        })
+        .then(d => {
+          if (d == null) {
+            return error(
+              `服务器错误：根据工单类别号[${ticketCategoryId}]查询不到工单类别内容`
+            );
+          }
+          workflowId = d.workflowId;
+          return ajax.post("workflowService.getWorkflowById", [workflowId]);
+        })
+        .then(d => {
+          if (d == null) {
+            return error(
+              `服务器错误：根据工单流程号[${workflowId}]查询不到工单流程内容`
+            );
+          }
+          let { name } = d;
+          return ajax
+            .post("workflowDefinitionService.getWorkflowDefinitions")
+            .then(d => {
+              let defer = q.defer(),
+                fd = d.find(d => d.name == name);
+              if (fd == null) {
+                defer.reject(
+                  `服务器错误：根据流程名称[${name}]匹配不到任何以存在的流程图`
+                );
+              }
+              defer.resolve(fd);
+              return defer.promise;
+            });
+        });
+    }
+
+    /** = Promise.resolve **/
+
+    success(d) {
+      return success(d);
+    }
+
+    /** 根据ci,kpi查询节点值 **/
+
+    getKpiValue(nodeId, kpis) {
+      let kpiQueryModel = [
+        "kpi",
+        {
+          category: "ci",
+          isRealTimeData: false,
+          nodeIds: [nodeId - 0],
+          kpiCodes: kpis,
+          statisticType: "psiot",
+          condList: []
+        }
+      ];
+      return ajax
+        .post(
+          "kpiDataFlexService.getKpiValueList?IncludeFields=kpiCode,value",
+          kpiQueryModel
+        )
+        .then(d => {
+          return this.success(
+            kpis.reduce((a, b) => {
+              a[b] = d.find(({ kpiCode }) => kpiCode == b) || {};
+              a[b] = a[b].value || null;
+              return a;
+            }, {})
+          );
+        });
+    }
+
+    getDataItemValuelist(params) {
+      let startTime = typeof params.time === "object" ? params.time[0] : null,
+        endTime = typeof params.time === "object" ? params.time[1] : null,
+        kpis = params.kpiCodes,
+        timePeriod = typeof params.time === "object" ? 0 : params.time;
+      let kpiQueryModel = [
+        "kpi",
+        {
+          category: "time",
+          isRealTimeData: false,
+          timePeriod: timePeriod,
+          nodeIds: params.nodeIds,
+          includeInstance: true,
+          queryInstances: params.kpiCodes
+            .reduce((a, b) => {
+              return a.indexOf(b.instance) == -1 ? a.concat([b.instance]) : a;
+            }, [])
+            .join(","),
+          kpiCodes: kpis.map(n => n.dataItemId),
+          startTime: startTime,
+          endTime: endTime,
+          timeRange: "",
+          statisticType: "psiot",
+          condList: [],
+          dataType: params.dataType ? params.dataType : "",
+          aggregateFunc: params.dataType ? params.aggregateFunc : "",
+          aggregatePeriod: params.dataType ? params.aggregatePeriod : ""
+        }
+      ];
+      return ajax
+        .post(
+          "kpiDataFlexService.getKpiValueList?IncludeFields=kpiCode,value,arisingTime",
+          kpiQueryModel
+        )
+        .then(d => {
+          if (d.length == 0) {
+            return success(undefined);
+          }
+
+          let minDate = Math.min.apply(
+            null,
+            d.map(n => toValue(n.arisingTime))
+          );
+
+          class optionData {
+            constructor(data) {
+              extend(this, data);
+            }
+
+            getMinDate() {
+              return minDate;
+            }
+          }
+
+          return ajax
+            .post("resourceUIService.getResourceById", $state.params.id)
+            .then(({ modelId }) => {
+              let obj = d.reduce(function(a, b) {
+                  a[b.kpiCode] = a[b.kpiCode] || [];
+                  var rangeObj =
+                    resourceUIService.rootModelsDic[modelId] &&
+                    resourceUIService.rootModelsDic[modelId].kpiDic &&
+                    resourceUIService.rootModelsDic[modelId].kpiDic[
+                      b.kpiCode
+                    ] &&
+                    resourceUIService.rootModelsDic[modelId].kpiDic[b.kpiCode]
+                      .rangeObj;
+                  if (rangeObj) {
+                    b.value = rangeObj[b.value];
+                  }
+                  a[b.kpiCode].push([
+                    toValue(b.arisingTime) - minDate,
+                    b.value,
+                    b.kpiCode
+                  ]);
+                  return a;
+                }, {}),
+                series = propMap(obj, (n, i) => {
+                  return {
+                    name: kpis.find(d => d.dataItemId == i).kpiName,
+                    data: n,
+                    symbolSize: 0,
+                    type: "line"
+                  };
+                }),
+                legendProm = propMap(obj, (n, i) => {
+                  return kpis.find(d => d.dataItemId == i).kpiName;
+                });
+              return q.all(legendProm).then(legend => {
+                return success(
+                  new optionData({
+                    xAxis: {
+                      boundaryGap: false,
+                      type: "value",
+                      min: "dataMin",
+                      max: "dataMax",
+                      axisLabel: {
+                        formatter: function(params) {
+                          let d = dateparser(minDate).addTimeStamp(params);
+                          return d.getDateString("MM/dd,hh:mm:ss");
+                        }
+                      }
+                    },
+                    tooltip: {
+                      trigger: "axis",
+                      formatter: function(params, b, c) {
+                        return params.reduce((a, b) => {
+                          let time = b.value[0],
+                            val = b.value[1],
+                            marker = b.marker,
+                            seriesIndex = b.seriesIndex,
+                            d = dateparser(minDate + time);
+
+                          a += marker + legend[seriesIndex];
+                          a +=
+                            ":" +
+                            val +
+                            "[" +
+                            d.getDateString("MM/dd,hh:mm:ss") +
+                            "]<br>";
+                          return a;
+                        }, "");
+                      }
+                    },
+                    series: series,
+                    legend: { data: legend }
+                  })
+                );
+              });
+            });
+        });
+    }
+  }
+
+  function success(d) {
+    let defer = q.defer();
+    defer.resolve(d);
+    return defer.promise;
+  }
+
+  function error(msg) {
+    let defer = q.defer();
+    defer.reject(msg);
+    return defer.promise;
+  }
+
+  /** 获取timestamp **/
+
+  function toValue(d) {
+    return new Date(d) - 0;
+  }
+
+  /** 遍历对象 **/
+
+  function propMap(obj, callback) {
+    let rs = [];
+    for (let i in obj) {
+      rs.push(callback(obj[i], i));
+    }
+    return rs;
+  }
+
+  return new commonMethodService();
+}
+</script>

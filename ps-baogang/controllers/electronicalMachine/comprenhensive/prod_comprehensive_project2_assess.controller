@@ -1,0 +1,134 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService"
+        deps="dialogMaterialList"
+></config>
+<!--dialogDeviceInfo-->
+<template>
+    <div class="row padding-5">
+        <div class="col-md-12">
+            <div class="block">
+                <div class="col-md-12 margin-bottom-10">
+                    <button ng-click="editResume()"
+                            ng-if="currentRoleID == 59846674150228 && mode == 'resume'"
+                            class="btn btn-primary pull-right">编辑</button>
+                </div>
+                <div class="wrap">
+                    <div class="table-title">
+                        <span class="text-red" style="vertical-align: top">*</span>
+                        <span style="vertical-align: top">修复价值评估结论:</span>
+                        <textarea class="form-control" ng-model="conclusion" ng-disabled="disableFn(mode,currentRoleID)"></textarea>
+                    </div>
+                </div>
+                <div class="wrap">
+                    <div class="table-title">
+                        <span class="text-red" style="vertical-align: top">*</span>
+                        <span style="vertical-align: top">修复价值评估说明:</span>
+                        <textarea class="form-control" ng-model="instructions" ng-disabled="disableFn(mode,currentRoleID)"></textarea>
+                    </div>
+                </div>
+                <div class="wrap">
+                    <div class="table-title">
+                        <span class="text-red" style="vertical-align: top">*</span>
+                        <span style="vertical-align: top">是否具有修复价值:</span>
+                        <select select2 class="form-control" ng-model="whetherThereIsRepairValue" ng-options="value.id as value.name for value in values" selectdata="values" ng-disabled="disableFn(mode,currentRoleID)"></select>
+                    </div>
+                </div>
+                <div class="wrap">
+                    <div class="table-title">
+                        <button class="btn btn-primary" ng-click="submitFn()" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">保存</button>
+                        <button class="btn btn-default" ng-click="close()" ng-if="mode !='resume' && currentRoleID == 70153973788968 || mode == 'superAdmin'">取 消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService){
+        let saveValueAssessment = "motorRepairUIService.saveValueAssessment",
+                findValueAssessments = "motorRepairUIService.findValueAssessments";
+
+        var target = commonMethodService();
+        var params88 = target.getValue("maintainObj");
+        var params89 = params88.implementOrderNo;
+        var param99 = [];
+        param99.push(params89);
+        scope.mode = target.getValue('mode');
+        scope.currentRoleID = target.getCurrentUser().currentRoleID;
+        scope.editResume = function (){
+          scope.mode = 'superAdmin';
+        };
+        scope.disableFn = function (mode,currentRoleID){
+          return mode === 'resume'
+              || (currentRoleID == 59846674150228 && mode != 'superAdmin')
+              || (currentRoleID != 70153973788968  && currentRoleID != 59846674150228 );
+        };
+
+
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+        }
+        scope.values = [
+            {id:"是",name:"是"},
+            {id:"否",name:"否"}
+        ]
+        scope.submitFn = function(){
+            if(!scope.conclusion){
+                growl.warning("修复价值评估结论不可为空");
+                return
+            }
+            if(!scope.instructions){
+                growl.warning("修复价值评估说明不可为空");
+                return
+            }
+            if(!scope.whetherThereIsRepairValue){
+                growl.warning("是否有修复价值不可为空");
+                return
+            }
+
+            var params = {};
+            params.implementOrderNo = params89;
+            params.conclusion = scope.conclusion;
+            params.instructions = scope.instructions;
+            params.whetherThereIsRepairValue = scope.whetherThereIsRepairValue;
+
+            ajax.post(saveValueAssessment, params).then( assess => {
+                growl.success("价值评估成功");
+                return cms2.success(
+                        (assess || [])
+                );
+            }).then( domains => {
+                    scope.resources = domains.map( d => new tableCell(d));
+            });
+        }
+
+        scope.close = function(){
+            scope.conclusion = "";
+            scope.instructions = "";
+            scope.whetherThereIsRepairValue = "";
+        }
+//        展示数据
+        ajax.post(findValueAssessments, param99).then( assess => {
+            for(var key in assess[assess.length-1]){
+                if(assess[assess.length-1].hasOwnProperty(key) === true){
+                    scope[key] = assess[assess.length-1][key];
+                }
+            }
+        })
+
+    }
+</script>
+<style lang="less" scoped>
+    .wrap {
+        padding : 5px 10px !important;
+        display:flex;
+        justify-content:center;
+        /*align-item:"center"*/
+    }
+</style>
+
+

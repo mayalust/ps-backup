@@ -1,0 +1,481 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket,userUIService"></config>
+<template>
+  <div class="wrap">
+    <div class="element-row">
+      <div class="topo with-border">
+        <ps-topo-common></ps-topo-common>
+      </div>
+    </div>
+    <div class="element-row">
+      <div class="alarm with-border">
+        <h5 style="margin-bottom: 10px;">报警通知</h5>
+        <table
+          ps-table-sync
+          data-paginate="pageonly"
+          data-source="resources1"
+          data-filter="filter1"
+          data-sort="sort1"
+          data-page="page1"
+        >
+          <thead>
+            <tr>
+              <th>产线</th>
+              <th>设备信息</th>
+              <th>报警来源</th>
+              <th>报警消息</th>
+              <th>报警级别</th>
+              <th>报警时间</th>
+              <th>报警状态</th>
+              <th class="option">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              ng-repeat="(key,item) in items track by key"
+              ng-click="showInfo(item)"
+              ng-style="{}"
+            >
+              <!--<td ng-bind="item.customerName"></td>-->
+              <td>
+                <span ng-bind="item.customerName"></span>
+              </td>
+              <td>
+                <span ng-bind="item.devName"></span>
+              </td>
+              <td>
+                <!-- //1  "采集系统";-->
+                <span
+                  ng-bind="item.appName == 1 ? '在线预警'
+                              :item.appName == 2 ? '智能诊断'
+                              :item.appName == 3 ? '大数据分析'
+                              :item.appName == 4 ? '离线诊断'
+                              :'-'
+                "
+                ></span>
+              </td>
+              <td>
+                <span ng-bind="item.message"></span>
+              </td>
+              <td>
+                <span
+                  ng-bind="item.severity == -1 ? '正常'
+                           :item.severity == 2 ? '注意'
+                           :item.severity == 3 ? '异常'
+                           :item.severity == 4 ? '警告'
+                           :'-'
+              "
+                  ng-class="{'alerts-normal':item.severity == -1,
+                           'alerts-minor':item.severity == 2,
+                           'alerts-black' :item.severity == 3,
+                           'alerts-critical':item.severity == 4,
+                          }"
+                  class="label"
+                ></span>
+              </td>
+              <td>
+                <span ng-bind="formatTime(item.firstArisingTime)"></span>
+              </td>
+              <td>
+                <span
+                  ng-bind="item.state == 0 ? '新产生'
+                           :item.state == 5 ? '已确认'
+                           :item.state == 10 ? '待处理'
+                           :item.state == 20 ? '已解决'
+                           :item.state == 30 ? '已忽略'
+                           :'-'
+              "
+                ></span>
+              </td>
+              <td>
+                <div ps-option-group>
+                  <button
+                    class="btn btn-primary"
+                    ng-click="progress(item)"
+                    ng-disabled="!item.disableBool"
+                  >
+                    <span
+                      class="glyphicon glyphicon-cog"
+                      ng-bind="{false:'无匹配工单',true:'过程跟踪'}[!!item.disableBool]"
+                    ></span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="diagnosis-report with-border">
+        <h5 style="margin-bottom: 10px;">智能诊断</h5>
+        <div class="row font-white back-color">
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警消息:</span>
+            <span
+              ng-bind="diagInfo ? diagInfo.message : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警级别: </span>
+            <span
+              ng-bind="diagInfo ? (diagInfo.severity == -1 ? '正常'
+                                                           :diagInfo.severity == 2 ? '注意'
+                                                           :diagInfo.severity == 3 ? '异常'
+                                                           :diagInfo.severity == 4 ? '警告'
+                                                           :'-'): ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5">
+            <span>报警时间: </span>
+            <span
+              ng-bind="diagInfo ?formatTime(diagInfo.firstArisingTime) : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.diagnoseDesc">
+            <span>诊断结论: </span>
+            <ul ng-repeat="(k,item) in diagDesArr" style="margin-left: 24px;">
+              <li>
+                <span ng-if="diagDesArr.length !== 0">{{ k + 1 }}.</span>
+                {{ item }}
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.dealOption">
+            <span>处理建议:</span>
+            <span
+              ng-bind="diagInfo ? diagInfo.dealOption : ''"
+              class="font-ellipse"
+            ></span>
+          </div>
+          <div class="col-md-12 margin-bottom-5" ng-if="diagInfo.relatedFile">
+            <span>附件: </span>
+            <ul ng-repeat="(f,item2) in fileArr" style="margin-left: 24px;">
+              <li>
+                <span ng-if="fileArr.length !== 0">{{ f + 1 }}.</span>
+                <a ng-attr-href="{{item2}}" target="_blank"
+                  ><span>{{ item2.slice(item2.lastIndexOf("/") + 1) }}</span></a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { extend, dateparser } from "ps-ultility";
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket,
+  userUIService
+) {
+  var target = cms();
+
+  let dataMap = new Map(),
+    ws = psWebsocket("prod_steel_dedust");
+  class socektData {
+    constructor(d) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+    }
+    on() {
+      ws.on(state.params.id, this.kpiCode, d => {
+        scope.$apply(() => {
+          this.value = d;
+        });
+      });
+    }
+  }
+
+  scope.formatTime = function(d) {
+    return d ? dateparser(d).getDateString("yyyy-MM-dd hh:mm:ss") : "-";
+  };
+  //过程跟踪
+  scope.progress = function(elem) {
+    ajax
+      .post("ticketTaskService.getDealTicketListByPage", [
+        {
+          nodeIds: "" + state.params.id,
+          attrs: {
+            origId: elem.alertId
+          },
+          categorys: "50,90,260,280,290"
+        },
+        {
+          start: 0,
+          length: 10
+        }
+      ])
+      .then(dt => {
+        if (dt.data.length > 0) {
+          console.log(
+            dt.data.find(d => {
+              return d.deviceId == state.params.id;
+            })
+          );
+          target.setValue("ticketNo", dt.data[0].ticketNo);
+          target.navigateTo("index", {
+            main: [0, "viewId:9246777620035"] //viewId???
+          });
+        } else {
+          target.growl("告警未转工单", "warning");
+        }
+      });
+  };
+
+  class tableCell {
+    constructor(data) {
+      for (var i in data) {
+        this[i] = data[i];
+      }
+    }
+  }
+  scope.showInfo = function(item) {
+    scope.diagInfo = item;
+    scope.fileArr = (item.relatedFile ? item.relatedFile : "").split(",");
+    scope.diagDesArr = (item.diagnoseDesc ? item.diagnoseDesc : "").split(",");
+  };
+
+  cms().getDomainAreaLineTree_alertStatus(function(find) {
+    let id = state.params.id;
+    ajax
+      .post("alertQueryFlexService.getAlertByPage", [
+        {
+          domain: "",
+          nodeType: "",
+          pageSize: 1000,
+          severities: "1,2,3,4",
+          states: "0,5,10,20",
+          nodeIds: id
+        },
+        {
+          start: 0,
+          length: "",
+          sort: "createTime",
+          sortType: "desc",
+          statCount: true,
+          total: 0
+        }
+      ])
+      .then(d => {
+        let nodeIds = d.data.map(b => b.nodeId);
+        //用设备id查找 customerId
+        ajax
+          .post("resourceUIService.getResourceByIds", [nodeIds])
+          .then(customers => {
+            let customerIds = customers.map(customer => customer.customerId);
+            customers.forEach(customer => {
+              d.data = d.data.map(v => {
+                v["customerId"] = customer.customerId;
+                return v;
+              });
+            });
+            //用customerId 查找 customerName
+            ajax
+              .post("resourceUIService.getResourceByIds", [customerIds])
+              .then(customerNames => {
+                let customerObj = {},
+                  customerArr = [];
+                customerNames.forEach(customerName => {
+                  customerObj.customerId = customerName.id;
+                  customerObj.customerName = customerName.name;
+                  customerArr.push(customerObj);
+                });
+                customerArr.forEach(c => {
+                  d.data.map(vid => {
+                    if (vid.customerId == c.customerId) {
+                      vid["customerName"] = c["customerName"];
+                      return vid;
+                    }
+                  });
+                });
+                //获取所有工单
+                let alertParam,
+                  alertIds = [],
+                  alertData = d.data;
+                alertIds = alertData.map((val, k) => {
+                  return val.alertId;
+                });
+                alertParam = [
+                  {
+                    attrs: {
+                      origId: alertIds
+                    },
+                    categorys: "50,90,260,280,290"
+                  },
+                  {
+                    start: 0,
+                    length: 100000
+                  }
+                ];
+                ajax
+                  .post("ticketTaskService.getDealTicketListByPage", alertParam)
+                  .then(data => {
+                    alertData = alertData
+                      .filter(
+                        alert =>
+                          alert.state == 0 ||
+                          alert.state == 5 ||
+                          alert.state == 10
+                      )
+                      .map((value, j) => {
+                        let aId = value.alertId,
+                          origIdObj =
+                            data.data.find(v => {
+                              return (v.origId && v.origId[0]) == aId;
+                            }) || {};
+                        if (
+                          aId ==
+                          (origIdObj && origIdObj.origId && origIdObj.origId[0])
+                        ) {
+                          value["disableBool"] = true;
+                        } else {
+                          value["disableBool"] = false;
+                        }
+                        return value;
+                      });
+                    scope.resources1 = alertData.map(b => new tableCell(b));
+                  });
+              });
+          });
+      });
+  });
+}
+</script>
+<style lang="less" scoped>
+.wrap {
+}
+
+.element-row {
+  display: flex;
+  .topo {
+    flex: 3;
+    margin: 10px;
+    padding: 40px;
+  }
+  .value-box,
+  .alarm,
+  .diagnosis-report {
+    flex: 1;
+    margin: 10px;
+  }
+  .kpi {
+    width: 100%;
+    margin: 10px;
+    display: flex;
+    padding: 5px;
+    flex-wrap: wrap;
+    .kpi-item {
+      width: 10%;
+      padding: 10px;
+      .item-wrap {
+        .title {
+          margin: 0;
+          padding: 4px 0;
+          text-align: center;
+          background: #214770;
+        }
+        .status-wrap {
+          text-align: center;
+          padding: 10px 0;
+        }
+      }
+    }
+  }
+  .value-box {
+    padding: 10px;
+    .value-item {
+      &-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      &-kpi {
+        display: flex;
+        padding: 5px 0;
+        .label {
+          color: rgb(170, 170, 170);
+          text-align: right;
+          flex: 1;
+        }
+        .status-box {
+          flex: 2;
+          padding-left: 20px;
+        }
+      }
+    }
+  }
+  .alarm,
+  .diagnosis-report {
+    padding: 10px;
+  }
+  div {
+    ul {
+      &:nth-of-type(1) {
+        margin-top: -16px;
+      }
+    }
+  }
+}
+
+.status {
+  height: 20px;
+  line-height: 20px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  width: 90px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  &.state-1 {
+    background-color: #00bb7b;
+  }
+  &.state-2 {
+    background-color: #efd80b;
+  }
+  &.state-3 {
+    background-color: #ff8800;
+  }
+  &.state-4 {
+    background-color: #fd0001;
+  }
+}
+
+.with-border {
+  border: 1px solid #25729d;
+}
+
+.font-white {
+  color: #fff;
+  font-size: 75%;
+  font-weight: 700;
+}
+.font-ellipse {
+  width: calc(100% - 80px);
+  word-break: normal;
+  display: inline-block;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow: hidden;
+  vertical-align: top;
+  padding-left: 10px;
+}
+.back-color {
+  div {
+    padding: 4px !important;
+    &:nth-child(1) {
+      background-color: #214867 !important;
+    }
+    padding: 4px;
+  }
+}
+</style>

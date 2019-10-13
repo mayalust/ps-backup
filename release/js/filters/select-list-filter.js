@@ -1,0 +1,2 @@
+function _typeof(t){return(_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t})(t)}define(["../filters/filters.js"],function(t){"use strict";t.filter("$filter",function(){return function(t,o){var n=[];return"object"==_typeof(t)&&(n="function"==typeof o?t.filter(function(t){return o(t)}):t),n}})});
+//# sourceMappingURL=../../map/js/filters/select-list-filter.js.map

@@ -1,0 +1,347 @@
+<config injector="$scope,$q,$timeout,$state,$location,$registerService,ajax,commonMethodService2,growl,userUIService,psLoading,psDialog"
+        params="/:userID"
+        deps="spareArtDialog"
+></config>
+<template>
+  <section class="content" id="alerts">
+    <div class="row" style="max-height: calc(100vh - 115px); overflow-y: auto;">
+      <div class="col-md-12">
+        <div>
+          <div class="block margin-5 padding-5">
+            <div class="row">
+              <div class="col-md-2 item">
+                <label class="form-label">备件类型：</label>
+                <ps-select
+                    ng-model="rollerType"
+                    data-options="item.valueCode as item.label for item in rollerTypes"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">文件类型：</label>
+                <ps-select
+                    ng-model="craftsType"
+                    data-options="item.valueCode as item.label for item in craftsTypes"
+                ></ps-select>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">文件名称：</label>
+                <div>
+                  <input ng-model="name"
+                         class="form-control" />
+                </div>
+              </div>
+              <div class="col-md-2 item">
+                <label class="form-label">时间：</label>
+                <ps-date ng-model="updateDate"></ps-date>
+              </div>
+              <div class="col-md-12">
+                <div class="pull-right padding-top-10">
+                  <button class="btn btn-primary" ng-click="search()">查询</button>
+                  <button class="btn btn-default" ng-click="reset()">清除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="block margin-5 padding-5">
+            <button class="btn btn-primary" ng-click="addNewKnowledge()">添加工艺文件</button>
+            <div class="wrap">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="wrap">
+                    <table ps-table-sync="false"
+                           data-current="current"
+                           data-source="getKnowledgeSimpleByConditionWithPage"
+                           data-page="page">
+                      <thead>
+                      <tr>
+                        <th>备件类型</th>
+                        <th>文件类型</th>
+                        <th>文件名称</th>
+                        <th>时间</th>
+                        <th>责任人</th>
+                        <th>操作</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr ng-repeat="item in items">
+                        <td>
+                          <span ng-bind="item.rollerType"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.craftsType"></span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.name"></span>
+                        </td>
+                        <td>
+                          <span>{{item.updateDate | date: 'yyyy-MM-dd hh:mm:ss'}}</span>
+                        </td>
+                        <td>
+                          <span ng-bind="item.updateUserName"></span>
+                        </td>
+                        <td style="width:160px">
+                          <div ps-option-group>
+                            <button class="btn btn-primary" ng-click="item.download()">下载</button>
+                            <button class="btn btn-default" ng-click="item.edit()">编辑</button>
+                            <button class="btn btn-default" ng-click="item.remove()">删除</button>
+                          </div>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+<script>
+  import { dateparser, extend, isArray } from "ps-ultility"
+  export default function( scope,q,timeout,$state,location,registerService,ajax,cms2,growl,userUIService,psLoading,psDialog){
+    let getKnowledgeSimpleByConditionWithPage = "knowledgeUIService.getCraftsSimpleByConditionWithPage",
+      deleteKnowledgeSimple = "knowledgeUIService.deleteCraftsSimple",
+      root = scope.$root.$$childHead;
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      download(){
+        let url = userUIService.uploadFileUrl + this.fileList[0].filePath;
+        window.open(url);
+      }
+      remove(){
+          psDialog.confirm("确定要删除吗？",() => {
+            ajax.post(deleteKnowledgeSimple, [[this.id]]).then( d => {
+              growl.success("删除成功");
+              scope.reset();
+            });
+          })
+
+      }
+      edit(){
+        cms2.modal({
+          title : "工艺文件",
+          directive : "spare-art-dialog",
+          width : 800,
+          scope : scope,
+          params : extend({}, this),
+        }).then( s => {
+          if( typeof s != 'undefined'){
+            let files = s ? s.fileList : [],
+              newAdd = files.filter( d => d.name );
+            s.fileList = files.filter( d => d.fileName );
+            function uploadFile(){
+              let formData = new FormData();
+              formData.append("resourceId", 1 );
+              newAdd.forEach((v,i)=>{
+                formData.append(`file${i}`,v);
+              });
+              return ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+                let rs = []
+                if(d.code == "0"){
+                  let obj = {},dArr = d.data || [];
+                  if(isArray(d.data)){
+                    d.data.forEach((v,i)=>{
+                      obj = {};
+                      obj["fileName"] = newAdd[i].name;
+                      // obj["filePath"] = v.qualifiedName;
+                      obj["filePath"] = dArr.find((val,k) => val.qualifiedName.split('-')[1] === newAdd[i].name ).qualifiedName;
+                      rs.push(obj);
+                    })
+                  }else {
+                    obj["fileName"] = newAdd[0].name;
+                    obj["filePath"] = d.data.qualifiedName;
+                    rs.push(obj);
+                  }
+                  return cms2.success(rs);
+                }
+              })
+            }
+            ( newAdd.length > 0 ? uploadFile() : cms2.success([])).then( d => {
+              [].push.apply(s.fileList, d);
+              if(s.fileList && s.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空!");
+              }else {
+                s.name = s.fileList[0].name || s.fileList[0].fileName;
+                psLoading.showLoading();
+                ajax.post("knowledgeUIService.addCraftsSimple",s).then(function (d) {
+                  if(d == null){
+                    psLoading.closeLoading();
+                    growl.success("编辑成功！");
+                    scope.reset();
+                  }
+                });
+              }
+            })
+          }
+        })
+      }
+      getUpdateTime(){
+        return dateparser(this.updateDate).getDateString();
+      }
+    }
+    function getMyDicts(){
+      let defer = q.defer(),
+        clear = root.$watch("myDicts", d => {
+          if( typeof d !== "undefined"){
+            defer.resolve( d )
+            clear();
+          }
+        });
+      return defer.promise;
+    }
+    function createRenderFunction( ){
+      return function( page, pageSize ){
+        let query = function(){
+            let rs = {};
+            if( scope.rollerType ){
+              rs.rollerType = scope.rollerType;
+            }
+            if( scope.craftsType ){
+              rs.craftsType = scope.craftsType;
+            }
+            if( scope.name ){
+              rs.name = scope.name;
+            }
+            if(scope.updateDate){
+              rs.updateDate = scope.updateDate;
+            }
+            return rs;
+          },
+          params = [query(),{
+            "start":page * pageSize,
+            "length":pageSize,
+            "statCount":true
+          }];
+        return ajax.post(getKnowledgeSimpleByConditionWithPage, params).then( dt => {
+          if(typeof scope.updateDate == 'undefined' ){
+            dt.data = dt.data.map( d => new tableCell(d))
+          }else {
+            let st = scope.updateDate[0],
+                ed = scope.updateDate[1];
+            dt.data = dt.data.filter( v =>
+              new Date(v.updateDate).getTime() - new Date(st).getTime()
+              && new Date(ed).getTime() - new Date(v.updateDate).getTime()
+            ).map( d => new tableCell(d));
+          }
+          return cms2.success( dt );
+        });
+      }
+    }
+    getMyDicts().then( myDicts => {
+      function getDiction(attr){
+        return myDicts[attr];
+      }
+      scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      scope.rollerTypes = getDiction("rollerType");
+      scope.craftsTypes = getDiction("craftsType");
+      scope.search = function(){
+        scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      }
+      scope.reset = function(){
+        scope.rollerType
+          = scope.craftsType
+          = scope.name
+          = scope.updateDate
+          = undefined;
+        scope.getKnowledgeSimpleByConditionWithPage = createRenderFunction();
+      }
+    })
+    scope.addNewKnowledge = function(){
+      cms2.modal({
+        title : "工艺文件",
+        directive : "spare-art-dialog",
+        width : 800,
+        scope : scope,
+        params : {},
+      }).then( s => {
+        let formData = new FormData(), files = s ? s.fileList : [];
+        formData.append("resourceId", 1 );
+        if(typeof s !== "undefined"){
+          if(s.fileList && s.fileList.length){
+            s.fileList.forEach((v,i)=>{
+              formData.append(`file${i}`,v);
+            });
+            s.fileList = [];
+            ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (d) {
+              if(d.code == "0"){
+                let obj = {},dArr = d.data || [];
+                if(isArray(d.data)){
+                  d.data.forEach((v,i)=>{
+                    obj = {};
+                    obj["fileName"] = files[i].name;
+                    obj["filePath"] = dArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                    s.fileList.push(obj);
+                  })
+                }else {
+                  obj["fileName"] = files[0].name;
+                  obj["filePath"] = d.data.qualifiedName;
+                  s.fileList.push(obj);
+                }
+                return cms2.success( s );
+              }
+            }).then(function (d) {
+              if(d.fileList.length == 0){
+                psLoading.closeLoading();
+                growl.info("附件不能为空！");
+              }else {
+                psLoading.showLoading();
+                ajax.post("knowledgeUIService.addCraftsSimple",d).then(function (d) {
+                  if(d == null){
+                    psLoading.closeLoading();
+                    // growl.info("附件不能为空！");
+                    growl.success("新增成功！");
+                    scope.reset();
+                  }
+                })
+              }
+            });
+          }else{
+            psLoading.closeLoading();
+            growl.info("附件不能为空！");
+          }
+        }
+      })
+    }
+  }
+</script>
+<style lang="less" scoped>
+  table{
+    td {
+      height : 28px !important;
+    }
+  }
+  .margin-5{
+    margin : 5px;
+  }
+  .item {
+    padding : 5px !important;
+  }
+  .padding-5{
+    padding : 5px;
+  }
+  label.form-label{
+    text-align: center;
+  }
+  .wrap {
+    padding : 10px 0px !important;
+    a {
+      cursor : pointer;
+      font-weigh : bold;
+    }
+    .drop{
+      float : left;
+      width : 200px;
+    }
+    .option{
+      width : 160px;
+    }
+  }
+</style>

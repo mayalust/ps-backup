@@ -1,0 +1,431 @@
+<config injector="$scope,$timeout,$state,$registerService,psTreeData,ajax,commonMethodService2,commonMethodService,growl,resourceUIService,psWebsocket"
+></config>
+<template>
+  <div class="out">
+    <div class="tree-loading ng-scope" ng-if="!loaded" data-a-58306b0e=""></div>
+    <div class="wrap">
+      <div ng-repeat="dataItem in dataItems">
+        <div class="group" ng-repeat="group in dataItem">
+          <div
+            class="warn"
+            ng-click="group.warning.click()"
+            ng-style="group.warning.position()"
+            data-show-time="group.warning.getArisingTime()"
+          ></div>
+          <div
+            class="warn2"
+            ng-click="group.warning2.click()"
+            ng-style="group.warning2.position()"
+            data-show-time="group.warning2.getArisingTime()"
+          ></div>
+          <div
+            class="warn3"
+            ng-click="group.warning3.click()"
+            ng-style="group.warning3.position()"
+            data-show-time="group.warning3.getArisingTime()"
+          ></div>
+          <div
+            class="item"
+            ng-repeat="item in group.details"
+            ng-style="item.position()"
+            ng-bind="item.getValue()"
+            ng-click="item.click()"
+            data-show-time="group.warning.getArisingTime()"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import mainCtrl from "../../../localdb/mainctrl.json";
+export default function(
+  scope,
+  timeout,
+  $state,
+  registerService,
+  psTreeData,
+  ajax,
+  cms2,
+  cms,
+  growl,
+  resourceUIService,
+  psWebsocket
+) {
+  const vstep = 2.2,
+    colors = ["yellow", "green", "red", "white", "white"],
+    { devicesMap, dataItemsMap } = mainCtrl,
+    { detailNumsMap, extraMap, iconsMap } = dataItemsMap,
+    { topLeft, topRight, bottomLeft, bottomRight } = devicesMap;
+  let ciIds = getIds(devicesMap).map(d => d - 0),
+    ws = psWebsocket("prod_mainCtrlRm"),
+    kpiIds = getIds(dataItemsMap).map(d => d - 0),
+    kpiValueMap = {},
+    params = [
+      "kpi",
+      {
+        category: "ci",
+        isRealTimeData: true,
+        timePeriod: 0,
+        nodeIds: ciIds,
+        kpiCodes: kpiIds,
+        startTime: null,
+        endTime: null,
+        includeInstance: true,
+        queryInstances: "00",
+        timeRange: "",
+        statisticType: "psiot",
+        condList: []
+      }
+    ];
+  scope.loaded = false;
+  function toFixed(num) {
+    return Math.floor(num * 1000) / 1000;
+  }
+  function getFromValueList({ value }) {
+    value = value - 0;
+    if (!value) {
+      return;
+    }
+    return toFixed(value, 2);
+  }
+  class warnCell {
+    constructor(d, y, x, nodeId, kpiId) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+      this.$y = y;
+      this.$x = x;
+      this.nodeId = nodeId;
+      this.kpiId = kpiId;
+      ws.on(this.nodeId, this.kpiId, (d, dt) => {
+        scope.$apply(() => {
+          attr(kpiValueMap, `${this.nodeId}/${this.kpiId}`, dt);
+        });
+      });
+    }
+    click() {
+      let id = this.nodeId,
+        enddate = new Date(this.getArisingTime()) - 0,
+        startdate = enddate - 2 * 3600 * 1000,
+        dataItems = this.kpiId;
+      cms2.navigateTo("专业分析", {
+        id,
+        startdate,
+        enddate,
+        dataItems
+      });
+    }
+    getArisingTime() {
+      let ins =
+        (kpiValueMap[this.nodeId] && kpiValueMap[this.nodeId][this.kpiId]) ||
+        {};
+      return ins.arisingTime;
+    }
+    position() {
+      return {
+        marginTop: getPersentage(this.$y) + "%",
+        left: this.$x + "%",
+        backgroundImage:
+          this.getValue() == 1
+            ? "url(../../images/baogang/images/middle_r.png)"
+            : "url(../../images/baogang/images/middle_g.png)"
+      };
+    }
+    getValue() {
+      let val =
+        kpiValueMap[this.nodeId] && kpiValueMap[this.nodeId][this.kpiId];
+      if (val == null) {
+        return 0;
+      }
+      return getFromValueList(val) || 0;
+    }
+  }
+  class warnCell2 extends warnCell {
+    constructor(d, y, x, nodeId, kpiId) {
+      super(d, y, x, nodeId, kpiId);
+    }
+    position() {
+      return {
+        marginTop: getPersentage(this.$y) + "%",
+        left: this.$x + "%",
+        backgroundImage:
+          this.getValue() == 1
+            ? "url(../../images/baogang/images/line_r.png)"
+            : "url(../../images/baogang/images/line_g.png)"
+      };
+    }
+  }
+  class warnCell3 extends warnCell {
+    constructor(d, y, x, nodeId, kpiId) {
+      super(d, y, x, nodeId, kpiId);
+    }
+    position() {
+      return {
+        marginTop: getPersentage(this.$y) + "%",
+        left: this.$x + "%",
+        backgroundImage:
+          this.getValue() == 1
+            ? "url(../../images/baogang/images/K_r.png)"
+            : "url(../../images/baogang/images/K_g.png)"
+      };
+    }
+  }
+  class itemCell extends warnCell {
+    constructor(d, _i, y, x, nodeId) {
+      super(d, y, x, nodeId, d.id);
+      this.$inx = _i;
+    }
+    position() {
+      return {
+        marginTop: getPersentage(vstep * this.$inx + this.$y) + "%",
+        color: colors[this.$inx],
+        left: this.$x + "%"
+      };
+    }
+  }
+  class Empty {
+    constructor(d, y, x, nodeId, kpiId) {
+      for (let i in d) {
+        this[i] = d[i];
+      }
+      this.$y = y;
+      this.$x = x;
+    }
+    position() {
+      return {
+        marginTop: getPersentage(this.$y) + "%",
+        left: this.$x + 0.4 + "%",
+        width: ".2%",
+        backgroundColor: "green"
+      };
+    }
+  }
+  function attr(obj, attrs, val) {
+    let arr = attrs.split("/").filter(d => d),
+      last = arr.pop(),
+      key;
+    while ((key = arr.shift())) {
+      obj[key] = obj[key] || {};
+      obj = obj[key];
+    }
+    obj[last] = val;
+  }
+  function getPersentage(num) {
+    return 0.6 * num;
+  }
+  function createArr(dt) {
+    let rs = [];
+    for (let i in dt || detailNumsMap) {
+      rs.push({
+        id: i,
+        value: 0
+      });
+    }
+    return rs;
+  }
+  function createDataItem(top, left, json, Step, des) {
+    var rs = [],
+      index = 0;
+    for (var i in json) {
+      rs.push({
+        details: createArr(dataItemsMap[des]).map(
+          (d, inx) => new itemCell(d, inx, top, left + index * Step, i)
+        )
+      });
+      index++;
+    }
+    return rs;
+  }
+  function createGrp(
+    top,
+    left,
+    json,
+    Step,
+    showDetails,
+    showWarning3,
+    offsetY,
+    offsetX,
+    flip
+  ) {
+    var rs = [],
+      index = 0;
+    for (var i in json) {
+      rs.push({
+        details:
+          showDetails != false
+            ? createArr().map(
+                (d, inx) =>
+                  new itemCell(
+                    d,
+                    inx,
+                    offsetY || top,
+                    (offsetX || left) + index * Step,
+                    i
+                  )
+              )
+            : [],
+        warning:
+          showDetails != false
+            ? new warnCell({}, top - 22, left + index * Step, i, 27676)
+            : new Empty({}, top - 22, left + index * Step, i, 27676),
+        warning2: new warnCell2({}, top - 26, left + index * Step, i, 27673),
+        warning3:
+          showWarning3 != false
+            ? new warnCell3(
+                {},
+                top - 12.3,
+                flip
+                  ? left - 2.1 + index * Step + 1.5
+                  : left + index * Step + 1.5,
+                i,
+                27678
+              )
+            : []
+      });
+      index++;
+    }
+    return rs;
+  }
+  function getIds(obj) {
+    let ids = [];
+    for (let i in obj) {
+      for (let j in obj[i]) {
+        if (ids.indexOf(j) == -1) {
+          ids.push(j);
+        }
+      }
+    }
+    return ids;
+  }
+  function updateValues(valuelist) {
+    valuelist.forEach(b => {
+      let nodeId = b.nodeId,
+        kpiCode = b.kpiCode;
+      kpiValueMap[nodeId] = kpiValueMap[nodeId] || {};
+      kpiValueMap[nodeId][kpiCode] = b;
+    });
+    scope.loaded = true;
+    scope.dataItems = [
+      createGrp(42, 5.2, topLeft, 4.0),
+      createGrp(42, 71.5, topRight, 3.8),
+      createGrp(82.3, 5.8, bottomLeft, 4.12),
+      createGrp(82.3, 60.2, bottomRight, 3.9),
+      createGrp(
+        82.3,
+        46,
+        {
+          407451616770879: "HP-1"
+        },
+        3.9,
+        true,
+        true,
+        null,
+        null,
+        true
+      ),
+      createGrp(
+        82.3,
+        51.5,
+        {
+          407451616770882: "HP-2"
+        },
+        3.9,
+        false,
+        false
+      ),
+      createGrp(
+        58,
+        44.5,
+        {
+          407451616770885: "HP-3"
+        },
+        3.9,
+        true,
+        false,
+        23,
+        46
+      ),
+      createGrp(
+        58,
+        54,
+        {
+          407451616770888: "HP-4"
+        },
+        3.9,
+        true,
+        false,
+        23,
+        55.5
+      ),
+      createDataItem(
+        42.5,
+        41,
+        {
+          407451616770885: "HP-3"
+        },
+        3.9,
+        "extraMap"
+      ),
+      createDataItem(
+        42.5,
+        58.5,
+        {
+          407451616770888: "HP-4"
+        },
+        3.9,
+        "extraMap"
+      )
+    ];
+  }
+  ws.send(ciIds, kpiIds);
+  ajax.post("kpiDataFlexService.getKpiValueList", params).then(updateValues);
+  scope.$on("destroy", () => {
+    ws.destroy();
+  });
+}
+</script>
+<style lang="less" scoped>
+.out {
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  .wrap {
+    background-image: url(/upload/515445641576228/20190322160325371.png);
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    padding-bottom: 60%;
+    position: relative;
+    .warn {
+      cursor: pointer;
+      position: absolute;
+      width: 1%;
+      padding-bottom: 3%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      //background-color : red;
+    }
+    .warn2 {
+      cursor: pointer;
+      position: absolute;
+      width: 1%;
+      padding-bottom: 8%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      //border : 1px solid rgba(250,250,250,.3);
+    }
+    .warn3 {
+      cursor: pointer;
+      position: absolute;
+      width: 0.7%;
+      padding-bottom: 2%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      //background-color : yellow;
+    }
+    .item {
+      cursor: pointer;
+      position: absolute;
+    }
+  }
+}
+</style>

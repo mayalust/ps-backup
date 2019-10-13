@@ -1,0 +1,113 @@
+<config injector="$timeout, psScope, ajax, $routeParams, psUltility, psAttribute"
+></config>
+<template>
+    <div class="bk-scope">
+        <form class="row" ng-class="formcls(option)">
+            <ps-form-content data-option="op" ng-repeat="op in option.children">
+            </ps-form-content>
+        </form>
+    </div>
+</template>
+<script type="text/javascript">
+import {each, attribute} from "ps-ultility";
+
+export default function (timeout, psScope, ajax, routeParams, psUltility, psAttribute) {
+  return {
+    restrict: 'E',
+    scope: {
+      option: "="
+    },
+    replace: true,
+    link: function (scope, element) {
+      /****** 处理所有的字段, 将所有的字段，转换为对象格式，放入attributes中 ******/
+      let allAttrs = psAttribute.resolveAttributes(scope.option.attributes);
+      /****** 处理所有的字段 ******/
+
+      let formAttributes = psAttribute.resolveFromAttributes(scope.option.children, allAttrs);
+
+      scope.option.children = formAttributes.map(d => {
+        if (d.key) {
+          return d;
+        } else {
+          let o = {
+            type: d.formType,
+            label: d.label,
+            key: d.name,
+            format: d.format
+          };
+          for(var i in d){
+            new RegExp("type|key|formType|label|name|format", "gm").test(i)
+              ? null : o[i] = d[i];
+          }
+          o.config = o.config || {}
+          if (d.relate) {
+            o['options'] = {
+              url: d.relate.name + '@getByCondition',
+              param: d.relate.parameter || {}
+            }
+            if (d.formType === 'select') {
+              o['format'] = {
+                id: d.relate.id,
+                label: d.relate.label
+              }
+            }
+          }
+          if (d.upper) {
+            o.watch = {
+              key: d.upper[0].name,
+              before: function (n, next) {
+                let obj = {};
+                obj[d.upper[0].from] = n;
+                return obj;
+              },
+              url: d.relate.name + '@getByCondition',
+              handler: function (e) {
+                e.update({
+                  options: e.$value
+                });
+              }
+            }
+          }
+          o['config']['format'] = o.format;
+          return o;
+        }
+      });
+
+      let url, data;
+      psScope(scope);
+      if (url = scope.option.url) {
+        ajax.post(url, routeParams["id"]).then(function (d) {
+          each(scope.option.children, (n) => {
+            n[psUltility.keyPattern(n["key"])] = attribute(d, n["key"]);
+          });
+        });
+      } else if (data = scope.option.data) {
+        each(scope.option.children, (n) => {
+          n[psUltility.keyPattern(n["key"])] = attribute(data, n["key"]);
+        })
+      }
+      scope.formcls = function (option) {
+        return option.class || "";
+      }
+    }
+  }
+}
+</script>
+<style type="less" scoped="true">
+form {
+    width: 500px;
+}
+
+.range {
+    height: 28px;
+}
+
+.form-center {
+    width: 60%;
+    margin: auto;
+}
+
+.bk-form-input {
+    width: ~'calc(100% - 12px)';
+}
+</style>

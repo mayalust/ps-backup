@@ -1,0 +1,48 @@
+<config injector="$q, $timeout"
+></config>
+<script type="text/javascript">
+  export default function (q, timeout) {
+    function dealAttributeDefinitions(item, index) {
+      let ret = {},obj = {};
+      let key = Object.keys(item)[0];
+      ret.__key = key;
+      if(key === 'detailDialog' || key === 'directive'){
+        obj = item;
+      }else {
+        obj = item[key]
+      }
+      return Object.assign({}, ret, obj);
+    }
+
+    function generateTaskJobProcess(task) {
+      if (typeof task !== 'object' || JSON.stringify(task) === '{}' || task === null) {
+        return {};
+      }
+      if (!task["ticketTask"] || !task["ticketTask"]["attributeDefinitions"]) {
+        return {};
+      }
+      let taskValues = task["ticketTask"]['values'];
+      return task["ticketTask"]["attributeDefinitions"].map(dealAttributeDefinitions).reduce((prev, curr) => {
+        if(curr.__key == 'detailDialog'){
+          prev["detailDialog"] = curr["detailDialog"];
+        }
+        if(curr.__key == 'directive' ){
+          prev["directive"] = curr["directive"];
+        }
+        if (!curr.showInTracker) {
+          return prev;
+        }
+        prev[curr.__key] = {
+          key: curr.label,
+          value: taskValues[curr.__key]
+        };
+        return prev;
+
+      }, {});
+    }
+
+    return {
+      generateTaskJobProcess
+    }
+  }
+</script>

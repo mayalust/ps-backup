@@ -1,0 +1,82 @@
+<config injector="$rootScope,$q"></config>
+<script>
+/** mock **/
+export default function(rootScope, q) {
+  function psTrackerCreator(factory) {
+    class PsTrackerCreator {
+      intelligenceFixing() {
+        function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue
+        ) {
+          /** 智能检修 **/
+          return [
+            {
+              title: "智能检修",
+              icon: "fa fa-user fa-fw fa-circle-o bg-green",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                findAttr(["任务分类", "taskCategory"]),
+                findAttr(["任务来源", "appName"]),
+                findAttr(["处理人", "handlerName"]),
+                createButton(["检修方案", "fixingPlan"]),
+                createButton(["检修实绩", "fixingResult"])
+              ]
+            }
+          ];
+        }
+      }
+      statusKeeping() {
+        function expression(
+          createAttr,
+          findAttr,
+          createTitle,
+          createButton,
+          findValue
+        ) {
+          /** 节点模版 **/
+          return [
+            {
+              title: "状态维护",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["工单号", "ticketNo"]),
+                findAttr(["任务分类", "message"]),
+                findAttr(["任务来源", "appName"]),
+                findAttr(["维护项目编号", "standardNo"]),
+                findAttr(["维护项目名称", "standardName"]),
+                findAttr(["实施依据", "maintainBasis"]),
+                findAttr(["处理人", "ticket.handlerName"]),
+                createButton(["维护实绩", "keepResult"])
+              ]
+            },
+            {
+              title: "智能决策",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [findAttr(["异常名称", "maintainBasis"])]
+            },
+            {
+              title: "智能方案",
+              icon: "fa fa-user bg-aqua",
+              time: findValue("executeTime"),
+              data: [
+                findAttr(["解决方案", "maintainBasis"]),
+                findAttr(["维护项目编号", "standardNo"]),
+                findAttr(["维护项目名称", "standardName"]),
+                createButton(["规则详情", "keepResult"])
+              ]
+            }
+          ];
+        }
+      }
+    }
+  }
+  return psTrackerCreator;
+}
+</script>

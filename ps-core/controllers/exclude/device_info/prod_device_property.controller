@@ -1,0 +1,303 @@
+<config injector="$scope,$q,ajax,$location,psDialog,$routeParams,growl"
+        params="/:id?/:id?"></config>
+<template>
+    <proudsmart-base>
+        <ps-layout data-option="layout"></ps-layout>
+    </proudsmart-base>
+</template>
+<script type="text/javascript">
+export default function (scope, q, ajax, location, psDialog, routeParams, growl) {
+  let resource = {};
+   
+  scope.layout = {
+    label: "基本信息",
+    init: function (next) {
+      if (routeParams.id > 0) {
+        ajax.post("resourceUIService.getResourceById", routeParams.id).then((d) => {
+          resource = d;
+          next({
+            model: resource,
+            dtable: []
+          })
+        });
+      }
+    },
+    modals: {
+      editModel: {
+        label: "属性信息",
+        type: "layout",
+        children: [{
+          type: "form-dialog",
+          data: null,
+          children: [{
+            type: "select",
+            label: "属性名称",
+            key: "label"
+          }, {
+            type: "select",
+            label: "显示名称",
+            key: "name"
+          }, {
+            type: "input",
+            label: "开始使用时间",
+            key: "startUseTime"
+          }, {
+            type: "input",
+            label: "更换次数",
+            key: "replaceNum"
+          }]
+        }],
+        buttons: [{
+          label: "确定",
+          class: "btn btn-primary",
+          click: function () {
+            this.submit();
+          }
+        }, {
+          label: "取消",
+          click: function () {
+            this.close();
+          }
+        }]
+      }
+    },
+    children: [{
+      type: "form-inline",
+      children: [{
+        type: "button",
+        config: {
+          label: " 保存设备",
+          class: "btn btn-primary",
+          icon: "fa fa-save",
+          click: function (e) {
+            let d = e.getData();
+            if (d.model) {
+              for (let key in d.model) {
+                resource[key] = d.model[key];
+              }
+              if (d.dtable) {
+                let ele = resource['values'] == null ? {} : resource['values'];
+                d.attrtable.forEach(item => {
+                  // if (item.sourceValue != null && typeof item.sourceValue !== 'undefined') {
+                  ele[item.name] = item.value;
+                  // }
+                });
+                resource['values'] = ele;
+              }
+              delete resource.model;
+              if (routeParams.id > 0) {
+                ajax.post("resourceUIService.updateDevice", resource).then((r) => {
+                  growl.success("保存成功", {});
+                });
+              } else {
+                ajax.post("resourceUIService.addResource", resource).then((r) => {
+                  if (r && r.id > 0) {
+                    growl.success("保存成功", {});
+                    location.path("/prod_device_property/" + r.id);
+                  }
+                });
+              }
+            }
+          }
+        }
+      }]
+    }, {
+      label: "基本信息",
+      type: "panel",
+      children: [{
+        type: "form",
+        scope: "model",
+        attributes: {
+          domainPath: ["管理域", "dist", {
+            name: "resource",
+            from: "domainPath",
+            to: "domainPath",
+            parameter: {
+              modelId: 300,
+              category: "Domain"
+            }
+          }, {
+            value: "domainPath"
+          }],
+          customerId: ["所属车间", "number", {
+            name: "customer",
+            label: "customerName"
+          }],
+          projectId: ["所属线体", "number", {
+            name: "project",
+            label: "projectName"
+          }],
+          modelId: ["设备类型", "number", "modelDefinition"],
+          label: ["设备名称", "string"],
+          sn: ["设备编码", "string"]
+        },
+        children: [{
+          name: "domainPath",
+          formType: "tree"
+        }, "customerId", {
+          name: "projectId",
+          upper: [{
+            name: "model.customerId",
+            from: "customerId"
+          }]
+        }, "modelId", "label", "sn"]
+      }]
+    }, {
+      label: "属性信息",
+      type: "panel",
+      children: [{
+        type: "tabs-dynamic",
+        key: "dtable",
+        relateTo: {
+          key: "model.modelId",
+          url: "resourceUIService.getAttrsByModelIdAndAttrTypes",
+          after: function (d, next) {
+            let groups = [];
+            let relates = [];
+            for (let i in d) {
+              let attrsData = d[i];
+              let promises = attrsData.filter((n) => {
+                return n.dataType == 'relate' || n.dataType == 'dict'
+              }).map((n) => {
+                let defer = q.defer();
+                if (n.dataType == 'relate') {
+                  ajax.post("configUIService.getByCondition", [n.relate.name, {}]).then((d) => {
+                    n.dataSource = d.map((m) => {
+                      return {"id": m[n.relate.to], "label": m[n.relate.label]}
+                    });
+                    defer.resolve(n.dataSource);
+                  });
+                } else if (n.dataType == 'dict') {
+                  ajax.post("dictionaryService.getDictValues", [n.attrTypeValue]).then((d) => {
+                    n.dataSource = d.map((m) => {
+                      return {"id": m.valueCode, "label": m.label}
+                    });
+                    defer.resolve(n.dataSource);
+                  });
+                } else if (n.dataType == 'enum') {
+                  if (n.attrTypeValue != null && typeof n.attrTypeValue !== 'undefined') {
+                    defer.resolve(n.attrTypeValue);
+                  }
+                }
+                return defer.promise;
+              })
+              q.all(promises).then((d) => {
+                attrsData.forEach(ele => {
+                  ele.value = ele.sourceValue;
+                });
+                attrsData.forEach(ele => {
+                  for (let key in resource.values) {
+                    if (key == ele.name) {
+                      ele.value = resource.values[key];
+                    }
+                  }
+                });
+                groups.push({
+                  attrType: i,
+                  data: {
+                    attrtable: attrsData
+                  }
+                });
+                next(groups);
+              });
+            }
+          },
+          value: routeParams.id
+        },
+        children: [{
+          type: "table-form",
+          key: "attrtable",
+          config: {
+            attributes: {
+              "label": ["显示名称", "text"],
+              "value": ["属性值", "text"]
+            },
+            grid: {
+              body: ["label", {
+                name: "value",
+                gridType: function (row) {
+                  let typeStr = 'input';
+                  switch (row.dataType) {
+                    case 'date':
+                      typeStr = 'date2';
+                      break;
+                    case 'standardAddress':
+                      typeStr = 'address';
+                      break;
+                    case 'relate':
+                      if (row.relate.isMultiSelect) {
+                        typeStr = 'multi-select'
+                      } else {
+                        typeStr = 'select';
+                      }
+                      break;
+                    case 'dict':
+                      typeStr = 'select';
+                      break;
+                    case 'enum':
+                      typeStr = 'select';
+                      break;
+                    case 'file':
+                      typeStr = 'file';
+                      break;
+                    case 'icon':
+                      typeStr = 'file';
+                      break;
+                  }
+                  return typeStr;
+                },
+                options: function (row) {
+                  var op = null;
+                  switch (row.dataType) {
+                    case 'relate':
+                      op = row.dataSource;
+                      break;
+                    case 'dict':
+                      op = row.dataSource;
+                      break;
+                    case 'enum':
+                      // op = "userUIService.queryUserByCondition";
+                      try {
+                        op = JSON.parse(row.attrTypeValue);
+                      } catch (e) {
+                        console.warn( 
+                        op = row.attrTypeValue;
+                      }
+                      break;
+                  }
+                  return op;
+                }
+              }],
+              config: {
+                showSearch: false,
+                showIndex: false,
+                showSelector: false
+              }
+            }
+          }
+        }],
+        config: {
+          showname: function (d) {
+            if (d.attrType == "default") {
+              return "基本属性"
+            } else {
+              return d.attrType;
+            }
+          },
+          enableAppend: false,
+          showDrop: false
+        },
+        value: [{
+          label: "基本属性",
+          after: function (d) {
+            return d;
+          }
+        }]
+      }]
+    }]
+  }
+};
+</script>
+<style
+        type="less">
+</style>

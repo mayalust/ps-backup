@@ -1,0 +1,23 @@
+<section class="col-md-12" style="display: block;height: 100%;padding: 5px;">
+  <!--二级标题-->
+  <!--<div ng-if="showTree"-->
+  <!--style="padding: 5px;font-weight: bold;color: rgb(114, 179, 215);line-height: 20px;position: relative;"-->
+  <!--ng-bind="treeStr">-->
+  <!--</div>-->
+  
+  <div class="nav nav-tabs" ng-if="!sub_active_hide">
+    <li ng-class="{'active':item.index == sub_active_index}" ng-click="subNavToPage(item)" ng-repeat="item in subtabs"
+        style="cursor:pointer;" ng-if="item.specialLink != 1">
+      <a>
+        <span style="margin-right: 3px;"></span>
+        {{item.name}}
+      </a>
+    </li>
+  </div>
+  <div class="row block wrap" ng-style="{true : { height : 'calc(100% - 25px)' }, false : { height : 'calc(100% - 25px)' }}[viewId == 177280852260000]"
+       style="overflow-y:auto">
+    <div class="col-md-12" style="padding:5px;">
+      <ui-view></ui-view>
+    </div>
+  </div>
+</section>

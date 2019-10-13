@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-editor/js/controllers/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,gCAAiC","file":"app-editor/js/controllers/index.js","sourcesContent":["define([\"js/controllers/controller.js\"], function () {});"],"sourceRoot":"/source/"}

@@ -1,0 +1,291 @@
+body {
+    font-family: "MicrosoftYaHei";
+}
+
+.clearfix:after {
+    content: "";
+    height: 0;
+    line-height: 0;
+    clear: both;
+    display: block;
+    visibility: hidden
+}
+
+.clearfix {
+    zoom: 1
+}
+
+.contain {
+    width: 13440px;
+    height: 3240px;
+    background: url("../images/screenbg.jpg") no-repeat;
+    background-size: 100% 100%;
+}
+
+/*左侧：第一部分 - 状态总览*/
+.left-padding {
+    padding: 60px 0 0 160px;
+
+}
+
+.box-background {
+    width: 100%;
+    height: 1000px;
+    background: rgba(18, 52, 121, 0.8);
+    border: 1px solid #86d3ff;
+    position: relative;
+}
+
+.box-background .left_text {
+    width: 47%;
+    height: 20%;
+    padding-top: 2%;
+    font-size: calc(6vw);
+    margin-left: 3%;
+    color: rgb(206, 206, 206);
+    font-weight: 800;
+    float: left;
+}
+
+.box-background .icon-text {
+    font-size: calc(3vw);
+    color: rgb(206, 206, 206);
+}
+
+.box-background .iconfont-position {
+    position: absolute;
+    right: 4%;
+    top: 5%;
+}
+
+.box-background .right_text {
+    width: 48%;
+    height: 23%;
+    padding: 2% 0 0 2%;
+    float: left;
+}
+
+.right_text-1, .right_text-2, .right_text-3 {
+    width: 33.33%;
+    background-size: 55px 20px;
+    padding-left: 1%;
+    color: rgb(255, 255, 255);
+    font-size: 3vw;
+    float: left;
+}
+
+.bar-blue, .bar-yellow, .bar-red {
+    width: 40%;
+    height: 60px;
+    background: #29b4ec;
+    border-radius: 30px;
+    display: inline-block;
+    vertical-align: middle
+}
+
+.bar-yellow {
+    background: #e8b609;
+}
+
+.bar-red {
+    background: #e74e54;
+}
+
+.svg-echarts {
+    height: 80%
+}
+
+.svg-echarts .title {
+    width: 86%;
+    font-size: 3.5vw;
+    color: rgb(240, 240, 240);
+    padding: 2% 0 0 14%;
+}
+
+.svg-echarts .left {
+    margin-top: 30px;
+    width: 30%;
+    height: 100%;
+    float: left;
+}
+
+.svg-echarts .sub-title {
+    font-size: calc(2.5vw);
+    color: rgb(160, 160, 160);
+    text-align: right;
+}
+
+.svg-echarts .counts {
+    font-size: calc(4vw);
+    color: rgb(255, 255, 255);
+    text-align: right;
+    padding-bottom: 12%;
+}
+
+.svg-echarts .center {
+    width: 20%;
+    height: 100%;
+    float: left;
+}
+
+.svg-echarts .right {
+    width: 50%;
+    float: left;
+}
+
+.svg-echarts .legend-red, .svg-echarts .legend-yellow, .svg-echarts .legend-blue {
+    width: 30%;
+    height: 170px;
+    background: #e74e54;
+    vertical-align: middle;
+    margin: 30px 0 0 30px;
+}
+
+.svg-echarts .legend-yellow {
+    background: #e8b609;
+}
+
+.svg-echarts .legend-blue {
+    background: #29b4ec;
+}
+
+/*第二部分 - 表格*/
+.table-box {
+    padding: 0% 3% 0;
+}
+
+.table-box .table-title td {
+    color: rgb(115, 217, 255);
+    font-weight: bold;
+    font-size: 4vw;
+}
+
+.table-box .white-text {
+    color: rgb(255, 255, 255);
+}
+
+.table-box .special-text {
+    color: #00fff6
+}
+
+.table > tbody > tr > td {
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    color: rgb(64, 217, 255);
+    font-size: 5vw;
+}
+
+/*.table > tbody > tr > td:nth-child(4) {*/
+/*color: #00fff6*/
+/*}*/
+
+.table > tbody > tr:nth-child(5) > td {
+    border-bottom: none;
+
+}
+
+.table-box .slide-bar {
+    width: 60%;
+    height: 50px;
+    background: #bfbfbf;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.table-box .sliding-block {
+    width: 88%;
+    height: 48px;
+    background: #00fff6
+}
+
+/*右侧：第一部分故障异常预报分类*/
+.right-padding {
+    padding: 60px 160px 0 0;
+}
+
+.device-cartogram {
+    width: 54%;
+    height: 1000px;
+    background: rgba(18, 52, 121, 0.8);
+    border: 1px solid #86d3ff;
+    margin-right: 28px;
+    float: left;
+
+}
+
+.system-notify {
+    width: 45%;
+    height: 1000px;
+    background: rgba(18, 52, 121, 0.8);
+    border: 1px solid #86d3ff;
+    float: left;
+}
+
+.right-padding .left_text {
+    width: 100%;
+    height: 21%;
+    padding-top: 4%;
+    font-size: calc(6vw);
+    margin-left: 3%;
+    color: rgb(206, 206, 206);
+    font-weight: 800;
+    float: left;
+}
+
+.content-box {
+    height: 780px;
+    overflow: auto;
+}
+
+.content-text {
+    padding: 0 3%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 4vw;
+    color: rgb(206, 206, 206);
+}
+
+/*严重*/
+.content-text.critical, .datetime-text.critical {
+    color: #e7675d;
+}
+
+/*重要*/
+.content-text.major, .datetime-text.major {
+    color: #ed9700;
+}
+
+/*次要*/
+.content-text.minor, .datetime-text.minor {
+    color: #e1cd0a;
+}
+
+/*警告*/
+.content-text.warning, .datetime-text.warning {
+    color: #25bce7;
+}
+
+.datetime-text {
+    padding: 0 3%;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 2vw;
+    color: rgb(206, 206, 206);
+}
+
+/*中间柱图*/
+
+.cylinder-box {
+    width: 300px;
+    height: 1000px;
+
+}
+
+.nav {
+    width: 4320px;
+    height: 900px;
+    background: url("../images/screenbg.jpg")  no-repeat;
+    background-size: contain;
+    background-position: center center;
+}

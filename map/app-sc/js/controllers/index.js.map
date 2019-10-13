@@ -1,0 +1,1 @@
+{"version":3,"sources":["app-sc/js/controllers/index.js"],"names":["define"],"mappings":"AAAAA,OAAO,CAAC,sCAAuC,yCAA0C,gBAAiB","file":"app-sc/js/controllers/index.js","sourcesContent":["define(['../../js/controllers/appnav-ctrl.js', '../../js/controllers/configure-ctrl.js', './login-ctrl'], function () {});"],"sourceRoot":"/source/"}

@@ -1,0 +1,459 @@
+<config injector="$q,$rootScope,$timeout,psScope,ajax" type="factory"
+></config>
+<script type="text/javascript">
+  import { stringify, isObject, isArray, isString, attribute, isFunction, each } from "ps-ultility";
+  export default function(q,rootScope,timeout,psScope,ajax){
+    function isPlanObject(obj){
+      return isObject(obj) && obj !== null;
+    }
+
+    function trimngOptions(scope, str){
+      let reg = /(?:(?:([\w\[\]\d\.\"\']+)\s+as\s+)?([\w\[\]\d\.\"\']+)\s+for\s+)?(\w+)\s+in\s+([\w\[\]\.\"\']+)/g,
+        match = reg.exec(scope[str || 'options']),
+        options = match[4],
+        item = match[3],
+        label = match[2] || item,
+        id = match[1] || value,
+        dataOptions = eval(`scope.$parent.${options}`) || [],
+        each = new Function("scope", "options", "callback",
+          `for(var i = 0; i < options.length; i++){
+              let ${item} = options[i];
+              callback(${id}, ${label}, ${item});
+            }`
+        );
+      function getItemName(str){
+        let regex = /[\w]+(?:\.|\[)([\w]+)\]?/g,
+          match = regex.exec(str);
+        return match && match[1];
+      }
+      return {
+        _id : id,
+        _label : label,
+        id : getItemName(id),
+        label : getItemName(label),
+        rawOptions : dataOptions,
+        options : (function(){
+          let rs = [];
+          each(scope, dataOptions, function(id, label, item){
+            rs.push([id, label, item]);
+          })
+          return rs;
+        })(),
+        each : function(callback){
+          each(scope, dataOptions, callback);
+        }
+      };
+    }
+    const globalWatchers = {},
+      dic = {
+        "." : "_A0_",
+        "[" : "_B0_",
+        "]" : "_B1_",
+        "'" : "_C0_",
+        "\"" : "_C1_",
+          " " : "_D1_"
+      };
+    function getScopeData(option){
+      let rs = {};
+      recursive(rs, option);
+      function recursive(rs, node){
+        if(node.scope){
+          rs = rs[node.scope] = {};
+        } else if(node.key) {
+          attribute(rs, node.key, node[keyPattern(node.key)] || null);
+        }
+        each(node.children, (n)=>{
+          recursive(rs, n);
+        });
+      }
+      return rs;
+    }
+    function getData(scope){
+      let rs = {}, s = getRootScope(scope);
+      recursive(rs, s[keyPattern("layout")]);
+      function recursive(rs, node){
+        if(node.scope){
+          rs = rs[node.scope] = {};
+        } else if(node.key) {
+          attribute(rs, node.key, node[keyPattern(node.key)] || null);
+        }
+        each(node.children, (n)=>{
+          recursive(rs, n);
+        });
+      }
+      return rs;
+    }
+    function getFormat(obj){
+      if(isArray(obj)){
+        return {
+          id : obj[0],
+          label : obj[1]
+        }
+      } else if(isObject(obj)){
+        return obj;
+      }
+    }
+    function commitData(node, data, noMerge){
+      recursive(node, "");
+      noMerge = ( typeof noMerge === "undefined" ) ? true : noMerge;
+      function recursive(node, depth){
+        let val = data
+          ? attribute(data, `${depth}.${node.key}`)
+          : undefined;
+        if(node.scope){
+          depth += `.${node.scope}`;
+        } else if(node.key) {
+          if(typeof val !== "undefined" || noMerge){
+            node[keyPattern(node.key)] = val;
+          }
+        }
+        each(node.children, (n)=>{
+          recursive(n, depth);
+        });
+      }
+    }
+    function getChildrenScope(scope){
+      let children = [], headScope = scope.$$childHead;
+      while(headScope){
+        children.push(headScope);
+        headScope = headScope.$$nextSibling;
+      }
+      return children;
+    }
+    function removeAllChildrenScope(scope){
+      let item, queue = getChildrenScope(scope), children;
+      while(item = queue.shift()){
+        item.$destroy();
+        children = getChildrenScope(item);
+        [].push.apply(queue, children);
+      }
+    }
+    function setData(scope, data){
+      let s = getRootScope(scope);
+      commitData(s[keyPattern("layout")], data);
+    }
+    function encode(code){
+      for(let i in dic){
+        while(code.indexOf(i) !== -1){
+          code = code.replace(i, dic[i]);
+        }
+      }
+      return code;
+    }
+    function decode(code){
+      for(let i in dic){
+        while(code.indexOf(dic[i]) !== -1){
+          code = code.replace(dic[i], i);
+        }
+      }
+      return code;
+    }
+    function keyPattern(str){
+      return isString(str) ? `FREEBOARD_____VALUE_____${encode(str)}` : null;
+    }
+    function decodePattern(str){
+      return isString(str) ? decode(str) : null;
+    }
+    function getClickFunction(obj){
+      let fun = obj.on && obj.on.click;
+      fun = isFunction(fun) ? fun : obj.click;
+      fun = isFunction(fun) ? fun : obj.onclick;
+      return isFunction(fun) ? fun : null;
+    }
+    function getScopeByName(node, name){
+      while(node){
+        if(node[name]){
+          return node[name];
+        }
+        node = node.$parent;
+      }
+      return null;
+    }
+    function getRootScope(node){
+      return getScopeByName(node, "$$customRootScope");
+    }
+    function getParentScope(node){
+      return getScopeByName(node, "$$customParentScope");
+    }
+    function createLoadWatch(config, scope, callback){
+      let clear, watch = isPlanObject(config)
+        ? ( config.key || config.watch ) : null, s, match, watchType,
+        deep = config && config.deep, includeUndefined = config && config.includeUndefined;
+      if(isString(watch)){
+          watchType = "watch";
+      } else if(isArray(watch)){
+          watchType = "watchGroup";
+      }
+      if(watchType){
+          match = /^\$\.(.*)$/g.exec(watch);
+          s = match ? rootScope.$$customRootScope : getRootScope(scope);
+          watch = match ? match[1] : watch;
+          clear = s[`$${watchType}`](watch, (n,o,s)=>{
+              if(typeof n !== "undefined"){
+                  createLoadEvent(config, n)
+                      .then((d) =>{
+                          callback(d);
+                      });
+              } else {
+                  includeUndefined ? createLoadEvent(config, n)
+                      .then((d) =>{
+                          callback(d);
+                      }) : null;
+              }
+          }, deep);
+          scope.$on("$destroy", ()=>{
+              clear();
+          })
+      }
+    }
+
+
+    function findScopeByName(scope, name){
+      let s = getRootScope(scope), item,
+        layout = s[keyPattern("layout")],
+        queue = [layout];
+      if(typeof name !== "string"){
+        return layout
+      }
+      while(item = queue.shift()) {
+        if (typeof item.scope !== "undefined" && item.scope == name) {
+          return item;
+        }
+        item.children
+          ? [].push.apply(queue, item.children) : null;
+      }
+      return null;
+    }
+
+    function checkValidateByScope(scope, callback, sc){
+      let s = getRootScope(scope), item,
+        layout = findScopeByName(scope),
+          rs = ["__valid__"],
+        wgs = [],
+        queue = [layout];
+      function recursive(node, depth, callback){
+        if(node.key) {
+          callback(depth.concat([node.key]));
+        }
+        if(node.children){
+          for(let i = 0; i < node.children.length; i++){
+            recursive(node.children[i], depth.concat(node.scope ? [node.scope] : []), callback);
+          }
+        }
+      }
+      recursive(layout, [], ( depth ) => {
+        wgs.push(rs.concat(depth).join("."));
+      });
+      return s.$watchGroup( wgs, (n,o,s) => {
+        callback(n.every(m => { return m !== false }));
+      })
+    }
+
+    function createImmediatePromise(data){
+      var defer = q.defer();
+      defer.resolve(data);
+      return defer.promise;
+    }
+
+    function loadDefaultValue(config, attribute, scope, callback){
+      if(config[attribute] && isString(config[attribute].watch)){
+        createLoadWatch(config[attribute], scope, callback);
+      }
+      return createLoadEvent(config[attribute])
+        .then((d) => {
+          config[keyPattern(attribute)] = d;
+          return createImmediatePromise(d)
+        })
+    }
+    function createLoadEvent(config, parameter){
+      if(isObject(config)){
+        let before = config.before || config.param || config.params || config.parameter,
+          after = config.after,
+          post = config.post,
+          url = config.url;
+        if(typeof post === "function"){
+          return createPromise(post, parameter)
+            .then((d)=>{
+              if(typeof d === "object"){
+                if(typeof d.url !== "string"){
+                  throw new Error("post方法需要返回一个对象，必须包含url字段，代表要访问的地址");
+                }
+                return ajax.post(d.url, d.param || d.parameter);
+              } else {
+                return createImmediatePromise(d);
+              }
+            })
+            .then((d) => {
+              return createPromise(after, d);
+            });
+        } else {
+          return createPromise(before, parameter)
+            .then((d) => {
+              return url ? ajax.post(url, d) : createImmediatePromise(d);
+            })
+            .then((d) => {
+              return createPromise(after, d);
+            });
+        }
+      } else if(typeof config === "string") {
+        return ajax.post(config);
+      } else if(typeof config === "function") {
+        return createPromise(function(d, next){
+          return config(next);
+        });
+      } else {
+        return createImmediatePromise(config);
+      }
+    }
+    function createPromise(fn, data, evt){
+      let defer = q.defer(),
+        next = function(d){
+          defer.resolve(d);
+        };
+      if(typeof fn === "function"){
+        let dt = fn( data, next, evt );
+        if(typeof dt !== "undefined"){
+          next(dt);
+          next = function(){
+            console.warn("return与next方法不可同时设置");
+          }
+        }
+      } else {
+        defer.resolve(typeof fn == "undefined" ? data : fn);
+      }
+      return defer.promise;
+    }
+    function runFormat(obj, attr){
+      attr = attr[0] === "." ? attr.slice(1) : attr;
+      let exp = /\$this/g.test(attr)
+        ? attr.replace("$this", "this")
+        : "this." + attr;
+      let fn = new Function(`return ${exp}`);
+      return fn.call(obj);
+    }
+    function getCurrentDepth(node){
+      let depth = "", root = getRootScope(node);
+      while(node && node !== root){
+        let key = node.option && node.option.hasOwnProperty("key") ? node.option.key : null,
+          s = node.option && node.option.hasOwnProperty("scope") ? node.option.scope : null,
+          isScope = node.option && node.option._scoped,
+          _key = node.option && node.option._key, k;
+        key = key ? key.split(".").join("\"][\"") : null;
+        k = s || key;
+        if(isScope){
+          k = `["${ key }"]` + _key;
+        } else {
+          k = k && `["${k}"]`
+        }
+        depth = (node.hasOwnProperty("option") && k ? k : "") + depth;
+        node = node.$parent;
+      };
+      return depth;
+    }
+    function registerCurrentScope(scope){
+      let root = getRootScope(scope), clears = [],
+        key = scope.option["key"],
+        value = scope.option["value"],
+        optionsKey = scope.option["optionKey"],
+        _optionsKey = isString(optionsKey) ? keyPattern(optionsKey) : null,
+        _key = isString(key) ? keyPattern(key) : null,
+        _valid = isString(key) ? (keyPattern(key) + "_valid") : null,
+        _value = isString(value) ? keyPattern(value) : null;
+        if(/\s+/g.test(_valid)){
+            //  
+        }
+      psScope(scope, ()=>{
+        if(!isString(key)){
+          return;
+        }
+        [].push.apply(clears, [
+          scope.$watch(`option.${_key}`, (n, o, s)=>{
+            let _depth = getCurrentDepth(s);
+            attribute(root, _depth, n);
+          }),scope.$watch(`option.${_valid}`, (n, o, s)=>{
+            let _depth = getCurrentDepth(s);
+            attribute(root, `[\"__valid__\"]${_depth}`, n);
+          }),optionsKey ? scope.$watch(`option.options`, (n, o, s)=>{
+            if(typeof n === "object"){
+              /** 会有问题 */
+              s.$$customParentScope[optionsKey] = n;
+              isString(_optionsKey) ? scope.option[_optionsKey] = n : null;
+            }
+          }) : function(){}]);
+      });
+      scope.$on("$destroy", function(){
+        for(let i in clears){
+          clears[i]();
+        }
+        scope.$$customParentScope[key] = null;
+      });
+    }
+    function getParametersDicObj(){
+      let arr = getParametersDic(), obj = {}, i;
+      for(i = 0; i < arr.length; i++){
+        obj[arr[i].id] = arr[i].value;
+      }
+      return obj;
+    }
+    function getParametersDic(){
+      return [{
+        id : "string",
+        value : "input",
+        label : "字符串"
+      },{
+        id : "numberic",
+        value : "input",
+        label : "数值"
+      },{
+        id : "datetime",
+        value : "date2",
+        label : "时间"
+      },{
+        id : "date",
+        value : "date2",
+        label : "日期"
+      },{
+        id : "standardAddress",
+        value : "address",
+        label : "地址"
+      },{
+        id : "dict",
+        value : "input",
+        label : "字典"
+      },{
+        id : "icon",
+        value : "icon",
+        label : "图标"
+      },{
+        id : "user",
+        value : "input",
+        label : "用户"
+      }]
+    }
+    return {
+      getParametersDic : getParametersDic,
+      getParametersDicObj : getParametersDicObj,
+      getRootScope : getRootScope,
+      decodePattern : decodePattern,
+      getParentScope : getParentScope,
+      getScopeByName : getScopeByName,
+      getCurrentDepth : getCurrentDepth,
+      trimngOptions : trimngOptions,
+      keyPattern : keyPattern,
+      registerCurrentScope : registerCurrentScope,
+      checkValidateByScope : checkValidateByScope,
+      getData : getData,
+      setData : setData,
+      getScopeData : getScopeData,
+      commitData : commitData,
+      createPromise : createPromise,
+      createLoadEvent : createLoadEvent,
+      createLoadWatch : createLoadWatch,
+      getClickFunction : getClickFunction,
+      loadDefaultValue : loadDefaultValue,
+      removeAllChildrenScope : removeAllChildrenScope,
+      runFormat : runFormat,
+      getFormat : getFormat
+    }
+  }
+</script>

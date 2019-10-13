@@ -1,0 +1,130 @@
+<config injector="$scope,$timeout,$state,$registerService,ajax,commonMethodService2"
+        deps="psSel"
+></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block">
+          <div class="wrap">
+            <table ps-table-sync="false"
+                   data-source="getAlertByPage"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th style="width:20px;"><input type="checkbox"/></th>
+                <th>设备名称</th>
+                <th>发起时间</th>
+                <th>aa</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="item in items">
+                <td><input type="checkbox"/></td>
+                <td>{{item.devName}}</td>
+                <td ng-bind="item.toDateString()"></td>
+                <td>
+                  <ps-select
+                      ng-model="m"
+                      data-options="op.id as op.label for op in $parent.$parent.$parent.ops">
+                  </ps-select>
+                </td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-primary" ng-click="item.option1()">按钮1</button>
+                    <button class="btn btn-default" ng-click="item.option2()">按钮2</button>
+                    <button class="btn btn-default" ng-click="item.option3()">按钮3</button>
+                    <button class="btn btn-default" ng-click="item.option4()">按钮4</button>
+                    <button class="btn btn-default" ng-click="item.option5()">按钮5</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,ajax,cms2){
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      toDateString(){
+        return dateparser(this.arisingTime).getDateString("yyyt-MM-dd");
+      }
+      option1(){
+        cms2.modal({
+          title : this.devName,
+          directive : "test-modal",
+          scope : scope,
+          params : this
+        }).then( d => {
+          scope.page = 0;
+          scope.getAlertByPage = createRenderFunction();
+        });
+      }
+      option2(){
+         
+      }
+      option3(){
+         
+      }
+      option4(){
+         
+      }
+      option5(){
+         
+      }
+      update(){
+        this.a = 50;
+      }
+      remove(){
+        let inx = scope.items.indexOf( this )
+        scope.items.splice( inx, 1 );
+      }
+    };
+    scope.bb = function( dt ){
+      return dateparser( dt ).getDateString("yyyt-MM-dd");
+    };
+    function createRenderFunction(){
+      return function( page, pageSize ){
+        let params = [{
+          "domain":"/0/515445641576227/",
+          "nodeType":"",
+          "pageSize":1000,
+          "severities":"1,2,3,4",
+          "states":"0,5,10,20",
+          "nodeIds":""
+        },{
+          "start":page * pageSize,
+          "length":pageSize,
+          "statCount":true
+        }];
+        return ajax.post("alertQueryFlexService.getAlertByPage", params).then( dt => {
+          dt.data = dt.data.map( d => new tableCell(d))
+          return cms2.success( dt );
+        });
+      }
+    }
+    ajax.post("resourceUIService.getResourceByModelId", 300).then( domains => {
+      scope.ops = domains;
+      scope.getAlertByPage = createRenderFunction();
+    });
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

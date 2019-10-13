@@ -1,0 +1,2 @@
+define(["filters/filters"],function(n){"use strict";n.filter("percent",function(){return function(n){return parseInt(n),parseInt(n)+"%"}}),n.filter("getunit",function(){return function(n){var t=[{label:"所有单位",value:""}];for(var e in n){var r=n[e].unit;t.find(function(n){return n.value==r})||t.push({label:r,value:r})}return t}})});
+//# sourceMappingURL=../../../map/app-editor2/js/filters/free-board-filter.js.map

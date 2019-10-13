@@ -1,0 +1,33 @@
+<config injector="$rootScope,$compile"></config>
+<template>
+  <div class="task-job-special"></div>
+</template>
+<script type="text/javascript">
+export default function (rootScope, compile) {
+  return {
+    scope: {
+      task: "="
+    },
+    link (scope, element, attr) {
+      scope.$watch('task', (n, o, s) => {
+        if (typeof n !== 'undefined') {
+          element.append(compileDom(n));
+        }
+      });
+
+      function compileDom (task) {
+        let specialDomScope = scope.$new(true);
+        specialDomScope.params = {
+          task: task
+        };
+        let specialDom = document.createElement(task.process.directive);
+        specialDom.setAttribute('task', 'params.task');
+        return compile(specialDom)(specialDomScope);
+      }
+
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+</style>

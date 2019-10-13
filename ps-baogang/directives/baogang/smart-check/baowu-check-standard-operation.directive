@@ -1,0 +1,898 @@
+<config injector="$q,ajax, psDialog,$routeParams,psUltility,$location,growl,commonMethodService, psRouter"
+></config>
+<template>
+    <div class="wrap" style="overflow-y: auto;height: calc(100vh - 180px);">
+        <ps-layout data-option="option">
+        </ps-layout>
+    </div>
+</template>
+<script type="text/javascript">
+  import {extend} from "ps-ultility";
+  export default function (q, ajax, psDialog, routeParams, psUltility, location, growl, commonMethodService, psRouter) {
+    let target = commonMethodService(), resource;
+
+    return {
+      link(scope, element, attr) {
+        let mode = target.getValue("mode"),
+          mp = "",//页面操作区分 编辑和添加的 标记
+          currentPage = target.getValue("currentPage") || {},
+          resultObj = {}, planObj = {}, disclosureObj ={}, drawObj ={},highPlanObj = {};// resultObj  新增时创建的对象
+        mp = target.getValue("mp") || "";
+        if (target.getValue("obj")) {//上一个页面传过来的
+          resultObj = target.getValue("obj");
+        }
+        target.on("tree_resourceChange", function (e) {
+          resource = e.resource;
+          scope.option = {
+            type: "layout",
+            init: function () {
+                if(JSON.stringify(resultObj) !== "{}"){
+                    if(resultObj.maintainPlanList.length){
+                        resultObj.maintainPlanList =  resultObj.maintainPlanList.filter((v,i)=>{
+                            if(resultObj.standardProjectId == v.standardProjectNo) {
+                                return v;
+                            }
+                        } );
+                    }
+                }
+                // 新增页面的判断条件
+              if (mode == "add" && JSON.stringify(currentPage) == "{}") {
+                resultObj = {};
+                return {
+                    resultObj : resultObj,
+                    planObj: resultObj,
+                    disclosureObj: resultObj,
+                    drawObj : resultObj,
+                    highPlanObj: resultObj,
+                };
+              } else if (mode == "edit") {
+                  //图纸
+                  resultObj.drawNumber= [];
+                  drawObj = {
+                      dNum : "310701M02-102",
+                      modifyTime: "2018-12-15 10:27:53",
+                  };
+                  resultObj.drawNumber.push(drawObj);
+
+                  //高危技术方案
+                  /*resultObj.higherTechnicalPlan= [];
+                  highPlanObj = {
+                      highName : "无涉及",
+                      modifyTime: "2018-12-13 07:26:53",
+
+                  };
+                  resultObj.higherTechnicalPlan.push(highPlanObj);*/
+
+
+                  //安全技术交底
+                  resultObj.technicalDisclosure= [];
+                  disclosureObj = [{
+                      disclosureName : "做好现场危险源动态辨识",
+                      modifyTime: "2018-12-11 09:26:53",
+
+                  },{
+                      disclosureName : "现场人员证件检查",
+                      modifyTime: "2018-12-10 13:26:53",
+
+                  },{
+                      disclosureName : "主要上下辊道机架时要防滑",
+                      modifyTime: "2018-12-13 11:26:53",
+
+                  },{
+                      disclosureName : "动火时专人监护",
+                      modifyTime: "2018-12-15 09:28:53",
+
+                  }];
+                  disclosureObj.forEach(d=>{
+                      resultObj.technicalDisclosure.push({
+                          disclosureName: d.disclosureName,
+                          modifyTime : d.modifyTime
+                      })
+                  })
+
+
+
+                target.setValue("maintainPlanList", resultObj.maintainPlanList);
+                target.setValue("technicalDisclosure", resultObj.technicalDisclosure);
+                // target.setValue("higherTechnicalPlan", resultObj.higherTechnicalPlan);
+                target.setValue("drawNumber", resultObj.drawNumber);
+                return {
+                    resultObj : resultObj,
+                    planObj: resultObj,
+                    disclosureObj: resultObj,
+                    drawObj : resultObj,
+                    highPlanObj: resultObj,
+                };
+              } else if(mode == "detail") {
+                  //图纸
+                  resultObj.drawNumber= [];
+                  drawObj = {
+                      dNum : "310701M02-102",
+                      modifyTime: "2018-12-15 10:27:53",
+
+                  };
+                  resultObj.drawNumber.push(drawObj);
+
+                  //高危技术方案
+                  /*resultObj.higherTechnicalPlan= [];
+                  highPlanObj = {
+                      highName : "无涉及",
+                      modifyTime: "2018-12-13 07:26:53",
+
+                  };
+                  resultObj.higherTechnicalPlan.push(highPlanObj);*/
+
+                  //安全技术交底
+                  resultObj.technicalDisclosure= [];
+                  disclosureObj = [{
+                      disclosureName : "做好现场危险源动态辨识",
+                      modifyTime: "2018-12-11 09:26:53",
+
+                  },{
+                      disclosureName : "现场人员证件检查",
+                      modifyTime: "2018-12-10 13:26:53",
+
+                  },{
+                      disclosureName : "主要上下辊道机架时要防滑",
+                      modifyTime: "2018-12-13 11:26:53",
+
+                  },{
+                      disclosureName : "动火时专人监护",
+                      modifyTime: "2018-12-15 09:28:53",
+
+                  }];
+                  disclosureObj.forEach(d=>{
+                      resultObj.technicalDisclosure.push({
+                          disclosureName: d.disclosureName,
+                          modifyTime : d.modifyTime
+                      })
+                  })
+
+                  target.setValue("maintainPlanList", resultObj.maintainPlanList);
+                  target.setValue("technicalDisclosure", resultObj.technicalDisclosure);
+                  // target.setValue("higherTechnicalPlan", resultObj.higherTechnicalPlan);
+                  target.setValue("drawNumber", resultObj.drawNumber);
+                return  {
+                    resultObj : resultObj,
+                    planObj: resultObj,
+                    disclosureObj: resultObj,
+                    drawObj : resultObj,
+                    highPlanObj: resultObj,
+                };
+              }else{
+                resultObj = extend(resultObj, currentPage);
+                // 取到新增的数据
+                resultObj.maintainPlanList = target.getValue("maintainPlanList");
+                //过滤新增方案
+                  if(JSON.stringify(resultObj) !== "{}"){
+                      if(resultObj.maintainPlanList.length){
+                          resultObj.maintainPlanList =  resultObj.maintainPlanList.filter((v,i)=>{
+                              if(resultObj.standardProjectId == v.standardProjectNo) {
+                                  return v;
+                              }
+                          } );
+                      }
+                  }
+                /*resultObj.technicalDisclosure =  target.getValue("technicalDisclosure");
+                resultObj.higherTechnicalPlan =  target.getValue("higherTechnicalPlan");
+                resultObj.drawNumber =  target.getValue("drawNumber");*/
+                return  {
+                    resultObj : resultObj,
+                    planObj: resultObj,
+                    disclosureObj: disclosureObj,
+                    drawObj : drawObj,
+                    highPlanObj: highPlanObj,
+
+                  };
+              }
+
+            },
+            children: [{
+              type: "form-inline",
+              children: [{
+                name: "deviceName",
+                type: "label",
+                width: 10,
+                value: "设备名称:"
+              }, {
+                type: "label",
+                width: 10,
+                value: resource.label,
+              }, {
+                name: "deviceCode",
+                type: "label",
+                width: 10,
+                value: "设备编号:"
+              }, {
+                type: "label",
+                width: 10,
+                value: resource.externalDevId,
+              }]
+            }, {//新建检修标准
+              label: "检修标准基础信息",
+              type: "panel",
+              children: [{
+                type: "form-grid",
+                scope: "resultObj",
+                children: [{
+                  type: "input",
+                  label: "标准项目编号",
+                  key: "standardProjectId",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "input",
+                  label: "标准项目名称",
+                  key: "standardProjectName",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "select",
+                  label: "产线工程师",
+                  key: "executioner",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  options: function () {
+                      var allUsers = target.getRootScope("getAllUserInfo"),
+                          smartUsers = [],roleArr = [];
+                      allUsers.forEach(function (item) {
+                          if(item.roleID && item.roleID.indexOf(",") !== -1){
+                              roleArr = item.roleID.split(",");
+                              roleArr.some((v)=>{
+                                  if(v == "496878991490167"){
+                                      smartUsers.push(item);
+                                      return true;
+                                  }
+                              })
+                          }else {
+                              if (item.roleID == "496878991490167") {//智能产线工程师roleID "496878991490167,496878991490169"
+                                  smartUsers.push(item);
+                              }
+                          }
+                      });
+                      return smartUsers;
+                  },
+                    format: {
+                        id: "userID",
+                        label: "userName"
+                    },
+                }, {
+                  type: "select",
+                  label: "施工类别",
+                  key: "constructionType",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  options: target.getRootScope("myDicts")["constructionType"],
+                  format: {
+                    id: "valueCode",
+                    label: "label"
+                  }
+                }, {
+                  type: "select",
+                  label: "项目类别",
+                  key: "projectCategory",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  options: target.getRootScope("myDicts")["baowuProjectCategory"],
+                  format: {
+                    id: "valueCode",
+                    label: "label"
+                  }
+                }, {
+                  type: "select",
+                  label: "高危等级",
+                  key: "highDangerLevel",
+                  composory: false,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  options: target.getRootScope("myDicts")["highDangerLevel"],
+                  format: {
+                    id: "valueCode",
+                    label: "label"
+                  }
+                }, {
+                  type: "input",
+                  label: "实施依据",
+                  key: "maintainBasis",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "input",
+                  label: "建议班组名称",
+                  key: "suggesTeamName",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "input",
+                  label: "作业时长(H)",
+                  key: "needTime",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false,
+                      type: "number",
+                      min: 0
+                  },
+                }, {
+                  type: "input",
+                  label: "总人数",
+                  key: "totalPerpsonNum",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false,
+                      type: "number",
+                      min: 0,
+                  },
+                }, {
+                  type: "input",
+                  label: "总工时(H)",
+                  key: "totalUseTime",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false,
+                      type: "number",
+                      min: 0,
+                  },
+                }, {
+                  type: "input",
+                  label: "工作内容",
+                  key: "workContent",
+                  composory: true,
+                  col: 12,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "select",
+                  label: "周期单位",
+                  key: "executionCycle",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  options: target.getRootScope("myDicts")["executionCycle"],
+                    format: {
+                        id:"valueCode",
+                        label:"label"
+                    },
+                }, {
+                  type: "input",
+                  label: "周期间隔",
+                  key: "cycleNum",
+                  composory: true,
+                  col: 4,
+                    watch: {
+                        key: "resultObj.executionCycle",
+                        handler: function (row) {
+                            if(row.$value == "none"){
+                                row.$scope.option.config.disabled = true;
+                                row.update({
+                                    value: 0
+                                })
+                            }else {
+                                row.$scope.option.config.disabled = false;
+                                /*row.update({
+                                    value: ""
+                                })*/
+                            }
+                        }
+                    },
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false,
+                      type: "number",
+                      min: 0,
+                  },
+                }, {
+                  type: "date2",
+                  label: "开始时间",
+                  key: "firstExecutionTime",
+                  composory: true,
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                }, {
+                  type: "checkbox",
+                  label: "是否启用",
+                  col: 4,
+                  config: {
+                    disabled: mode == "detail" ? "disabled" : false
+                  },
+                  format: {
+                    true: 0,
+                    false: 1
+                  },
+                  key: "taskStatus",
+                }]
+              }]
+            }, {//检修方案
+              label: "检修方案",
+              type: "panel",
+                scope: "planObj",
+              children: [{
+                type: "table-form",
+                key: "maintainPlanList",
+                config: {
+                  attributes: {
+                    "maintainPlanName": ["检修方案名称", "text"],
+                    "updateDate": ["修改时间", "date2"],
+                  },
+                  grid: {
+                    body: [{
+                      name: "maintainPlanName",
+                    }, {
+                      name: "updateDate",
+                        bind: function (row) {
+                            //GMT转普通格式
+                            function GMTToStr(time){
+                                let date = new Date(time);
+                                let hour = date.getHours();
+                                let  minute = date.getMinutes();
+                                let  second = date.getSeconds();
+                                if(hour < 10) {
+                                    hour = "0" + hour.toString();
+                                }
+                                if(minute < 10 ){
+                                    minute = "0" + minute.toString();
+                                }
+                                if(second < 10) {
+                                    second = "0" + second.toString();
+                                }
+                                let Str=date.getFullYear() + '-' +
+                                    (date.getMonth() + 1) + '-' +
+                                    date.getDate() + ' ' +
+                                    hour + ':' +
+                                    minute + ':' +
+                                    second;
+                                return Str;
+                            }
+                            return  row.updateDate != undefined ? GMTToStr(row.updateDate) : null;
+                        }
+                    }],
+                    buttons: {
+                      inGrid: [{
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function (e) {
+                            target.setValue("smartObj",e.$row);
+                            target.setValue("modePlan","detail");
+                            target.navigateTo("index", {
+                              main: 6,
+                              sub: [1, "viewId:baowu-check-plan-operation"],
+                            });
+                          }
+                        }
+                      }, {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                            target.setValue("currentPage",scope.resultObj);
+                            // 获取当前数组的下标
+                            target.setValue("index",e.$index);
+                            target.setValue("smartObj",e.$row);
+                              target.setValue("modePlan","edit");
+                            target.navigateTo("index", {
+                              main: 6,
+                              sub: [1, "viewId:baowu-check-plan-operation"],
+                            });
+                          }
+                        }
+                      }, {
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                              scope.resultObj.maintainPlanList.splice(e.$index, 1);
+                              growl.info("删除检修方案成功");
+
+                          }
+                        }
+                      }],
+                      outGrid: [{
+                        label: "新增方案",
+                        class: "primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                             let  attr = scope.resultObj;
+                              if(attr.standardProjectId === "" || typeof attr.standardProjectId == "undefined" ){
+                                 growl.info("标准项目编号为必填项");
+                             }else if(attr.standardProjectName === "" || typeof attr.standardProjectName == "undefined"){
+                                 growl.info("标准项目名称为必填项");
+                             }else if(attr.executioner === "" || typeof attr.standardProjectName == "undefined"){
+                                 growl.info("产线工程师为必填项");
+                             }else if(attr.constructionType === "" || typeof attr.constructionType == "undefined"){
+                                 growl.info("施工类别为必填项");
+                             }else if(attr.projectCategory === "" || typeof attr.projectCategory == "undefined"){
+                                 growl.info("项目类别为必填项");
+                             }else if(attr.maintainBasis === "" || typeof attr.maintainBasis == "undefined"){
+                                 growl.info("实施依据为必填项");
+                             }else if(attr.suggesTeamName === "" || typeof attr.suggesTeamName == "undefined"){
+                                 growl.info("建议班组名称为必填项");
+                             }else if(attr.needTime === "" || typeof attr.needTime == "undefined"){
+                                 growl.info("作业时长为必填项");
+                             }else if(attr.totalPerpsonNum === "" || typeof attr.totalPerpsonNum == "undefined"){
+                                 growl.info("总人数为必填项");
+                             }else if(attr.totalUseTime === "" || typeof attr.totalUseTime == "undefined"){
+                                 growl.info("总工时为必填项");
+                             }else if(attr.workContent == "" || typeof attr.workContent == "undefined"){
+                                 growl.info("工作内容为必填项");
+                             }else if(attr.executionCycle === "" || typeof attr.executionCycle == "undefined"){
+                                 growl.info("周期单位为必填项");
+                             }else if(attr.cycleNum === "" || typeof attr.cycleNum == "undefined"){
+                                 growl.info("周期间隔为必填项");
+                             }else if(attr.firstExecutionTime === "" || typeof attr.firstExecutionTime == "undefined"){
+                                 growl.info("开始时间为必填项");
+                             }else {
+                                 target.setValue("currentPage",scope.resultObj);
+                                 target.setValue("modePlan","add");
+                                 target.navigateTo("index", {
+                                     main: 6,
+                                     sub: [1, "viewId:baowu-check-plan-operation"],
+                                 });
+                             }
+
+                          }
+                        },
+                      }]
+                    },
+                    config: {
+                      composory : true,
+                      showIndex: true,
+                      showSelector: false,
+                      showSearch: false,
+                      showPage: true,
+
+
+                    },
+                    options: []
+                  }
+                }
+              }]
+            }, {//检修安全技术交底
+              label: "检修安全技术交底",
+              type: "panel",
+                scope: "disclosureObj",
+              children: [{
+                type: "table-form",
+                key: "technicalDisclosure",
+                config: {
+                  attributes: {
+                    "disclosureName": ["安全技术交底名称", "text"],
+                    "modifyTime": ["修改时间", "date"],
+                  },
+                  grid: {
+                    body: [{
+                      name: "disclosureName",
+                    }, {
+                      name: "modifyTime",
+                    }],
+                    buttons: {
+                      inGrid: [{
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function (e) {
+                            // location.path("prod_check_standard_detail/" + e.$row.id);
+                          }
+                        }
+                      }, {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }, {
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                            /*e.remove({
+                              // url: "resourceUIService.deleteDataTemplateItem",
+                              before: function (row) {
+                                return e.$row.id
+                              }
+                            });*/
+                          }
+                        }
+                      }],
+                      outGrid: [{
+                        label: "新增交底",
+                        class: "primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }]
+                    },
+                    config: {
+                      showIndex: true,
+                      showSelector: false,
+                      showSearch: false,
+                      showPage: true,
+
+                    },
+                    options: []
+                  }
+                }
+              }]
+            }, {//高危技术方案
+              label: "高危技术方案",
+              type: "panel",
+              scope: "highPlanObj",
+              children: [{
+                type: "table-form",
+                key: "higherTechnicalPlan",
+                config: {
+                  attributes: {
+                    "highName": ["高危技术方案名称", "text"],
+                    "modifyTime": ["修改时间", "date"],
+                  },
+                  grid: {
+                    body: [{
+                      name: "highName",
+                    }, {
+                      name: "modifyTime",
+                    }],
+                    buttons: {
+                      inGrid: [{
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }, {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }, {
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                           /* e.remove({
+                              // url: "resourceUIService.deleteDataTemplateItem",
+                              before: function (row) {
+                                return e.$row.id
+                              }
+                            });*/
+                          }
+                        }
+                      }],
+                      outGrid: [{
+                        label: "新增方案",
+                        class: "primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                          }
+                        }
+                      }]
+                    },
+                    config: {
+                      showIndex: true,
+                      showSelector: false,
+                      showSearch: false,
+                      showPage: true,
+
+                    },
+                    options: []
+                  }
+                }
+              }]
+            }, {//参考图纸编号
+              label: "参考图纸编号",
+              type: "panel",
+              scope: "drawObj",
+              children: [{
+                type: "table-form",
+                key: "drawNumber",
+                config: {
+                  attributes: {
+                    "dNum": ["图纸编号", "text"],
+                    "modifyTime": ["修改时间", "date"],
+                  },
+                  grid: {
+                    body: [{
+                      name: "dNum",
+                    }, {
+                      name: "modifyTime",
+                    }],
+                    buttons: {
+                      inGrid: [{
+                        label: "详情",
+                        class: "btn btn-primary",
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }, {
+                        label: "编辑",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }, {
+                        label: "删除",
+                        class: "btn btn-primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+                           /* e.remove({
+                              // url: "resourceUIService.deleteDataTemplateItem",
+                              before: function (row) {
+                                return e.$row.id
+                              }
+                            });*/
+                          }
+                        }
+                      }],
+                      outGrid: [{
+                        label: "新增图纸",
+                        class: "primary",
+                        show: function () {
+                          return mode == "detail" ? false : true;
+                        },
+                        on: {
+                          click: function (e) {
+
+                          }
+                        }
+                      }]
+                    },
+                    config: {
+                      showIndex: true,
+                      showSelector: false,
+                      showSearch: false,
+                      showPage: true,
+                    },
+                    options: []
+                  }
+                }
+              }]
+            }, {
+              type: "form-inline",
+              children: [{
+                type: "button",
+                width: 10,
+                config: {
+                  class: "btn-primary btn-100",
+                  label: "确 定",
+                  show: mode == "detail" ? false : true,
+                  validCheck: ["resultObj","planObj"],
+                  on: {
+                    click: function (e) {
+                      resultObj["deviceId"] = resource.id;
+                      resultObj["deviceCode"] = resource.externalDevId;
+                      resultObj["deviceName"] = resource.label;
+                      resultObj["ticketCategory"] = "320";
+                      resultObj.maintainPlanList = e.getData().planObj.maintainPlanList;
+                      if(resultObj.maintainPlanList.length!= 0){
+                        resultObj.maintainPlanList = resultObj.maintainPlanList.map(v => {
+                                                          if(v && v.hasOwnProperty("repairablePartsBak")){
+                                                            delete v.repairablePartsBak;
+                                                          }
+                                                          v.repairablePartActionLogs = null;
+                                                          return v;
+                                                     })
+                      }
+                      ajax.post("maintenanceTaskUIService.addMaintainIntelligentStandard", resultObj).then((d) => {
+                        mode == "add" ? growl.info("添加智能检修标准成功") : growl.info("编辑智能检修标准成功");
+                        target.navigateTo("index", {
+                          main: 6,
+                          sub: [1,"viewID:494624133620023"],
+                        });
+                      })
+                    }
+                  }
+                },
+                key: "save"
+              }, {
+                type: "button",
+                width: 10,
+                config: {
+                  label: "取 消",
+                  class: "btn-default btn-100",
+                  show: mode == "detail" ? false : true,
+                  click: function () {
+                    target.navigateTo("index", {
+                      main: 6,
+                      sub: [1,"viewID:494624133620023"],
+                    });
+                  }
+                },
+              }, {
+                type: "button",
+                width: 10,
+                config: {
+                  label: "返 回",
+                  class: "btn-default btn-100",
+                  show: mode == "detail" ? true : false,
+                  click: function () {
+                    target.navigateTo("index", {
+                      main: 6,
+                      sub: [1,"viewID:494624133620023"],
+                    });
+                  }
+                },
+              }]
+            }],
+          }
+        });
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+
+</style>

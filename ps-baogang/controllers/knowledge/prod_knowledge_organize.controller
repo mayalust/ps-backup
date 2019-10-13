@@ -1,0 +1,1243 @@
+<config injector="$scope, commonMethodService2, commonMethodService, $state, api, userLoginUIService, growl"
+        params="/:ticketNo">
+</config>
+<template>
+  <div class="box"
+       style="background-color: transparent;overflow-y: auto;height: calc( 100vh - 114px );overflow-x:hidden;padding:5px;">
+    <div>
+      <button class="btn btn-primary" type="button" ng-click="backUrl()">返回</button>
+    </div>
+    <div class="title">
+      <p class="title-item">设备名称:</p>
+      <p class="title-item">{{devName}}</p>
+      <p class="title-item">设备编号:</p>
+      <p class="title-item">{{deviceCode}}</p>
+    </div>
+    <div class="knowledge-case">
+      <!-- ********** 状态诊断: 只有 category 为280的工单才会有这个 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.statusDiagnosis">
+        <dt class="bk-group-title">
+          <span>状态诊断</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope">
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>设备告警信息</span>
+              </div>
+              <div class="value">
+                <span>{{statusDiagnosisObj.alertTitle}}</span>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>异常现象</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.abnPhenomenon" options="abnPhenomenons"
+                            config="abnPhenomenonsConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>工艺状况</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.technicsStatus" options="technicsStatus"
+                            config="technicsStatusConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>检测部位</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.position" options="positions"
+                            config="positionsConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>判断标准</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.standard" options="standards"
+                            config="standardsConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>判断依据</span>
+              </div>
+              <div class="value">
+                <ps-multi-select1 ng-model="statusDiagnosisObj.basis" options="basises"
+                                  config="basisesConfig"></ps-multi-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>判断依据图片</span>
+              </div>
+              <div class="value">
+                <div ng-repeat="image in statusDiagnosisObj.basisImage" style="width: 90%;">
+                  <img ng-src="{{image.value}}" style="width: 100%;" alt="{{image.label}}"/>
+                </div>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>综合状态等级</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.statusGrade" options="statusGrades"
+                            config="statusGradesConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>异常部位</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.abnPosition" options="abnPositions"
+                            config="abnPositionsConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>异常类型</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.abnType" options="abnType" config="abnTypeConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>综合判断结论</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.multipleConclusion" options="multipleConclusions"
+                            config="multipleConclusionsConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理方案建议</span>
+              </div>
+              <div class="value">
+                <ps-select1 ng-model="statusDiagnosisObj.cessingScheme" options="cessingSchemes"
+                            config="cessingSchemesConfig"></ps-select1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>备注</span>
+              </div>
+              <div class="value">
+                <ps-textarea ng-model="statusDiagnosisObj.checkRemark"></ps-textarea>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>附件</span>
+              </div>
+              <div class="value">
+                <div ng-repeat="upload in statusDiagnosisObj.attUpload">
+                  <a ng-href="{{upload.value}}" download>{{upload.label}}</a>
+                </div>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>精密检测</span>
+              </div>
+              <div class="value">
+                <button type="button" class="btn btn-primary">同步告警</button>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="value">
+                <ps-grid1 ng-model="statusDiagnosisObj.dorList" config="dorListConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 状态诊断: 只有 category 为280的工单才会有这个 \\\\\\\\\\ -->
+      
+      <!-- ********** 状态处理：暂不处理 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 1">
+        <dt class="bk-group-title">
+          <span>状态处理</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope">
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理方式</span>
+              </div>
+              <div class="value">
+                暂不处理
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理原因</span>
+              </div>
+              <div class="value">
+                <label>
+                  <input type="checkbox" ng-model="statusResolveObj.checkboxList0">
+                  没有停机时间
+                </label>
+                <label>
+                  <input type="checkbox" ng-model="statusResolveObj.checkboxList1">
+                  缺少备件
+                </label>
+                <label>
+                  <input type="checkbox" ng-model="statusResolveObj.checkboxList2">
+                  技术不具备
+                </label>
+                <label>
+                  <input type="checkbox" ng-model="statusResolveObj.checkboxList3">
+                  其他
+                </label>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理说明</span>
+              </div>
+              <div class="value">
+                <ps-textarea ng-model="statusResolveObj.tallyDealExplain"></ps-textarea>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 状态处理：暂不处理 \\\\\\\\\\ -->
+      
+      <!-- ********** 状态处理：自行处理 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 2">
+        <dt class="bk-group-title">
+          <span>状态处理</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope">
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理方式</span>
+              </div>
+              <div class="value">
+                自行处理
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>原因说明</span>
+              </div>
+              <div class="value">
+                <ps-textarea ng-model="statusResolveObj.tallyReason"></ps-textarea>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value">
+              <div class="label">
+                <span>处理过程说明</span>
+              </div>
+              <div class="value">
+                <ps-textarea ng-model="statusResolveObj.tallyCourseReason"></ps-textarea>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 状态处理：自行处理 \\\\\\\\\\ -->
+      
+      <!-- ********** 状态处理：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>状态处理</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value width-1-1">
+              <div class="label">
+                <span>处理方式</span>
+              </div>
+              <div class="value">
+                发起检修委托
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>标准项目编号</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.standardProjectId"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>标准项目名称</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.standardProjectName"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>产线工程师</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.executionerName"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>施工类别</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.constructionType"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>项目类别</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.projectCategory"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>高危项目</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.highDangerLevelLabel"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>实施依据</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.maintainBasis"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>建议班组名称</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.suggesTeamName"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>作业时长</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.needTime"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>总人数</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.totalPerpsonNum"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>总工时</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.totalUseTime"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-1">
+              <div class="label">
+                <span>工作内容</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="statusResolveObj.workContent"></ps-input1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 状态处理：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 方案概况：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>方案概况</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>检修方案名称</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.maintainPlanName"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>危险源</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.dangerSource"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>动火等级</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.fireGrade"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>项目计划实施时间</span>
+              </div>
+              <div class="value">
+                <ps-date2 ng-model="planObj.projectImplTime"></ps-date2>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 方案概况：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 人员准备：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>人员准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value width-1-1">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanPersonGridModel" config="maintinPlanPersonGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 人员准备：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 工器具准备：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>工器具准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanToolGridModel" config="maintinPlanToolGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 工器具准备：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 常用材料准备：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>常用材料准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanMaterialGridModel" config="maintinPlanMaterialGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 常用材料准备：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 挂牌准备：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>挂牌准备</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanListDeviceGridModel" config="maintinPlanListDeviceGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 常用材料准备：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 施工步骤：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>施工步骤</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanStepListGridModel" config="maintinPlanStepListGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 施工步骤：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 备件更换：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>备件更换</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <p style="margin: 0;font-size: 16px;font-weight: 900;padding-left: 20px;">易耗件</p>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanConsumablePartsGridModel"
+                          config="maintinPlanConsumablePartsGridConfig"></ps-grid1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <p style="margin: 0;font-size: 16px;font-weight: 900;padding-left: 20px;">可修复件</p>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value" style="width: 100%;">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanRepairablePartGridModel"
+                          config="maintinPlanRepairablePartGridConfig"></ps-grid1>
+              </div>
+            </div>
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 备件更换：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 施工总结：发起检修委托 ********** -->
+      <dl class="bk-group" ng-if="showOrHide.dealType == 3">
+        <dt class="bk-group-title">
+          <span>备件更换</span>
+        </dt>
+        <dd class="bk-group-detail">
+          <div class="bk-scope flex-display">
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>项目开始时间</span>
+              </div>
+              <div class="value">
+                <ps-date2 ng-model="planObj.projectBeginDate"></ps-date2>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>项目结束时间</span>
+              </div>
+              <div class="value">
+                <ps-date2 ng-model="planObj.projectEndDate"></ps-date2>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>施工用时</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.realUseTime"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-1">
+              <div class="value">
+                <ps-grid1 ng-model="maintinPlanRealPersonGridModel" config="maintinPlanRealPersonGridConfig"></ps-grid1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>总人数</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.totalUseNum"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+                <span>总工时</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.totalUseTime"></ps-input1>
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-3">
+              <div class="label">
+              </div>
+              <div class="value">
+              </div>
+            </div>
+            <div class="margin-bottom-10 label-value width-1-1">
+              <div class="label">
+                <span>异常判断结果处理说明</span>
+              </div>
+              <div class="value">
+                <ps-input1 ng-model="planObj.resultDesc"></ps-input1>
+              </div>
+            </div>
+          
+          </div>
+        </dd>
+      </dl>
+      <!-- \\\\\\\\\\ 施工总结：发起检修委托 \\\\\\\\\\ -->
+      
+      <!-- ********** 提交按钮 ********** -->
+      <div style="display: flex;justify-content: center">
+        <button type="button" class="btn btn-primary" ng-click="submitFn()">提交</button>
+      </div>
+      <!-- \\\\\\\\\\ 提交按钮 \\\\\\\\\\ -->
+    
+    </div>
+  
+  </div>
+</template>
+<script>
+export default function (scope, cms2, cms, state, api, userLoginUIService, growl) {
+  const ticketNo = state.params.ticketNo;
+  const target = cms();
+
+  const getSelectFormat = () => {
+    return {
+      format: {
+        value: 'valueCode'
+      }
+    };
+  };
+  const highDangerLevels = target.getRootScope("myDicts")["highDangerLevel"];
+  const init = (initData) => {
+    scope.showOrHide = {
+      statusDiagnosis: false,
+      dealType: 0
+    };
+    scope.statusDiagnosisObj = {};
+    scope.statusResolveObj = {};
+    scope.planObj = {};
+    // 异常现象
+    scope.abnPhenomenons = target.getRootScope("myDicts")["abnPhenomenon"];
+    scope.abnPhenomenonsConfig = getSelectFormat();
+    // 工艺状况
+    scope.technicsStatus = target.getRootScope("myDicts")["technicsStatus"];
+    scope.technicsStatusConfig = getSelectFormat();
+    // 检测部位
+    scope.positions = target.getRootScope("myDicts")["position"];
+    scope.positionsConfig = getSelectFormat();
+    // 判断标准
+    scope.standards = target.getRootScope("myDicts")["standard"];
+    scope.standardsConfig = getSelectFormat();
+    // 判断依据
+    scope.basises = target.getRootScope("myDicts")["basis"];
+    scope.basisesConfig = getSelectFormat();
+    // 综合状态等级
+    scope.statusGrades = target.getRootScope("myDicts")["statusGrade"];
+    scope.statusGradesConfig = getSelectFormat();
+    // 异常部位
+    scope.abnPositions = target.getRootScope("myDicts")["abnPosition"];
+    scope.abnPositionsConfig = getSelectFormat();
+    // 异常类型
+    scope.abnType = target.getRootScope("myDicts")["abnType"];
+    scope.abnTypeConfig = getSelectFormat();
+    // 综合判断结论
+    scope.multipleConclusions = target.getRootScope("myDicts")["multipleConclusion"];
+    scope.multipleConclusionsConfig = getSelectFormat();
+    // 处理方案建议
+    scope.cessingSchemes = target.getRootScope("myDicts")["cessingScheme"];
+    scope.cessingSchemesConfig = getSelectFormat();
+
+    scope.backUrl = function () {
+      history.go(-1);
+    }
+
+    scope.submitFn = function () {
+      let param = {
+        creatUser: userLoginUIService.user.userId,
+        arrangeTime: new Date,
+        status: 'already',
+        ticketNo: ticketNo,
+        deviceId: initData.ticket.values.deviceId,
+        deviceName: initData.ticket.values.devName,
+        deviceCode: initData.ticket.values.deviceCode
+      };
+      if (Object.keys(scope.statusDiagnosisObj).length > 0) {
+        param = {...param, ...scope.statusDiagnosisObj};
+      }
+      if (scope.showOrHide.dealType == 1) {
+        param.dealType = 1;
+        param.treatmentPlan = '暂不处理';
+        param.tallyCheckboxlist = param.tallyCheckboxlist || [];
+        if (scope.statusResolveObj['checkboxList0']) {
+          param.tallyCheckboxlist = [...param.tallyCheckboxlist, {
+            id: 0
+          }];
+        }
+        if (scope.statusResolveObj['checkboxList1']) {
+          param.tallyCheckboxlist = [...param.tallyCheckboxlist, {
+            id: 1
+          }];
+        }
+        if (scope.statusResolveObj['checkboxList2']) {
+          param.tallyCheckboxlist = [...param.tallyCheckboxlist, {
+            id: 2
+          }];
+        }
+        if (scope.statusResolveObj['checkboxList3']) {
+          param.tallyCheckboxlist = [...param.tallyCheckboxlist, {
+            id: 3
+          }];
+        }
+        param.tallyDealExplain = scope.statusResolveObj.tallyDealExplain;
+      }
+      if (scope.showOrHide.dealType == 2) {
+        param.dealType = 2;
+        param.treatmentPlan = '自行处理';
+        param = {...param, ...scope.statusResolveObj}
+      }
+      if (scope.showOrHide.dealType == 3) {
+        param.dealType = 3;
+        param.treatmentPlan = scope.statusResolveObj.standardProjectName;
+        param = {...param, ...scope.statusResolveObj, ...scope.planObj};
+        let personList = scope.maintinPlanPersonGridModel.map(item => {
+          let findUser = scope.maintinPlanRealPersonGridModel.find(p => {
+            return p.personType == item.personType;
+          });
+          return {
+            ...item,
+            realUseNum: findUser ? (findUser.realUseNum || 0) : 0
+          }
+        });
+        param.materialList = scope.maintinPlanMaterialGridModel;
+        param.toolList = scope.maintinPlanToolGridModel;
+        param.listDeviceList = scope.maintinPlanListDeviceGridModel;
+        param.stepsList = scope.maintinPlanStepListGridModel;
+        param.consumableParts = scope.maintinPlanConsumablePartsGridModel;
+        param.repairablePartActionLogs = scope.maintinPlanRepairablePartGridModel;
+        param.personList = personList;
+        param.deviceType = initData.promiseData.knowledgeBaseData && initData.promiseData.knowledgeBaseData.deviceType ? initData.promiseData.knowledgeBaseData.deviceType : '';
+        param.detection = initData.promiseData.knowledgeBaseData && initData.promiseData.knowledgeBaseData.specialty ? initData.promiseData.knowledgeBaseData.specialty : '';
+      }
+      api.post('knowledgeBaseService.addKnowledgeBase', param).then(ret => {
+        if (ret.code == 0) {
+          growl.success('知识整理成功');
+          scope.backUrl();
+        }
+      });
+    };
+
+    let stateDiagnosis = initData.promiseData.stateDiagnosis;
+    if (initData.ticket.category == 280) {
+      scope.showOrHide.statusDiagnosis = true;
+      scope.statusDiagnosisObj.alertTitle = stateDiagnosis.alertTitle;
+      scope.statusDiagnosisObj.abnPhenomenon = stateDiagnosis.abnPhenomenon;
+      scope.statusDiagnosisObj.technicsStatus = stateDiagnosis.technicsStatus;
+      scope.statusDiagnosisObj.position = stateDiagnosis.position;
+      scope.statusDiagnosisObj.standard = stateDiagnosis.standard;
+      scope.statusDiagnosisObj.basis = stateDiagnosis.basis;
+      scope.statusDiagnosisObj.statusGrade = stateDiagnosis.statusGrade;
+      scope.statusDiagnosisObj.abnPosition = stateDiagnosis.abnPosition;
+      scope.statusDiagnosisObj.abnType = stateDiagnosis.abnType;
+      scope.statusDiagnosisObj.multipleConclusion = stateDiagnosis.multipleConclusion;
+      scope.statusDiagnosisObj.cessingScheme = stateDiagnosis.cessingScheme;
+      scope.statusDiagnosisObj.checkRemark = stateDiagnosis.checkRemark;
+      scope.statusDiagnosisObj.basisImage = stateDiagnosis.basisImage;
+      scope.statusDiagnosisObj.attUpload = stateDiagnosis.attUpload;
+      scope.statusDiagnosisObj.dorList = stateDiagnosis.offlineReportList;
+      scope.dorListConfig = {
+        columns: [{
+          key: 'deviceType',
+          label: '报告编号',
+          type: 'text'
+        }, {
+          key: 'level',
+          label: '完成时间',
+          type: 'text'
+        }, {
+          key: 'exception',
+          label: '诊断责任人',
+          type: 'text'
+        }, {
+          key: 'jiancezhuanye',
+          label: '专业类型',
+          type: 'text'
+        }, {
+          key: 'plan',
+          label: '报告结论',
+          type: 'text'
+        }, {
+          key: 'date',
+          label: '诊断描述',
+          type: 'text'
+        }, {
+          key: 'user',
+          label: '检修建议',
+          type: 'text'
+        }, {
+          key: 'user',
+          label: '备注',
+          type: 'text'
+        }]
+      };
+      scope.showOrHide.dealType = stateDiagnosis.dealType;
+      if (scope.showOrHide.dealType == 1) {
+        scope.statusResolveObj.tallyCheckboxlist = stateDiagnosis.tallyCheckboxlist.map(item => {
+          return item.id;
+        });
+        scope.statusResolveObj.tallyCheckboxlist.forEach(item => {
+          scope.statusResolveObj['checkboxList' + item] = true;
+        });
+        scope.statusResolveObj.tallyDealExplain = stateDiagnosis.tallyDealExplain;
+      }
+      if (scope.showOrHide.dealType == 2) {
+        scope.statusResolveObj.tallyReason = stateDiagnosis.tallyCourseReason;
+        scope.statusResolveObj.tallyCourseReason = stateDiagnosis.tallyCourseReason;
+      }
+    } else {
+      scope.showOrHide.dealType = '3';
+    }
+    if (scope.showOrHide.dealType == 3) {
+      scope.statusResolveObj = initData.promiseData.maintenanceTask;
+      let maintainPlanData = initData.promiseData.maintainPlan.maintainPlanResult;
+
+      scope.statusResolveObj.highDangerLevelLabel = highDangerLevels.find(level => {
+        return level.valueCode == scope.statusResolveObj.highDangerLevel;
+      }).label;
+
+      scope.planObj.maintainPlanName = maintainPlanData.maintainPlanName;
+      scope.planObj.dangerSource = maintainPlanData.dangerSource;
+      scope.planObj.fireGrade = maintainPlanData.fireGrade;
+      scope.planObj.projectImplTime = maintainPlanData.projectImplTime;
+      scope.planObj.projectBeginDate = maintainPlanData.projectBeginDate;
+      scope.planObj.projectEndDate = maintainPlanData.projectEndDate;
+      scope.planObj.realUseTime = maintainPlanData.realUseTime;
+      scope.planObj.totalUseTime = maintainPlanData.totalUseTime;
+      scope.planObj.totalUseNum = maintainPlanData.totalUseNum;
+      scope.planObj.resultDesc = maintainPlanData.resultDesc;
+
+      // ----------- 人员准备表格 -------------
+      scope.maintinPlanPersonGridModel = maintainPlanData.personList;
+      scope.maintinPlanPersonGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'personType',
+          label: '人员类型',
+          type: 'text'
+        }, {
+          key: 'personNum',
+          label: '人员数量',
+          type: 'text'
+        }]
+      };
+      // ----------- 人员准备表格 -------------
+
+      // ----------- 工器具准备 -------------
+      scope.maintinPlanToolGridModel = maintainPlanData.toolList;
+      scope.maintinPlanToolGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'name',
+          label: '名称',
+          type: 'text'
+        }, {
+          key: 'format',
+          label: '规格',
+          type: 'text'
+        }, {
+          key: 'num',
+          label: '数量',
+          type: 'text'
+        }, {
+          key: 'unit',
+          label: '单位',
+          type: 'text'
+        }]
+      };
+      // ----------- 工器具准备 -------------
+
+      // ----------- 常用材料准备 -------------
+      scope.maintinPlanMaterialGridModel = maintainPlanData.materialList;
+      scope.maintinPlanMaterialGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'name',
+          label: '名称',
+          type: 'text'
+        }, {
+          key: 'format',
+          label: '规格',
+          type: 'text'
+        }, {
+          key: 'num',
+          label: '数量',
+          type: 'text'
+        }, {
+          key: 'unit',
+          label: '单位',
+          type: 'text'
+        }]
+      };
+      // ----------- 常用材料准备 -------------
+
+      // ----------- 挂牌准备 -------------
+      scope.maintinPlanListDeviceGridModel = maintainPlanData.listDeviceList;
+      scope.maintinPlanListDeviceGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'name',
+          label: '序号',
+          type: 'text'
+        }, {
+          key: 'format',
+          label: '安全牌性质',
+          type: 'text'
+        }, {
+          key: 'num',
+          label: '挂牌位置',
+          type: 'text'
+        }, {
+          key: 'unit',
+          label: '挂牌设备',
+          type: 'text'
+        }, {
+          key: 'unit',
+          label: '挂牌确认',
+          type: 'text'
+        }]
+      };
+      // ----------- 挂牌准备 -------------
+
+      // ----------- 施工步骤 -------------
+      scope.maintinPlanStepListGridModel = maintainPlanData.stepsList;
+      scope.maintinPlanStepListGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'stepsNo',
+          label: '步骤',
+          type: 'text'
+        }, {
+          key: 'content',
+          label: '作业内容',
+          type: 'text'
+        }, {
+          key: 'planNeedTime',
+          label: '预计作业时间',
+          type: 'text'
+        }, {
+          key: 'dataType',
+          label: '数据类别',
+          type: 'text'
+        }, {
+          key: 'technicalPoints',
+          label: '技术要点',
+          type: 'text'
+        }, {
+          key: 'safetyMeasures',
+          label: '安全措施',
+          type: 'text'
+        }, {
+          key: 'unit',
+          label: '单位',
+          type: 'text'
+        }, {
+          key: 'upperLimit',
+          label: '上限',
+          type: 'text'
+        }, {
+          key: 'lowerLimit',
+          label: '下限',
+          type: 'text'
+        }, {
+          key: 'confirm',
+          label: '作业确认',
+          type: 'text',
+          bind (row, value) {
+            return row.dataType == '定性' ? (row.stepsResult == 1 ? '是' : '否') : row.stepsResult
+          }
+        }, {
+          key: 'remark',
+          label: '备注',
+          type: 'text'
+        }, {
+          key: 'resultFiles',
+          label: '备注',
+          type: 'text'
+        }]
+      };
+      // ----------- 施工步骤 -------------
+
+      // ----------- 易耗件 -------------
+      scope.maintinPlanConsumablePartsGridModel = maintainPlanData.consumableParts;
+      scope.maintinPlanConsumablePartsGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'rollerName',
+          label: '备件名称',
+          type: 'text'
+        }, {
+          key: 'rollerNo',
+          label: '备件编码',
+          type: 'text'
+        }, {
+          key: 'format',
+          label: '规格型号',
+          type: 'text'
+        }, {
+          key: 'manufacturer',
+          label: '生产厂家',
+          type: 'text'
+        }, {
+          key: 'useNum',
+          label: '使用数量',
+          type: 'text'
+        }]
+      };
+      // ----------- 易耗件 -------------
+
+      // ----------- 可修复件 -------------
+      scope.maintinPlanRepairablePartGridModel = maintainPlanData.repairablePartActionLogs;
+      scope.maintinPlanRepairablePartGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'rollerType',
+          label: '类型',
+          type: 'text',
+          bind (row) {
+            return row.values.rollerType;
+          }
+        }, {
+          key: 'fatherRollerName',
+          label: '在线备件身份ID',
+          type: 'text',
+          bind (row) {
+            return row.values.fatherRollerName;
+          }
+        }, {
+          key: 'rollerName',
+          label: '更换备件身份ID',
+          type: 'text',
+          bind (row) {
+            return row.values.rollerName;
+          }
+        }]
+      };
+      // ----------- 可修复件 -------------
+
+      scope.maintinPlanRealPersonGridModel = maintainPlanData.personList;
+      scope.maintinPlanRealPersonGridConfig = {
+        inlineAddConfirm: function (row, next) {
+          this.addRow(row);
+          next();
+        },
+        outButtons: [{
+          label: '新增',
+          symbol: 'inlineAdd'
+        }],
+        bodyButtons: [{
+          label: '删除',
+          on: {
+            click: function (row) {
+              this.deleteRow(row);
+            }
+          }
+        }],
+        columns: [{
+          key: 'personType',
+          label: '人员类型',
+          type: 'text'
+        }, {
+          key: 'realUseNum',
+          label: '实际投入人数',
+          type: 'text'
+        }]
+      };
+    }
+
+  };
+
+  api.post('ticketTaskService.getTicketTasks', ticketNo).then(ret => {
+    let prevTicket = ret.data[0].variables.paramTicket;
+    scope.devName = prevTicket.values.devName;
+    scope.deviceCode = prevTicket.values.deviceCode;
+    return {
+      category: prevTicket.category,
+      ticket: prevTicket
+    }
+  }).then(ret => {
+    let ticket = ret.ticket;
+    let category = ret.category;
+    let previousTicketNo = ticket.ticketNo;
+    api.post('baogangTicketService.getDeviceCheckResumeByTicket', [previousTicketNo]).then(ret => {
+       
+      init({
+        promiseData: ret.data,
+        ticket: ticket
+      });
+    });
+  });
+}
+</script>
+<style lang="less" scoped>
+.flex-display {
+  display: flex;
+  flex-wrap: wrap;
+  
+  .width-1-3 {
+    flex-basis: 33.333333333%;
+  }
+  
+  .width-1-1 {
+    flex-basis: 100%;
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  
+  .title-item {
+    padding: 5px;
+    min-width: 10px;
+    margin: 0;
+  }
+}
+
+.label-value {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  
+  .label {
+    flex-basis: 120px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .value {
+    flex: 1;
+  }
+}
+
+</style>

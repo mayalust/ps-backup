@@ -1,0 +1,2 @@
+define([],function(){return function(n){var o,r=n.element,t=(n.global,n.target),i=(n.route,n.targetDom,n.rowDom);n.tElement,n.traverseColumn,n.previewMode;r.style&&t.css(r.style),$$.runExpression(r.$attr("advance/expression"),function(t){if("0"==t.code){var e=t.data;o=(o="function"==typeof e?e(n,system):e)||{}}else o={};!function(t){var e=t.$attr("on/init");if(r.setDimension=function(t){i.children()},"function"==typeof e)try{e({target:r})}catch(t){}}(o)})}});
+//# sourceMappingURL=../../map/toolkit/component/row.js.map

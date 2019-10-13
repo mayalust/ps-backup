@@ -1,0 +1,237 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl"
+        params="/:starttime/:endtime"
+        deps="dialogGlobalRule"
+></config>
+<template>
+  <div class="row padding-5">
+    <div class="col-md-12">
+      <div class="block margin-bottom-5 padding-10">
+        <div class="margin-bottom-5">
+          <span class="padding-right-10">指标:</span>
+          <div class="horizontal">
+            <ul>
+              <li ng-repeat = "item in indicators" class="horizontal">
+                <input type="checkbox"  id="">
+                <span ng-bind="item.label"></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <span class="padding-right-10">时间:</span>
+          <button class="btn btn-default"
+                  ng-repeat="sel in timeSels"
+                  ng-class="sel.class()"
+                  ng-click="sel.click()"
+                  ng-bind="sel.label">
+          </button>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="starttime"></ps-date2>
+          </div>
+          <span class="padding-left-right-10">至</span>
+          <div class="horizontal width-200">
+            <ps-date2 ng-model="endtime"></ps-date2>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+          <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <h1>饼图图片。。。待完成</h1>
+    </div>
+    <div class="col-md-12">
+      <div class="block">
+        <div class="wrap">
+          <div class="table-title">
+            维修履历
+            <button ng-click="addLocalRule()"
+                    class="btn btn-primary pull-right">导出</button>
+          </div>
+          <table ps-table-sync
+                 data-paginate="pageonly"
+                 data-source="resources"
+                 data-filter="filter"
+                 data-sort="sort"
+                 data-page="page">
+            <thead>
+            <tr>
+              <th>序号</th>
+              <th>委托单位</th>
+              <th>委托单号</th>
+              <th>项目等级</th>
+              <th>工程名称</th>
+              <th>设备类型</th>
+              <th>修理方式</th>
+              <th>宝钢号</th>
+              <th>设备型号</th>
+              <th>设备编号</th>
+              <th>委托日期</th>
+              <th>状态</th>
+              <th class="option">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(key,item) in items track by key">
+              <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+              <td ng-bind="item.label"></td>
+              <td ng-bind="item.label"></td>
+              <td ng-bind="item.deviceType"></td>
+              <td ng-bind="item.label"></td>
+              <td ng-bind="item.numberId"></td>
+              <td ng-bind="item.rateCapacity"></td>
+              <td ng-bind="item.maker"></td>
+              <td ng-bind="item.makeId"></td>
+              <td ng-bind="item.getModifyTime()"></td>
+              <td ng-bind="item.label"></td>
+              <td ng-bind="item.label"></td>
+              <td>
+                <div ps-option-group>
+                  <button class="btn btn-primary" ng-click="item.repairDetailFn()">维修详情</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl){
+        let getResourceByModelId = "resourceUIService.getResourceByModelId",
+            currentTime = new Date(),
+            date = dateparser(currentTime),
+            trimToDate = date.trimmToDate().date,
+            trimToWeek = date.trimmToWeek().date,
+            trimToMonth = date.trimmToMonth().date;
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                    ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                    : "-";
+            }
+            repairDetailFn(){
+
+            }
+        }
+        ajax.post(getResourceByModelId, 300).then( domains => {
+            return ajax.post(getResourceByModelId, 301).then( customers => {
+                return ajax.post(getResourceByModelId, 302).then( projects => {
+                    return cms2.success((domains || [])
+                        .concat(customers || []).concat(projects || []));
+                })
+            });
+        }).then( domains => {
+            scope.resources = domains.map( d => new tableCell(d));
+            scope.models = [{
+                id : 300,
+                label : "管理域"
+            },{
+                id : 301,
+                label : "客户"
+            },{
+                id : 302,
+                label : "项目"
+            }];
+        });
+        scope.echartOption = {
+            xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: [820, 932, 901, 934, 1290, 1330, 1320],
+                type: 'line'
+            }]
+        };
+        scope.timeSels = [{
+            label : "当日",
+            click(){
+                scope.starttime = trimToDate;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToDate == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        },{
+            label : "本周",
+            click(){
+                scope.starttime = trimToWeek;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToWeek == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        },{
+            label : "本月",
+            click(){
+                scope.starttime = trimToMonth;
+                scope.endtime = currentTime;
+            },
+            class(){
+                return scope.starttime - trimToMonth == 0
+                && scope.endtime - currentTime == 0 ? "btn-primary" : "btn-default"
+            }
+        }];
+        scope.indicators = [{
+            id: "0",
+            label: "维修数量"
+        },{
+            id: "1",
+            label: "大修比例"
+        },{
+            id: "2",
+            label: "一次合格率"
+        },{
+            id: "3",
+            label: "故障类型"
+        },{
+            id: "4",
+            label: "试验数量"
+        },{
+            id: "5",
+            label: "拖期率"
+        }]
+        scope.clearFn = function(){
+            scope.filter = ( d => true );
+        }
+        scope.searchFn = function(){
+            scope.filter = ({ modelId, label, modifyTime }) => {
+                if( typeof scope.modelId !=="undefined" && modelId !== scope.modelId){
+                    return false;
+                }
+                if( typeof scope.label !=="undefined" && label.indexOf( scope.label ) == -1 ){
+                    return false;
+                }
+                let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+                    et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+                    mt = new Date( modifyTime );
+                if( mt - st < 0 || mt - et > 0 ){
+                    return false;
+                }
+                return true;
+            }
+        };
+    }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

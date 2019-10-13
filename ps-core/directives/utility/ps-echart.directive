@@ -1,0 +1,152 @@
+<config injector="$q,$rootScope,$state"></config>
+<template>
+  <div class="echart">
+    <div class="noData" ng-if="showNoData">
+      <div class="cell">暂无数据可以展示</div>
+    </div>
+    <div class="chart"></div>
+  </div>
+</template>
+<script type="text/javascript">
+import baogang from "../../../localdb/echartTheme/baogang.json";
+import { isArray, isObject } from "ps-ultility";
+export default function(q, rootScope, $state) {
+  return {
+    scope: true,
+    require: "ngModel",
+    link(scope, element, attr, ngModel) {
+      let echartIns;
+      function success(d) {
+        let defer = q.defer();
+        defer.resolve(d);
+        return defer.promise;
+      }
+      function loadEcharts() {
+        window.__echarts =
+          typeof window.__echarts === "undefined"
+            ? (function() {
+                let defer = q.defer();
+                window["require"](
+                  ["echarts"],
+                  echarts => {
+                    defer.resolve(echarts);
+                  },
+                  e => {
+                    defer.reject(e);
+                  }
+                );
+                return defer.promise;
+              })()
+            : window.__echarts;
+        return window.__echarts.then(echarts => {
+          return success(echarts);
+        });
+      }
+      function deleteAll(dt) {
+        let queue = [
+            {
+              level: 0,
+              data: dt
+            }
+          ],
+          item;
+        function getArr(obj, level) {
+          let rs = [];
+          for (let i in obj) {
+            if (obj.hasOwnProperty(i)) {
+              rs.push({
+                level: level,
+                key: i,
+                data: obj[i],
+                parent: obj
+              });
+            }
+          }
+          return rs;
+        }
+        while ((item = queue.shift())) {
+          let { key, data, parent, level } = item;
+          if (key && parent) {
+            delete parent[key];
+          }
+          if (isArray(data) || (isObject(data) && level < 1)) {
+            let arr = getArr(data, level + 1);
+            [].push.apply(queue, arr);
+          }
+        }
+      }
+      function initEcharts() {
+        return loadEcharts().then(echarts => {
+          if (echartIns) {
+            //console.error( echartIns.id + "已存在跳过" );
+          } else {
+            echartIns = echarts.init(element.find(".chart")[0], baogang);
+            //console.error( echartIns.id + "创建成功" );
+          }
+          return success(echartIns);
+        });
+      }
+      ngModel.$render = function() {
+        initEcharts().then(echartIns => {
+          if (ngModel.$viewValue) {
+            scope.showNoData = false;
+            echartIns.hideLoading();
+            echartIns.setOption(ngModel.$viewValue, true);
+            echartIns.resize();
+            return;
+          }
+          if (ngModel.$viewValue === undefined) {
+            echartIns.clear();
+            scope.showNoData = false;
+            echartIns.showLoading("default", {
+              text: "计算中，请稍候...",
+              maskColor: "#164464",
+              textColor: "#fff"
+            });
+            return;
+          }
+          if (ngModel.$viewValue === null) {
+            echartIns.clear();
+            echartIns.hideLoading();
+            scope.showNoData = true;
+            return;
+          }
+        });
+      };
+      scope.$on("$destroy", e => {
+        initEcharts().then(echartIns => {
+          echartIns.clear();
+          echartIns.dispose();
+          deleteAll(echartIns);
+          echartIns = null;
+        });
+      });
+    }
+  };
+}
+</script>
+<style lang="less" scoped="true">
+.echart {
+  height: 400px;
+  position: relative;
+  .noData {
+    position: absolute;
+    display: table;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    .cell {
+      display: table-cell;
+      text-align: center;
+      vertical-align: middle;
+    }
+  }
+  .chart {
+    height: 400px;
+  }
+}
+</style>

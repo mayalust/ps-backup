@@ -1,0 +1,267 @@
+<config injector="$scope,$timeout,ajax,$state,$registerService,commonMethodService2,growl,commonMethodService,psDialog"
+        deps="dialogDeviceInfo,dialogDeviceInfoAc"
+></config>
+<template>
+  <div class="wrap" style="overflow-y:auto;height:calc(100vh - 180px);">
+    <div class="row padding-5">
+      <div class="col-md-12">
+        <div class="block margin-bottom-5">
+          <span class="padding-right-10">设备类型:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="motorType1"
+                       data-change = "modelChange(motorType1 + motorType1.length)"
+                       data-options="motorType1.valueCode as motorType1.label for motorType1 in motorTypes"></ps-select>
+          </div>
+          <span class="padding-right-10">设备型号:</span>
+          <div class="horizontal width-200">
+            <input ng-model="motorModel" class="form-control"/>
+          </div>
+          <span class="padding-right-10">宝钢号:</span>
+          <div class="horizontal width-200">
+            <input ng-model="baogangNo" class="form-control"/>
+          </div>
+          <span class="padding-right-10">额定容量:</span>
+          <div class="horizontal width-200">
+            <input ng-model="ratedCapacity" class="form-control"/>
+          </div>
+          <br/>
+          <span class="padding-right-10">所属厂部:</span>
+          <div class="horizontal width-200">
+            <ps-select ng-model="department"
+                       data-change = "modelChange(department + department.length)"
+                       data-options="department.valueCode as department.label for department in departments"></ps-select>
+          </div>
+          <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+          <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="block">
+          <div class="wrap">
+            <p style="color:white">{{motorType2}}</p>
+            <div class="table-title">
+              设备信息库
+              <button ng-click="addDeviceInfo()"
+                      class="btn btn-primary pull-right" style="margin-left: 5px;" ng-if="currentRoleID == 70153973788934 || currentRoleID == 70153973788969 || currentRoleID == 59846674150228">添加设备</button>
+              <ps-select class="pull-right"
+                         ng-model="$parent.motorType"
+                         ng-if="currentRoleID == 70153973788934 || currentRoleID == 70153973788969 || currentRoleID == 59846674150228"
+                         data-change = "modelChange(motorType + motorType.length)"
+                         data-options="motorType.valueCode as motorType.label for motorType in motorTypes"></ps-select>
+
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>所属厂部</th>
+                <th>设备类型</th>
+                <th>设备型号</th>
+                <th>宝钢号</th>
+                <th>额定容量</th>
+                <th>制造厂商</th>
+                <th>制造编号</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{key<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="(item.department == 'abrasion') ? '冷轧厂'
+                             : (item.department == 'warmwalzwerk') ? '热轧厂'
+                             : (item.department == 'powerPlant') ? '电厂'
+                             : (item.department == 'steelPipeDepartment') ? '钢管事业部'
+                             : (item.department == 'steelWorks') ? '炼钢厂'
+                             : (item.department == 'ringPart') ? '能环部'
+                             : (item.department == 'thickPlatePlant') ? '厚板厂'
+                             : (item.department == 'motDepartment') ? '运输部'
+                             : (item.department == 'siliconSteelDepartment') ? '硅钢部'
+                             : (item.department == 'baori') ? '宝日'
+                             : (item.department == 'bwtcDepartment') ? '宝武碳材'
+                             : (item.department == 'elseDepartment') ? '其他'
+                             : '-'"></td>
+                <td ng-bind="(item.motorType == 'AC_MOTOR') ? '交流电机'
+                             : (item.motorType == 'DC_MOTOR') ? '直流电机'
+                             : (item.motorType == 'TRANSFORMER')? '变压器'
+                             : '-'"></td>
+                <td ng-bind="item.motorModel"></td>
+                <td ng-bind="item.baogangNo" ng-attr-title="{{item.baogangNo}}"></td>
+                <td ng-bind="item.ratedCapacity"></td>
+                <td ng-bind="item.manufacturers"></td>
+                <td ng-bind="item.manufacturingNumber"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-default" ng-click="item.view()">查看</button>
+                    <button class="btn btn-default" ng-click="item.edit()" ng-if="currentRoleID == '59846674150228'">编辑</button>
+                    <button class="btn btn-default" ng-click="item.resume()">履历</button>
+                    <button class="btn btn-default" ng-click="item.remove()" ng-if="currentRoleID == '59846674150228'">删除</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    import { dateparser } from "ps-ultility";
+    export default function( scope,timeout,ajax,$state,registerService,cms2,growl,commonMethodService,psDialog){
+        var target = commonMethodService();
+         scope.currentRoleID = target.getCurrentUser().currentRoleID;
+         scope.motorType = '';
+        function getMotorType (m){
+          if(m && m == "AC_MOTOR"){
+            return  "dialog-device-info-ac";
+          }else if(m == "DC_MOTOR"){
+             return "dialog-device-info-ac";
+          }else if(m == "TRANSFORMER"){
+            return "dialog-device-info";
+          }
+        }
+        class tableCell{
+            constructor(data){
+                for(var i in data){
+                    this[i] = data[i];
+                }
+            }
+            getModifyTime(){
+                return this.modifyTime
+                    ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+                    : "-";
+            }
+            view(){
+              cms2.modal({
+                    title : "设备信息",
+                    directive : getMotorType(this.motorType),
+                    width : "80%",
+                    params : {
+                        mode : "view",
+                        data : this
+                    }
+                }).then( d => {
+
+                });
+            }
+            edit(){
+                cms2.modal({
+                    title : "设备信息",
+                    directive : getMotorType(this.motorType),
+                    width : "80%",
+                    params : {
+                        mode : "edit",
+                        flag: "bg",
+                        data : this
+                    }
+                }).then( d => {
+                    d = angular.extend(this, d.clone);
+                    ajax.post("motorRepairUIService.saveMotorInfo",d).then((d) => {
+                        growl.info("编辑设备成功");
+                        timer();
+                    })
+                });
+            }
+            resume(){
+              target.setValue('baogangNo',this.baogangNo);
+              cms2.refresh("prod_comprehensive_project_resume");
+            }
+            remove(){
+                psDialog.confirm("确定要删除吗？",()=>{
+                  ajax.post("motorRepairUIService.deleteByBaogangNo",[this.baogangNo]).then(()=>{
+                    growl.info("删除成功");
+                    timer();
+                  })
+                })
+            }
+        }
+        function timer(){
+            ajax.post("motorRepairUIService.findMotorInfo",{}).then( d => {
+                scope.resources = d.sort((a,b)=> new Date(b.createTime).getTime()-new Date(a.createTime).getTime()).map( a => new tableCell(a));
+            })
+        }
+        timer();
+        let interval = setInterval(()=>{
+            timer();
+            scope.$apply();
+        },300000);
+        scope.addDeviceInfo = function(){
+          if(!scope.motorType){
+            growl.warning('请选择设备类型');
+            return;
+          }else {
+            cms2.modal({
+              title : "设备信息",
+              directive :  getMotorType(scope.motorType),
+              width : "80%",
+              params : {
+                mode : "edit",
+                data : {motorType: scope.motorType}
+              }
+            }).then( d => {
+              if(!!!d){
+                return;
+              }else {
+                ajax.post("motorRepairUIService.saveMotorInfo",d.clone).then(() => {
+                  growl.info("添加设备成功");
+                  timer();
+                })
+              }
+            });
+          }
+
+        }
+        scope.departments = target.getRootScope("myDicts")["factoryHeadquarters"];
+        scope.motorTypes = target.getRootScope("myDicts")["motorType"];
+        scope.modelChange = function(a){
+        //
+        }
+        scope.clearFn = function(){
+            scope.motorType = "";
+            scope.motorModel = "";
+            scope.baogangNo = "";
+            scope.ratedCapacity = "";
+            scope.department = "";
+            scope.filter = (() => {
+                return true;
+            });
+        }
+        scope.searchFn = function(){
+            scope.filter = ({ motorType,motorModel,baogangNo,ratedCapacity,department }) => {
+                if( scope.motorType1 && motorType !== scope.motorType1){
+                    return false;
+                }
+                if( typeof scope.motorModel !=="undefined" && motorModel.indexOf(scope.motorModel) == -1){
+                    return false;
+                }
+                if( typeof scope.baogangNo !=="undefined" && baogangNo.indexOf( scope.baogangNo ) == -1 ){
+                    return false;
+                }
+                if( typeof scope.ratedCapacity !=="undefined" && ratedCapacity.indexOf( scope.ratedCapacity ) == -1 ){
+                    return false;
+                }
+                if( scope.department && department !== scope.department){
+                    return false;
+                }
+                return true;
+            }
+        };
+        scope.$on("$destroy",()=>{
+            clearInterval(interval);
+        })
+    }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

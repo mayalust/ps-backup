@@ -1,0 +1,73 @@
+<config injector="$scope, commonMethodService, $state, psTreeData, ajax, commonMethodService2, psWebsocket"></config>
+<template>
+  <div class="wrap">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block margin-5 padding-20 item">
+          <div class="topo with-border">
+            <ps-topo-product></ps-topo-product>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="block margin-5 padding-5">
+          <h5>检修实绩（当月内）</h5>
+          <div class="low with-border">
+            <ps-pie-chart data-kpi="[1,2]"></ps-pie-chart>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="block margin-5 padding-5">
+          <h5>异常事件分布（当月内）</h5>
+          <div class="low with-border">
+            <ps-pie-chart></ps-pie-chart>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="block margin-5 padding-5">
+          <h5>诊断绩效统计（当月内）</h5>
+          <div class="low with-border">
+            <ps-percentage-bar></ps-percentage-bar>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default function(
+  scope,
+  cms,
+  state,
+  psTreeData,
+  ajax,
+  cms2,
+  psWebsocket
+) {}
+</script>
+<style lang="less" scoped>
+.item {
+  min-height: 260px;
+  position: relative;
+}
+.low {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.art {
+  height: 483px;
+}
+.margin-5 {
+  margin: 5px !important;
+}
+.padding-5 {
+  padding: 5px !important;
+}
+.padding-20 {
+  padding: 20px !important;
+}
+</style>

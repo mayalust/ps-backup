@@ -1,0 +1,2 @@
+define(["../services/services.js"],function(e){"use strict";e.factory("processService",["serviceProxy",function(n){var e={},s="processDefinitionService";return e.getProcessDefinitions=function(e){n.get(s,"getProcessDefinitions",[],e)},e.saveProcessDefinition=function(e,i){n.get(s,"saveProcessDefinition",e,i)},e.getProcessDefinitionById=function(e,i){n.get(s,"getProcessDefinitionById",e,i)},e.deleteProcessDefinitionById=function(e,i){n.get(s,"deleteProcessDefinitionById",e,i)},e}])});
+//# sourceMappingURL=../../map/js/services/process-definition-service.js.map

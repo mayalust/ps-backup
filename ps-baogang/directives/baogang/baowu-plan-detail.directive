@@ -1,0 +1,611 @@
+<config injector="psDialog,commonMethodService,commonMethodService2"></config>
+<template>
+  <div class="wrap">
+    <div class="block">
+      <div class="row column box">
+        <div id="item_undefined" class="box-header with-border">
+          <h3 class="box-title" style="width: 100%;">状态诊断</h3>
+          <div class="box-tools pull-right">
+            <button class="btn btn-box-tool" data-widget="collapse">
+              <i class="fa fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="box-body">
+          <div style="undefined" class="col-md-12">
+            <div>
+              <table style="width: 100%; table-layout: fixed;">
+                <tbody>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>设备告警信息</span>
+                    </td>
+                    <td class="col-md-11" colspan="2" style="padding: 3px;">
+                      {{ ticketTask.alertTitle }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>异常现象</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.abnPhenomenon }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>工艺状况</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.technicsStatus }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>检测部位</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.position }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>注意事项</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.attention }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>判断标准</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.standard }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>判断依据</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.basis }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>判断依据图片</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      <a
+                        target="_blank"
+                        ng-repeat="bi in ticketTask.basisImage"
+                        ng-attr-href="{{bi.value}}"
+                        ><img
+                          ng-attr-src="{{bi.value}}"
+                          style="width: 100px;height: 100px;margin-right: 10px;"
+                      /></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span style="display: inline-block; width: 10px;"
+                        ><span></span>
+                        <div
+                          style="font-size: 20px; top: 5px; position: relative; color: rgb(255, 111, 100);"
+                        ></div> </span
+                      ><span>综合状态等级</span>
+                    </td>
+                    <td
+                      colspan="2"
+                      style="padding: 3px;"
+                      ng-bind="getExplainerFromDiction('statusGrade')(ticketTask.statusGrade)"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>异常部位</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.abnPosition }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>异常类型</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.abnType }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>综合判断结论</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.multipleConclusion }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>处理方案建议</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.cessingScheme }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>备注</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      {{ ticketTask.remark }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>处理方式</span>
+                    </td>
+                    <td
+                      colspan="2"
+                      style="padding: 3px;"
+                      ng-bind="{ '1': '暂不处理', '2': '自行处理', '3': '检修委托' }[resumeObj.ticket.values.dealType]"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="col-md-1"
+                      style="padding: 3px; text-align: right; height: 40px; position: relative;"
+                    >
+                      <span>附件</span>
+                    </td>
+                    <td colspan="2" style="padding: 3px;">
+                      <a
+                        target="_blank"
+                        ng-repeat="bi in ticketTask.attUpload"
+                        ng-attr-href="{{bi.value}}"
+                        ng-bind="bi.label"
+                      ></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- 自行处理-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 2">
+              <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                  <div class="table-title pull-left">自行处理</div>
+                  <div class="pull-right">
+                    <!-- <span
+                      class="glyphicon glyphicon-chevron-down arrow"
+                      style="font-size: 26px"
+                      data-toggle="collapse"
+                      data-target="#self_deal"
+                      aria-haspopup="false"
+                      aria-expanded="true"
+                    ></span> -->
+                  </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                  <div
+                    style=" height:2px;border:none;border-top:2px solid cornflowerblue;"
+                  ></div>
+                </div>
+                <div class="" id="self_deal" class="collapse in">
+                  <div class="row margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-12">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            原因说明:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-textarea
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.ticket.values.tallyReason"
+                            ></ps-textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-12">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            处理过程说明:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-textarea
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.ticket.values.tallyCourseReason"
+                            ></ps-textarea>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--暂不处理-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 1">
+              <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                  <div class="table-title pull-left">暂不处理</div>
+                  <div class="pull-right">
+                    <!-- <span
+                      class="glyphicon glyphicon-chevron-down arrow"
+                      style="font-size: 26px"
+                      data-toggle="collapse"
+                      data-target="#not_deal"
+                      aria-haspopup="false"
+                      aria-expanded="true"
+                    ></span> -->
+                  </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                  <div
+                    style=" height:2px;border:none;border-top:2px solid cornflowerblue;"
+                  ></div>
+                </div>
+                <div class="" id="not_deal" class="collapse in">
+                  <div class="row margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-12">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            原因说明:<span
+                              style="margin-left:10px;"
+                              ng-bind="resumeObj.ticket.values.tallyCheckboxlist[complexDealType].label"
+                            ></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-12">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            处理说明:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-textarea
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.ticket.values.tallyDealExplain"
+                            ></ps-textarea>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--检修委托-->
+            <div class="row" ng-if="resumeObj.ticket.values.dealType == 3">
+              <div class="margin-bottom-5">
+                <div class="col-md-12 margin-bottom-5 margin-top-15">
+                  <div class="table-title pull-left">检修委托</div>
+                  <div class="pull-right">
+                    <!-- <span
+                      class="glyphicon glyphicon-chevron-down arrow"
+                      style="font-size: 26px"
+                      data-toggle="collapse"
+                      data-target="#check_entrust"
+                      aria-haspopup="false"
+                      aria-expanded="true"
+                    ></span> -->
+                  </div>
+                </div>
+                <div class="col-md-12 margin-bottom-10">
+                  <div
+                    style=" height:2px;border:none;border-top:2px solid cornflowerblue;"
+                  ></div>
+                </div>
+                <div class="" id="check_entrust" class="collapse in">
+                  <div class="row margin-bottom-5">
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            标准项目编号:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.standardProjectId"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            标准项目名称:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.standardProjectName"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            产线工程师:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.executionerName"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            施工类别:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.constructionType"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            项目类别:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.projectCategory"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            高危等级:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-select
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.highDangerLevel"
+                              data-options="item.valueCode as item.label for item in highDangerLevels"
+                            ></ps-select>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            实施依据:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.maintainBasis"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            建议班组名称:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.suggesTeamName"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            作业时长(H):
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.needTime"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            总人数:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.totalPerpsonNum"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            总工时(H):
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.totalUseTime"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4"></div>
+                    </div>
+                    <div class="col-md-12 margin-bottom-5">
+                      <div class="col-md-12">
+                        <div class="tbl">
+                          <div class="radio-lbl">
+                            <span class="text-red">*</span>
+                            工作内容:
+                          </div>
+                          <div class="tbl-cell">
+                            <ps-input
+                              data-config="{'disabled': true}"
+                              ng-model="resumeObj.maintenanceTask.workContent"
+                            ></ps-input>
+                          </div>
+                          <div class="radio-unit">
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/javascript">
+export default function(psDialog, cms, cms2) {
+  var target = cms();
+  return {
+    link(scope, element, attr) {
+      let {
+        $parent: {
+          params: { ticketTask }
+        }
+      } = scope;
+      scope.complexDealType =
+        ticketTask && ticketTask.values && ticketTask.values.complexDealType;
+      scope.resumeObj = {
+        ticket: ticketTask
+      };
+      scope.getExplainerFromDiction = cms2.getExplainerFromDiction;
+      scope.ticketTask = ticketTask.variables;
+    }
+  };
+}
+</script>
+<style type="less" scoped="true">
+.tbl {
+  padding: 5px;
+}
+</style>

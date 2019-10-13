@@ -1,0 +1,309 @@
+<config injector="$scope,$timeout,$state,$registerService,commonMethodService2,ajax,growl,psLoading,commonMethodService"
+        deps="dialogProjectFinishManage"
+></config>
+<template>
+  <div class="wrap" style="overflow-y:auto;height:calc(100vh - 180px);">
+    <div class="row">
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block padding-10">
+          <div class="margin-bottom-5">
+            <span class="padding-right-10">委托单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="entrustOrderNo" class="form-control"/>
+            </div>
+            <span class="padding-right-10">工程单号:</span>
+            <div class="horizontal width-200">
+              <input ng-model="implementOrderNo" class="form-control"/>
+            </div>
+            <span class="padding-right-10">委托日期:</span>
+            <div class="horizontal width-200">
+              <ps-date2 ng-model="starttime"></ps-date2>
+            </div>
+            <span class="padding-left-right-10">至</span>
+            <div class="horizontal width-200">
+              <ps-date2 ng-model="endtime"></ps-date2>
+            </div>
+            <button class="btn btn-primary" ng-click="searchFn()">查询</button>
+            <button class="btn btn-primary" ng-click="clearFn()">清空</button>
+          </div>
+          <div>
+
+          </div>
+
+        </div>
+      </div>
+      <div class="col-md-12 margin-bottom-5">
+        <div class="block">
+          <div class="wrap">
+            <div class="table-title">
+              设备工程单
+            </div>
+            <table ps-table-sync
+                   data-paginate="pageonly"
+                   data-source="resources"
+                   data-filter="filter"
+                   data-sort="sort"
+                   data-page="page">
+              <thead>
+              <tr>
+                <th>序号</th>
+                <th>委托单位</th>
+                <th>委托单号</th>
+                <th>项目等级</th>
+                <th>工程名称</th>
+                <th>工程单号</th>
+                <th>设备类型</th>
+                <th>修理方式</th>
+                <th>宝钢号</th>
+                <th>设备型号</th>
+                <th>委托日期</th>
+                <th>状态</th>
+                <th class="option">操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="(key,item) in items track by key">
+                <td>{{Number(key)<10 ? "0"+(key+1): key+1}}</td>
+                <td ng-bind="item.entrustDepartments"></td>
+                <td ng-bind="item.entrustOrderNo" ng-attr-title="{{item.entrustOrderNo}}"></td>
+                <td ng-bind="item.projectLevel"></td>
+                <td ng-bind="item.projectName"></td>
+                <td ng-bind="item.implementOrderNo" ng-attr-title="{{item.implementOrderNo}}"></td>
+                <td ng-bind="(item.motorType == 'AC_MOTOR'||item.motorType == '交流电') ? '交流电'
+                             : (item.motorType == 'DC_MOTOR' || item.motorType == '直流电') ? '直流电'
+                             : (item.motorType == 'TRANSFORMER' || item.motorType == '变压器')? '变压器'
+                             : '-'"></td>
+                <td ng-bind="item.repairWay"></td>
+                <td ng-bind="item.baogangNo" ng-attr-title="{{item.baogangNo}}"></td>
+                <td ng-bind="item.motorModel"></td>
+                <!-- <td ng-bind="item.entrustDate"></td>-->
+                <td ng-bind="item.getModifyTime()"></td>
+                <td ng-bind="item.status == 10 ? '待处理'
+                              : item.status == 100 ? '处理中'
+                              : item.status == 200 ? '已完成'
+                              :  '-'"></td>
+                <td>
+                  <div ps-option-group>
+                    <button class="btn btn-default" ng-click="item.finishFn()">完工管理</button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { dateparser } from "ps-ultility";
+  export default function( scope,timeout,$state,registerService,cms2,ajax,growl,psLoading,commonMethodService){
+      let target = commonMethodService();
+    class tableCell{
+      constructor(data){
+        for(var i in data){
+          this[i] = data[i];
+        }
+      }
+      getModifyTime(){
+        return this.modifyTime
+          ? dateparser(this.modifyTime).getDateString("yyyy-MM-dd,hh:mm:ss")
+          : "-";
+      }
+      analysis(){
+        cms2.navigateTo(2);
+      }
+        finishFn(){
+            cms2.modal({
+                title : "完工管理",
+                directive : "dialog-project-finish-manage",
+                width : "80%",
+                params : {
+                    mode : "edit",
+                    // data: this,
+                    data : { "implementOrderNo":this.implementOrderNo}
+                }
+            }).then( d => {
+
+                if( typeof (d && d.clone) != "undefined"){
+                  function getFiles(data) {
+                    let keys = Object.keys(data);
+                    let values = Object.values(data);
+                    let temp = [];
+                    let ret = [];
+                    keys.forEach((key, index) => {
+                      let obj = {};
+                      obj.key = key;
+                      obj.files = values[index];
+                      temp.push(obj);
+                    });
+
+                    let index = 0;
+                    temp.forEach(item => {
+                      if (item.files.length > 0) {
+                        item.files.forEach(file => {
+                          ret.push({
+                            name: file.name,
+                            key: item.key,
+                            file: file,
+                            index: index
+                          });
+                          index ++ ;
+                        });
+                      }
+                    });
+
+                    return ret;
+                  }
+                  function setValueEmpty(data) {
+                    for(let key in data) {
+                      d.clone[key] = [];
+                    }
+                  }
+                  let formData = new FormData();
+                  let hasFileObj = {};
+                  hasFileObj.attachmentListDelivery = d.clone.attachmentListDelivery.map(v=>{
+                                                                                              if(v.hasOwnProperty('filePath'))
+                                                                                              {return v;}
+                                                                                            }) || [];
+                  hasFileObj.attachmentListHandover = d.clone.attachmentListHandover.map(v=>{
+                                                                                              if(v.hasOwnProperty('filePath'))
+                                                                                              {return v;}
+                                                                                            }) || [];
+                  hasFileObj.attachmentListWarehouse = d.clone.attachmentListWarehouse.map(v=>{
+                                                                                              if(v.hasOwnProperty('filePath'))
+                                                                                              {return v;}
+                                                                                            }) || [];
+                  let obj = {
+                    'attachmentListDelivery': d.clone.attachmentListDelivery.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                    'attachmentListHandover': d.clone.attachmentListHandover.filter(v=>!v.hasOwnProperty('filePath')) || [],
+                    'attachmentListWarehouse': d.clone.attachmentListWarehouse.filter(v=>!v.hasOwnProperty('filePath')) || []
+                  };
+                  let files = getFiles(obj);
+                  setValueEmpty(obj);
+                  formData.append("resourceId",2);
+                  if(files.length >0){
+                    files.forEach((v,i) => {
+                      formData.append(`file${v.index}`,v.file);
+                    })
+                  }
+                  if(files.length !== 0){
+                    // d.clone.attachmentList = [];
+                    ajax.upload("resourceFileUIService.uploadResourceFile",formData).then(function (s) {
+                      if(s.code == "0"){
+                        growl.info("附件上传成功");
+                        let obj = {},sArr = s.data || [];
+                        if(isArray(s.data)){
+                          s.data.forEach((v,i)=>{
+                            obj = {};
+                            obj["fileName"] = files[i].name;
+                            // obj["filePath"] = v.qualifiedName;
+                            obj["filePath"] = sArr.find((val,k) => val.qualifiedName.split('-')[1] === files[i].name ).qualifiedName;
+                            d.clone[files[i].key].push(obj);
+                          })
+                        }else {
+                          obj["fileName"] = files[0].name;
+                          obj["filePath"] = s.data.qualifiedName;
+                          d.clone[files[0].key].push(obj);
+                        }
+                        return cms2.success( d );
+                      }
+                    }).then(function (d) {
+                      psLoading.showLoading();
+                      d.clone.attachmentListDelivery = d.clone.attachmentListDelivery.concat(hasFileObj.attachmentListDelivery.filter(v=>v));
+                      d.clone.attachmentListHandover = d.clone.attachmentListHandover.concat(hasFileObj.attachmentListHandover.filter(v=>v));
+                      d.clone.attachmentListWarehouse = d.clone.attachmentListWarehouse.concat(hasFileObj.attachmentListWarehouse.filter(v=>v));
+                      ajax.post("motorRepairUIService.saveCompletionManagement",d.clone).then(function (d) {
+                        if(d!= null){
+                          psLoading.closeLoading();
+                          growl.info("完工管理成功！");
+
+                        }
+                      });
+                    })
+                  }else {
+                    psLoading.showLoading();
+                    d.clone.attachmentListDelivery = d.clone.attachmentListDelivery.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.attachmentListDelivery.filter(v=>v));
+                    d.clone.attachmentListHandover = d.clone.attachmentListHandover.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.attachmentListHandover.filter(v=>v));
+                    d.clone.attachmentListWarehouse = d.clone.attachmentListWarehouse.filter(v=>!v.hasOwnProperty('filePath')).concat(hasFileObj.attachmentListWarehouse.filter(v=>v));
+                    ajax.post("motorRepairUIService.saveCompletionManagement",d.clone).then(function (d) {
+                      if(d!= null){
+                        psLoading.closeLoading();
+                        growl.info("完工管理成功！");
+                      }
+
+                    })
+                  }
+                }
+
+            });
+        }
+    }
+    function timer(){
+        ajax.post("motorRepairUIService.findImplementOrder",{}).then( d => {
+            scope.resources = d.map( a => new tableCell(a));
+        })
+    }
+    timer();
+    let interval = setInterval(()=>{
+        timer();
+        scope.$apply();
+    },300000);
+      scope.clearFn = function(){
+          scope.entrustOrderNo = "";
+          scope.implementOrderNo = "";
+          scope.starttime = "";
+          scope.endtime = "";
+          scope.filter = (() => {
+              return true;
+          });
+      }
+      scope.searchFn = function(){
+          scope.filter = ({ entrustOrderNo,implementOrderNo,modifyTime}) => {
+              if((typeof scope.entrustOrderNo !== "undefined") && entrustOrderNo !==null && entrustOrderNo.indexOf( scope.entrustOrderNo ) == -1){
+                  return false;
+              }else if(typeof scope.entrustOrderNo !== "undefined"
+                  && (entrustOrderNo == null || entrustOrderNo == "")
+                  && (typeof scope.implementOrderNo == "undefined" || scope.implementOrderNo == "")
+
+              ){
+                  return false;
+              }
+              if( typeof scope.implementOrderNo !=="undefined" && implementOrderNo.indexOf( scope.implementOrderNo ) == -1){
+                  return false;
+              }
+              if(typeof scope.implementOrderNo !=="undefined"
+                  && typeof scope.entrustOrderNo !== "undefined"
+                  && scope.implementOrderNo !== ""
+                  && scope.entrustOrderNo !== ""){
+                  if(entrustOrderNo == null){
+                      return false;
+                  }else if(implementOrderNo.indexOf( scope.implementOrderNo ) !== -1 && entrustOrderNo.indexOf( scope.entrustOrderNo ) !== -1){
+                      return true;
+                  }else {
+                      return false;
+                  }
+              }
+              let st = typeof scope.starttime === "undefined" ? 0 : scope.starttime,
+                  et = typeof scope.endtime === "undefined" ? 1/0 : scope.endtime,
+                  mt = new Date( modifyTime );
+              if( mt - st < 0 || mt - et > 0 ){
+                  return false;
+              }
+              return true;
+          }
+      };
+      scope.$on("$destroy",()=>{
+          clearInterval(interval);
+      })
+  }
+</script>
+<style lang="less" scoped>
+  .wrap {
+    padding : 5px 10px !important;
+    .option{
+      width : 160px;
+    }
+  }
+</style>

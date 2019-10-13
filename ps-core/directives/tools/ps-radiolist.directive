@@ -1,0 +1,87 @@
+<config injector="$q"></config>
+<template>
+    <div>
+    </div>
+</template>
+<script type="text/javascript">
+  export default function (q) {
+    return {
+      restrict: 'E',
+      scope: {
+        config: '=?',
+        options: '=?',
+        ngModel: '=?'
+      },
+      replace: true,
+      require: '?ngModel',
+      link(scope, element, attr, ngModel) {
+        let root = element[0],
+          defer = q.defer(),
+          defaultConfig = {};
+        scope.config = angular.extend({},defaultConfig,scope.config || {});
+        let format = Object.assign({
+          true: true,
+          false: false
+        },(scope.config.format || {}));
+        root.addEventListener('click',function (e) {
+          if(e.target.tagName == 'INPUT' && e.target.type == "radio"){
+            let ind = e.target.id.split("_")[0];
+            scope.options[ind].value = true;
+            ngModel.$setViewValue(ind);
+          }
+        });
+        function initDom(options) {
+          root.innerHTML = createDom(options);
+        }
+        scope.$watch(`options`, n => {
+          if(typeof n == 'undefined'){
+            return ;
+          }
+          initDom(n);
+          defer.resolve();
+        });
+
+        function createDom(options) {
+          let name = Math.uuid();//radio name 互斥
+          return  options.map((op,i) => {
+            return  ` <label style="padding: 0 7px;">
+                            <input type="radio" style="display: inline-block;width: 16px;height: 16px;vertical-align: -4px;" id="${i+'_'+name}" name="${name}" ng-checked="op.value"  ng-disabled="config.disabled">
+                            <span style="font-size: 75%;color: #fff;">${op.label}</span>
+                      </label>`;
+          }).join("");
+        }
+        [].push.call(ngModel.$parsers,function (n,o,s) {
+          if(typeof n == 'undefined'){
+            return ;
+          }
+          ngModel.$render();
+          return n;
+
+        });
+        [].push.call(ngModel.$formatters,function (n,o,s) {
+          ngModel.$render();
+          return n;
+        });
+        ngModel.$render = function (e){
+          defer.promise.then(function () {
+            let radios = root.querySelectorAll("input[type=radio]");
+            radios.forEach((v,i) => {
+              if(i == ngModel.$viewValue && ngModel.$viewValue !== ""){
+                scope.options[i].value = true;
+                v.checked = true;
+              }else {
+                scope.options[i].value = false;
+                v.checked = false;
+              }
+            })
+          })
+        }
+      }
+    }
+  }
+</script>
+<style type="less" scoped="true">
+   /* input[type="checkbox"] {
+        margin-top: 9px !important;
+    }*/
+</style>
